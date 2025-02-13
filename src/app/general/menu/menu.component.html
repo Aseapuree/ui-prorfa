@@ -12,8 +12,12 @@
         <button class="menu-btn">Perfil</button>
       </li>
       <li>
-        <button class="menu-btn">Ver Libros</button>
+        <button 
+        class="menu-btn" 
+        routerLink="campus"
+        routerLinkActive="active">Ver Libros</button>
       </li>
+      
       <li>
         <button class="menu-btn" (click)="toggleSubMenu()">Asignar Libro ⮟</button>
         <ul *ngIf="subMenuOpen" class="submenu">
