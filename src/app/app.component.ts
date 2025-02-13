@@ -5,7 +5,7 @@ import {
   FaConfig,
   FaIconLibrary,
 } from '@fortawesome/angular-fontawesome';
-import { fontAwesomeIcons } from './components/shared/font-awesome-icons';
+import { fontAwesomeIcons } from './campus/components/shared/font-awesome-icons';
 
 @Component({
   selector: 'app-root',
