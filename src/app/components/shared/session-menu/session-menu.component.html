@@ -1,0 +1,84 @@
+<!-- Contenedor principal -->
+<div class="h-full flex flex-col bg-primary-dark shadow-xl overflow-y-scroll">
+    <div class="flex justify-center mt-5">
+        <img 
+            src="{{ image }}"
+            alt="curso" class="w-40 h-40 rounded-lg">
+    </div>
+    <div class="grid rounded-2xl divide-y divide-dashed hover:divide-solid justify-evenly bg-gray-50 dark:bg-gray-300 m-3 mt-5 grid-cols-3">
+        
+        <!-- Sesión 01 -->
+        <div class="col-span-1 p-3">
+            <div class="flex flex-col items-center">
+                <a href="#">
+                    <button class="tr-300">
+                        <fa-icon [icon]="['fas', 'user']" class="menu-icon" [ngClass]="'text-gray-500 text-4xl mr-4'"></fa-icon>
+                        <span class="text-lg font-medium">{{ session }}</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Curso -->
+        <div class="col-span-1 p-3">
+            <div class="flex flex-col items-center">
+                <a href="#">
+                    <button class="tr-300">
+                        <fa-icon [icon]="['fas', 'book']" class="menu-icon" [ngClass]="'text-gray-500 text-4xl mr-4'"></fa-icon>
+                        <span class="text-lg font-medium">Curso</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Material de Apoyo -->
+        <div class="col-span-1 p-3">
+            <div class="flex flex-col items-center">
+                <a href="#">
+                    <button class="tr-300">
+                        <fa-icon [icon]="['fas', 'file-alt']" class="menu-icon" [ngClass]="'text-gray-500 text-4xl mr-4'"></fa-icon>
+                        <span class="text-lg font-medium">Material</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Asistencia -->
+        <div class="col-span-1 p-3">
+            <div class="flex flex-col items-center">
+                <a href="#">
+                    <button class="tr-300">
+                        <fa-icon [icon]="['fas', 'clipboard-check']" class="menu-icon" [ngClass]="'text-gray-500 text-4xl mr-4'"></fa-icon>
+                        <span class="text-lg font-medium">Asistencia</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Soporte -->
+        <div class="col-span-1 p-3">
+            <div class="flex flex-col items-center">
+                <a href="#">
+                    <button class="tr-300">
+                        <fa-icon [icon]="['fas', 'headset']" class="menu-icon" [ngClass]="'text-gray-500 text-4xl mr-4'"></fa-icon>
+                        <span class="text-lg font-medium">Soporte</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Salir -->
+        <div class="col-span-1 p-3">
+            <div class="flex flex-col items-center">
+                <a 
+                (click)="navigate()">
+                    <button class="tr-300">
+                        <fa-icon [icon]="['fas', 'sign-out-alt']" class="menu-icon" [ngClass]="'text-gray-500 text-4xl mr-4'"></fa-icon>
+                        <span class="text-lg font-medium">Salir</span>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --primary-dark: #0D1B2A;
+    --secondary-dark: #1B263B;
+    --primary-hover: #415A77;
+    --border-color: #778DA9;
+    --text-color: #E0E1DD;
+    --accent-color: #415A77;
+  }
+  
+  .bg-primary-dark {
+    background-color: var(--primary-dark);
+  }
+  
+  .menu-btn {
+    width: 100%;
+    background-color: var(--secondary-dark);
+    color: var(--text-color);
+    padding: 10px;
+    font-weight: bold;
+    text-align: left;
+    border-radius: 5px;
+    transition: background 0.3s;
+    border: 1px solid var(--border-color);
+  }
+  
+  .menu-btn:hover {
+    background-color: var(--primary-hover);
+  }
+  
+  .submenu {
+    margin-top: 5px;
+    padding-left: 10px;
+  }
+  
+  .submenu-btn {
+    width: 100%;
+    background-color: var(--primary-hover);
+    color: var(--text-color);
+    padding: 8px;
+    text-align: left;
+    border-radius: 5px;
+    transition: background 0.3s;
+    border: 1px solid var(--border-color);
+  }
+  
+  .submenu-btn:hover {
+    background-color: var(--border-color);
+  }
