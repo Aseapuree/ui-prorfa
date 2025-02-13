@@ -1,14 +1,15 @@
 <div class="flex h-screen">
-    <!-- Menú lateral -->
-    <aside class="w-64 bg-gray-900 text-white p-5">
-      <app-menu></app-menu>
-    </aside>
+  <!-- Menú lateral -->
+  <aside class="w-64 bg-gray-600 text-white  min-h-screen cu">
+    <app-menu></app-menu>
+  </aside>
   
-    <!-- Contenedor del contenido -->
-    <div class="flex-1 flex justify-center items-center bg-gray-100 p-6">
-      <div class="w-4/5 bg-white p-6 rounded-lg shadow-lg">
-        <router-outlet></router-outlet>
-      </div>
-    </div>
+
+  <!-- Contenedor del contenido -->
+  <div class="flex-1 flex flex-col bg-gray-600 p-6 overflow-auto">
+    <!-- <div class="w-full bg-white p-6 rounded-lg shadow-lg"> -->
+      <router-outlet></router-outlet>
+    <!-- </div> -->
   </div>
   
+</div>
