@@ -1,0 +1,32 @@
+<!-- Modal Overlay -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeModal()">
+  <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl p-6" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-2xl font-bold">{{ book.title }}</h2>
+      <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl transition-colors">
+        &times;
+      </button>
+    </div>
+    
+    <!-- Imagen del libro -->
+    <img [src]="book.imageUrl" alt="{{ book.title }} cover" class="w-full h-64 object-cover mb-4 rounded-lg">
+
+    <!-- Detalles del libro -->
+    <p class="text-gray-700"><span class="font-semibold">Autor:</span> {{ book.author }}</p>
+    <p class="text-gray-700 mt-4">{{ book.description }}</p>
+
+    <!-- Botones -->
+    <div class="mt-4 flex space-x-3">
+      <button class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">
+        📖 Leer
+      </button>
+      <button class="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition">
+        ⬇️ Descargar
+      </button>
+      <button class="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition">
+        📌 Asignar
+      </button>
+    </div>
+  </div>
+</div>

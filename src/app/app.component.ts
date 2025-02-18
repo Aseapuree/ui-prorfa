@@ -6,14 +6,12 @@ import {
   FaIconLibrary,
 } from '@fortawesome/angular-fontawesome';
 import { fontAwesomeIcons } from './components/shared/font-awesome-icons';
+import { NgxPaginationModule } from 'ngx-pagination';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
-    RouterOutlet,
-    FontAwesomeModule,
-  ],
+  imports:[RouterOutlet,FontAwesomeModule,NgxPaginationModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
