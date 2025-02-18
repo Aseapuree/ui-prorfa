@@ -1,12 +1,97 @@
-<div class="p-6 bg-gray-100 min-h-screen">
-    <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Nuestra Librería</h1>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Iterar sobre los libros -->
-      <div *ngFor="let book of books" class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-gray-900">{{ book.title }}</h2>
-        <p class="text-sm text-gray-600 mt-2">Autor: {{ book.author }}</p>
-        <p class="text-gray-700 mt-4">{{ book.description }}</p>
-      </div>
+<div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen">
+  <!-- Header -->
+  <div class="text-center py-6">
+    <h1 class="text-5xl font-extrabold text-gray-800">Nuestra Librería</h1>
+    <p class="text-lg text-gray-600 mt-2">Descubre y disfruta de los mejores libros</p>
+  </div>
+
+  <!-- Controles de búsqueda y filtrado -->
+  <div class="mb-8 flex flex-col md:flex-row gap-6 justify-between items-center bg-white p-4 rounded-lg shadow-md">
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm" 
+      placeholder="Buscar libros..."
+      class="w-full md:w-64 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+
+    <select 
+      [(ngModel)]="selectedCategory" 
+      (change)="onCategoryChange(selectedCategory)"
+      class="px-4 py-2 rounded-lg border bg-white shadow-sm"
+    >
+    <option value="">Categoria</option>
+      <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+    </select>
+
+    <select 
+      [(ngModel)]="itemsPerPage" 
+      class="px-4 py-2 rounded-lg border bg-white shadow-sm"
+    >
+      <option [value]="3">3 por página</option>
+      <option [value]="6">6 por página</option>
+      <option [value]="9">9 por página</option>
+    </select>
+  </div>
+
+  <!-- Listado de libros -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      *ngFor="let libro of filteredBooks"
+      class="bg-white p-6 rounded-lg shadow-md cursor-pointer hover:shadow-xl transition-transform transform hover:-translate-y-2"
+      (click)="openModal(libro)"
+    >
+      <img
+        [src]="libro.imageUrl"
+        alt="{{ libro.title }} cover"
+        class="w-full h-52 object-cover mb-4 rounded-lg"
+      >
+      <h2 class="text-xl font-bold text-gray-900">{{ libro.title }}</h2>
+      <p class="text-sm text-gray-600 mt-1">Autor: <span class="font-medium">{{ libro.author }}</span></p>
+      <p class="text-gray-700 mt-4 line-clamp-3">{{ libro.description }}</p>
     </div>
   </div>
+
+  <!-- Mensaje sin resultados -->
+  <div *ngIf="filteredBooks.length === 0" class="text-center text-gray-600 py-8">
+    No se encontraron libros
+  </div>
+
+  <!-- Paginación -->
+  <div class="flex justify-center mt-4">
+    <!-- Botón Anterior -->
+    <button 
+      (click)="changePage(currentPage - 1)" 
+      [disabled]="currentPage === 1"
+      class="px-4 py-2 mx-1 bg-gray-300 rounded disabled:opacity-50"
+    >
+      Anterior
+    </button>
+  
+    <!-- Botones de paginación -->
+    <button 
+      *ngFor="let page of getPages()" 
+      (click)="changePage(page)" 
+      [class.bg-blue-500]="currentPage === page"
+      [class.text-white]="currentPage === page"
+      class="px-4 py-2 mx-1 bg-blue-200 rounded"
+    >
+      {{ page }}
+    </button>
+  
+    <!-- Botón Siguiente -->
+    <button 
+      (click)="changePage(currentPage + 1)" 
+      [disabled]="currentPage === getTotalPages()"
+      class="px-4 py-2 mx-1 bg-gray-300 rounded disabled:opacity-50"
+    >
+      Siguiente
+    </button>
+  </div>
+
+  <!-- Modal de detalle -->
+  <app-libros-detalle
+    *ngIf="selectedBook" 
+    [book]="selectedBook" 
+    (close)="closeModal()"
+  ></app-libros-detalle>
+</div>
