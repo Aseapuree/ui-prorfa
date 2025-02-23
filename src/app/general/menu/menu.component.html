@@ -1,5 +1,5 @@
 <!-- <nav class="h-screen w-64 bg-primary-dark text-white p-4 flex flex-col shadow-lg"> -->
-  <nav class="h-full w-64 text-white p-4 flex flex-col w-full shadow-lg ce">
+  <nav class="h-full text-white p-4 flex flex-col w-full shadow-lg ce">
 
     <!-- Ícono del usuario -->
     <div class="flex items-center justify-center mb-6">
@@ -17,8 +17,14 @@
         <button 
         class="menu-btn" 
         routerLink="campus"
-        routerLinkActive="active">Ver Libros</button>
+        routerLinkActive="active">Campus</button>
       </li>
+      <li>
+        <button 
+        class="menu-btn" 
+        >Ver Libros</button>
+      </li>
+
       
       <li>
         <button class="menu-btn" (click)="toggleSubMenu()">Asignar Libro ⮟</button>
