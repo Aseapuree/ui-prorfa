@@ -31,7 +31,7 @@ export class CampusSesionesComponent {
   async obtenerSesion(): Promise<void> {
     try {
       const data = await lastValueFrom(this.sesionService.obtenerSesionList());
-      console.log('Datos recibidos:', data); // Verifica los datos aquí
+      console.log('Datos recibidos:', data);
       this.sesiones = data;
     } catch (error) {
       console.error('Error al obtener las sesiones', error);

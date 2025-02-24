@@ -18,7 +18,7 @@ export class SesionService {
       .pipe(
         map(response => {
           console.log('Respuesta recibida:', response);
-          return response.data.content; // Extrae los datos correctamente
+          return response.data.content;
         })
       );
   }

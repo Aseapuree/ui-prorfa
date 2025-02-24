@@ -16,7 +16,7 @@ export class CourseService {
   // Obtener lista de cursos para usarlo en mi campus
   obtenerCourseList(): Observable<Curso[]> {
     return this.clienteHttp.get<{ content: Curso[] }>(`${this.urlBase}/listar`)
-      .pipe(map(response => response.content)); // Extraer solo el array de cursos
+      .pipe(map(response => response.content));
   }
 
 }

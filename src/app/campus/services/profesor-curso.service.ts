@@ -12,7 +12,7 @@ export class ProfesorCursoService {
 
   constructor(private clienteHttp: HttpClient) { }
 
-   // Obtener lista de cursos para usarlo en mi campus
+   // Obtener lista de profesores con sus cursos para usarlo en mi campus
     obtenerCourseList(): Observable<ProfesorCurso[]> {
       return this.clienteHttp.get<{ content: ProfesorCurso[] }>(`${this.urlBase}/listar`)
         .pipe(map(response => response.content)); 
