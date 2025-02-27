@@ -25,6 +25,20 @@
         >Ver Libros</button>
       </li>
 
+      <li>
+        <button class="menu-btn" (click)="toggleSubMenu()">Panel de Control⮟</button>
+        <ul *ngIf="subMenuOpen" class="submenu">
+          <li><button 
+              class="submenu-btn"
+              routerLink="usuarios"
+              routerLinkActive="active"
+              >📘 Usuarios</button></li>
+          <li><button 
+              class="submenu-btn"
+              routerLink="cursos"
+              routerLinkActive="active">📕 Cursos</button></li>
+        </ul>
+      </li>
       
       <li>
         <button class="menu-btn" (click)="toggleSubMenu()">Asignar Libro ⮟</button>

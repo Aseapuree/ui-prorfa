@@ -13,10 +13,14 @@ export class CourseService {
 
   constructor(private clienteHttp: HttpClient) { }
 
-  // Obtener lista de cursos para usarlo en mi campus
-  obtenerCourseList(): Observable<Curso[]> {
-    return this.clienteHttp.get<{ content: Curso[] }>(`${this.urlBase}/listar`)
-      .pipe(map(response => response.content));
-  }
 
+   // Obtener lista de cursos
+    obtenerCourseList(): Observable<Curso[]> {
+      return this.clienteHttp.get<{ data: { content: Curso[] } }>(`${this.urlBase}/listar`)
+  .pipe(map(response => {
+    console.log("Lista de cursos cargada correctamente:", response.data.content);
+    return response.data.content;  // Aquí extraemos solo el array de cursos
+  }));
+
+    }
 }

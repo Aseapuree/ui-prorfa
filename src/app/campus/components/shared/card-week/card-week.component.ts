@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { Router, RouterLink, RouterModule } from '@angular/router';
-import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-card-week',
   standalone: true,
-  imports: [CommonModule, RouterLink, FaIconComponent,RouterModule],
+  imports: [CommonModule, RouterLink, FontAwesomeModule,RouterModule],
   templateUrl: './card-week.component.html',
   styleUrl: './card-week.component.scss'
 })
