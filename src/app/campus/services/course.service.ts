@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { Curso } from '../interface/curso';
+import { response } from 'express';
 
 @Injectable({
   providedIn: 'root'
@@ -14,13 +15,31 @@ export class CourseService {
   constructor(private clienteHttp: HttpClient) { }
 
 
-   // Obtener lista de cursos
-    obtenerCourseList(): Observable<Curso[]> {
-      return this.clienteHttp.get<{ data: { content: Curso[] } }>(`${this.urlBase}/listar`)
-  .pipe(map(response => {
-    console.log("Lista de cursos cargada correctamente:", response.data.content);
-    return response.data.content;  // Aquí extraemos solo el array de cursos
-  }));
+  obtenerListaCursos(): Observable<Curso[]> {
+    return this.clienteHttp.get<{ data: { content: Curso[] } }>(`${this.urlBase}/listar`)
+      .pipe(map(response => response.data.content));
+  }
 
-    }
+  agregarCurso(curso: Curso): Observable<Curso> {
+    return this.clienteHttp.post<Curso>(`${this.urlBase}/agregar`, curso);
+  }
+  
+  actualizarCurso(id: string, curso: Curso): Observable<Curso> {
+    return this.clienteHttp.put<Curso>(`${this.urlBase}/editar/${id}`, curso);
+  }
+
+  eliminarCurso(id: string): Observable<void> {
+    return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`);
+  }
+
+  buscarCursos(keyword: string): Observable<Curso[]> {
+    return this.clienteHttp.get<{ data: Curso[] }>(`${this.urlBase}/buscar?keyword=${keyword}`)
+      .pipe(
+        map(response => {
+          console.log("Respuesta del backend:", response);
+          return response.data; 
+        })
+      );
+  }
+  
 }

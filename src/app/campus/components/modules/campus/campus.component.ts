@@ -9,8 +9,6 @@ import { ProfesorCurso } from '../../../interface/profesor-curso';
 import { lastValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatDialog } from '@angular/material/dialog';
-import { ModalComponent } from '../../shared/modal/modal.component';
 
 @Component({
   selector: 'app-campus',
@@ -25,8 +23,7 @@ export class CampusComponent implements OnInit {
   profesorcursos: ProfesorCurso[] = [];
 
   constructor(
-    private profesorCursoService: ProfesorCursoService,
-    private _matDialog: MatDialog
+    private profesorCursoService: ProfesorCursoService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -74,12 +71,5 @@ export class CampusComponent implements OnInit {
       console.error("Error al eliminar el curso", error);
     }
   }
-
-  //Modal de agregar
-    abriModal():void {
-      this._matDialog.open(ModalComponent, {
-        
-      })
-    }
 
 }

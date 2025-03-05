@@ -9,11 +9,13 @@ import { CampusInfoWeekComponent } from '../../weeks/campus-info-week/campus-inf
 import { SesionService } from '../../../../services/sesion.service';
 import { Sesion } from '../../../../interface/sesion';
 import { lastValueFrom } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { ModalComponent } from '../../../shared/modal1/modal1.component';
 
 @Component({
   selector: 'app-campus-sesiones',
   standalone: true,
-  imports: [CommonModule, RouterLink, FontAwesomeModule,RouterModule,CardWeekComponent, CampusInfoWeekComponent,HttpClientModule, NgxPaginationModule],
+  imports: [CommonModule, NgxPaginationModule, FontAwesomeModule,RouterModule,CardWeekComponent,HttpClientModule],
   providers: [SesionService],
   templateUrl: './campus-sesiones.component.html',
   styleUrl: './campus-sesiones.component.scss'
@@ -22,7 +24,10 @@ export class CampusSesionesComponent {
   public page!: number;
   sesiones: Sesion[] = [];
 
-  constructor(private sesionService: SesionService) {}
+  constructor(
+    private sesionService: SesionService,
+    private _matDialog: MatDialog
+  ) {}
 
   async ngOnInit(): Promise<void> {
     await this.obtenerSesion();
@@ -37,4 +42,11 @@ export class CampusSesionesComponent {
       console.error('Error al obtener las sesiones', error);
     }
   }
+  
+  //Modal de agregar
+      abriModal():void {
+        this._matDialog.open(ModalComponent, {
+          
+        })
+      }
 }

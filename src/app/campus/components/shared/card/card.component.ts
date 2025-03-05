@@ -1,13 +1,11 @@
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { ModalEliminarComponent } from '../modal-eliminar/modal-eliminar.component';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+
 
 @Component({
   selector: 'app-card',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule],
+  imports: [],
   templateUrl: './card.component.html',
   styleUrl: './card.component.scss'
 })
@@ -20,8 +18,7 @@ export class CardComponent {
   @Input() idProfesorCurso?: string;
 
   constructor(
-    private router: Router,
-    private _matDialog: MatDialog 
+    private router: Router
   ) {}
 
   //Metodo para navegar a la ruta
@@ -29,10 +26,5 @@ export class CardComponent {
     this.router.navigate([this.route]);
   }
 
-  //Metodo para abril modal de eliminar
-  deleteItem():void {
-    this._matDialog.open(ModalEliminarComponent, {
-          
-    })
-    }
+  
 }

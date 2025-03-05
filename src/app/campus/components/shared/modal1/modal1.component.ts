@@ -6,7 +6,7 @@ import { MatDialogRef } from '@angular/material/dialog';
   selector: 'app-modal',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './modal.component.html',
+  templateUrl: './modal1.component.html',
   styleUrl: './modal.component.scss'
 })
 export class ModalComponent {
