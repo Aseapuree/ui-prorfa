@@ -29,7 +29,7 @@ export class ModalService {
   
     this._dialog.open(componentRef, {
       data: config,
-      width: '600px'
+      width: '1000px'
     });
   }
 
