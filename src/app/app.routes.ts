@@ -11,7 +11,7 @@ export const routes: Routes = [
         {path:'campus',component:CampusComponent},
         {path:'cursos', component: CampusCursosComponent},
         { path: 'libreria', component: LibrosListadoComponent},
-        { path: 'curso-angular', component: CampusSesionesComponent},
+        { path: 'sesiones/:idProfesorCurso', component: CampusSesionesComponent },
         { path: 'info-week', component: CampusInfoWeekComponent}
     ] },
     

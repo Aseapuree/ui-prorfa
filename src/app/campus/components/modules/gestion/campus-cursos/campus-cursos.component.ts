@@ -54,8 +54,26 @@ export class CampusCursosComponent {
     }
   }
 
+   // Hacer funcionar el
+   cargarCursos(): void {
+    console.log("Cargando cursos..."); // Depuración: Inicio de la carga
+    this.courseService.obtenerListaCursos().subscribe({
+      next: (cursos) => {
+        console.log("Cursos obtenidos:", cursos); // Depuración: Verifica los datos recibidos
+        this.cursos = cursos || []; // Actualiza la lista de cursos (o un array vacío si es null/undefined)
+        console.log("Datos actualizados en la lista:", this.cursos); // Depuración
+        this.cdr.detectChanges(); // Forzar la actualización de la vista
+      },
+      error: (err) => {
+        console.error('Error al cargar cursos:', err); // Depuración: Error en la solicitud
+        this.cursos = []; // Limpia la lista en caso de error
+        this.cdr.detectChanges(); // Forzar la actualización de la vista
+      },
+    });
+  }
 
-  openAddModal() {
+
+  openAddModal(): void {
     const dialogRef = this.dialog.open(ModalComponent, {
       width: '600px',
       data: { isEditing: false }
@@ -67,19 +85,21 @@ export class CampusCursosComponent {
           nombre: result.nombre,
           descripcion: result.descripcion,
           grado: result.grado
-          // No incluir fechaCreacion ni fechaActualizacion
         };
   
         this.courseService.agregarCurso(nuevoCurso).subscribe({
-          next: () => this.cargarCursos(),
+          next: () => {
+            this.cargarCursos(); // Recargar la lista de cursos
+            console.log("Datos recibidos después de agregar:", this.cursos); // Depuración
+            console.log('Curso agregado correctamente');
+          },
           error: (err) => console.error('Error al agregar curso:', err)
         });
       }
     });
   }
   
-  
-  openEditModal(curso: Curso) {
+  openEditModal(curso: Curso): void {
     console.log("Curso a editar:", curso); // Verificar el curso antes de editar
   
     if (!curso.idCurso) {
@@ -102,7 +122,8 @@ export class CampusCursosComponent {
   
         this.courseService.actualizarCurso(curso.idCurso!, cursoEditado).subscribe({
           next: () => {
-            this.cargarCursos();
+            this.cargarCursos(); // Recargar la lista de cursos
+            console.log("Datos recibidos después de editar:", this.cursos); // Depuración
             console.log('Curso actualizado correctamente');
           },
           error: (err) => console.error('Error al actualizar curso:', err),
@@ -110,8 +131,6 @@ export class CampusCursosComponent {
       }
     });
   }
-  
-  
 
 eliminarCurso(idCurso: string): void {
   const dialogRef = this._dialog.open(DialogoConfirmacionComponent, {
@@ -132,20 +151,7 @@ eliminarCurso(idCurso: string): void {
     }
   });
 }
-    // Hacer funcionar el
-    cargarCursos(): void {
-      console.log("Cargando cursos...");
-      this.courseService.obtenerListaCursos().subscribe({
-        next: (cursos) => {
-          console.log("Cursos obtenidos:", cursos);
-          this.cursos = cursos; // Actualiza la lista de cursos
-          this.cdr.detectChanges(); // 👈 Forzar la actualización de la vista
-        },
-        error: (err) => console.error('Error al cargar cursos:', err)
-      });
-    }
-    
-  
+   
   
   buscarCursos() {
     console.log("Buscando cursos con keyword:", this.keyword);
