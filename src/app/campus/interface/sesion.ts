@@ -1,8 +1,11 @@
 import { UUID } from "crypto";
 
 export class Sesion {
-    idProfesorCurso?: UUID;
+    idSesion?: UUID;
+    infoCurso?: UUID;
     titulo?: string;
     descripcion?: string;
-    fecha?: Date;
+
+
+    profesorGuardar?: UUID;
 }

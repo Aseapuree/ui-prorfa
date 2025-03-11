@@ -91,9 +91,7 @@ export class ModalComponent implements OnInit {
       idCurso: [this._matDialog?.idCurso || ''],
       nombre: [this._matDialog?.nombre || '', Validators.required],
       descripcion: [this._matDialog?.descripcion || '', Validators.required],
-      grado: [this._matDialog?.grado || '', Validators.required],
-      fechaCreacion: [this._matDialog?.fechaCreacion || '', Validators.required],
-      fechaActualizacion: [this._matDialog?.fechaActualizacion || '']
+      grado: [this._matDialog?.grado || '', Validators.required]
     });
   
     // Formatear fechaCreacion si está presente

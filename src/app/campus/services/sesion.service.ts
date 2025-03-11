@@ -22,4 +22,30 @@ export class SesionService {
         })
       );
   }
+
+  obtenerSesionesPorCurso(idProfesorCurso: string): Observable<any[]> {
+    console.log(`Obteniendo sesiones de ${idProfesorCurso}`);
+    
+    return this.clienteHttp.get<{ status: number, message: string, data: any[] }>(
+      `${this.urlBase}/profesor-curso/${idProfesorCurso}`
+    ).pipe(
+      map(response => {
+        console.log("Respuesta de la API:", response);
+        return response.data; // Devolvemos solo las sesiones
+      })
+    );
+}
+
+agregarSesion(sesion: Sesion): Observable<Sesion> {
+  return this.clienteHttp.post<Sesion>(`${this.urlBase}/agregar`, sesion);
+}
+
+editarSesion(id: string, sesion: Sesion): Observable<Sesion> {
+  return this.clienteHttp.put<Sesion>(`${this.urlBase}/editar/${id}`, sesion);
+}
+
+eliminarSesion(id: string): Observable<void> {
+  return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`);
+}
+  
 }

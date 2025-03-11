@@ -1,43 +1,45 @@
-.bg-primary-dark {
-    background-color: var(--primary-dark);
-  }
-  
-  .menu-btn {
-    width: 100%;
-    background-color: var(--secondary-dark);
-    color: var(--text-color);
-    padding: 10px;
-    font-weight: bold;
-    text-align: left;
-    border-radius: 5px;
-    transition: background 0.3s;
-    border: 1px solid var(--border-color);
-  }
-  
-  .menu-btn:hover {
-    background-color: var(--primary-hover);
-  }
-  
-  .submenu {
-    margin-top: 5px;
-    padding-left: 10px;
-  }
-  
-  .submenu-btn {
-    width: 100%;
-    background-color: var(--primary-hover);
-    color: var(--text-color);
-    padding: 8px;
-    text-align: left;
-    border-radius: 5px;
-    transition: background 0.3s;
-    border: 1px solid var(--border-color);
-  }
-  
-  .submenu-btn:hover {
-    background-color: var(--border-color);
-  }
+.ce {
+  background-color: var(--primary-dark);
+  transition: width 0.3s ease-in-out;
+}
 
-  .ce{
-    background-color: var(--primary-dark);
-  }
+// 🔹 Estilos para ocultar el menú cuando se retrae
+.closed {
+  width: 60px;
+  overflow: hidden;
+  transition: width 0.3s ease-in-out;
+}
+
+.toggle-menu {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+.menu-btn, .exit-btn {
+  width: 100%;
+  background-color: var(--secondary-dark);
+  color: var(--text-color);
+  padding: 12px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 5px;
+  transition: background 0.3s, transform 0.2s;
+  border: 1px solid var(--border-color);
+}
+
+.menu-btn:hover, .exit-btn:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+.exit-btn {
+  background-color: #e63946;
+}
+
+.exit-btn:hover {
+  background-color: #d62828;
+}

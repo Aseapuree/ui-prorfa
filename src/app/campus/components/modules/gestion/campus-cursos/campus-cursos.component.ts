@@ -30,8 +30,8 @@ export class CampusCursosComponent {
   constructor(
     private modalService: ModalService,
     private courseService: CourseService,
-    private dialog: MatDialog
-    , private cdr: ChangeDetectorRef
+    private dialog: MatDialog, 
+    private cdr: ChangeDetectorRef
   ) {}
 
   private readonly _dialog = inject(MatDialog);
@@ -54,8 +54,26 @@ export class CampusCursosComponent {
     }
   }
 
+   // Hacer funcionar el
+   cargarCursos(): void {
+    console.log("Cargando cursos..."); // Depuración: Inicio de la carga
+    this.courseService.obtenerListaCursos().subscribe({
+      next: (cursos) => {
+        console.log("Cursos obtenidos:", cursos); // Depuración: Verifica los datos recibidos
+        this.cursos = cursos || []; // Actualiza la lista de cursos (o un array vacío si es null/undefined)
+        console.log("Datos actualizados en la lista:", this.cursos); // Depuración
+        this.cdr.detectChanges(); // Forzar la actualización de la vista
+      },
+      error: (err) => {
+        console.error('Error al cargar cursos:', err); // Depuración: Error en la solicitud
+        this.cursos = []; // Limpia la lista en caso de error
+        this.cdr.detectChanges(); // Forzar la actualización de la vista
+      },
+    });
+  }
 
-  openAddModal() {
+
+  openAddModal(): void {
     const dialogRef = this.dialog.open(ModalComponent, {
       width: '600px',
       data: { isEditing: false }
@@ -64,54 +82,55 @@ export class CampusCursosComponent {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         const nuevoCurso: Curso = {
-          ...result,
-          fechaCreacion: new Date().toISOString(), // Formato ISO 8601
-          fechaActualizacion: new Date().toISOString() // Formato ISO 8601
+          nombre: result.nombre,
+          descripcion: result.descripcion,
+          grado: result.grado
         };
   
         this.courseService.agregarCurso(nuevoCurso).subscribe({
-          next: () => this.cargarCursos(), // Recargar la lista de cursos
+          next: () => {
+            this.cargarCursos(); // Recargar la lista de cursos
+            console.log("Datos recibidos después de agregar:", this.cursos); // Depuración
+            console.log('Curso agregado correctamente');
+          },
           error: (err) => console.error('Error al agregar curso:', err)
         });
       }
     });
   }
   
-  openEditModal(curso: Curso) {
-  console.log("Curso a editar:", curso); // Depuración: Verifica que el curso tenga un ID
-  if (!curso.idCurso) {
-    console.error("El curso no tiene un ID definido:", curso);
-    return;
-  }
-
-  const dialogRef = this.dialog.open(ModalComponent, {
-    width: '600px',
-    data: { ...curso, isEditing: true } // Asegúrate de pasar el ID
-  });
-
-  dialogRef.afterClosed().subscribe((result) => {
-    if (result) {
-      const cursoEditado: Curso = {
-        ...result,
-        idCurso: curso.idCurso, // Asegúrate de mantener el ID original
-        fechaCreacion: curso.fechaCreacion,
-        fechaActualizacion: new Date().toISOString()
-      };
-
-      if (curso.idCurso) {
-        this.courseService.actualizarCurso(curso.idCurso, cursoEditado).subscribe({
+  openEditModal(curso: Curso): void {
+    console.log("Curso a editar:", curso); // Verificar el curso antes de editar
+  
+    if (!curso.idCurso) {
+      console.error("El curso no tiene un ID definido:", curso);
+      return;
+    }
+  
+    const dialogRef = this.dialog.open(ModalComponent, {
+      width: '600px',
+      data: { ...curso, isEditing: true }
+    });
+  
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const cursoEditado: Partial<Curso> = {
+          nombre: result.nombre,
+          descripcion: result.descripcion,
+          grado: result.grado
+        };
+  
+        this.courseService.actualizarCurso(curso.idCurso!, cursoEditado).subscribe({
           next: () => {
-            this.cargarCursos();
+            this.cargarCursos(); // Recargar la lista de cursos
+            console.log("Datos recibidos después de editar:", this.cursos); // Depuración
             console.log('Curso actualizado correctamente');
           },
           error: (err) => console.error('Error al actualizar curso:', err),
         });
-      } else {
-        console.error('ID no definido');
       }
-    }
-  });
-}
+    });
+  }
 
 eliminarCurso(idCurso: string): void {
   const dialogRef = this._dialog.open(DialogoConfirmacionComponent, {
@@ -132,18 +151,7 @@ eliminarCurso(idCurso: string): void {
     }
   });
 }
-    // Hacer funcionar el
-    cargarCursos(): void {
-      console.log("Cargando cursos...");
-      this.courseService.obtenerListaCursos().subscribe({
-        next: (cursos) => {
-          console.log("Cursos obtenidos:", cursos);
-          this.cursos = cursos; // Actualiza la lista de cursos
-        },
-        error: (err) => console.error('Error al cargar cursos:', err)
-      });
-    }
-  
+   
   
   buscarCursos() {
     console.log("Buscando cursos con keyword:", this.keyword);

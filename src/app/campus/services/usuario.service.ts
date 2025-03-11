@@ -13,7 +13,7 @@ export class UsuarioService {
   constructor(private clienteHttp: HttpClient) { }
 
   // Obtener lista de usuarios
-  obtenerUsuarioList(): Observable<Usuario[]> {
+  obtenerListaUsuario(): Observable<Usuario[]> {
     return this.clienteHttp.get<Usuario[]>(`${this.urlBase}/listar`)
       .pipe(
         map(response => {
