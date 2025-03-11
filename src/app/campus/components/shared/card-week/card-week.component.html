@@ -1,0 +1,30 @@
+<button
+  type="button"
+  (click)="navigate()"
+  [attr.aria-label]="'Abrir curso ' + title"
+  class="w-full sm:w-72 min-h-40 flex items-stretch shadow-md rounded-md bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow duration-200"
+>
+  <div class="w-full p-4 flex flex-col justify-between">
+    <div class="flex items-center justify-between">
+      <fa-icon
+        [icon]="['fas', 'book']"
+        class="text-gray-500 text-3xl mr-4"
+      ></fa-icon>
+      <span
+        class="px-3 py-1 text-xs text-blue-800 uppercase bg-blue-200 rounded-full dark:bg-blue-300 dark:text-blue-900"
+      >
+        {{ week }}
+      </span>
+    </div>
+
+    <div>
+      <h1 class="text-center mt-2 text-lg font-semibold text-gray-800 dark:text-white">
+        {{ title }}
+      </h1>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+        {{ description }}
+      </p>
+    </div>
+  </div>
+</button>
+

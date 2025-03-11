@@ -5,13 +5,17 @@ import {
   FaConfig,
   FaIconLibrary,
 } from '@fortawesome/angular-fontawesome';
-import { fontAwesomeIcons } from './components/shared/font-awesome-icons';
-import { NgxPaginationModule } from 'ngx-pagination';
+import { fontAwesomeIcons } from './campus/components/shared/font-awesome-icons';
+import { ModalService } from './campus/components/modules/modals/modal/modal.service';
+import { ModalComponent } from './campus/components/shared/modal1/modal1.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports:[RouterOutlet,FontAwesomeModule,NgxPaginationModule],
+  imports: [
+    RouterOutlet,
+    FontAwesomeModule,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -27,5 +31,12 @@ export class AppComponent implements OnInit {
   private initFontAwesome() {
     this.faConfig.defaultPrefix = 'far';
     this.faIconLibrary.addIcons(...fontAwesomeIcons);
+  }
+
+  // Estructura para el modal
+  private readonly _modalSvc = inject(ModalService);
+
+  onClickNewContact(): void{
+    this._modalSvc.openModal<ModalComponent>(ModalComponent);
   }
 }
