@@ -17,10 +17,11 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-dark">
   <div *ngFor="let sesion of sesiones | paginate: { itemsPerPage: 4, currentPage: page }" class="flex flex-col">
     <app-card-week
-      [week]="'Semana 1'"
+      [week]="'Sesiones'"
       [title]="sesion.titulo || 'Nombre de la sesion'"
       [description]="sesion.descripcion || 'Descripción de la clase'"
-      [route]="'/info-week'"
+      [route]="'/card-actividades'"
+      [idSesion]="sesion.idSesion"
     >
     </app-card-week>
 

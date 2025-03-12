@@ -2,9 +2,12 @@ import { Routes } from '@angular/router';
 import { CampusComponent } from './campus/components/modules/campus/campus.component';
 import { LayoutComponent } from './general/components/layout/layout.component';
 import { LibrosListadoComponent } from './libreria/components/libros-listado/libros-listado.component';
-import { CampusInfoWeekComponent } from './campus/components/modules/weeks/campus-info-week/campus-info-week.component';
 import { CampusSesionesComponent } from './campus/components/modules/gestion/campus-sesiones/campus-sesiones.component';
 import { CampusCursosComponent } from './campus/components/modules/gestion/campus-cursos/campus-cursos.component';
+import { CampusActividadesComponent } from './campus/components/modules/gestion/campus-actividades/campus-actividades.component';
+import { CampusAlumnoComponent } from './campus/components/modules/campus-alumno/campus-alumno/campus-alumno.component';
+import { SesionesAlumnoComponent } from './campus/components/modules/campus-alumno/sesiones-alumno/sesiones-alumno.component';
+import { ActividadesAlumnoComponent } from './campus/components/modules/campus-alumno/actividades-alumno/actividades-alumno.component';
 import { AuthGuard } from './guard/auth.guard';
 
 export const routes: Routes = [
@@ -14,7 +17,7 @@ export const routes: Routes = [
         // {path:'usuarios', component: CampusUsuarioComponent, canActivate: [AuthGuard]},
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
         { path: 'curso-angular', component: CampusSesionesComponent, canActivate: [AuthGuard]},
-        { path: 'info-week', component: CampusInfoWeekComponent, canActivate: [AuthGuard]}
+        // { path: 'info-week', component: CampusInfoWeekComponent, canActivate: [AuthGuard]}
     ],canActivate:[AuthGuard] },
     
 ];

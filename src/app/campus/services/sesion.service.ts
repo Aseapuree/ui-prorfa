@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Sesion } from '../interface/sesion';
 import { map, Observable } from 'rxjs';
+import { DTOActividadesSesion } from '../interface/DTOActividadesSesion';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,10 @@ export class SesionService {
 
   private urlBase = "http://localhost:8080/v1/sesiones";
 
+
   constructor(private clienteHttp: HttpClient) { }
+
+
 
   obtenerSesionList(): Observable<Sesion[]> {
     console.log('Realizando solicitud a:', `${this.urlBase}/listar`);
@@ -48,4 +52,21 @@ eliminarSesion(id: string): Observable<void> {
   return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`);
 }
   
+obtenerActividadesPorSesion(idSesion: string): Observable<DTOActividadesSesion> {
+  return this.clienteHttp.get<DTOActividadesSesion>(
+    `${this.urlBase}/actividades/${idSesion}`
+  );
+}
+
+agregarIntroduccion(formData: FormData): Observable<any> {
+  return this.clienteHttp.post(`${this.urlBase}/introduccion/agregar`, formData);
+}
+
+agregarMaterial(formData: FormData): Observable<any> {
+  return this.clienteHttp.post(`${this.urlBase}/material/agregar`, formData);
+}
+
+agregarActividad(formData: FormData): Observable<any> {
+  return this.clienteHttp.post(`${this.urlBase}/actividad/agregar`, formData);
+}
 }

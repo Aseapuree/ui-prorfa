@@ -4,7 +4,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router, RouterLink, RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { ModalEliminarComponent } from '../modal-eliminar/modal-eliminar.component';
 
 @Component({
   selector: 'app-card-week',
@@ -18,20 +17,20 @@ export class CardWeekComponent {
     @Input() title: string = 'Nombre de la semana';
     @Input() description: string = 'Descripción de la semana';
     @Input() route: string = '/';
+    @Input() idSesion?: string; // Nuevo input para el ID de la sesión
   
     constructor(
       private router: Router,
       private _matDialog: MatDialog
     ) {}
     
-      navigate() {
+    navigate() {
+      if (this.idSesion) {
+        this.router.navigate([this.route, this.idSesion]); // Redirige con el ID de la sesión
+      } else {
         this.router.navigate([this.route]);
       }
+    }
 
-    //Metodo para abril modal de eliminar
-      deleteItem():void {
-        this._matDialog.open(ModalEliminarComponent, {
-              
-        })
-        }
+    
 }

@@ -1,16 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { CardWeekComponent } from '../../../shared/card-week/card-week.component';
-import { CampusInfoWeekComponent } from '../../weeks/campus-info-week/campus-info-week.component';
 import { SesionService } from '../../../../services/sesion.service';
 import { Sesion } from '../../../../interface/sesion';
 import { lastValueFrom } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { ModalComponent } from '../../../shared/modal1/modal1.component';
 import { ModalSesionService } from '../../modals/modal-sesion/modal-sesion.service';
 import { ModalSesionComponent } from '../../modals/modal-sesion/modal-sesion.component';
 import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/dialogo-confirmacion.component';
@@ -31,7 +29,8 @@ export class CampusSesionesComponent {
   constructor(
     private sesionService: SesionService,
     private route: ActivatedRoute,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   private readonly _sesionSVC = inject(SesionService);
