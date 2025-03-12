@@ -1,63 +1,37 @@
-<!-- <nav class="h-screen w-64 bg-primary-dark text-white p-4 flex flex-col shadow-lg"> -->
-  <nav class="h-full text-white p-4 flex flex-col w-full shadow-lg ce">
+<nav [class.closed]="menuCerrado" class="h-full w-64 text-white p-4 flex flex-col shadow-lg ce transition-all duration-300">
+  <!-- Botón para retraer/expandir -->
+  <button class="toggle-menu" (click)="toggleMenu()">☰</button>
 
-    <!-- Ícono del usuario -->
-    <div class="flex items-center justify-center mb-6">
-      <div class="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
-        <img src="assets\imagenes\usuario.png" alt="Perfil" class="w-16 h-16 rounded-full border-2 border-white">
-      </div>
+  <div *ngIf="!menuCerrado" class="flex flex-col items-center justify-center mb-6">
+    <!-- Ícono del usuario y nombre -->
+    <div class="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
+      <img src="assets/imagenes/usuario.png" alt="Perfil" class="w-16 h-16 rounded-full border-2 border-white">
     </div>
-  
-    <!-- Opciones del menú -->
-    <ul class="space-y-4">
-      <li>
-        <button class="menu-btn">Perfil</button>
-      </li>
-      <li>
-        <button 
-        class="menu-btn" 
-        routerLink="campus"
-        routerLinkActive="active">Campus Profesor</button>
-      </li>
-      <li>
-        <button 
-        class="menu-btn" 
-        routerLink="campus-alumno"
-        routerLinkActive="active">Campus</button>
-      </li>
-      <li>
-        <button
-          routerLink="libreria"
-          routerLink="active"
-        class="menu-btn" 
-        >Ver Libros</button>
-      </li>
+    <p class="text-lg font-bold text-white mt-2">
+      {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
+    </p>
+    <p class="text-sm text-gray-300">{{ nombreRol || 'Sin Rol' }}</p>
+    
+  </div>
 
-      <li>
-        <button class="menu-btn" (click)="toggleSubMenu()">Panel de Control⮟</button>
-        <ul *ngIf="subMenuOpen" class="submenu">
-          <li><button 
-              class="submenu-btn"
-              routerLink="usuarios"
-              routerLinkActive="active"
-              >📘 Usuarios</button></li>
-          <li><button 
-              class="submenu-btn"
-              routerLink="cursos"
-              routerLinkActive="active">📕 Cursos</button></li>
-        </ul>
-      </li>
-      
-      <li>
-        <button class="menu-btn" (click)="toggleSubMenu()">Asignar Libro ⮟</button>
-        <ul *ngIf="subMenuOpen" class="submenu">
-          <li><button class="submenu-btn">📘 Primaria</button></li>
-          <li><button class="submenu-btn">📕 Secundaria</button></li>
-        </ul>
-      </li>
-      <li>
-        <button class="menu-btn">Ver Historial</button>
-      </li>
-    </ul>
-  </nav>
+  <!-- Opciones del menú generadas dinámicamente -->
+  <ul *ngIf="!menuCerrado" class="space-y-4">
+    <li *ngFor="let menu of menus; trackBy: trackById">
+      <button class="menu-btn" (click)="navigate(menu)">
+        {{ menu.menu_descripcion }}
+      </button>
+    </li>
+    <!-- Botón de Perfil -->
+    <li>
+      <button class="menu-btn" (click)="irAPerfil()">Perfil</button>
+    </li>
+    <li>
+    <!-- Botón de salida -->
+  <button *ngIf="!menuCerrado" class="exit-btn" (click)="logout()">
+    Cerrar Sesión
+  </button>
+</li>
+  </ul>
+
   
+</nav>
