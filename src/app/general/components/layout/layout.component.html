@@ -2,10 +2,10 @@
   <!-- Menú lateral -->
   <aside [ngClass]="menuAbierto ? 'w-64' : 'w-0'" class="bg-gray-600 text-white min-h-screen transition-all duration-300 overflow-hidden">
     <app-menu 
-    [nombreUsuario]="nombreUsuario"
-    [apellidoPaterno]="apellidoPaterno"
-    [apellidoMaterno]="apellidoMaterno"
-    [nombreRol]="nombreRol"
+    [nombreUsuario]="usuarioMostrar.nombre || 'undefined'"
+    [apellidoPaterno]="usuarioMostrar.apellidopaterno || 'undefined'"
+    [apellidoMaterno]="usuarioMostrar.apellidomaterno || 'undefined'"
+    [nombreRol]="usuarioMostrar.rol?.nombreRol || 'undefined'"
     (menuToggle)="toggleMenu()"></app-menu>
   </aside>
 
