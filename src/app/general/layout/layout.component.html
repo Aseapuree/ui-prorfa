@@ -1,16 +1,19 @@
-<div class="flex h-screen">
+<div class="h-screen flex">
   <!-- Menú lateral -->
-  <aside [ngClass]="menuAbierto ? 'w-64' : 'w-0'" class="bg-gray-600 text-white min-h-screen transition-all duration-300 overflow-hidden">
+  <aside [ngClass]="menuAbierto ? 'w-64' : 'w-0'" 
+         class="bg-gray-800 text-white min-h-screen transition-all duration-300">
     <app-menu 
-    [nombreUsuario]="nombreUsuario"
-    [apellidoPaterno]="apellidoPaterno"
-    [apellidoMaterno]="apellidoMaterno"
-    [nombreRol]="nombreRol"
-    (menuToggle)="toggleMenu()"></app-menu>
+      [nombreUsuario]="nombreUsuario"
+      [apellidoPaterno]="apellidoPaterno"
+      [apellidoMaterno]="apellidoMaterno"
+      [nombreRol]="nombreRol"
+      (menuToggle)="toggleMenu()">
+    </app-menu>
   </aside>
 
   <!-- Contenedor del contenido -->
-  <div class="flex-1 flex flex-col bg-gray-600 p-6 overflow-auto">
+  <div [ngClass]="menuAbierto ? 'w-[calc(100%-16rem)]' : 'w-full'"
+       class="bg-gray-600 p-6 transition-all duration-300 h-screen overflow-auto flex-1">
     <router-outlet></router-outlet>
   </div>
 </div>

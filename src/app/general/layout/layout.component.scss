@@ -1,23 +1,18 @@
 .container {
-    display: flex;
-    height: inherit;
-  }
-  
-  .sidebar {
-    width: 250px;
-    background-color: #333;
-    color: white;
-    // padding: 20px;
-    min-height: 100vh;
-  }
-  
-  .content {
-    flex-grow: 1;
-    padding: 20px;
-    background-color: #f4f4f4;
-  }
-  
-  .cu {
-    background-color: transparent; // Ya no es rojo
-  }
-  
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+.sidebar {
+  background-color: #333;
+  color: white;
+  transition: width 0.3s ease;
+}
+
+.content {
+  flex-grow: 1;
+  transition: width 0.3s ease; /* Asegura una animación fluida */
+  min-height: 100vh;
+  background-color: #f4f4f4;
+}

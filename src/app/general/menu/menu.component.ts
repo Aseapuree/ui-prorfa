@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { DTOmenuService } from '../Services/dtomenu.service';
 import { DTOmenu } from '../Interface/DTOmenu';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,FontAwesomeModule],
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.scss']
 })

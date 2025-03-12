@@ -18,7 +18,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class LayoutComponent implements OnInit {
   title = 'Angular';
   menus: DTOmenu[] = [];
-  idUsuario: string = "537d4a03-953a-4851-8c12-1da09ad2123c";
+  idUsuario: string = "537d4a03-953a-4851-8c12-1da09ad2122c";
   idRol: string = '';
   @Output() nombreRol: string = '';
   nombreUsuario: string = '';
@@ -90,4 +90,6 @@ export class LayoutComponent implements OnInit {
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;
   }
+  
+  
 }
