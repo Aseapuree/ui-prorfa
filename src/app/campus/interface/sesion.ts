@@ -5,7 +5,5 @@ export class Sesion {
     infoCurso?: UUID;
     titulo?: string;
     descripcion?: string;
-
-
     profesorGuardar?: UUID;
 }

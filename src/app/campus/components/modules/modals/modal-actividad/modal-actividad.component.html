@@ -1,0 +1,31 @@
+<mat-dialog-content>
+  <form [formGroup]="formulario">
+    <!-- Campo de nombre -->
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" required />
+    </mat-form-field>
+
+    <!-- Campo de archivo (sin mat-form-field) -->
+    <div class="w-full">
+      <label for="archivo">Archivo</label>
+      <input
+        id="archivo"
+        type="file"
+        (change)="onFileSelected($event)"
+        accept=".pdf,.mp4,.avi,.mov"
+        required
+      />
+    </div>
+  </form>
+
+  <!-- Fondo semitransparente y spinner -->
+  <div *ngIf="cargando" class="overlay">
+    <mat-progress-spinner mode="indeterminate" color="primary"></mat-progress-spinner>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cerrarModal()">Cancelar</button>
+  <button mat-button color="primary" (click)="agregarContenido()">Agregar</button>
+</mat-dialog-actions>

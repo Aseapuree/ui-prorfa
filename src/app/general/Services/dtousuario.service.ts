@@ -11,7 +11,8 @@ export class DTOUsuarioService {
 
   constructor(private http: HttpClient) {}
 
-  getUsuario(idusuario: string): Observable<{ status: number; message: string; data: DTOUsuario }> {
+  getUsuario(idusuario?: string): Observable<{ status: number; message: string; data: DTOUsuario }> {
+
     return this.http.get<{ status: number; message: string; data: DTOUsuario }>(`${this.url}${idusuario}`);
   }
 }

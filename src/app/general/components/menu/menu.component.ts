@@ -1,9 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { DTOmenuService } from '../Services/dtomenu.service';
-import { DTOmenu } from '../Interface/DTOmenu';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { DTOmenuService } from '../../Services/dtomenu.service';
+import { DTOmenu } from '../../Interface/DTOMenu';
 
 @Component({
   selector: 'app-menu',
@@ -90,7 +89,7 @@ export class MenuComponent implements OnInit {
     }
     
     // Redirigir manualmente a la nueva URL
-    window.location.href = 'http://127.0.0.1:4203';
+    window.location.href = 'http://localhost:4203';
   }
   
 }

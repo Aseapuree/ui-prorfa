@@ -7,7 +7,6 @@ import {
 } from '@fortawesome/angular-fontawesome';
 import { fontAwesomeIcons } from './campus/components/shared/font-awesome-icons';
 import { ModalService } from './campus/components/modules/modals/modal/modal.service';
-import { ModalComponent } from './campus/components/shared/modal1/modal1.component';
 
 @Component({
   selector: 'app-root',
@@ -36,7 +35,5 @@ export class AppComponent implements OnInit {
   // Estructura para el modal
   private readonly _modalSvc = inject(ModalService);
 
-  onClickNewContact(): void{
-    this._modalSvc.openModal<ModalComponent>(ModalComponent);
-  }
+
 }
