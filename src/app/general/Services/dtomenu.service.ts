@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOmenu } from '../Interface/DTOMenu'; 
+import { DTOMenu } from '../Interface/DTOMenu'; 
 import { DTOResponse } from '../Interface/DTOResponse';
 
 @Injectable({
@@ -12,7 +12,7 @@ export class DTOmenuService {
 
   constructor(private http: HttpClient) { }
 
-  getMenus(idrol:any): Observable<DTOResponse<DTOmenu[]>> {
-    return this.http.get<DTOResponse<DTOmenu[]>>(`${this.url}${idrol}`);
+  getMenus(idrol:any): Observable<DTOResponse<DTOMenu[]>> {
+    return this.http.get<DTOResponse<DTOMenu[]>>(`${this.url}${idrol}`,{withCredentials:true});
   }
 }

@@ -14,7 +14,7 @@ export class UsuarioService {
 
   // Obtener lista de usuarios
   obtenerListaUsuario(): Observable<Usuario[]> {
-    return this.clienteHttp.get<Usuario[]>(`${this.urlBase}/listar`)
+    return this.clienteHttp.get<Usuario[]>(`${this.urlBase}/listar`,{withCredentials:true})
       .pipe(
         map(response => {
           console.log("Lista de usuarios cargada correctamente:", response);

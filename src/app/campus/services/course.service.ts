@@ -16,24 +16,24 @@ export class CourseService {
 
 
   obtenerListaCursos(): Observable<Curso[]> {
-    return this.clienteHttp.get<{ data: { content: Curso[] } }>(`${this.urlBase}/listar`)
+    return this.clienteHttp.get<{ data: { content: Curso[] } }>(`${this.urlBase}/listar`,{withCredentials:true})
       .pipe(map(response => response.data.content));
   }
 
   agregarCurso(curso: Curso): Observable<Curso> {
-    return this.clienteHttp.post<Curso>(`${this.urlBase}/agregar`, curso);
+    return this.clienteHttp.post<Curso>(`${this.urlBase}/agregar`, curso,{withCredentials:true});
   }
   
   actualizarCurso(id: string, curso: Curso): Observable<Curso> {
-    return this.clienteHttp.put<Curso>(`${this.urlBase}/editar/${id}`, curso);
+    return this.clienteHttp.put<Curso>(`${this.urlBase}/editar/${id}`, curso,{withCredentials:true});
   }
 
   eliminarCurso(id: string): Observable<void> {
-    return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`);
+    return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`,{withCredentials:true});
   }
 
   buscarCursos(keyword: string): Observable<Curso[]> {
-    return this.clienteHttp.get<{ data: Curso[] }>(`${this.urlBase}/buscar?keyword=${keyword}`)
+    return this.clienteHttp.get<{ data: Curso[] }>(`${this.urlBase}/buscar?keyword=${keyword}`,{withCredentials:true})
       .pipe(
         map(response => {
           console.log("Respuesta del backend:", response);
