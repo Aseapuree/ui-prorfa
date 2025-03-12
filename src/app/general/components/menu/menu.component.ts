@@ -2,7 +2,8 @@ import { Component, OnInit, ChangeDetectorRef, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { DTOmenuService } from '../../Services/dtomenu.service';
-import { DTOmenu } from '../../Interface/DTOMenu';
+import { DTOMenu } from '../../Interface/DTOMenu';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-menu',
@@ -16,7 +17,7 @@ export class MenuComponent implements OnInit {
   @Input() apellidoPaterno: string = '';  
   @Input() apellidoMaterno: string = '';  
   @Input() nombreRol: string = ''; 
-  menus: DTOmenu[] = [];
+  menus: DTOMenu[] = [];
   subMenuOpen: { [key: string]: boolean } = {}; 
   menuCerrado = false;
 
@@ -67,11 +68,11 @@ export class MenuComponent implements OnInit {
     this.subMenuOpen[menuId] = !this.subMenuOpen[menuId];
   }
 
-  trackById(index: number, item: DTOmenu): string {
+  trackById(index: number, item: DTOMenu): string {
     return item.idMenu ?? index.toString();
   }
 
-  navigate(menu: DTOmenu) {
+  navigate(menu: DTOMenu) {
     if (menu.menu_ruta) {
       this.router.navigate([menu.menu_ruta]);
     }

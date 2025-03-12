@@ -1,4 +1,4 @@
-export class DTOmenu {
+export class DTOMenu {
     idMenu?: string;
     idmenuparent?: string;
     idmenurol?: string;

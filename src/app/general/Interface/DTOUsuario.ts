@@ -1,4 +1,4 @@
-import { DTORoles } from "./DTOroles";
+import { DTORoles } from "./DTORoles";
 
 export class DTOUsuario {
     idusuario?: string;
