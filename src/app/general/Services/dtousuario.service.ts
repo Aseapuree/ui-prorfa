@@ -13,6 +13,6 @@ export class DTOUsuarioService {
 
   getUsuario(idusuario?: string): Observable<{ status: number; message: string; data: DTOUsuario }> {
 
-    return this.http.get<{ status: number; message: string; data: DTOUsuario }>(`${this.url}${idusuario}`);
+    return this.http.get<{ status: number; message: string; data: DTOUsuario }>(`${this.url}${idusuario}`,{withCredentials:true});
   }
 }

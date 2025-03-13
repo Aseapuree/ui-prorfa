@@ -13,6 +13,6 @@ export class DTOmenuService {
   constructor(private http: HttpClient) { }
 
   getMenus(idrol:any): Observable<DTOResponse<DTOMenu[]>> {
-    return this.http.get<DTOResponse<DTOMenu[]>>(`${this.url}${idrol}`);
+    return this.http.get<DTOResponse<DTOMenu[]>>(`${this.url}${idrol}`,{withCredentials:true});
   }
 }
