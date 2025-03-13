@@ -10,6 +10,9 @@ import { SesionesAlumnoComponent } from './campus/components/modules/campus-alum
 import { ActividadesAlumnoComponent } from './campus/components/modules/campus-alumno/actividades-alumno/actividades-alumno.component';
 import { AuthGuard } from './guard/auth.guard';
 import { PerfilComponent } from './general/components/perfil/perfil.component';
+import { PrimariaComponent } from './matricula/primaria/primaria.component';
+import { SecundariaComponent } from './matricula/secundaria/secundaria.component';
+import { RegistrarMatriculaComponent } from './matricula/registrarmatricula/registrarmatricula.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
@@ -18,8 +21,11 @@ export const routes: Routes = [
         // {path:'usuarios', component: CampusUsuarioComponent, canActivate: [AuthGuard]},
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
         { path: 'curso-angular', component: CampusSesionesComponent, canActivate: [AuthGuard]},
-        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]}
-        // { path: 'info-week', component: CampusInfoWeekComponent, canActivate: [AuthGuard]}
+        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
+        // { path: 'info-week', component: CampusInfoWeekComponent, canActivate: [AuthGuard]},
+        {path:'primaria', component: PrimariaComponent},
+        {path:'secundaria', component: SecundariaComponent},
+        { path: 'registrarmatricula', component: RegistrarMatriculaComponent }
     ],canActivate:[AuthGuard] },
-    
+
 ];

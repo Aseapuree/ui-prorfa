@@ -1,0 +1,89 @@
+.form-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: linear-gradient(135deg, #1B263B 0%, #415A77 100%);
+  border: 2px solid #778DA9;
+  border-radius: 10px;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  padding: 2rem;
+  box-sizing: border-box;
+  color: #E0E1DD;
+  font-family: 'Roboto', sans-serif;
+}
+
+.form-container h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #E0E1DD;
+  font-size: 1.8rem;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.form-container fieldset {
+  border: none;
+  margin-bottom: 1.5rem;
+  padding: 0;
+}
+
+.form-container legend {
+  color: #E0E1DD;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.form-container label {
+  display: block;
+  margin-top: 0.8rem;
+  font-weight: bold;
+  color: #E0E1DD;
+}
+
+.form-container input,
+.form-container select {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem;
+  border-radius: 5px;
+  border: 1px solid #778DA9;
+  background-color: #E0E1DD;
+  color: #1B263B;
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-container input:focus,
+.form-container select:focus {
+  outline: none;
+  border-color: #0D1B2A;
+  box-shadow: 0 0 0 3px rgba(13,27,42,0.3);
+}
+
+.form-container button[type="submit"] {
+  margin-top: 1.2rem;
+  padding: 0.8rem 1.2rem;
+  background-color: #0D1B2A;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.form-container button[type="submit"]:hover {
+  background-color: #415A77;
+}
+
+.form-container p {
+  color: #E0E1DD;
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
+
+.form-container .invalid {
+  border: 1px solid red !important;
+}

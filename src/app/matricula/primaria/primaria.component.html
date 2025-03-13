@@ -1,0 +1,18 @@
+<div *ngIf="cargando" class="loading-container">
+  <div class="spinner"></div>
+  <p>Cargando vacantes...</p>
+</div>
+
+<div *ngIf="!cargando" class="card-container">
+  <div class="card" *ngFor="let grado of gradosPrimaria; let i = index">
+    <div class="front">
+      <h2>{{ grado }}</h2>
+    </div>
+    <div class="back">
+      <p>Vacantes disponibles: {{ vacantesPrimaria[i] }}</p>
+      <button *ngIf="vacantesPrimaria[i] > 0" (click)="matricular(i)" class="button">
+        MATRICULAR
+      </button>
+    </div>
+  </div>
+</div>

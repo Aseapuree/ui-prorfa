@@ -1,0 +1,134 @@
+<div class="form-container">
+  <h2>Registrar Matrícula</h2>
+
+  <div class="info-container">
+    <p><strong>Nivel:</strong> {{ nivel }}</p>
+    <p><strong>Grado:</strong> {{ grado }}</p>
+    <p><strong>Sección asignada:</strong> {{ seccion }}</p>
+  </div>
+
+  <form [formGroup]="formMatricula" (ngSubmit)="onSubmit()">
+
+    <fieldset formGroupName="apoderado">
+      <legend>Datos del Apoderado</legend>
+
+      <label>Relación con el estudiante</label>
+      <select formControlName="relacionEstudiante">
+        <option value="Madre">MADRE</option>
+        <option value="Padre">PADRE</option>
+        <option value="Tutor">TUTOR</option>
+      </select>
+      <div class="error" *ngIf="formMatricula.get('apoderado.relacionEstudiante')?.invalid && formMatricula.get('apoderado.relacionEstudiante')?.touched">
+        Seleccione la relación.
+      </div>
+
+      <label>Nombre</label>
+      <input formControlName="nombre" type="text" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.nombre')?.invalid && formMatricula.get('apoderado.nombre')?.touched">
+        Ingrese el nombre.
+      </div>
+
+      <label>Apellido Paterno</label>
+      <input formControlName="apellidoPaterno" type="text" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.apellidoPaterno')?.invalid && formMatricula.get('apoderado.apellidoPaterno')?.touched">
+        Ingrese el apellido paterno.
+      </div>
+
+      <label>Apellido Materno</label>
+      <input formControlName="apellidoMaterno" type="text" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.apellidoMaterno')?.invalid && formMatricula.get('apoderado.apellidoMaterno')?.touched">
+        Ingrese el apellido materno.
+      </div>
+
+      <label>Tipo de Documento</label>
+      <select formControlName="tipoDocumento">
+        <option value="DNI">DNI</option>
+        <option value="CE">Carnet de Extranjería</option>
+      </select>
+      <div class="error" *ngIf="formMatricula.get('apoderado.tipoDocumento')?.invalid && formMatricula.get('apoderado.tipoDocumento')?.touched">
+        Seleccione un tipo de documento.
+      </div>
+
+      <label>Número de Documento</label>
+      <input formControlName="numeroDocumento" type="text" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.numeroDocumento')?.invalid && formMatricula.get('apoderado.numeroDocumento')?.touched">
+        Ingrese el número de documento.
+      </div>
+
+      <label>Fecha de Nacimiento</label>
+      <input formControlName="fechaNacimiento" type="date" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.invalid && formMatricula.get('apoderado.fechaNacimiento')?.touched">
+        Ingrese la fecha de nacimiento.
+      </div>
+
+      <label>Dirección</label>
+      <input formControlName="direccion" type="text" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.direccion')?.invalid && formMatricula.get('apoderado.direccion')?.touched">
+        Ingrese la dirección.
+      </div>
+
+      <label>Teléfono</label>
+      <input formControlName="telefono" type="text" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.telefono')?.invalid && formMatricula.get('apoderado.telefono')?.touched">
+        Ingrese el teléfono.
+      </div>
+
+      <label>Correo</label>
+      <input formControlName="correo" type="email" />
+      <div class="error" *ngIf="formMatricula.get('apoderado.correo')?.invalid && formMatricula.get('apoderado.correo')?.touched">
+        Ingrese un correo válido.
+      </div>
+    </fieldset>
+
+    <fieldset formGroupName="alumno">
+      <legend>Datos del Alumno</legend>
+
+      <label>Nombre</label>
+      <input formControlName="nombre" type="text" />
+      <div class="error" *ngIf="formMatricula.get('alumno.nombre')?.invalid && formMatricula.get('alumno.nombre')?.touched">
+        Ingrese el nombre.
+      </div>
+
+      <label>Apellido Paterno</label>
+      <input formControlName="apellidoPaterno" type="text" />
+      <div class="error" *ngIf="formMatricula.get('alumno.apellidoPaterno')?.invalid && formMatricula.get('alumno.apellidoPaterno')?.touched">
+        Ingrese el apellido paterno.
+      </div>
+
+      <label>Apellido Materno</label>
+      <input formControlName="apellidoMaterno" type="text" />
+      <div class="error" *ngIf="formMatricula.get('alumno.apellidoMaterno')?.invalid && formMatricula.get('alumno.apellidoMaterno')?.touched">
+        Ingrese el apellido materno.
+      </div>
+
+      <label>Tipo de Documento</label>
+      <select formControlName="tipoDocumento">
+        <option value="DNI">DNI</option>
+        <option value="CE">Carnet de Extranjería</option>
+      </select>
+      <div class="error" *ngIf="formMatricula.get('alumno.tipoDocumento')?.invalid && formMatricula.get('alumno.tipoDocumento')?.touched">
+        Seleccione un tipo de documento.
+      </div>
+
+      <label>Número de Documento</label>
+      <input formControlName="numeroDocumento" type="text" />
+      <div class="error" *ngIf="formMatricula.get('alumno.numeroDocumento')?.invalid && formMatricula.get('alumno.numeroDocumento')?.touched">
+        Ingrese el número de documento.
+      </div>
+
+      <label>Fecha de Nacimiento</label>
+      <input formControlName="fechaNacimiento" type="date" />
+      <div class="error" *ngIf="formMatricula.get('alumno.fechaNacimiento')?.invalid && formMatricula.get('alumno.fechaNacimiento')?.touched">
+        Ingrese la fecha de nacimiento.
+      </div>
+
+      <label>Dirección</label>
+      <input formControlName="direccion" type="text" />
+      <div class="error" *ngIf="formMatricula.get('alumno.direccion')?.invalid && formMatricula.get('alumno.direccion')?.touched">
+        Ingrese la dirección.
+      </div>
+    </fieldset>
+
+    <button type="submit" [disabled]="formMatricula.invalid">Registrar</button>
+  </form>
+</div>
