@@ -8,7 +8,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, RouterModule,FontAwesomeModule],
+  imports: [CommonModule, RouterModule, FontAwesomeModule],
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.scss']
 })
@@ -17,7 +17,9 @@ export class MenuComponent implements OnInit {
   @Input() apellidoPaterno: string = '';  
   @Input() apellidoMaterno: string = '';  
   @Input() nombreRol: string = ''; 
+
   menus: DTOMenu[] = [];
+  menuJerarquico: any[] = []; // Estructura con submenús
   subMenuOpen: { [key: string]: boolean } = {}; 
   menuCerrado = false;
 
@@ -48,11 +50,15 @@ export class MenuComponent implements OnInit {
       this.menus = menuResponse?.data || [];
       console.log("✅ Menús cargados en MenuComponent:", this.menus);
 
-      this.menus.forEach(menu => {
-        if (menu.idmenurol) {
-          this.subMenuOpen[menu.idmenurol] = false;
-        }
-      });
+      // Construir jerarquía de menús y submenús
+      this.menuJerarquico = this.menus
+        .filter(menu => menu.idmenuparent === null) // Menús principales
+        .map(menu => ({
+          ...menu,
+          submenus: this.menus.filter(sub => sub.idmenuparent === menu.idMenu) // Submenús correspondientes
+        }));
+
+      console.log("📌 Menús estructurados:", this.menuJerarquico);
 
       this.cdr.detectChanges();
     }, error => {
@@ -92,5 +98,4 @@ export class MenuComponent implements OnInit {
     // Redirigir manualmente a la nueva URL
     window.location.href = 'http://localhost:4203';
   }
-  
 }

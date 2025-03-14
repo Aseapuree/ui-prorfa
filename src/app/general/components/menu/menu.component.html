@@ -1,4 +1,4 @@
-<nav [class.closed]="menuCerrado" class="h-full w-64 text-white p-4 flex flex-col shadow-lg ce transition-all duration-300">
+<nav [class.closed]="menuCerrado" class="h-full w-64 text-white p-4 flex flex-col shadow-lg transition-all duration-300">
   <!-- Botón para retraer/expandir -->
   <button class="toggle-menu" (click)="toggleMenu()">☰</button>
 
@@ -11,27 +11,36 @@
       {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
     </p>
     <p class="text-sm text-gray-300">{{ nombreRol || 'Sin Rol' }}</p>
-    
   </div>
 
-  <!-- Opciones del menú generadas dinámicamente -->
+  <!-- Menús y submenús -->
   <ul *ngIf="!menuCerrado" class="space-y-4">
-    <li *ngFor="let menu of menus; trackBy: trackById">
-      <button class="menu-btn" (click)="navigate(menu)">
-        {{ menu.menu_descripcion }}
+    <li *ngFor="let menu of menuJerarquico; trackBy: trackById">
+      <button class="menu-btn flex justify-between items-center" (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)">
+        <span>{{ menu.menu_descripcion }}</span>
+        <span *ngIf="menu.submenus.length" class="submenu-icon">
+          {{ subMenuOpen[menu.idMenu] ? '▼' : '►' }}
+        </span>
       </button>
+
+      <!-- Submenús desplegables -->
+      <ul *ngIf="subMenuOpen[menu.idMenu]" class="submenu">
+        <li *ngFor="let submenu of menu.submenus; trackBy: trackById">
+          <button class="submenu-btn" (click)="navigate(submenu)">
+            {{ submenu.menu_descripcion }}
+          </button>
+        </li>
+      </ul>
     </li>
+
     <!-- Botón de Perfil -->
     <li>
       <button class="menu-btn" (click)="irAPerfil()">Perfil</button>
     </li>
-    <li>
+    
     <!-- Botón de salida -->
-  <button *ngIf="!menuCerrado" class="exit-btn" (click)="logout()">
-    Cerrar Sesión
-  </button>
-</li>
+    <li>
+      <button class="exit-btn" (click)="logout()">Cerrar Sesión</button>
+    </li>
   </ul>
-
-  
 </nav>
