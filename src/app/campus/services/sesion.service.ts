@@ -2,14 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Sesion } from '../interface/sesion';
 import { map, Observable } from 'rxjs';
-import { DTOActividadesSesion } from '../interface/DTOActividadesSesion';
+import { DTOActividad, DTOActividadesSesion } from '../interface/DTOActividad';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SesionService {
 
-  private urlBase = "http://localhost:8080/v1/sesiones";
+  private urlBase = "http://127.0.0.1:8080/v1/sesiones";
 
 
   constructor(private clienteHttp: HttpClient) { }
@@ -54,19 +54,13 @@ eliminarSesion(id: string): Observable<void> {
   
 obtenerActividadesPorSesion(idSesion: string): Observable<DTOActividadesSesion> {
   return this.clienteHttp.get<DTOActividadesSesion>(
-    `${this.urlBase}/actividades/${idSesion}`,{withCredentials:true}
+    `${this.urlBase}/actividades/${idSesion}`, { withCredentials: true }
+  ).pipe(
+    map(response => response) // Ya no necesitas extraer 'data' aquí, el tipo ya lo incluye
   );
 }
 
-agregarIntroduccion(formData: FormData): Observable<any> {
-  return this.clienteHttp.post(`${this.urlBase}/introduccion/agregar`, formData,{withCredentials:true});
-}
-
-agregarMaterial(formData: FormData): Observable<any> {
-  return this.clienteHttp.post(`${this.urlBase}/material/agregar`, formData,{withCredentials:true});
-}
-
-agregarActividad(formData: FormData): Observable<any> {
-  return this.clienteHttp.post(`${this.urlBase}/actividad/agregar`, formData,{withCredentials:true});
+agregarActividad(sesionId: string, formData: FormData): Observable<any> {
+  return this.clienteHttp.post(`${this.urlBase}/actividades/agregar/${sesionId}`, formData, { withCredentials: true });
 }
 }

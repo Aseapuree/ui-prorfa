@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable } from 'rxjs';
-import { ProfesorCurso } from '../interface/profesor-curso';
+import { ProfesorCurso } from '../interface/Profesor-curso';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfesorCursoService {
 
-  private urlBase = "http://localhost:8080/v1/profesor-curso";
+  private urlBase = "http://127.0.0.1:8080/v1/profesor-curso";
 
   constructor(private clienteHttp: HttpClient) { }
 

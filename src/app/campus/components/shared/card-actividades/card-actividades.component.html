@@ -1,5 +1,13 @@
 <div class="flex flex-wrap items-center justify-center gap-2 bg-gray-900 p-4 mt-4 rounded-md mx-8">
-
+  <!-- Botón de Retroceder -->
+  <button
+  *ngIf="showBackButton"
+  (click)="onRetroceder()"
+  class="cursor-pointer bg-gray-800 relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-700 text-gray-300 hover:text-white h-9 rounded-md px-3 w-full sm:w-auto"
+  >
+  <fa-icon [icon]="['fas', 'arrow-left']" class="text-white"></fa-icon>
+  Salir
+  </button>
   <!-- Botón de Introducción -->
   <button
     (click)="seleccionar('introducciones')"

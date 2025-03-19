@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { SesionService } from '../../../../services/sesion.service';
 import { MatButtonModule } from '@angular/material/button';
+import { DTOActividad } from '../../../../interface/DTOActividad';
 
 const MATERIAL_MODULES = [
   MatFormFieldModule,
@@ -31,7 +32,7 @@ export class ModalActividadComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<ModalActividadComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: { tipo: 'introducciones' | 'materiales' | 'actividades', sesionId: string },
     private fb: FormBuilder,
     private sesionService: SesionService
   ) {
@@ -42,8 +43,7 @@ export class ModalActividadComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('ModalActividadComponent iniciado'); // Depuración
-    console.log('Datos recibidos en el modal:', this.data); // Depuración
+    console.log('Datos recibidos en el modal:', this.data);
   }
 
   onFileSelected(event: any): void {
@@ -64,66 +64,37 @@ export class ModalActividadComponent implements OnInit {
       alert('Por favor, completa todos los campos y selecciona un archivo.');
       return;
     }
-
+  
     this.cargando = true;
-
+  
     const formData = new FormData();
+    const actividad: DTOActividad = {
+      actividadNombre: this.formulario.get('nombre')?.value,
+      infoMaestra: {
+        descripcion: this.tipoContenido === 'introducciones' ? 'Introducción' :
+                     this.tipoContenido === 'materiales' ? 'Material' : 'Actividad'
+      }
+    };
+    formData.append('actividad', new Blob([JSON.stringify(actividad)], { type: 'application/json' }));
     formData.append('archivo', this.archivoSeleccionado);
-    formData.append('nombre', this.formulario.get('nombre')?.value);
-    formData.append('sesionId', this.data.sesionId);
-
-    switch (this.tipoContenido) {
-      case 'introducciones':
-        this.sesionService.agregarIntroduccion(formData).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            this.cargando = false;
-            console.error('Error al agregar introducción:', err);
-            alert('Error al agregar introducción. Inténtalo de nuevo.');
-          },
-        });
-        break;
-
-      case 'materiales':
-        this.sesionService.agregarMaterial(formData).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            this.cargando = false;
-            console.error('Error al agregar material:', err);
-            alert('Error al agregar material. Inténtalo de nuevo.');
-          },
-        });
-        break;
-
-      case 'actividades':
-        this.sesionService.agregarActividad(formData).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            this.cargando = false;
-            console.error('Error al agregar actividad:', err);
-            alert('Error al agregar actividad. Inténtalo de nuevo.');
-          },
-        });
-        break;
-
-      default:
-        console.error('Tipo de contenido no válido');
+  
+    console.log('Datos enviados al backend:', { sesionId: this.data.sesionId, actividad, archivo: this.archivoSeleccionado.name });
+  
+    this.sesionService.agregarActividad(this.data.sesionId, formData).subscribe({
+      next: () => {
         this.cargando = false;
-        alert('Tipo de contenido no válido.');
-        break;
-    }
+        this.dialogRef.close(true);
+      },
+      error: (err) => {
+        this.cargando = false;
+        console.error('Error al agregar actividad:', err);
+        alert('Error al agregar contenido. Inténtalo de nuevo. Detalle: ' + err.message);
+      },
+    });
   }
-
   cerrarModal(): void {
     this.dialogRef.close(false);
   }
+
+  
 }

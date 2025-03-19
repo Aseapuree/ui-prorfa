@@ -5,7 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { ProfesorCursoService } from '../../../services/profesor-curso.service';
-import { ProfesorCurso } from '../../../interface/profesor-curso';
+import { ProfesorCurso } from '../../../interface/Profesor-curso';
 import { lastValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
