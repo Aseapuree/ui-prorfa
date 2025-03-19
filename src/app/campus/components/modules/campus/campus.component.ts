@@ -5,7 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { ProfesorCursoService } from '../../../services/profesor-curso.service';
-import { ProfesorCurso } from '../../../interface/Profesor-curso';
+import { ProfesorCurso } from '../../../interface/ProfesorCurso'; 
 import { lastValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -34,6 +34,7 @@ export class CampusComponent implements OnInit {
   async obtenerCurso(): Promise<void> {
     try {
       this.profesorcursos = await lastValueFrom(this.profesorCursoService.obtenerCourseList());
+      console.log("PROFESOR CURSOS: ", this.profesorcursos)
     } catch (error) {
       console.error('Error al obtener los cursos', error);
     }

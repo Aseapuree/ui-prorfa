@@ -9,7 +9,7 @@ import { DTOActividad, DTOActividadesSesion } from '../interface/DTOActividad';
 })
 export class SesionService {
 
-  private urlBase = "http://127.0.0.1:8080/v1/sesiones";
+  private urlBase = "http://localhost:8080/v1/sesiones";
 
 
   constructor(private clienteHttp: HttpClient) { }

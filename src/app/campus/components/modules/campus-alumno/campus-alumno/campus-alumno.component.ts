@@ -8,7 +8,7 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { CardComponent } from '../../../shared/card/card.component';
 import { ProfesorCursoService } from '../../../../services/profesor-curso.service';
 import { lastValueFrom } from 'rxjs';
-import { ProfesorCurso } from '../../../../interface/Profesor-curso';
+import { ProfesorCurso } from '../../../../interface/ProfesorCurso';
 
 @Component({
   selector: 'app-campus-alumno',
