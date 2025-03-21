@@ -8,13 +8,17 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { CardActividadesComponent } from '../../../shared/card-actividades/card-actividades.component';
 import { SafeUrlPipe } from './safe-url.pipe';
+import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/dialogo-confirmacion.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
+import { NotificationService } from '../../../shared/notificaciones/notification.service';
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades';
 
 @Component({
   selector: 'app-campus-actividades',
   standalone: true,
-  imports: [RouterModule, HttpClientModule, CommonModule, CardActividadesComponent, SafeUrlPipe],
+  imports: [RouterModule, HttpClientModule, CommonModule, CardActividadesComponent, SafeUrlPipe, FontAwesomeModule,NotificationComponent,],
   templateUrl: './campus-actividades.component.html',
   styleUrl: './campus-actividades.component.scss'
 })
@@ -29,22 +33,24 @@ export class CampusActividadesComponent implements OnInit {
     },
   };
   idSesion: string = '';
-  idProfesorCurso: string = ''; // Este valor se establece en ngOnInit
+  idProfesorCurso: string = '';
   actividadSeleccionada: TipoActividad = 'introducciones';
-  contenidoActual: { tipo: 'pdf' | 'video'; url: string } | null = null;
+  contenidoActual: { tipo: 'pdf' | 'video'; url: string; actividad: DTOActividad } | null = null;
   errorLoadingFile: boolean = false;
+  actividadesActuales: DTOActividad[] = [];
+  isAddButtonDisabled: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
     private sesionService: SesionService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService // Inyectar el servicio
   ) {}
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
       this.idSesion = params.get('idSesion') || '';
-      // Intentar obtener idProfesorCurso desde el estado de navegación (si se pasó)
       const navigation = this.router.getCurrentNavigation();
       if (navigation?.extras.state?.['idProfesorCurso']) {
         this.idProfesorCurso = navigation.extras.state['idProfesorCurso'];
@@ -61,7 +67,7 @@ export class CampusActividadesComponent implements OnInit {
     this.sesionService.obtenerActividadesPorSesion(this.idSesion).subscribe({
       next: (data) => {
         this.actividadesSesion = data;
-        this.mostrarContenidoInicial();
+        this.actualizarActividadesActuales();
       },
       error: (err) => {
         console.error('Error al obtener actividades:', err);
@@ -71,33 +77,45 @@ export class CampusActividadesComponent implements OnInit {
 
   seleccionarActividad(tipo: TipoActividad): void {
     this.actividadSeleccionada = tipo;
+    this.contenidoActual = null;
     this.errorLoadingFile = false;
-    this.mostrarContenidoInicial();
+    this.actualizarActividadesActuales();
   }
 
-  mostrarContenidoInicial(): void {
-    let actividadesArray: any[] = [];
+  actualizarActividadesActuales(): void {
     if (this.actividadSeleccionada === 'introducciones') {
-      actividadesArray = this.actividadesSesion.data.introducciones;
+      this.actividadesActuales = this.actividadesSesion.data.introducciones;
     } else if (this.actividadSeleccionada === 'materiales') {
-      actividadesArray = this.actividadesSesion.data.materiales;
+      this.actividadesActuales = this.actividadesSesion.data.materiales;
     } else if (this.actividadSeleccionada === 'actividades') {
-      actividadesArray = this.actividadesSesion.data.actividades;
+      this.actividadesActuales = this.actividadesSesion.data.actividades;
     }
+  }
 
-    if (actividadesArray.length > 0) {
-      const actividad = actividadesArray[0];
-      const esVideo = this.esVideo(actividad.actividadUrl);
-      this.contenidoActual = { tipo: esVideo ? 'video' : 'pdf', url: actividad.actividadUrl };
+  toggleContenido(actividad: DTOActividad): void {
+    if (
+      this.contenidoActual &&
+      this.contenidoActual.actividad.actividadUrl === actividad.actividadUrl
+    ) {
+      this.contenidoActual = null; // Ocultar si ya está visible
     } else {
-      this.contenidoActual = null;
+      const esVideo = this.esVideo(actividad.actividadUrl!);
+      this.contenidoActual = {
+        tipo: esVideo ? 'video' : 'pdf',
+        url: actividad.actividadUrl!,
+        actividad: actividad,
+      };
+      this.errorLoadingFile = false;
     }
   }
 
   esVideo(url: string): boolean {
     const videoExtensions = ['.mp4', '.webm', '.avi', '.mov'];
     const videoDomains = ['youtube.com', 'vimeo.com'];
-    return videoExtensions.some((ext) => url.includes(ext)) || videoDomains.some((domain) => url.includes(domain));
+    return (
+      videoExtensions.some((ext) => url.toLowerCase().includes(ext)) ||
+      videoDomains.some((domain) => url.toLowerCase().includes(domain))
+    );
   }
 
   openAddModal(tipo: TipoActividad): void {
@@ -112,7 +130,57 @@ export class CampusActividadesComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.obtenerActividades();
+        this.notificationService.showNotification('Actividad agregada con éxito', 'success');
       }
+    });
+  }
+
+  openEditModal(actividad: DTOActividad, event: Event): void {
+    event.stopPropagation();
+    const dialogRef = this.dialog.open(ModalActividadComponent, {
+      width: '500px',
+      data: {
+        tipo: this.actividadSeleccionada,
+        sesionId: this.idSesion,
+        actividad: actividad,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.obtenerActividades();
+        this.notificationService.showNotification('Actividad editada con éxito', 'success');
+      }
+    });
+  }
+
+  openDeleteDialog(actividad: DTOActividad, event: Event): void {
+    event.stopPropagation();
+    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
+      width: '1px',
+      height: '1px',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.eliminarActividad(actividad);
+      }
+    });
+  }
+
+  eliminarActividad(actividad: DTOActividad): void {
+    this.sesionService.eliminarActividad(this.idSesion, actividad.idActividad!).subscribe({
+      next: () => {
+        this.obtenerActividades();
+        if (this.contenidoActual && this.contenidoActual.actividad.actividadUrl === actividad.actividadUrl) {
+          this.contenidoActual = null;
+        }
+        this.notificationService.showNotification('Actividad eliminada con éxito', 'error'); // Rojo para eliminación
+      },
+      error: (err) => {
+        console.error('Error al eliminar actividad:', err);
+        this.notificationService.showNotification('Error al eliminar actividad', 'error');
+      },
     });
   }
 
@@ -122,7 +190,7 @@ export class CampusActividadesComponent implements OnInit {
       this.router.navigate(['/sesiones', this.idProfesorCurso]);
     } else {
       console.error('idProfesorCurso no está definido');
-      this.router.navigate(['campus']); // Ruta por defecto si no hay idProfesorCurso
+      this.router.navigate(['campus']);
     }
   }
 

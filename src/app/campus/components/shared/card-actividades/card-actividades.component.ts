@@ -29,6 +29,8 @@ export class CardActividadesComponent {
   }
 
   onRetroceder(): void {
-    this.retroceder.emit(); // Emitir evento de retroceso
+    console.log('Evento retroceder disparado desde CardActividadesComponent');
+    this.retroceder.emit();
   }
 }
+

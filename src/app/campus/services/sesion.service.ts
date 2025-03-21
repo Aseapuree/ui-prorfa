@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Sesion } from '../interface/sesion';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import { DTOActividad, DTOActividadesSesion } from '../interface/DTOActividad';
+import { DTOResponse } from '../interface/DTOResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -41,7 +42,14 @@ export class SesionService {
 }
 
 agregarSesion(sesion: Sesion): Observable<Sesion> {
-  return this.clienteHttp.post<Sesion>(`${this.urlBase}/agregar`, sesion,{withCredentials:true});
+  return this.clienteHttp.post<DTOResponse<Sesion>>(`${this.urlBase}/agregar`, sesion, { withCredentials: true })
+    .pipe(
+      map(response => response.data),
+      catchError(error => {
+        console.error('Error al agregar sesión:', error);
+        return throwError(() => new Error('Error al agregar sesión'));
+      })
+    );
 }
 
 editarSesion(id: string, sesion: Sesion): Observable<Sesion> {
@@ -60,7 +68,25 @@ obtenerActividadesPorSesion(idSesion: string): Observable<DTOActividadesSesion> 
   );
 }
 
+//actividades
+
 agregarActividad(sesionId: string, formData: FormData): Observable<any> {
   return this.clienteHttp.post(`${this.urlBase}/actividades/agregar/${sesionId}`, formData, { withCredentials: true });
 }
+
+editarActividad(sesionId: string, actividadId: string, formData: FormData): Observable<any> {
+  return this.clienteHttp.put(
+    `${this.urlBase}/actividades/editar/${sesionId}/${actividadId}`,
+    formData,
+    { withCredentials: true }
+  );
 }
+
+eliminarActividad(sesionId: string, actividadId: string): Observable<void> {
+  return this.clienteHttp.delete<void>(
+    `${this.urlBase}/actividades/eliminar/${sesionId}/${actividadId}`,
+    { withCredentials: true }
+  );
+}
+}
+

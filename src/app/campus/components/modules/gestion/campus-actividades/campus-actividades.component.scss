@@ -1,0 +1,18 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+  
+    tbody {
+      tr {
+        transition: background-color 0.3s ease; // Transición suave para el cambio de color
+        &.bg-gray-500 {
+          background-color: #6b7280 !important; // Color más claro para el resaltado
+        }
+      }
+    }
+  }
+  
+  .error-message {
+    margin-top: 1rem;
+    color: #f87171; // Rojo claro para mensajes de error
+  }

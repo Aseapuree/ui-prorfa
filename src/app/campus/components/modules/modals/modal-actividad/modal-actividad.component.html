@@ -6,9 +6,9 @@
       <input matInput formControlName="nombre" required />
     </mat-form-field>
 
-    <!-- Campo de archivo (sin mat-form-field) -->
+    <!-- Campo de archivo -->
     <div class="w-full">
-      <label for="archivo">Archivo</label>
+      <label for="archivo">Archivo* (Formatos válidos: PDF, mp4, avi, mov)</label>
       <input
         id="archivo"
         type="file"
@@ -17,6 +17,9 @@
         required
       />
     </div>
+
+    <!-- Mostrar mensaje de error o advertencia -->
+    <app-alert [message]="alertMessage" [type]="alertType"></app-alert>
   </form>
 
   <!-- Fondo semitransparente y spinner -->

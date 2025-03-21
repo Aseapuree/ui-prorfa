@@ -1,4 +1,5 @@
 export interface DTOActividad {
+  idActividad?: string;
   actividadNombre?: string;
   actividadUrl?: string;
   infoMaestra?: {
