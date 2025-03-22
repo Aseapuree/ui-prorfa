@@ -1,25 +1,36 @@
-<mat-dialog-content>
-  <form [formGroup]="formulario">
+<mat-dialog-content class="p-6 bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100 rounded-none">
+  <h2 class="text-2xl font-semibold mb-6 text-gray-100 dark:text-gray-100">{{ esEdicion ? 'Editar Actividad' : 'Agregar Actividad' }}</h2>
+  <form [formGroup]="formulario" (ngSubmit)="agregarContenido()" class="space-y-6 border border-gray-700 dark:border-gray-700 rounded-lg p-6">
     <!-- Campo de nombre -->
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Nombre</mat-label>
-      <input matInput formControlName="nombre" required />
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label class="text-gray-400 dark:text-gray-400">Nombre</mat-label>
+      <input matInput formControlName="nombre" required class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100" />
     </mat-form-field>
 
-    <!-- Campo de archivo -->
+    <!-- Campo de archivo personalizado -->
     <div class="w-full">
-      <label for="archivo">Archivo* (Formatos válidos: PDF, mp4, avi, mov)</label>
-      <input
-        id="archivo"
-        type="file"
-        (change)="onFileSelected($event)"
-        accept=".pdf,.mp4,.avi,.mov"
-        required
-      />
+      <label for="archivo" class="block text-gray-400 dark:text-gray-400 mb-2">Archivo* (Formatos válidos: PDF, mp4, avi, mov)</label>
+      <div class="flex items-center space-x-3">
+        <button type="button" (click)="fileInput.click()" class="px-4 py-2 bg-gray-700 dark:bg-gray-700 text-gray-100 dark:text-gray-100 rounded-md hover:bg-gray-600 dark:hover:bg-gray-600 transition-colors duration-300">
+          Seleccionar archivo
+        </button>
+        <input
+          #fileInput
+          id="archivo"
+          type="file"
+          (change)="onFileSelected($event)"
+          accept=".pdf,.mp4,.avi,.mov"
+          required
+          class="hidden"
+        />
+        <span class="text-gray-300 dark:text-gray-300 truncate">
+          {{ archivoSeleccionado ? archivoSeleccionado.name : 'Ningún archivo seleccionado' }}
+        </span>
+      </div>
     </div>
 
     <!-- Mostrar mensaje de error o advertencia -->
-    <app-alert [message]="alertMessage" [type]="alertType"></app-alert>
+    <app-alert [message]="alertMessage" [type]="alertType" class="block"></app-alert>
   </form>
 
   <!-- Fondo semitransparente y spinner -->
@@ -28,7 +39,11 @@
   </div>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="cerrarModal()">Cancelar</button>
-  <button mat-button color="primary" (click)="agregarContenido()">Agregar</button>
+<mat-dialog-actions align="end" class="bg-gray-800 dark:bg-gray-800 p-6">
+  <button mat-button (click)="cerrarModal()" class="px-4 py-2 bg-gray-800 dark:bg-gray-800 text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-purple-600 dark:hover:bg-purple-600 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300">
+    Cancelar
+  </button>
+  <button mat-raised-button (click)="agregarContenido()" class="px-4 py-2 bg-gray-800 dark:bg-gray-800 text-white dark:text-white border border-gray-600 dark:border-gray-600 rounded-md hover:bg-purple-600 dark:hover:bg-purple-600 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 shadow-md">
+    {{ esEdicion ? 'Guardar Cambios' : 'Agregar' }}
+  </button>
 </mat-dialog-actions>

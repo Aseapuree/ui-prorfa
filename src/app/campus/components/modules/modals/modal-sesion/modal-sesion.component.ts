@@ -8,6 +8,7 @@ import { CourseService } from '../../../../services/course.service';
 import { ModalSesionService } from './modal-sesion.service';
 import { Sesion } from '../../../../interface/sesion';
 import { SesionService } from '../../../../services/sesion.service';
+import { NotificationService } from '../../../shared/notificaciones/notification.service';
 
 const MATERIAL_MODULES = [MatLabel, MatFormField, MatInput, MatDialogModule, MatButtonModule]
 
@@ -25,7 +26,8 @@ export class ModalSesionComponent implements OnInit{
     private fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private sesionService: SesionService,
-    public dialogRef: MatDialogRef<ModalSesionComponent>
+    public dialogRef: MatDialogRef<ModalSesionComponent>,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -44,33 +46,37 @@ export class ModalSesionComponent implements OnInit{
 
   onSubmit(): void {
     if (this.sesionForm.invalid) {
+      this.notificationService.showNotification('Por favor, completa todos los campos', 'error');
       return;
     }
-  
+
     const sesionData = {
       ...this.sesionForm.value,
-      idSesion: this.data.isEditing ? this.data.sesion.idSesion : undefined, // Incluir ID al editar
+      idSesion: this.data.isEditing ? this.data.sesion.idSesion : undefined,
       profesorGuardar: this.data.idProfesorCurso,
     };
-  
-    console.log('Datos enviados:', sesionData);
-  
+
     if (this.data.isEditing) {
       this.sesionService.editarSesion(this.data.sesion.idSesion, sesionData).subscribe({
         next: (response) => {
-          console.log('Sesión editada:', response);
           this.dialogRef.close(true);
         },
-        error: (err) => console.error('Error al editar sesión:', err),
+        error: (err) => {
+          this.notificationService.showNotification('Error al editar sesión', 'error');
+          console.error('Error al editar sesión:', err);
+        },
       });
     } else {
       this.sesionService.agregarSesion(sesionData).subscribe({
         next: (response) => {
-          console.log('Sesión agregada:', response);
           this.dialogRef.close(true);
         },
-        error: (err) => console.error('Error al agregar sesión:', err),
+        error: (err) => {
+          this.notificationService.showNotification('Error al agregar sesión', 'error');
+          console.error('Error al agregar sesión:', err);
+        },
       });
     }
   }
 }
+

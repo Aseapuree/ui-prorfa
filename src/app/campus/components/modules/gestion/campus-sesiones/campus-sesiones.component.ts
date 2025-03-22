@@ -12,17 +12,19 @@ import { MatDialog } from '@angular/material/dialog';
 import { ModalSesionService } from '../../modals/modal-sesion/modal-sesion.service';
 import { ModalSesionComponent } from '../../modals/modal-sesion/modal-sesion.component';
 import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/dialogo-confirmacion.component';
+import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
+import { NotificationService } from '../../../shared/notificaciones/notification.service';
 
 @Component({
   selector: 'app-campus-sesiones',
   standalone: true,
-  imports: [CommonModule, NgxPaginationModule, FontAwesomeModule,RouterModule,CardWeekComponent,HttpClientModule],
+  imports: [CommonModule, NgxPaginationModule, FontAwesomeModule,RouterModule,CardWeekComponent,HttpClientModule,NotificationComponent],
   providers: [SesionService],
   templateUrl: './campus-sesiones.component.html',
   styleUrl: './campus-sesiones.component.scss'
 })
 export class CampusSesionesComponent {
-  public page!: number;
+  public page: number=1;
   sesiones: Sesion[] = [];
   idProfesorCurso: string = '';
 
@@ -30,7 +32,8 @@ export class CampusSesionesComponent {
     private sesionService: SesionService,
     private route: ActivatedRoute,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {}
 
   private readonly _sesionSVC = inject(SesionService);
@@ -50,6 +53,7 @@ export class CampusSesionesComponent {
         this.sesiones = data;
       },
       error: (err) => {
+        this.notificationService.showNotification('Error al obtener sesiones', 'error');
         console.error('Error al obtener sesiones:', err);
       },
     });
@@ -60,13 +64,14 @@ export class CampusSesionesComponent {
       width: '600px',
       data: {
         isEditing: false,
-        idProfesorCurso: this.idProfesorCurso, // Pasar el ID del profesor-curso
+        idProfesorCurso: this.idProfesorCurso,
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.obtenerSesiones(); // Recargar las sesiones después de agregar
+        this.obtenerSesiones();
+        this.notificationService.showNotification('Sesión agregada con éxito', 'success');
       }
     });
   }
@@ -76,37 +81,41 @@ export class CampusSesionesComponent {
       width: '600px',
       data: {
         isEditing: true,
-        sesion: sesion, // Pasar la sesión a editar
-        idProfesorCurso: this.idProfesorCurso, // Pasar el ID del profesor-curso
+        sesion: sesion,
+        idProfesorCurso: this.idProfesorCurso,
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.obtenerSesiones(); // Recargar las sesiones después de editar
+        this.obtenerSesiones();
+        this.notificationService.showNotification('Sesión editada con éxito', 'success');
       }
     });
   }
 
 
-  eliminarSesion(idSesion: string): void{
-    const dialoRef = this.dialog.open(DialogoConfirmacionComponent, {
+  eliminarSesion(idSesion: string): void {
+    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
       width: '1px',
       height: '1px',
-      data: { message : '¿Estas seguro de que quieres eliminar esta sesion?'}
+      data: { message: '¿Estás seguro de que quieres eliminar esta sesión?' },
     });
 
-    dialoRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this._sesionSVC.eliminarSesion(idSesion).subscribe({
           next: () => {
             this.obtenerSesiones();
-            
+            this.notificationService.showNotification('Sesión eliminada con éxito', 'error'); // Rojo para eliminación
           },
-          error: (err) => console.error("Error al eliminar una sesion", err)
-        })
+          error: (err) => {
+            this.notificationService.showNotification('Error al eliminar sesión', 'error');
+            console.error('Error al eliminar una sesión:', err);
+          },
+        });
       }
-    })
+    });
   }
 
   // Método para navegar a las actividades de una sesión
