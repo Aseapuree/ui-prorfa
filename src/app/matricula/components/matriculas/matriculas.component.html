@@ -1,0 +1,33 @@
+<div *ngIf="cargando" class="loading-container">
+  <div class="spinner"></div>
+  <p>Cargando vacantes...</p>
+</div>
+
+<div *ngIf="!cargando">
+  <ng-container *ngFor="let nivel of niveles">
+    <h2>{{ nivel.nombre }}</h2>
+    <div class="card-container">
+      <div class="card" *ngFor="let grado of nivel.grados">
+        <div class="front">
+          <span class="icon">🎓</span>
+          <h3>Grado {{ grado }}</h3>
+        </div>
+        <div class="back">
+          <p>
+            <span class="icon">ℹ️</span>
+            Vacantes:
+            <span *ngFor="let sec of ((nivel.vacantes?.[grado] || {}) | keyvalue)">
+              <span class="icon">✅</span> {{ sec.key }}: {{ sec.value }}
+            </span>
+          </p>
+          <button
+            *ngIf="hayVacantes(nivel.vacantes?.[grado] || {})"
+            (click)="matricular(nivel.nombre, grado)"
+            class="button">
+            <span class="icon">➡️</span> MATRICULAR
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

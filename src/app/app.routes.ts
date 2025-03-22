@@ -7,6 +7,8 @@ import { CampusCursosComponent } from './campus/components/modules/gestion/campu
 import { CampusActividadesComponent } from './campus/components/modules/gestion/campus-actividades/campus-actividades.component';
 import { AuthGuard } from './guard/auth.guard';
 import { PerfilComponent } from './general/components/perfil/perfil.component';
+import { MatriculasComponent } from'./matricula/components/matriculas/matriculas.component';
+import { RegistrarMatriculaComponent } from './matricula/components/registrarmatricula/registrarmatricula.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
@@ -15,7 +17,9 @@ export const routes: Routes = [
         { path: 'sesiones/:idProfesorCurso', component: CampusSesionesComponent,canActivate: [AuthGuard] },// Campus sesiones profesor
         { path: 'card-actividades/:idSesion', component: CampusActividadesComponent,canActivate: [AuthGuard] }, // Campus actividades profesor
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
-        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]}
+        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
+        {path:'matricula/:id', component: MatriculasComponent,canActivate:[AuthGuard]},
+        {path:'registrarmatricula', component: RegistrarMatriculaComponent,canActivate:[AuthGuard]},
     ],canActivate:[AuthGuard] },
     
 ];
