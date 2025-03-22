@@ -1,0 +1,103 @@
+<div class="form-container">
+  <h2>Registrar Matrícula</h2>
+
+  <div class="info-container">
+    <p><strong>Nivel:</strong> {{ nivel }}</p>
+    <p><strong>Grado:</strong> {{ grado }}</p>
+    <p><strong>Sección asignada:</strong> {{ seccion }}</p>
+  </div>
+
+  <form [formGroup]="formMatricula" (ngSubmit)="onSubmit()">
+    <div class="form-grid">
+
+      <fieldset formGroupName="apoderado">
+        <legend>Datos del Apoderado</legend>
+
+        <label>Número de Documento</label>
+        <div class="input-group search-container">
+          <span class="icon">🆔</span>
+          <input formControlName="numeroDocumento" type="text" (input)="buscarApoderado()"
+                 placeholder="Ingrese DNI del apoderado" />
+          <button type="button" (click)="buscarApoderado()">🔍</button>
+        </div>
+
+
+        <div *ngIf="mostrarFormularioApoderado">
+          <label>Relación con el estudiante</label>
+          <div class="input-group">
+            <span class="icon">👥</span>
+            <select formControlName="relacionEstudiante">
+              <option value="Madre">MADRE</option>
+              <option value="Padre">PADRE</option>
+              <option value="Tutor">TUTOR</option>
+            </select>
+          </div>
+
+          <label>Nombre</label>
+          <div class="input-group">
+            <span class="icon">👤</span>
+            <input formControlName="nombre" type="text" placeholder="Ingrese nombre" />
+          </div>
+
+          <label>Apellido Paterno</label>
+          <div class="input-group">
+            <span class="icon">👤</span>
+            <input formControlName="apellidoPaterno" type="text" placeholder="Ingrese apellido paterno" />
+          </div>
+
+          <label>Apellido Materno</label>
+          <div class="input-group">
+            <span class="icon">👤</span>
+            <input formControlName="apellidoMaterno" type="text" placeholder="Ingrese apellido materno" />
+          </div>
+
+          <label>Fecha de Nacimiento</label>
+          <div class="input-group">
+            <span class="icon">📅</span>
+            <input formControlName="fechaNacimiento" type="date" />
+          </div>
+        </div>
+      </fieldset>
+
+
+      <fieldset formGroupName="alumno">
+        <legend>Datos del Alumno</legend>
+
+        <label>Nombre</label>
+        <div class="input-group">
+          <span class="icon">👤</span>
+          <input formControlName="nombre" type="text" placeholder="Ingrese nombre" />
+        </div>
+
+        <label>Apellido Paterno</label>
+        <div class="input-group">
+          <span class="icon">👤</span>
+          <input formControlName="apellidoPaterno" type="text" placeholder="Ingrese apellido paterno" />
+        </div>
+
+        <label>Apellido Materno</label>
+        <div class="input-group">
+          <span class="icon">👤</span>
+          <input formControlName="apellidoMaterno" type="text" placeholder="Ingrese apellido materno" />
+        </div>
+
+        <label>Tipo de Documento</label>
+        <div class="input-group">
+          <span class="icon">🆔</span>
+          <select formControlName="tipoDocumento">
+            <option value="DNI">DNI</option>
+            <option value="CE">Carnet de Extranjería</option>
+          </select>
+        </div>
+
+        <label>Número de Documento</label>
+        <div class="input-group">
+          <span class="icon">🆔</span>
+          <input formControlName="numeroDocumento" type="text" placeholder="Ingrese número de documento" />
+        </div>
+      </fieldset>
+    </div>
+
+    <button type="submit" [disabled]="formMatricula.invalid">Registrar</button>
+  </form>
+</div>

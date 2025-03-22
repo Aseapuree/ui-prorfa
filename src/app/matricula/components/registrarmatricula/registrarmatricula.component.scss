@@ -1,0 +1,125 @@
+.form-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--primary-hover) 100%);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  box-sizing: border-box;
+  color: var(--text-color);
+  font-family: 'Roboto', sans-serif;
+}
+
+.form-container h2 {
+  margin: 0.5rem 0;
+  color: var(--text-color);
+  font-size: 1.8rem;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.info-container p {
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+fieldset {
+  border: none;
+  margin-bottom: 1rem;
+  padding: 0;
+}
+
+legend {
+  color: var(--text-color);
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+label {
+  display: block;
+  margin: 0.5rem 0;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.input-group .icon {
+  padding: 0.5rem;
+  background: var(--boton);
+  color: #fff;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-group input,
+.input-group select {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-left: none;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  background-color: var(--secondary-dark);
+  color: var(--text-color);
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  border-color: var(--boton);
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+}
+
+.search-container button {
+  background: var(--boton);
+  border: none;
+  color: #fff;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.search-container button:hover {
+  background: var(--primary-hover);
+}
+
+button[type="submit"] {
+  display: block;
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background-color: var(--boton);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--primary-hover);
+}
+
+.invalid {
+  border: 1px solid red !important;
+}

@@ -10,6 +10,8 @@ import { SesionesAlumnoComponent } from './campus/components/modules/campus-alum
 import { ActividadesAlumnoComponent } from './campus/components/modules/campus-alumno/actividades-alumno/actividades-alumno.component';
 import { AuthGuard } from './guard/auth.guard';
 import { PerfilComponent } from './general/components/perfil/perfil.component';
+import { MatriculasComponent } from'./matricula/components/matriculas/matriculas.component';
+import { RegistrarMatriculaComponent } from './matricula/components/registrarmatricula/registrarmatricula.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
@@ -21,7 +23,9 @@ export const routes: Routes = [
         { path: 'sesiones-alumno/:idProfesorCurso', component: SesionesAlumnoComponent,canActivate: [AuthGuard]},//campus sesiones alumno
         { path: 'actividades/:idSesion', component: ActividadesAlumnoComponent,canActivate: [AuthGuard]},//campus actividades alumno
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
-        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]}
+        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
+        {path:'matricula/:id', component: MatriculasComponent,canActivate:[AuthGuard]},
+        {path:'registrarmatricula', component: RegistrarMatriculaComponent,canActivate:[AuthGuard]},
     ],canActivate:[AuthGuard] },
     
 ];
