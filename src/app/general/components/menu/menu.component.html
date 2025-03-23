@@ -14,33 +14,44 @@
   </div>
 
   <!-- Menús y submenús -->
-  <ul *ngIf="!menuCerrado" class="space-y-4">
+  <ul *ngIf="!menuCerrado" class="space-y-2">
     <li *ngFor="let menu of menuJerarquico; trackBy: trackById">
-      <button class="menu-btn flex justify-between items-center" (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)">
-        <span>{{ menu.menu_descripcion }}</span>
+      <button class="menu-btn flex items-center gap-3 w-full" 
+              (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)">
+        <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg" [ngClass]="getIconColorClass(menu.menu_icono)"></fa-icon> 
+        <span class="flex-grow text-left">{{ menu.menu_descripcion }}</span>
         <span *ngIf="menu.submenus.length" class="submenu-icon">
           {{ subMenuOpen[menu.idMenu] ? '▼' : '►' }}
         </span>
       </button>
 
       <!-- Submenús desplegables -->
-      <ul *ngIf="subMenuOpen[menu.idMenu]" class="submenu">
+      <ul *ngIf="subMenuOpen[menu.idMenu]" class="submenu pl-6">
         <li *ngFor="let submenu of menu.submenus; trackBy: trackById">
-          <button class="submenu-btn" (click)="navigate(submenu)">
-            {{ submenu.menu_descripcion }}
+          <button class="submenu-btn flex items-center gap-3 w-full" 
+                  (click)="navigate(submenu)">
+            <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-lg" [ngClass]="getIconColorClass(submenu.menu_icono)"></fa-icon> 
+            <span class="flex-grow text-left">{{ submenu.menu_descripcion }}</span>
           </button>
         </li>
       </ul>
     </li>
 
     <!-- Botón de Perfil -->
-    <li>
-      <button class="menu-btn" (click)="irAPerfil()">Perfil</button>
-    </li>
-    
-    <!-- Botón de salida -->
-    <li>
-      <button class="exit-btn" (click)="logout()">Cerrar Sesión</button>
-    </li>
+   <!-- Botón de Perfil -->
+<li>
+  <button class="menu-btn flex items-center gap-3 w-full" (click)="irAPerfil()">
+    <fa-icon [icon]="faUserCircle" class="text-lg text-blue-400"></fa-icon>
+    <span class="flex-grow text-left">Perfil</span>
+  </button>
+</li>
+
+<!-- Botón de salida mejorado -->
+<li>
+  <button class="exit-btn flex items-center gap-3 w-full" (click)="logout()">
+    <fa-icon [icon]="faSignOutAlt" class="text-lg text-white drop-shadow-md"></fa-icon>
+    <span class="flex-grow text-left text-white">Cerrar Sesión</span>
+  </button>
+</li>
   </ul>
 </nav>
