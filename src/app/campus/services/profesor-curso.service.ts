@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable } from 'rxjs';
-import { ProfesorCurso } from '../interface/profesor-curso';
+import { ProfesorCurso } from '../interface/ProfesorCurso'; 
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,7 @@ export class ProfesorCursoService {
 
    // Obtener lista de profesores con sus cursos
   obtenerCourseList(): Observable<ProfesorCurso[]> {
-    return this.clienteHttp.get<{ data: { content: ProfesorCurso[] } }>(`${this.urlBase}/listar`,{withCredentials:true})
+    return this.clienteHttp.get<any>(`${this.urlBase}/listar`,{withCredentials:true})
   .pipe(map(response => {
     console.log("Lista de asignaciones cargada correctamente.");
     return response.data.content;

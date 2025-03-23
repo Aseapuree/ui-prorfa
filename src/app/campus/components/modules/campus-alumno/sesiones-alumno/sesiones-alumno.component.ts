@@ -6,8 +6,9 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { CardWeekComponent } from '../../../shared/card-week/card-week.component';
 import { SesionService } from '../../../../services/sesion.service';
-import { Sesion } from '../../../../interface/sesion';
+
 import { MatDialog } from '@angular/material/dialog';
+import { Sesion } from '../../../../interface/sesion';
 
 @Component({
   selector: 'app-sesiones-alumno',

@@ -18,11 +18,19 @@ export class CardActividadesComponent {
   @Input() introduccion: string = 'Introducción';
   @Input() material: string = 'Material';
   @Input() actividad: string = 'Actividad';
-  @Input() actividadSeleccionada: TipoActividad | null = null; 
+  @Input() actividadSeleccionada: TipoActividad | null = null;
+  @Input() showBackButton: boolean = true; // Nueva entrada para controlar si se muestra el botón de retroceder 
 
   @Output() seleccionarActividad = new EventEmitter<TipoActividad>();
+  @Output() retroceder = new EventEmitter<void>(); // Nuevo evento para notificar retroceso
 
   seleccionar(tipo: TipoActividad): void {
     this.seleccionarActividad.emit(tipo);
   }
+
+  onRetroceder(): void {
+    console.log('Evento retroceder disparado desde CardActividadesComponent');
+    this.retroceder.emit();
+  }
 }
+

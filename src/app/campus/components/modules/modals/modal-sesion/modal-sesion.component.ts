@@ -46,31 +46,30 @@ export class ModalSesionComponent implements OnInit{
     if (this.sesionForm.invalid) {
       return;
     }
-
+  
     const sesionData = {
       ...this.sesionForm.value,
-      profesorGuardar: this.data.idProfesorCurso, // Añadir el ID del profesor-curso
+      idSesion: this.data.isEditing ? this.data.sesion.idSesion : undefined, // Incluir ID al editar
+      profesorGuardar: this.data.idProfesorCurso,
     };
-
+  
+    console.log('Datos enviados:', sesionData);
+  
     if (this.data.isEditing) {
-      // Lógica para editar
       this.sesionService.editarSesion(this.data.sesion.idSesion, sesionData).subscribe({
-        next: () => {
-          this.dialogRef.close(true); // Cerrar el modal y indicar que la operación fue exitosa
+        next: (response) => {
+          console.log('Sesión editada:', response);
+          this.dialogRef.close(true);
         },
-        error: (err) => {
-          console.error('Error al editar sesión:', err);
-        },
+        error: (err) => console.error('Error al editar sesión:', err),
       });
     } else {
-      // Lógica para agregar
       this.sesionService.agregarSesion(sesionData).subscribe({
-        next: () => {
-          this.dialogRef.close(true); // Cerrar el modal y indicar que la operación fue exitosa
+        next: (response) => {
+          console.log('Sesión agregada:', response);
+          this.dialogRef.close(true);
         },
-        error: (err) => {
-          console.error('Error al agregar sesión:', err);
-        },
+        error: (err) => console.error('Error al agregar sesión:', err),
       });
     }
   }

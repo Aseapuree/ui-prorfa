@@ -7,6 +7,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { SesionService } from '../../../../services/sesion.service';
 import { MatButtonModule } from '@angular/material/button';
+import { DTOActividad } from '../../../../interface/DTOActividad';
+import { AlertComponent } from '../../../shared/alert/alert.component';
 
 const MATERIAL_MODULES = [
   MatFormFieldModule,
@@ -19,7 +21,7 @@ const MATERIAL_MODULES = [
 @Component({
   selector: 'app-modal-actividad',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, ...MATERIAL_MODULES], // Agregar MatDialogModule
+  imports: [ReactiveFormsModule, CommonModule,AlertComponent, ...MATERIAL_MODULES], // Agregar MatDialogModule
   templateUrl: './modal-actividad.component.html',
   styleUrl: './modal-actividad.component.scss'
 })
@@ -28,22 +30,34 @@ export class ModalActividadComponent implements OnInit {
   archivoSeleccionado: File | null = null;
   tipoContenido: 'introducciones' | 'materiales' | 'actividades';
   cargando: boolean = false;
+  esEdicion: boolean = false;
+  alertMessage: string | null = null;
+  alertType: 'error' | 'warning' = 'error';
 
   constructor(
     public dialogRef: MatDialogRef<ModalActividadComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA)
+    public data: {
+      tipo: 'introducciones' | 'materiales' | 'actividades';
+      sesionId: string;
+      actividad?: DTOActividad;
+    },
     private fb: FormBuilder,
     private sesionService: SesionService
   ) {
     this.tipoContenido = data.tipo;
+    this.esEdicion = !!data.actividad;
     this.formulario = this.fb.group({
       nombre: ['', Validators.required],
     });
   }
 
   ngOnInit(): void {
-    console.log('ModalActividadComponent iniciado'); // Depuración
-    console.log('Datos recibidos en el modal:', this.data); // Depuración
+    if (this.esEdicion && this.data.actividad) {
+      this.formulario.patchValue({
+        nombre: this.data.actividad.actividadNombre,
+      });
+    }
   }
 
   onFileSelected(event: any): void {
@@ -52,75 +66,57 @@ export class ModalActividadComponent implements OnInit {
       const allowedTypes = ['application/pdf', 'video/mp4', 'video/avi', 'video/quicktime'];
       if (allowedTypes.includes(file.type)) {
         this.archivoSeleccionado = file;
+        this.alertMessage = null; // Limpiar mensaje si el archivo es válido
       } else {
-        alert('Tipo de archivo no permitido. Solo se permiten PDFs y videos (MP4, AVI, MOV).');
         this.archivoSeleccionado = null;
+        this.alertMessage = 'Tipo de archivo no permitido. Solo se permiten PDFs y videos (MP4, AVI, MOV).';
+        this.alertType = 'error';
       }
     }
   }
 
   agregarContenido(): void {
-    if (this.formulario.invalid || !this.archivoSeleccionado) {
-      alert('Por favor, completa todos los campos y selecciona un archivo.');
+    if (this.formulario.invalid || (!this.archivoSeleccionado && !this.esEdicion)) {
+      this.alertMessage = 'Por favor, completa todos los campos y selecciona un archivo.';
+      this.alertType = 'error';
       return;
     }
 
     this.cargando = true;
-
+    this.alertMessage = null; // Limpiar mensaje antes de enviar
     const formData = new FormData();
-    formData.append('archivo', this.archivoSeleccionado);
-    formData.append('nombre', this.formulario.get('nombre')?.value);
-    formData.append('sesionId', this.data.sesionId);
+    const actividad: DTOActividad = {
+      actividadNombre: this.formulario.get('nombre')?.value,
+      infoMaestra: {
+        descripcion:
+          this.tipoContenido === 'introducciones'
+            ? 'Introducción'
+            : this.tipoContenido === 'materiales'
+            ? 'Material'
+            : 'Actividad',
+      },
+    };
 
-    switch (this.tipoContenido) {
-      case 'introducciones':
-        this.sesionService.agregarIntroduccion(formData).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            this.cargando = false;
-            console.error('Error al agregar introducción:', err);
-            alert('Error al agregar introducción. Inténtalo de nuevo.');
-          },
-        });
-        break;
-
-      case 'materiales':
-        this.sesionService.agregarMaterial(formData).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            this.cargando = false;
-            console.error('Error al agregar material:', err);
-            alert('Error al agregar material. Inténtalo de nuevo.');
-          },
-        });
-        break;
-
-      case 'actividades':
-        this.sesionService.agregarActividad(formData).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            this.cargando = false;
-            console.error('Error al agregar actividad:', err);
-            alert('Error al agregar actividad. Inténtalo de nuevo.');
-          },
-        });
-        break;
-
-      default:
-        console.error('Tipo de contenido no válido');
-        this.cargando = false;
-        alert('Tipo de contenido no válido.');
-        break;
+    formData.append('actividad', new Blob([JSON.stringify(actividad)], { type: 'application/json' }));
+    if (this.archivoSeleccionado) {
+      formData.append('archivo', this.archivoSeleccionado);
     }
+
+    const request = this.esEdicion
+      ? this.sesionService.editarActividad(this.data.sesionId, this.data.actividad!.idActividad!, formData)
+      : this.sesionService.agregarActividad(this.data.sesionId, formData);
+
+    request.subscribe({
+      next: () => {
+        this.cargando = false;
+        this.dialogRef.close(true);
+      },
+      error: (err) => {
+        this.cargando = false;
+        this.alertMessage = `Error al procesar contenido. Detalle: ${err.message}`;
+        this.alertType = 'error';
+      },
+    });
   }
 
   cerrarModal(): void {

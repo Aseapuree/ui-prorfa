@@ -93,7 +93,7 @@ export class CampusSesionesComponent {
     const dialoRef = this.dialog.open(DialogoConfirmacionComponent, {
       width: '1px',
       height: '1px',
-      data: { message : '¿Estas seguro de que quieres eliminar este cursos?'}
+      data: { message : '¿Estas seguro de que quieres eliminar esta sesion?'}
     });
 
     dialoRef.afterClosed().subscribe(result => {
@@ -107,6 +107,12 @@ export class CampusSesionesComponent {
         })
       }
     })
+  }
 
+  // Método para navegar a las actividades de una sesión
+  irAActividades(idSesion: string): void {
+    this.router.navigate(['/card-actividades', idSesion], {
+      state: { idProfesorCurso: this.idProfesorCurso }
+    });
   }
 }

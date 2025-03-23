@@ -10,16 +10,22 @@ import { SesionesAlumnoComponent } from './campus/components/modules/campus-alum
 import { ActividadesAlumnoComponent } from './campus/components/modules/campus-alumno/actividades-alumno/actividades-alumno.component';
 import { AuthGuard } from './guard/auth.guard';
 import { PerfilComponent } from './general/components/perfil/perfil.component';
+import { MatriculasComponent } from'./matricula/components/matriculas/matriculas.component';
+import { RegistrarMatriculaComponent } from './matricula/components/registrarmatricula/registrarmatricula.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
-        {path:'campus',component:CampusComponent, canActivate: [AuthGuard]},
+        {path:'campus',component:CampusComponent, canActivate: [AuthGuard]},// Campus profesor
         {path:'cursos', component: CampusCursosComponent, canActivate: [AuthGuard]},
-        // {path:'usuarios', component: CampusUsuarioComponent, canActivate: [AuthGuard]},
+        {path: 'campus-alumno',component:CampusAlumnoComponent,canActivate: [AuthGuard]},//campus alumno
+        { path: 'sesiones/:idProfesorCurso', component: CampusSesionesComponent,canActivate: [AuthGuard] },// Campus sesiones profesor
+        { path: 'card-actividades/:idSesion', component: CampusActividadesComponent,canActivate: [AuthGuard] }, // Campus actividades profesor
+        { path: 'sesiones-alumno/:idProfesorCurso', component: SesionesAlumnoComponent,canActivate: [AuthGuard]},//campus sesiones alumno
+        { path: 'actividades/:idSesion', component: ActividadesAlumnoComponent,canActivate: [AuthGuard]},//campus actividades alumno
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
-        { path: 'curso-angular', component: CampusSesionesComponent, canActivate: [AuthGuard]},
-        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]}
-        // { path: 'info-week', component: CampusInfoWeekComponent, canActivate: [AuthGuard]}
+        {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
+        {path:'matricula/:id', component: MatriculasComponent,canActivate:[AuthGuard]},
+        {path:'registrarmatricula', component: RegistrarMatriculaComponent,canActivate:[AuthGuard]},
     ],canActivate:[AuthGuard] },
     
 ];
