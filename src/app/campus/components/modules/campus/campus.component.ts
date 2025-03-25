@@ -9,6 +9,8 @@ import { ProfesorCurso } from '../../../interface/ProfesorCurso';
 import { lastValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
+import { UserData, ValidateService } from '../../../../services/validateAuth.service';
+import { UsuarioService } from '../../../services/usuario.service';
 
 @Component({
   selector: 'app-campus',
@@ -21,13 +23,49 @@ import { MatDialogModule } from '@angular/material/dialog';
 export class CampusComponent implements OnInit {
   public page: number = 1;
   profesorcursos: ProfesorCurso[] = [];
+  usuarioId: string | null = null; // ID del usuario autenticado
 
   constructor(
-    private profesorCursoService: ProfesorCursoService
+    private profesorCursoService: ProfesorCursoService,
+    private authService: ValidateService, // Inyecta el servicio
+    private usuarioService: UsuarioService // Inyecta el nuevo servicio
   ) {}
 
   async ngOnInit(): Promise<void> {
-    await this.obtenerCurso();
+    try {
+      // Obtener los datos del usuario autenticado
+      const userData: UserData = await lastValueFrom(this.authService.getUserData());
+      console.log('Datos del usuario:', userData);
+
+      // Extraer el id_auth
+      const idAuth = userData?.data?.id;
+      if (!idAuth) {
+        console.error('No se encontró el id_auth del usuario');
+        return;
+      }
+
+      // Obtener el idusuario a partir del id_auth
+      this.usuarioId = await lastValueFrom(this.usuarioService.getUsuarioByIdAuth(idAuth));
+      console.log('usuarioId obtenido:', this.usuarioId);
+
+      if (this.usuarioId) {
+        localStorage.setItem('usuarioId', this.usuarioId);
+        await this.obtenerCursosPorProfesor();
+      } else {
+        console.error('No se encontró el ID del usuario autenticado');
+      }
+    } catch (error) {
+      console.error('Error al obtener el usuarioId:', error);
+    }
+  }
+
+  async obtenerCursosPorProfesor(): Promise<void> {
+    try {
+      this.profesorcursos = await lastValueFrom(this.profesorCursoService.obtenerCursosPorProfesor(this.usuarioId!));
+      console.log("Cursos del profesor: ", this.profesorcursos);
+    } catch (error) {
+      console.error('Error al obtener los cursos del profesor', error);
+    }
   }
 
   // Obtener cursos

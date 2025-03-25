@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import { ProfesorCurso } from '../interface/ProfesorCurso'; 
 
 @Injectable({
@@ -11,6 +11,21 @@ export class ProfesorCursoService {
   private urlBase = "http://localhost:8080/v1/profesor-curso";
 
   constructor(private clienteHttp: HttpClient) { }
+
+  // Obtener cursos de un profesor específico
+  obtenerCursosPorProfesor(usuarioId: string): Observable<ProfesorCurso[]> {
+    return this.clienteHttp.get<any>(`${this.urlBase}/listar-por-profesor/${usuarioId}`, { withCredentials: true })
+      .pipe(
+        map(response => {
+          console.log('Respuesta del backend:', response); // Depura la respuesta
+          return response.data; // Asegúrate de que response.data contiene los cursos
+        }),
+        catchError(error => {
+          console.error('Error al obtener los cursos del profesor', error);
+          return throwError(() => new Error('Error al cargar los cursos'));
+        })
+      );
+  }
 
    // Obtener lista de profesores con sus cursos
   obtenerCourseList(): Observable<ProfesorCurso[]> {

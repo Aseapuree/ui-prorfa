@@ -9,11 +9,13 @@ import { AuthGuard } from './guard/auth.guard';
 import { PerfilComponent } from './general/components/perfil/perfil.component';
 import { MatriculasComponent } from'./matricula/components/matriculas/matriculas.component';
 import { RegistrarMatriculaComponent } from './matricula/components/registrarmatricula/registrarmatricula.component';
+import { CampusGeneralComponent } from './campus/components/modules/campus-general/campus-general.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
+        {path:'campus-general',component:CampusGeneralComponent, canActivate: [AuthGuard]},// Campus general
         {path:'campus',component:CampusComponent, canActivate: [AuthGuard]},// Campus profesor
-        {path:'cursos', component: CampusCursosComponent, canActivate: [AuthGuard]},
+        {path:'gestion/cursos', component: CampusCursosComponent, canActivate: [AuthGuard]},
         { path: 'sesiones/:idProfesorCurso', component: CampusSesionesComponent,canActivate: [AuthGuard] },// Campus sesiones profesor
         { path: 'card-actividades/:idSesion', component: CampusActividadesComponent,canActivate: [AuthGuard] }, // Campus actividades profesor
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
