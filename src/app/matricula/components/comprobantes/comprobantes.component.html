@@ -1,0 +1,44 @@
+<div class="container" *ngIf="comprobante; else sinComprobante">
+  <h2>📄 Comprobante</h2>
+
+  <p>
+    <strong>👤 Apoderado:</strong>
+    {{ comprobante.apoderadoNombre }} (DNI: {{ comprobante.apoderadoDocumento }})
+  </p>
+  <p>
+    <strong>👨‍🎓 Alumno:</strong>
+    {{ comprobante.alumnoNombre }} (DNI: {{ comprobante.alumnoDocumento }})
+  </p>
+  <p>
+    <strong>🏫 Grado/Sección:</strong>
+    {{ comprobante.grado }}/{{ comprobante.seccion }}
+  </p>
+  <p>
+    <strong>🔢 Código Matrícula:</strong>
+    {{ comprobante.codigoMatricula }}
+  </p>
+  <p>
+    <strong>🆔 Código Alumno:</strong>
+    {{ comprobante.codigoAlumno }}
+  </p>
+  <p>
+    <strong>📅 Fecha Creación:</strong>
+    {{ comprobante.fechaCreacion }}
+  </p>
+  <p>
+    <strong>💳 Método de Pago:</strong>
+    {{ comprobante.metodoPago }}
+  </p>
+  <p>
+    <strong>📝 Observaciones:</strong>
+    {{ comprobante.observaciones }}
+  </p>
+
+  <hr>
+  <button (click)="generarComprobantePago()">💰 Generar Comprobante de Pago</button>
+  <button (click)="generarComprobanteMatricula()">✅ Generar Comprobante de Matrícula</button>
+</div>
+
+<ng-template #sinComprobante>
+  <p>⚠️ No hay comprobante disponible.</p>
+</ng-template>
