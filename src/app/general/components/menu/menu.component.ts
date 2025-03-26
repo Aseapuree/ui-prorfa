@@ -124,19 +124,6 @@ export class MenuComponent implements OnInit {
 
   getIconColorClass(iconName: string): string {
     const colorClassMap: { [key: string]: string } = {
-      faUser: 'text-green',
-      faBook: 'text-yellow',
-      faFileAlt: 'text-blue',
-      faClipboardCheck: 'text-lightgreen',
-      faHeadset: 'text-orange',
-      faSignOutAlt: 'text-red',
-      faStar: 'text-yellow',
-      faRocket: 'text-purple',
-      faArrowLeft: 'text-blue',
-      faPencil: 'text-pink',
-      faTrash: 'text-darkred',
-      faPlus: 'text-darkgreen',
-      faMagnifyingGlass: 'text-steelblue'
     };
   
     return colorClassMap[iconName] || '';
