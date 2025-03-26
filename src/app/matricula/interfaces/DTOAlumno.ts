@@ -1,13 +1,10 @@
-import { UUID } from "crypto";
-import { LocalDateTime } from '@js-joda/core';
-
 export class Alumno{
-  idalumno?: UUID;
+  idalumno?: string;
   nombre?: string;
   apellidoPaterno?: string;
   apellidoMaterno?: string;
-  idtipodoc?: UUID;
+  idtipodoc?: string;
   numeroDocumento?: string;
-  fechaNacimiento?: LocalDateTime;
+  fechaNacimiento?: string;
   direccion?: string;
 }

@@ -1,7 +1,7 @@
 .card-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
+  gap: 15px;
   padding: 10px;
   width: 100%;
 }
@@ -32,7 +32,7 @@
   align-items: center;
   padding: 15px;
   transition: opacity 0.5s ease;
-  color: white;
+  color: var(--text-color);
   font-weight: bold;
 }
 
@@ -61,10 +61,11 @@
   margin-top: 15px;
   padding: 10px 20px;
   background-color: var(--boton);
-  color: white;
+  color: var(--text-color);
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .button:hover {
@@ -96,4 +97,10 @@
 .loading-container p {
   color: var(--primary-dark);
   font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .card-container {
+    grid-template-columns: 1fr;
+  }
 }

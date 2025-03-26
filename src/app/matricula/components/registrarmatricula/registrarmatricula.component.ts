@@ -20,9 +20,10 @@ export class RegistrarMatriculaComponent implements OnInit {
   seccion!: string;
   apoderadoEncontrado: any = null;
 
-  mostrarFormularioApoderado: boolean = true;
+  mostrarFormularioApoderado: boolean = false;
 
-  usuario = JSON.parse(localStorage.getItem('usuario') || sessionStorage.getItem('usuario') || '{}');
+  // Usuario fijo
+  usuario = { idusuario: '0765bb4e-7cc4-4743-9eca-f7ebb3c1f624' };
 
   constructor(
     private fb: FormBuilder,
@@ -50,31 +51,31 @@ export class RegistrarMatriculaComponent implements OnInit {
     this.formMatricula = this.fb.group({
       dniBusqueda: [''],
       apoderado: this.fb.group({
-        nombre: ['', Validators.required],
-        apellidoPaterno: ['', Validators.required],
-        apellidoMaterno: ['', Validators.required],
+        nombre: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
+        apellidoPaterno: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
+        apellidoMaterno: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
         tipoDocumento: ['', Validators.required],
-        numeroDocumento: ['', Validators.required],
-        telefono: ['', Validators.required],
+        numeroDocumento: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+        telefono: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
         relacionEstudiante: ['', Validators.required],
         direccion: ['', Validators.required],
-        correo: ['', [Validators.required, Validators.email]]
+        correo: ['', [Validators.required, Validators.email]],
+        fechaNacimiento: ['', Validators.required]
       }),
       alumno: this.fb.group({
-        nombre: ['', Validators.required],
-        apellidoPaterno: ['', Validators.required],
-        apellidoMaterno: ['', Validators.required],
+        nombre: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
+        apellidoPaterno: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
+        apellidoMaterno: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
         tipoDocumento: ['', Validators.required],
-        numeroDocumento: ['', Validators.required],
+        numeroDocumento: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
         fechaNacimiento: ['', Validators.required],
         direccion: ['', Validators.required]
       })
     });
   }
 
-
   buscarApoderado(): void {
-    const dni = this.formMatricula.get('dniBusqueda')?.value;
+    const dni = this.formMatricula.get('apoderado.numeroDocumento')?.value;
     if (!dni) return;
 
     this.apoderadoService.buscarPorNumeroDocumento(dni).subscribe({
@@ -85,7 +86,6 @@ export class RegistrarMatriculaComponent implements OnInit {
       },
       error: err => {
         console.error('Error al buscar el apoderado:', err);
-
         this.apoderadoEncontrado = null;
         this.mostrarFormularioApoderado = true;
         alert('Apoderado no encontrado. Ingrese los datos manualmente.');
@@ -109,15 +109,14 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     apoderadoObs.subscribe({
       next: (apoderadoResp) => {
-        const idApoderado = apoderadoResp.idapoderado || apoderadoResp.idapoderado;
+        const idApoderado = apoderadoResp.idapoderado;
         this.alumnoService.agregarAlumno(alumnoData).subscribe({
           next: (alumnoResp: any) => {
-            const idAlumno = alumnoResp.idalumno || alumnoResp.id;
-
+            const idAlumno = alumnoResp.idalumno;
             const matriculaRequest = {
-              idusuario: this.usuario.idusuario,
-              idapoderado: idApoderado,
-              idalumno: idAlumno,
+              idusuario: { idusuario: this.usuario.idusuario },
+              idapoderado: { idapoderado: idApoderado },
+              idalumno: { idalumno: idAlumno },
               nivel: this.nivel,
               grado: this.grado,
               seccion: this.seccion
@@ -126,7 +125,7 @@ export class RegistrarMatriculaComponent implements OnInit {
             this.matriculaService.agregarMatricula(matriculaRequest).subscribe({
               next: () => {
                 alert('¡Matrícula registrada con éxito!');
-                this.router.navigate(['/']);
+                this.router.navigate(['/comprobantes']);
               },
               error: err => {
                 console.error('Error al registrar la matrícula:', err);

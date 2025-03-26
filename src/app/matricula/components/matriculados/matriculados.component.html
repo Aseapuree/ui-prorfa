@@ -1,0 +1,77 @@
+<div class="filter-container">
+  <form [formGroup]="filterForm" (ngSubmit)="onSearch()">
+    <div class="filter-row">
+      <label>
+        🎓 Grado:
+        <input type="number" formControlName="grado" placeholder="Ej. 3" />
+      </label>
+      <label>
+        🏫 Sección:
+        <input type="text" formControlName="seccion" placeholder="Ej. A" />
+      </label>
+      <label>
+        📅 Fecha Inicio:
+        <input type="date" formControlName="fechaInicio" />
+      </label>
+      <label>
+        📅 Fecha Fin:
+        <input type="date" formControlName="fechaFin" />
+      </label>
+    </div>
+    <div class="filter-row">
+      <label>
+        📅 Fecha Específica:
+        <input type="date" formControlName="fechaEspecifica" />
+      </label>
+      <label>
+        👤 Nombre:
+        <input type="text" formControlName="nombre" placeholder="Ej. Juan" />
+      </label>
+      <label>
+        👥 Apellido Paterno:
+        <input type="text" formControlName="apellidoPaterno" placeholder="Ej. Pérez" />
+      </label>
+      <label>
+        👥 Apellido Materno:
+        <input type="text" formControlName="apellidoMaterno" placeholder="Ej. López" />
+      </label>
+    </div>
+    <button type="submit" class="btn-search">🔍 Buscar</button>
+  </form>
+</div>
+
+<div *ngIf="loading" class="loading-container">
+  <div class="spinner"></div>
+  <p>⏳ Cargando...</p>
+</div>
+
+<div *ngIf="!loading && matriculados.length === 0">
+  <p>⚠️ No se encontraron registros.</p>
+</div>
+
+<div *ngIf="!loading && matriculados.length > 0">
+  <table class="matriculas-table">
+    <thead>
+      <tr>
+        <th>🎓 Grado</th>
+        <th>🏫 Sección</th>
+        <th>📚 Nivel</th>
+        <th>👤 Alumno</th>
+        <th>📅 Fecha Creación</th>
+        <th>🔧 Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of matriculados">
+        <td>{{ m.grado }}</td>
+        <td>{{ m.seccion }}</td>
+        <td>{{ m.nivel }}</td>
+        <td>{{ m.nombre }} {{ m.apellidoPaterno }} {{ m.apellidoMaterno }}</td>
+        <td>{{ m.fechaCreacion }}</td>
+        <td>
+          <button class="btn-print" (click)="imprimirRegistro(m)">🖨️ Imprimir</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
