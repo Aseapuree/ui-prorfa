@@ -6,4 +6,5 @@ export class DTOMenu {
     menu_ruta?: string;
     menu_fecha_creacion?: Date;
     menu_fecha_actualizacion?: Date;
+    menu_icono?: string;
 }

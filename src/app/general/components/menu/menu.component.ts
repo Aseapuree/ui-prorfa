@@ -4,6 +4,9 @@ import { RouterModule, Router } from '@angular/router';
 import { DTOmenuService } from '../../Services/dtomenu.service';
 import { DTOMenu } from '../../Interface/DTOMenu';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { fontAwesomeIcons } from '../../../campus/components/shared/font-awesome-icons';  // ✅ Importando iconos desde font-awesome-icons.ts
+import { faUserCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-menu',
@@ -17,6 +20,8 @@ export class MenuComponent implements OnInit {
   @Input() apellidoPaterno: string = '';  
   @Input() apellidoMaterno: string = '';  
   @Input() nombreRol: string = ''; 
+  faUserCircle = faUserCircle;
+  faSignOutAlt = faSignOutAlt;
 
   menus: DTOMenu[] = [];
   menuJerarquico: any[] = []; // Estructura con submenús
@@ -55,6 +60,7 @@ export class MenuComponent implements OnInit {
         .filter(menu => menu.idmenuparent === null) // Menús principales
         .map(menu => ({
           ...menu,
+          icono: this.getIcon(menu.menu_icono ?? ''), // Asignar el icono
           submenus: this.menus.filter(sub => sub.idmenuparent === menu.idMenu) // Submenús correspondientes
         }));
 
@@ -64,7 +70,24 @@ export class MenuComponent implements OnInit {
     }, error => {
       console.error("❌ Error al obtener menús en MenuComponent:", error);
     });
+    
   }
+
+  
+
+  getIcon(menu_icono: string): IconDefinition | null {
+    console.log(`🔍 Buscando icono: "${menu_icono}"`);
+  
+    const iconoEncontrado = fontAwesomeIcons.find(icon => icon.iconName === menu_icono.toLowerCase());
+  
+    if (!iconoEncontrado) {
+      console.warn(`⚠ No se encontró el icono: "${menu_icono}" en fontAwesomeIcons`);
+    }
+  
+    return iconoEncontrado || null;
+  }
+  
+  
 
   toggleMenu() {
     this.menuCerrado = !this.menuCerrado;
@@ -98,4 +121,25 @@ export class MenuComponent implements OnInit {
     // Redirigir manualmente a la nueva URL
     window.location.href = 'http://localhost:4203';
   }
+
+  getIconColorClass(iconName: string): string {
+    const colorClassMap: { [key: string]: string } = {
+      faUser: 'text-green',
+      faBook: 'text-yellow',
+      faFileAlt: 'text-blue',
+      faClipboardCheck: 'text-lightgreen',
+      faHeadset: 'text-orange',
+      faSignOutAlt: 'text-red',
+      faStar: 'text-yellow',
+      faRocket: 'text-purple',
+      faArrowLeft: 'text-blue',
+      faPencil: 'text-pink',
+      faTrash: 'text-darkred',
+      faPlus: 'text-darkgreen',
+      faMagnifyingGlass: 'text-steelblue'
+    };
+  
+    return colorClassMap[iconName] || '';
+  }
+  
 }

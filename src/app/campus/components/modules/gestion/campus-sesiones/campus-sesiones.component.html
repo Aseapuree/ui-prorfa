@@ -2,7 +2,8 @@
   No hay sesiones disponibles para este curso.
 </div>
 
-<div class="flex justify-end p-4">
+<!-- Botón Agregar (visible solo para Profesor) -->
+<div class="flex justify-end p-4" *ngIf="rolUsuario === 'Profesor'">
   <div class="bg-white border divide-x rounded-lg overflow-hidden dark:bg-gray-900 dark:border-gray-700 dark:divide-gray-700">
     <button
       (click)="openAddModal()"
@@ -26,8 +27,8 @@
     >
     </app-card-week>
 
-    <!-- Botones integrados en la tarjeta -->
-    <div class="flex border-t divide-x dark:border-gray-700 dark:divide-gray-700">
+    <!-- Botones Editar y Eliminar (visibles solo para Profesor) -->
+    <div class="flex border-t divide-x dark:border-gray-700 dark:divide-gray-700" *ngIf="rolUsuario === 'Profesor'">
       <button
         (click)="openEditModal(sesion)"
         class="flex-1 flex items-center justify-center px-2 py-2 xl:px-4 xl:py-2 text-sm font-medium text-gray-600 transition-colors duration-200 xl:text-base dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 gap-x-2"

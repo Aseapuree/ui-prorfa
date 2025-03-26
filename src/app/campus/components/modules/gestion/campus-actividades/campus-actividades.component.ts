@@ -12,6 +12,8 @@ import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
+import { UserData, ValidateService } from '../../../../../services/validateAuth.service';
+import { lastValueFrom } from 'rxjs';
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades';
 
@@ -33,7 +35,9 @@ export class CampusActividadesComponent implements OnInit {
     },
   };
   idSesion: string = '';
-  idProfesorCurso: string = '';
+  idProfesorCurso: string | null = null; // Puede ser null si es alumno
+  idAlumnoCurso: string | null = null;   // Nuevo para alumnos
+  rolUsuario: string | null = null;      // Variable para el rol del usuario
   actividadSeleccionada: TipoActividad = 'introducciones';
   contenidoActual: { tipo: 'pdf' | 'video'; url: string; actividad: DTOActividad } | null = null;
   errorLoadingFile: boolean = false;
@@ -45,22 +49,35 @@ export class CampusActividadesComponent implements OnInit {
     private sesionService: SesionService,
     private dialog: MatDialog,
     private router: Router,
-    private notificationService: NotificationService // Inyectar el servicio
+    private notificationService: NotificationService, // Inyectar el servicio
+    private validateService: ValidateService
   ) {}
 
-  ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
-      this.idSesion = params.get('idSesion') || '';
-      const navigation = this.router.getCurrentNavigation();
-      if (navigation?.extras.state?.['idProfesorCurso']) {
-        this.idProfesorCurso = navigation.extras.state['idProfesorCurso'];
-      }
-      console.log('idProfesorCurso:', this.idProfesorCurso);
-      console.log('idSesion:', this.idSesion);
-      if (this.idSesion) {
-        this.obtenerActividades();
-      }
-    });
+  async ngOnInit(): Promise<void> {
+    try {
+      // Obtener el rol del usuario autenticado
+      const userData: UserData = await lastValueFrom(this.validateService.getUserData());
+      this.rolUsuario = userData?.data?.rol || null;
+      console.log('Rol del usuario:', this.rolUsuario);
+
+      // Obtener parámetros de la ruta y estado de navegación
+      this.route.paramMap.subscribe((params) => {
+        this.idSesion = params.get('idSesion') || '';
+        const navigation = this.router.getCurrentNavigation();
+        if (navigation?.extras.state) {
+          this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
+          this.idAlumnoCurso = navigation.extras.state['idAlumnoCurso'] || null; // Si decides pasar idAlumnoCurso en el futuro
+        }
+        console.log('idProfesorCurso:', this.idProfesorCurso);
+        console.log('idAlumnoCurso:', this.idAlumnoCurso);
+        console.log('idSesion:', this.idSesion);
+        if (this.idSesion) {
+          this.obtenerActividades();
+        }
+      });
+    } catch (error) {
+      console.error('Error al obtener el rol del usuario:', error);
+    }
   }
 
   obtenerActividades(): void {
@@ -185,11 +202,13 @@ export class CampusActividadesComponent implements OnInit {
   }
 
   retroceder(): void {
-    console.log('Retrocediendo a sesiones con idProfesorCurso:', this.idProfesorCurso);
-    if (this.idProfesorCurso) {
-      this.router.navigate(['/sesiones', this.idProfesorCurso]);
+    console.log('Retrocediendo a sesiones con idProfesorCurso:', this.idProfesorCurso, 'o idAlumnoCurso:', this.idAlumnoCurso);
+    if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
+      this.router.navigate(['/sesiones/profesor', this.idProfesorCurso]);
+    } else if (this.rolUsuario === 'Alumno' && this.idAlumnoCurso) {
+      this.router.navigate(['/sesiones/alumno', this.idAlumnoCurso]);
     } else {
-      console.error('idProfesorCurso no está definido');
+      console.error('No se pudo determinar la ruta de retroceso');
       this.router.navigate(['campus']);
     }
   }

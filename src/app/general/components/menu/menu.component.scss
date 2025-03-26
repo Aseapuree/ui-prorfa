@@ -32,7 +32,7 @@
   border: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
-  align-items: center; // Alinea íconos y texto correctamente
+  align-items: center;
 }
 
 .menu-btn:hover, .exit-btn:hover {
@@ -60,7 +60,7 @@
   padding-left: 10px;
   border-left: 2px solid var(--border-color);
   transition: max-height 0.3s ease-in-out;
-  max-height: 500px; // Ajuste dinámico según el contenido
+  max-height: 500px;
 }
 
 .submenu-btn {
@@ -79,3 +79,16 @@
     transform: scale(1.03);
   }
 }
+
+// 🔹 Clases de colores para los iconos
+.text-green { color: #4CAF50; }  // Verde
+.text-yellow { color: #FFD700; } // Dorado
+.text-blue { color: #00BFFF; }   // Azul claro
+.text-lightgreen { color: #32CD32; } // Verde claro
+.text-orange { color: #FF4500; } // Naranja
+.text-red { color: #DC143C; }    // Rojo oscuro
+.text-purple { color: #8A2BE2; } // Púrpura
+.text-pink { color: #FF69B4; }   // Rosa fuerte
+.text-darkred { color: #B22222; }// Rojo ladrillo
+.text-darkgreen { color: #008000; } // Verde oscuro
+.text-steelblue { color: #4682B4; } // Azul acero
