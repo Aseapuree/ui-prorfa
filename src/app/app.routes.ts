@@ -6,10 +6,12 @@ import { CampusSesionesComponent } from './campus/components/modules/gestion/cam
 import { CampusCursosComponent } from './campus/components/modules/gestion/campus-cursos/campus-cursos.component';
 import { CampusActividadesComponent } from './campus/components/modules/gestion/campus-actividades/campus-actividades.component';
 import { AuthGuard } from './guard/auth.guard';
-import { PerfilComponent } from './general/components/perfil/perfil.component';
+import { PerfilComponent} from './general/components/perfil/perfil.component';
 import { MatriculasComponent } from'./matricula/components/matriculas/matriculas.component';
 import { RegistrarMatriculaComponent } from './matricula/components/registrarmatricula/registrarmatricula.component';
 import { CampusGeneralComponent } from './campus/components/modules/campus-general/campus-general.component';
+import { ComprobanteComponent } from './matricula/components/comprobantes/comprobantes.component';
+import { MatriculadosComponent } from './matricula/components/matriculados/matriculados.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
@@ -21,8 +23,11 @@ export const routes: Routes = [
         { path: 'card-actividades/:idSesion', component: CampusActividadesComponent,canActivate: [AuthGuard] }, // Campus actividades profesor
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
         {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
-        {path:'matricula/:id', component: MatriculasComponent,canActivate:[AuthGuard]},
+        {path:'matriculas/primaria', component: MatriculasComponent,canActivate:[AuthGuard]},
+        {path:'matriculas/secundaria', component: MatriculasComponent,canActivate:[AuthGuard]},
         {path:'registrarmatricula', component: RegistrarMatriculaComponent,canActivate:[AuthGuard]},
+        {path:'comprobantes', component: ComprobanteComponent,canActivate:[AuthGuard]},
+        {path:'matriculados', component: MatriculadosComponent,canActivate:[AuthGuard]},
     ],canActivate:[AuthGuard] },
-    
+
 ];

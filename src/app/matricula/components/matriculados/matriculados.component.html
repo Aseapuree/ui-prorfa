@@ -1,0 +1,82 @@
+<div class="search-container">
+  <input
+    type="text"
+    [(ngModel)]="quickSearch"
+    placeholder="Escribe para filtrar..."
+    class="search-input"
+    (keyup.enter)="onSearch()"
+    (input)="onSearch()"
+  />
+  <button class="filter-toggle" (click)="toggleFilters()">
+    <i class="filter-icon">⚙️</i>
+  </button>
+</div>
+
+<div class="filter-panel" *ngIf="showFilters">
+  <div class="advanced-filters">
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.grado" />
+      Filtrar por Grado
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.seccion" />
+      Filtrar por Sección
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.fecha" />
+      Filtrar por Fecha
+      <input
+        *ngIf="filterOptions.fecha"
+        type="date"
+        [(ngModel)]="filterFecha"
+        class="advanced-date-input"
+      />
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.nombre" />
+      Filtrar por Nombre
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.apellidoPaterno" />
+      Filtrar por Apellido Paterno
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.apellidoMaterno" />
+      Filtrar por Apellido Materno
+    </label>
+  </div>
+</div>
+
+<div class="table-container">
+  <table class="matriculas-table">
+    <thead>
+      <tr>
+        <th>🎓 Grado</th>
+        <th>🏫 Sección</th>
+        <th>📚 Nivel</th>
+        <th>👤 Alumno</th>
+        <th>📅 Fecha Creación</th>
+        <th>🔧 Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of matriculados">
+        <td>{{ m.grado }}</td>
+        <td>{{ m.seccion }}</td>
+        <td>{{ m.nivel }}</td>
+        <td>{{ m.nombre }} {{ m.apellidoPaterno }} {{ m.apellidoMaterno }}</td>
+        <td>{{ m.fechaCreacion }}</td>
+        <td>
+          <button class="btn-print" (click)="imprimirRegistro(m)">🖨️ Imprimir</button>
+        </td>
+      </tr>
+      <tr *ngIf="!loading && matriculados.length === 0">
+        <td colspan="6">⚠️ No se encontraron registros.</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>⏳ Cargando...</p>
+  </div>
+</div>

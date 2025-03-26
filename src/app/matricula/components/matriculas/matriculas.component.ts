@@ -54,8 +54,14 @@ export class MatriculasComponent implements OnInit {
     });
   }
 
+
   hayVacantes(secciones: { [seccion: string]: number } = {}): boolean {
     return Object.values(secciones).some(v => v > 0);
+  }
+
+
+  getSecciones(vacantes: { [seccion: string]: number } = {}): string[] {
+    return Object.keys(vacantes);
   }
 
   matricular(nivel: string, grado: number): void {

@@ -9,6 +9,8 @@ import { DTOUsuario } from '../../Interface/DTOUsuario';
 import { ValidateService } from '../../../services/validateAuth.service';
 import {  lastValueFrom } from 'rxjs';
 
+
+
 @Component({
   selector: 'app-layout',
   standalone: true,
@@ -21,6 +23,9 @@ export class LayoutComponent implements OnInit {
   @Output() nombreRol: string = '';
   usuarioMostrar: DTOUsuario = {};
   menuAbierto: boolean = true;
+  currentIndex: number = 0;
+  totalSlides: number = 3; // Ahora es 3 porque solo tienes 3 imágenes
+  intervalId: any;
 
   constructor(
     private menuService: DTOmenuService,
@@ -69,11 +74,12 @@ export class LayoutComponent implements OnInit {
       localStorage.setItem("rol", idRol);
       console.log("Rol guardado en localStorage:", localStorage.getItem("rol"));
       this.cdr.detectChanges();
-
+      this.startCarousel();
       const menuResponse = await lastValueFrom(this.menuService.getMenus(idRol));
       this.menus = menuResponse?.data || [];
       console.log("Menús cargados:", this.menus);
       this.cdr.detectChanges();
+      
     } catch (error) {
       console.error("Error en la obtención de usuario o menús:", error);
     }
@@ -91,5 +97,32 @@ export class LayoutComponent implements OnInit {
       window.location.href = "http://localhost:4203"; // Redirigir si no está autenticado
     }
   }
-  
+  // ---------- FUNCIONALIDAD DEL CARRUSEL ----------
+
+  startCarousel() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+    this.intervalId = setInterval(() => {
+      this.nextSlide();
+    }, 2000); // Ahora cambia cada 5 segundos
+  }
+
+  nextSlide() {
+    this.currentIndex = (this.currentIndex + 1) % this.totalSlides;
+  }
+
+  prevSlide() {
+    this.currentIndex = (this.currentIndex - 1 + this.totalSlides) % this.totalSlides;
+  }
+
+  goToSlide(index: number) {
+    this.currentIndex = index;
+  }
+
+  ngOnDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+  }
 }

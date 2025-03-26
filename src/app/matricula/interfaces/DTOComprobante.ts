@@ -1,18 +1,20 @@
-import { UUID } from "crypto";
-import Decimal from "decimal.js";
+import { Alumno, Apoderado, Usuario } from "./DTOMatricula";
 
 export class Comprobante{
-    idcomprobante?: UUID;
-    idtipocomp?: UUID;
+    idcomprobante?: string;
+    idtipocomp?: string;
     codigomatricula?: string;
     codigoalumno?: string;
-    montototal?: Decimal;
+    montototal?: string;
     url?: string;
 }
 
-export class Matricula{
-  idmatricula?: UUID;
-   grado?: number;
-   nivel?: string;
-   seccion?: string;
+export class Matricula {
+  idmatricula?: string;
+  idusuario?: Usuario;
+  idapoderado?: Apoderado;
+  idalumno?: Alumno;
+  grado?: number;
+  nivel?: string;
+  seccion?: string;
 }

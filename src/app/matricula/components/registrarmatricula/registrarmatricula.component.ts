@@ -1,10 +1,39 @@
-import { MatriculaService } from './../../services/matricula.service';
-import { AlumnoService } from './../../services/alumno.service';
-import { ApoderadoService } from './../../services/apoderado.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { ApoderadoService } from './../../services/apoderado.service';
+import { AlumnoService } from './../../services/alumno.service';
+import { MatriculaService } from './../../services/matricula.service';
+
+function documentLengthValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (!control.parent) return null;
+    const tipoDocumento = control.parent.get('tipoDocumento')?.value;
+    const value: string = control.value;
+    if (!value) return null;
+    if (tipoDocumento === '29c2c5c3-2fc9-4410-ab24-52a8114f9c05') {
+      return value.length === 8 ? null : { invalidLength: { requiredLength: 8, actualLength: value.length } };
+    } else if (tipoDocumento === 'fa65a599-60fd-43e1-85e2-7a95f3cf072e') {
+      return value.length <= 20 ? null : { invalidLength: { requiredMax: 20, actualLength: value.length } };
+    }
+    return null;
+  };
+}
+
+function minAgeValidator(minAge: number): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (!control.value) return null;
+    const birthDate = new Date(control.value);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age < minAge ? { minAge: { requiredAge: minAge, actualAge: age } } : null;
+  };
+}
 
 @Component({
   selector: 'app-registrar-matricula',
@@ -19,10 +48,10 @@ export class RegistrarMatriculaComponent implements OnInit {
   grado!: number;
   seccion!: string;
   apoderadoEncontrado: any = null;
+  mostrarFormularioApoderado: boolean = false;
 
-  mostrarFormularioApoderado: boolean = true;
-
-  usuario = JSON.parse(localStorage.getItem('usuario') || sessionStorage.getItem('usuario') || '{}');
+  // Usuario fijo
+  usuario = { idusuario: '0765bb4e-7cc4-4743-9eca-f7ebb3c1f624' };
 
   constructor(
     private fb: FormBuilder,
@@ -47,37 +76,59 @@ export class RegistrarMatriculaComponent implements OnInit {
   }
 
   crearFormulario(): void {
+    const soloLetrasPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
     this.formMatricula = this.fb.group({
       dniBusqueda: [''],
       apoderado: this.fb.group({
-        nombre: ['', Validators.required],
-        apellidoPaterno: ['', Validators.required],
-        apellidoMaterno: ['', Validators.required],
-        tipoDocumento: ['', Validators.required],
-        numeroDocumento: ['', Validators.required],
-        telefono: ['', Validators.required],
+        tipoDocumento: ['29c2c5c3-2fc9-4410-ab24-52a8114f9c05', Validators.required],
+        numeroDocumento: ['', [Validators.required, Validators.pattern('^[0-9]+$'), documentLengthValidator()]],
+        nombre: ['', [Validators.required, Validators.pattern(soloLetrasPattern)]],
+        apellidoPaterno: ['', [Validators.required, Validators.pattern(soloLetrasPattern)]],
+        apellidoMaterno: ['', [Validators.required, Validators.pattern(soloLetrasPattern)]],
+        telefono: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.minLength(9), Validators.maxLength(9)]],
         relacionEstudiante: ['', Validators.required],
         direccion: ['', Validators.required],
-        correo: ['', [Validators.required, Validators.email]]
+        correo: ['', [Validators.required, Validators.email]],
+        fechaNacimiento: ['', [Validators.required, minAgeValidator(18)]]
       }),
       alumno: this.fb.group({
-        nombre: ['', Validators.required],
-        apellidoPaterno: ['', Validators.required],
-        apellidoMaterno: ['', Validators.required],
+        nombre: ['', [Validators.required, Validators.pattern(soloLetrasPattern)]],
+        apellidoPaterno: ['', [Validators.required, Validators.pattern(soloLetrasPattern)]],
+        apellidoMaterno: ['', [Validators.required, Validators.pattern(soloLetrasPattern)]],
         tipoDocumento: ['', Validators.required],
-        numeroDocumento: ['', Validators.required],
-        fechaNacimiento: ['', Validators.required],
+        numeroDocumento: ['', [Validators.required, Validators.pattern('^[0-9]+$'), documentLengthValidator()]],
+        fechaNacimiento: ['', [Validators.required, minAgeValidator(4)]],
         direccion: ['', Validators.required]
       })
     });
+
+    this.formMatricula.get('apoderado.tipoDocumento')?.valueChanges.subscribe(() => {
+      this.formMatricula.get('apoderado.numeroDocumento')?.updateValueAndValidity();
+    });
+    this.formMatricula.get('alumno.tipoDocumento')?.valueChanges.subscribe(() => {
+      this.formMatricula.get('alumno.numeroDocumento')?.updateValueAndValidity();
+    });
   }
 
+  getNumeroDocumentoMaxLength(groupName: string): number {
+    const group = this.formMatricula.get(groupName);
+    if (group) {
+      const tipo = group.get('tipoDocumento')?.value;
+      if (tipo === '29c2c5c3-2fc9-4410-ab24-52a8114f9c05') {
+        return 8;
+      } else if (tipo === 'fa65a599-60fd-43e1-85e2-7a95f3cf072e') {
+        return 20;
+      }
+    }
+    return 100;
+  }
 
   buscarApoderado(): void {
-    const dni = this.formMatricula.get('dniBusqueda')?.value;
-    if (!dni) return;
+    const tipoDocumento = this.formMatricula.get('apoderado.tipoDocumento')?.value;
+    const numeroDocumento = this.formMatricula.get('apoderado.numeroDocumento')?.value;
+    if (!tipoDocumento || !numeroDocumento) return;
 
-    this.apoderadoService.buscarPorNumeroDocumento(dni).subscribe({
+    this.apoderadoService.buscarPorNumeroDocumento(tipoDocumento, numeroDocumento).subscribe({
       next: (apoderado) => {
         this.apoderadoEncontrado = apoderado;
         this.formMatricula.patchValue({ apoderado: apoderado });
@@ -85,7 +136,6 @@ export class RegistrarMatriculaComponent implements OnInit {
       },
       error: err => {
         console.error('Error al buscar el apoderado:', err);
-
         this.apoderadoEncontrado = null;
         this.mostrarFormularioApoderado = true;
         alert('Apoderado no encontrado. Ingrese los datos manualmente.');
@@ -104,20 +154,19 @@ export class RegistrarMatriculaComponent implements OnInit {
     const alumnoData = formData.alumno;
 
     const apoderadoObs = this.apoderadoEncontrado ?
-      this.apoderadoService.buscarPorNumeroDocumento(apoderadoData.numeroDocumento) :
+      this.apoderadoService.buscarPorNumeroDocumento(apoderadoData.tipoDocumento, apoderadoData.numeroDocumento) :
       this.apoderadoService.agregarApoderado(apoderadoData);
 
     apoderadoObs.subscribe({
       next: (apoderadoResp) => {
-        const idApoderado = apoderadoResp.idapoderado || apoderadoResp.idapoderado;
+        const idApoderado = apoderadoResp.idapoderado;
         this.alumnoService.agregarAlumno(alumnoData).subscribe({
           next: (alumnoResp: any) => {
-            const idAlumno = alumnoResp.idalumno || alumnoResp.id;
-
+            const idAlumno = alumnoResp.idalumno;
             const matriculaRequest = {
-              idusuario: this.usuario.idusuario,
-              idapoderado: idApoderado,
-              idalumno: idAlumno,
+              idusuario: { idusuario: this.usuario.idusuario },
+              idapoderado: { idapoderado: idApoderado },
+              idalumno: { idalumno: idAlumno },
               nivel: this.nivel,
               grado: this.grado,
               seccion: this.seccion
@@ -126,7 +175,7 @@ export class RegistrarMatriculaComponent implements OnInit {
             this.matriculaService.agregarMatricula(matriculaRequest).subscribe({
               next: () => {
                 alert('¡Matrícula registrada con éxito!');
-                this.router.navigate(['/']);
+                this.router.navigate(['/comprobantes']);
               },
               error: err => {
                 console.error('Error al registrar la matrícula:', err);

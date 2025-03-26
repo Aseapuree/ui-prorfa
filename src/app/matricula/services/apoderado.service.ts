@@ -36,13 +36,12 @@ export class ApoderadoService {
     return this.http.delete<void>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true });
   }
 
-    // Buscar un apoderado por número de documento
-    buscarPorNumeroDocumento(numeroDocumento: string): Observable<Apoderado> {
-      return this.http.get<any>(`${this.urlBase}/buscar/${numeroDocumento}`, { withCredentials: true })
-        .pipe(map(response => {
-          console.log("Apoderado buscado correctamente.");
-          return response.data;
-        }));
-    }
+  // Buscar un apoderado por tipo y número de documento
+  buscarPorNumeroDocumento(tipoDocumento: string, numeroDocumento: string): Observable<Apoderado> {
+    return this.http.get<any>(`${this.urlBase}/buscar/${tipoDocumento}/${numeroDocumento}`, { withCredentials: true })
+      .pipe(map(response => {
+        console.log("Apoderado buscado correctamente.");
+        return response.data;
+      }));
+  }
 }
-
