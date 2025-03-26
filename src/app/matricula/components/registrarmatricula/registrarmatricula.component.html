@@ -12,11 +12,24 @@
       <fieldset formGroupName="apoderado">
         <legend>Datos del Apoderado</legend>
 
+
+        <label>Tipo de Documento</label>
+        <div class="input-group">
+          <span class="icon">🆔</span>
+          <select formControlName="tipoDocumento">
+            <option value="29c2c5c3-2fc9-4410-ab24-52a8114f9c05">DNI</option>
+            <option value="fa65a599-60fd-43e1-85e2-7a95f3cf072e">CARNET EXTRANJERIA</option>
+          </select>
+        </div>
+        <div class="error" *ngIf="formMatricula.get('apoderado.tipoDocumento')?.touched && formMatricula.get('apoderado.tipoDocumento')?.hasError('required')">
+          Este campo es obligatorio.
+        </div>
+
+
         <label>Número de Documento</label>
         <div class="input-group search-container">
           <span class="icon">🆔</span>
-          <input formControlName="numeroDocumento" type="text" (input)="buscarApoderado()"
-                 placeholder="Ingrese DNI del apoderado" title="Solo números" />
+          <input formControlName="numeroDocumento" type="text" placeholder="Ingrese DNI del apoderado" title="Solo números" [attr.maxlength]="getNumeroDocumentoMaxLength('apoderado')" />
           <button type="button" (click)="buscarApoderado()">🔍</button>
         </div>
         <div class="error" *ngIf="formMatricula.get('apoderado.numeroDocumento')?.touched && formMatricula.get('apoderado.numeroDocumento')?.hasError('required')">
@@ -25,6 +38,15 @@
         <div class="error" *ngIf="formMatricula.get('apoderado.numeroDocumento')?.touched && formMatricula.get('apoderado.numeroDocumento')?.hasError('pattern')">
           Solo se permiten números.
         </div>
+        <div class="error" *ngIf="formMatricula.get('apoderado.numeroDocumento')?.touched && formMatricula.get('apoderado.numeroDocumento')?.hasError('invalidLength')">
+          <span *ngIf="formMatricula.get('apoderado.tipoDocumento')?.value === '29c2c5c3-2fc9-4410-ab24-52a8114f9c05'">
+            El DNI debe tener exactamente 8 dígitos.
+          </span>
+          <span *ngIf="formMatricula.get('apoderado.tipoDocumento')?.value === 'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">
+            El carnet de extranjería debe tener máximo 20 dígitos.
+          </span>
+        </div>
+
 
         <div *ngIf="mostrarFormularioApoderado">
           <label>Relación con el estudiante</label>
@@ -76,18 +98,6 @@
             Solo se permiten letras y espacios.
           </div>
 
-          <label>Tipo de Documento</label>
-          <div class="input-group">
-            <span class="icon">🆔</span>
-            <select formControlName="tipoDocumento">
-              <option value="29c2c5c3-2fc9-4410-ab24-52a8114f9c05">DNI</option>
-              <option value="fa65a599-60fd-43e1-85e2-7a95f3cf072e">CARNET EXTRANJERIA</option>
-            </select>
-          </div>
-          <div class="error" *ngIf="formMatricula.get('apoderado.tipoDocumento')?.touched && formMatricula.get('apoderado.tipoDocumento')?.hasError('required')">
-            Este campo es obligatorio.
-          </div>
-
           <label>Fecha de Nacimiento</label>
           <div class="input-group">
             <span class="icon">📅</span>
@@ -96,17 +106,23 @@
           <div class="error" *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.touched && formMatricula.get('apoderado.fechaNacimiento')?.hasError('required')">
             Este campo es obligatorio.
           </div>
+          <div class="error" *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.touched && formMatricula.get('apoderado.fechaNacimiento')?.hasError('minAge')">
+            Debe tener al menos 18 años.
+          </div>
 
           <label>Teléfono</label>
           <div class="input-group">
             <span class="icon">📞</span>
-            <input formControlName="telefono" type="text" placeholder="Ingrese teléfono" title="Solo números" />
+            <input formControlName="telefono" type="text" placeholder="Ingrese teléfono" title="Solo números" [attr.maxlength]="9" />
           </div>
           <div class="error" *ngIf="formMatricula.get('apoderado.telefono')?.touched && formMatricula.get('apoderado.telefono')?.hasError('required')">
             Este campo es obligatorio.
           </div>
           <div class="error" *ngIf="formMatricula.get('apoderado.telefono')?.touched && formMatricula.get('apoderado.telefono')?.hasError('pattern')">
             Solo se permiten números.
+          </div>
+          <div class="error" *ngIf="formMatricula.get('apoderado.telefono')?.touched && (formMatricula.get('apoderado.telefono')?.value.length !== 9)">
+            El número de celular debe tener 9 dígitos.
           </div>
 
           <label>Dirección</label>
@@ -186,13 +202,21 @@
         <label>Número de Documento</label>
         <div class="input-group">
           <span class="icon">🆔</span>
-          <input formControlName="numeroDocumento" type="text" placeholder="Ingrese número de documento" title="Solo números" />
+          <input formControlName="numeroDocumento" type="text" placeholder="Ingrese número de documento" title="Solo números" [attr.maxlength]="getNumeroDocumentoMaxLength('alumno')" />
         </div>
         <div class="error" *ngIf="formMatricula.get('alumno.numeroDocumento')?.touched && formMatricula.get('alumno.numeroDocumento')?.hasError('required')">
           Este campo es obligatorio.
         </div>
         <div class="error" *ngIf="formMatricula.get('alumno.numeroDocumento')?.touched && formMatricula.get('alumno.numeroDocumento')?.hasError('pattern')">
           Solo se permiten números.
+        </div>
+        <div class="error" *ngIf="formMatricula.get('alumno.numeroDocumento')?.touched && formMatricula.get('alumno.numeroDocumento')?.hasError('invalidLength')">
+          <span *ngIf="formMatricula.get('alumno.tipoDocumento')?.value === '29c2c5c3-2fc9-4410-ab24-52a8114f9c05'">
+            El DNI debe tener exactamente 8 dígitos.
+          </span>
+          <span *ngIf="formMatricula.get('alumno.tipoDocumento')?.value === 'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">
+            El carnet de extranjería debe tener máximo 20 dígitos.
+          </span>
         </div>
 
         <label>Fecha de Nacimiento</label>
@@ -202,6 +226,9 @@
         </div>
         <div class="error" *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('required')">
           Este campo es obligatorio.
+        </div>
+        <div class="error" *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('minAge')">
+          El alumno debe tener al menos 4 años.
         </div>
 
         <label>Dirección</label>

@@ -1,55 +1,53 @@
-<div class="filter-container">
-  <form [formGroup]="filterForm" (ngSubmit)="onSearch()">
-    <div class="filter-row">
-      <label>
-        🎓 Grado:
-        <input type="number" formControlName="grado" placeholder="Ej. 3" />
-      </label>
-      <label>
-        🏫 Sección:
-        <input type="text" formControlName="seccion" placeholder="Ej. A" />
-      </label>
-      <label>
-        📅 Fecha Inicio:
-        <input type="date" formControlName="fechaInicio" />
-      </label>
-      <label>
-        📅 Fecha Fin:
-        <input type="date" formControlName="fechaFin" />
-      </label>
-    </div>
-    <div class="filter-row">
-      <label>
-        📅 Fecha Específica:
-        <input type="date" formControlName="fechaEspecifica" />
-      </label>
-      <label>
-        👤 Nombre:
-        <input type="text" formControlName="nombre" placeholder="Ej. Juan" />
-      </label>
-      <label>
-        👥 Apellido Paterno:
-        <input type="text" formControlName="apellidoPaterno" placeholder="Ej. Pérez" />
-      </label>
-      <label>
-        👥 Apellido Materno:
-        <input type="text" formControlName="apellidoMaterno" placeholder="Ej. López" />
-      </label>
-    </div>
-    <button type="submit" class="btn-search">🔍 Buscar</button>
-  </form>
+<div class="search-container">
+  <input
+    type="text"
+    [(ngModel)]="quickSearch"
+    placeholder="Escribe para filtrar..."
+    class="search-input"
+    (keyup.enter)="onSearch()"
+    (input)="onSearch()"
+  />
+  <button class="filter-toggle" (click)="toggleFilters()">
+    <i class="filter-icon">⚙️</i>
+  </button>
 </div>
 
-<div *ngIf="loading" class="loading-container">
-  <div class="spinner"></div>
-  <p>⏳ Cargando...</p>
+<div class="filter-panel" *ngIf="showFilters">
+  <div class="advanced-filters">
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.grado" />
+      Filtrar por Grado
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.seccion" />
+      Filtrar por Sección
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.fecha" />
+      Filtrar por Fecha
+      <input
+        *ngIf="filterOptions.fecha"
+        type="date"
+        [(ngModel)]="filterFecha"
+        class="advanced-date-input"
+      />
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.nombre" />
+      Filtrar por Nombre
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.apellidoPaterno" />
+      Filtrar por Apellido Paterno
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="filterOptions.apellidoMaterno" />
+      Filtrar por Apellido Materno
+    </label>
+  </div>
 </div>
 
-<div *ngIf="!loading && matriculados.length === 0">
-  <p>⚠️ No se encontraron registros.</p>
-</div>
-
-<div *ngIf="!loading && matriculados.length > 0">
+<div class="table-container">
   <table class="matriculas-table">
     <thead>
       <tr>
@@ -72,6 +70,13 @@
           <button class="btn-print" (click)="imprimirRegistro(m)">🖨️ Imprimir</button>
         </td>
       </tr>
+      <tr *ngIf="!loading && matriculados.length === 0">
+        <td colspan="6">⚠️ No se encontraron registros.</td>
+      </tr>
     </tbody>
   </table>
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>⏳ Cargando...</p>
+  </div>
 </div>
