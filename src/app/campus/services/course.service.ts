@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { Curso } from '../interface/Curso';
 import { response } from 'express';
+import { DTOResponse } from '../interface/DTOResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +22,9 @@ export class CourseService {
   }
 
   agregarCurso(curso: Curso): Observable<Curso> {
-    return this.clienteHttp.post<Curso>(`${this.urlBase}/agregar`, curso,{withCredentials:true});
+    return this.clienteHttp
+      .post<DTOResponse<Curso>>(`${this.urlBase}/agregar`, curso, { withCredentials: true })
+      .pipe(map((response) => response.data));
   }
   
   actualizarCurso(id: string, curso: Curso): Observable<Curso> {

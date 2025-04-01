@@ -22,7 +22,7 @@ export class Apoderado {
   nombre?: string;
   apellidoPaterno?: string;
   apellidoMaterno?: string;
-  tipoDocumento?: string;
+  idtipodoc?: string;
   numeroDocumento?: string;
   fechaNacimiento?: string;
   direccion?: string;
@@ -35,7 +35,7 @@ export class Alumno {
   nombre?: string;
   apellidoPaterno?: string;
   apellidoMaterno?: string;
-  tipoDocumento?: string;
+  idtipodoc?: string;
   numeroDocumento?: string;
   fechaNacimiento?: string;
   direccion?: string;

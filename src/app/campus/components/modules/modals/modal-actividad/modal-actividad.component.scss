@@ -1,35 +1,75 @@
-/* Estilo para el campo de archivo */
-input[type="file"] {
+:host {
   display: block;
-  margin-top: 8px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-  background-color: white;
-  cursor: pointer;
+}
 
-  &:hover {
-    border-color: #3f51b5; // Color primario de Angular Material
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: #1f2937; // Equivalente a bg-gray-800
+    border-radius: 8px; // Bordes redondeados
+    transition: box-shadow 0.3s ease;
+  }
+
+  .mat-mdc-form-field-input-control {
+    color: #ffffff !important; // Texto blanco
+    caret-color: #60a5fa !important; // Cursor azul claro (blue-400)
+  }
+
+  .mat-mdc-form-field-label {
+    color: #9ca3af !important; // Equivalente a text-gray-400
+  }
+
+  // Eliminar el borde del mat-form-field
+  .mat-mdc-form-field-outline {
+    display: none !important; // Ocultar el borde por completo
+  }
+
+  &.mat-focused {
+    .mat-mdc-form-field-outline {
+      display: none !important; // Ocultar el borde incluso al enfocar
+    }
+    .mat-mdc-text-field-wrapper {
+      box-shadow: 0 0 0 2px #60a5fa; // Sombra azul claro al enfocar (blue-400)
+    }
   }
 }
 
-/* Estilo para el fondo semitransparente y el spinner */
+input[type="file"] {
+  color: #f3f4f6 !important; // Equivalente a text-gray-100
+}
+
 .overlay {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(238, 231, 231, 0.8); // Fondo blanco semitransparente
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7); // Fondo semitransparente más oscuro
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; // Asegura que esté por encima del formulario
+  z-index: 10;
 }
 
-/* Estilo para el spinner */
-mat-progress-spinner {
-  width: 50px !important; // Tamaño del spinner
-  height: 50px !important;
+.mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: #60a5fa !important; // Azul claro (blue-400)
+}
+
+.mat-mdc-dialog-actions {
+  border-top: 1px solid #374151; // Separador gris oscuro (border-gray-700)
+}
+
+// Asegurar que los botones no tengan fondo por defecto
+.mat-mdc-button, .mat-mdc-raised-button {
+  background: none !important; // Eliminar fondo por defecto
+  color: white !important; // Texto blanco
+}
+
+.mat-mdc-raised-button:hover {
+  background: #b90bd8 !important; // Fondo morado claro (purple-500)
+}
+
+.mat-mdc-button {
+  &.mat-primary {
+    background: none !important; // Eliminar fondo por defecto del botón primario
+  }
 }

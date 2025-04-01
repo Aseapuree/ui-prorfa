@@ -9,25 +9,87 @@ import { ProfesorCurso } from '../../../interface/ProfesorCurso';
 import { lastValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
+import { UserData, ValidateService } from '../../../../services/validateAuth.service';
+import { UsuarioService } from '../../../services/usuario.service';
+import { AlumnoCursoService } from '../../../services/alumno-curso.service';
+import { AlumnoCurso } from '../../../interface/AlumnoCurso';
 
 @Component({
   selector: 'app-campus',
   standalone: true,
   imports: [RouterModule, CardComponent, HttpClientModule, CommonModule, NgxPaginationModule, MatButtonModule, MatDialogModule],
-  providers: [ProfesorCursoService],
+  providers: [ProfesorCursoService, AlumnoCursoService],
   templateUrl: './campus.component.html',
   styleUrl: './campus.component.scss'
 })
 export class CampusComponent implements OnInit {
   public page: number = 1;
   profesorcursos: ProfesorCurso[] = [];
+  alumnocursos: AlumnoCurso[] = []; // Lista para cursos de alumnos
+  usuarioId: string | null = null; // ID del usuario autenticado
+  rolUsuario: string | null = null; // Rol del usuario autenticado
 
   constructor(
-    private profesorCursoService: ProfesorCursoService
+    private profesorCursoService: ProfesorCursoService,
+    private alumnoCursoService: AlumnoCursoService, // Inyectar el servicio
+    private authService: ValidateService, // Inyecta el servicio
+    private usuarioService: UsuarioService // Inyecta el nuevo servicio
   ) {}
 
   async ngOnInit(): Promise<void> {
-    await this.obtenerCurso();
+    try {
+      // Obtener los datos del usuario autenticado
+      const userData: UserData = await lastValueFrom(this.authService.getUserData());
+      console.log('Datos del usuario:', userData);
+
+      // Extraer el id_auth y el rol
+      const idAuth = userData?.data?.id;
+      this.rolUsuario = userData?.data?.rol || null;
+      if (!idAuth) {
+        console.error('No se encontró el id_auth del usuario');
+        return;
+      }
+
+      // Obtener el idusuario a partir del id_auth
+      this.usuarioId = await lastValueFrom(this.usuarioService.getUsuarioByIdAuth(idAuth));
+      console.log('usuarioId obtenido:', this.usuarioId);
+
+      if (this.usuarioId) {
+        localStorage.setItem('usuarioId', this.usuarioId);
+        // Cargar cursos según el rol del usuario
+        if (this.rolUsuario === 'Profesor') {
+          await this.obtenerCursosPorProfesor();
+        } else if (this.rolUsuario === 'Alumno') {
+          await this.obtenerCursosPorAlumno();
+        } else {
+          console.warn('Rol no reconocido:', this.rolUsuario);
+        }
+      } else {
+        console.error('No se encontró el ID del usuario autenticado');
+      }
+    } catch (error) {
+      console.error('Error al inicializar el componente:', error);
+    }
+  }
+
+  // Obtener cursos del profesor
+  async obtenerCursosPorProfesor(): Promise<void> {
+    try {
+      this.profesorcursos = await lastValueFrom(this.profesorCursoService.obtenerCursosPorProfesor(this.usuarioId!));
+      console.log("Cursos del profesor: ", this.profesorcursos);
+    } catch (error) {
+      console.error('Error al obtener los cursos del profesor', error);
+    }
+  }
+
+  // Obtener cursos del alumno
+  async obtenerCursosPorAlumno(): Promise<void> {
+    try {
+      this.alumnocursos = await lastValueFrom(this.alumnoCursoService.obtenerCursosPorAlumno(this.usuarioId!));
+      console.log("Cursos del alumno: ", this.alumnocursos);
+    } catch (error) {
+      console.error('Error al obtener los cursos del alumno', error);
+    }
   }
 
   // Obtener cursos

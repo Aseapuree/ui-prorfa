@@ -1,0 +1,24 @@
+:host {
+    display: block;
+  }
+  
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #1f2937; // Equivalente a bg-gray-800
+      border-color: #374151; // Equivalente a border-gray-700
+    }
+  
+    .mat-mdc-form-field-input-control {
+      color: #ffffff !important; // Forzar texto blanco
+      caret-color: #ffffff !important; // Color del cursor también blanco
+    }
+  
+    .mat-mdc-form-field-label {
+      color: #ffffff !important; // Texto de la etiqueta blanco (para "Título")
+    }
+  }
+  
+  textarea.mat-mdc-form-field-input-control {
+    color: #ffffff !important; // Forzar texto blanco en el textarea
+    caret-color: #ffffff !important; // Color del cursor también blanco
+  }

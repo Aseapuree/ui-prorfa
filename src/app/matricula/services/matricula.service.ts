@@ -11,7 +11,7 @@ export class MatriculaService {
 
   constructor(private http: HttpClient) { }
 
-  //Obtener una lista de matriculas
+  // Obtener una lista de matrículas
   obtenerMatriculas(): Observable<Matricula[]> {
     return this.http.get<any>(`${this.urlBase}/listar`, { withCredentials: true })
       .pipe(map(response => {
@@ -20,22 +20,22 @@ export class MatriculaService {
       }));
   }
 
-  //Agregar un matricula
+  // Agregar una nueva matrícula
   agregarMatricula(matricula: Matricula): Observable<Matricula> {
     return this.http.post<Matricula>(`${this.urlBase}/agregar`, matricula, { withCredentials: true });
   }
 
-  //Editar una matricula
+  // Editar una matrícula
   editarMatricula(id: string, matricula: Matricula): Observable<Matricula> {
     return this.http.put<Matricula>(`${this.urlBase}/editar/${id}`, matricula, { withCredentials: true });
   }
 
-  //Eliminar una matricula
+  // Eliminar una matrícula
   eliminarMatricula(id: string): Observable<void> {
     return this.http.delete<void>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true });
   }
 
-  // Asignar una segccion aleatoriamente
+  // Asignar una sección aleatoriamente
   asignarSeccion(grado: number): Observable<string> {
     return this.http.get<string>(`${this.urlBase}/asignarSeccion/${grado}`, { withCredentials: true })
       .pipe(
@@ -43,7 +43,7 @@ export class MatriculaService {
       );
   }
 
-  // Obtener numero de vacantes por nivel
+  // Obtener número de vacantes por nivel
   vacantesPorNivel(nivel: string): Observable<Map<number, Map<string, number>>> {
     return this.http.get<Map<number, Map<string, number>>>(`${this.urlBase}/vacantes/${nivel}`, { withCredentials: true });
   }

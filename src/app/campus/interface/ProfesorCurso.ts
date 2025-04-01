@@ -4,6 +4,7 @@ export class Usuario {
     apellidopaterno?: string;
     apellidomaterno?: string;
     nombreusuario?: string;
+    rol?: string;
 }
 
 export class Curso {

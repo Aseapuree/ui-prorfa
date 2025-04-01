@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
-// Modelo para matriculados
+
 export interface Matriculado {
   matriculaid: string;
   idusuario: string;
@@ -21,19 +21,28 @@ export interface Matriculado {
 @Component({
   selector: 'app-matriculados',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './matriculados.component.html',
   styleUrls: ['./matriculados.component.scss']
 })
 export class MatriculadosComponent implements OnInit {
   filterForm!: FormGroup;
+  showFilters: boolean = false;
   loading = false;
   matriculados: Matriculado[] = [];
-
-
-  private baseUrl = 'http://localhost:8080/v1/matriculas';
+  quickSearch: string = '';
+  filterFecha: string = '';
+  filterOptions = {
+    grado: false,
+    seccion: false,
+    fecha: false,
+    nombre: false,
+    apellidoPaterno: false,
+    apellidoMaterno: false
+  };
 
   pdfMake: any;
+  private baseUrl = 'http://localhost:8080/v1/matriculas';
 
   constructor(
     private fb: FormBuilder,
@@ -45,8 +54,6 @@ export class MatriculadosComponent implements OnInit {
     this.filterForm = this.fb.group({
       grado: [''],
       seccion: [''],
-      fechaInicio: [''],
-      fechaFin: [''],
       fechaEspecifica: [''],
       nombre: [''],
       apellidoPaterno: [''],
@@ -59,8 +66,51 @@ export class MatriculadosComponent implements OnInit {
     this.matriculados = [];
   }
 
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
+  private isValidDate(value: string): boolean {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  }
+
   onSearch(): void {
     this.loading = true;
+    this.filterForm.reset();
+
+    if (!this.showFilters) {
+      if (this.quickSearch) {
+        if (!isNaN(Number(this.quickSearch))) {
+          this.filterForm.patchValue({ grado: this.quickSearch });
+        } else if (this.isValidDate(this.quickSearch)) {
+          this.filterForm.patchValue({ fechaEspecifica: this.quickSearch });
+        } else {
+          this.filterForm.patchValue({ nombre: this.quickSearch });
+        }
+      }
+    } else {
+      const update: any = {};
+      if (this.filterOptions.grado && !isNaN(Number(this.quickSearch))) {
+        update.grado = this.quickSearch;
+      }
+      if (this.filterOptions.seccion) {
+        update.seccion = this.quickSearch;
+      }
+      if (this.filterOptions.fecha && this.filterFecha) {
+        update.fechaEspecifica = this.filterFecha;
+      }
+      if (this.filterOptions.nombre) {
+        update.nombre = this.quickSearch;
+      }
+      if (this.filterOptions.apellidoPaterno) {
+        update.apellidoPaterno = this.quickSearch;
+      }
+      if (this.filterOptions.apellidoMaterno) {
+        update.apellidoMaterno = this.quickSearch;
+      }
+      this.filterForm.patchValue(update);
+    }
+
     let params = new HttpParams();
     const formValues = this.filterForm.value;
     if (formValues.grado) {
@@ -68,12 +118,6 @@ export class MatriculadosComponent implements OnInit {
     }
     if (formValues.seccion) {
       params = params.set('seccion', formValues.seccion);
-    }
-    if (formValues.fechaInicio) {
-      params = params.set('fechaInicio', formValues.fechaInicio);
-    }
-    if (formValues.fechaFin) {
-      params = params.set('fechaFin', formValues.fechaFin);
     }
     if (formValues.fechaEspecifica) {
       params = params.set('fecha', formValues.fechaEspecifica);
