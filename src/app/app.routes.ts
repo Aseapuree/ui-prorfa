@@ -14,6 +14,7 @@ import { MatriculasComponent } from'./matricula/components/matriculas/matriculas
 import { RegistrarMatriculaComponent } from './matricula/components/registrarmatricula/registrarmatricula.component';
 import { ComprobanteComponent } from './matricula/components/comprobantes/comprobantes.component';
 import { MatriculadosComponent } from './matricula/components/matriculados/matriculados.component';
+import { InicioComponent } from './general/components/inicio/inicio.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
@@ -26,6 +27,7 @@ export const routes: Routes = [
         { path: 'actividades/:idSesion', component: ActividadesAlumnoComponent,canActivate: [AuthGuard]},//campus actividades alumno
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
         {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
+        { path:'inicio', component: InicioComponent,canActivate:[AuthGuard]},
         {path:'matricula/:id', component: MatriculasComponent,canActivate:[AuthGuard]},
         {path:'registrarmatricula', component: RegistrarMatriculaComponent,canActivate:[AuthGuard]},
         {path:'matriculas/primaria', component: MatriculasComponent,canActivate:[AuthGuard]},
