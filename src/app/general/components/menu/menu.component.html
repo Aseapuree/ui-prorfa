@@ -7,10 +7,10 @@
     <div class="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
       <img src="assets/imagenes/usuario.png" alt="Perfil" class="w-16 h-16 rounded-full border-2 border-white">
     </div>
-    <p class="text-lg font-bold text-white mt-2">
+    <p class="text-lg font-bold text-white mt-2" *ngIf="!menuCerrado">
       {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
     </p>
-    <p class="text-sm text-gray-300">{{ nombreRol || 'Sin Rol' }}</p>
+    <p class="text-sm text-gray-300" *ngIf="!menuCerrado">{{ nombreRol || 'Sin Rol' }}</p>
   </div>
 
   <!-- Menús y submenús -->

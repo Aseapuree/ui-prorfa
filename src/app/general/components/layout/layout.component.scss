@@ -11,4 +11,21 @@
   align-items: center;
   min-height: 100vh;
   background-color: #f4f4f4;
+  transition: margin-left 0.3s ease-in-out;
+  margin-left: 250px; /* Cuando el menú está abierto */
+}
+
+.closed + .content {
+  margin-left: 60px; /* Se expande cuando el menú se cierra */
+}
+
+app-menu {
+  background-color: #0D1B2A; /* Color del menú */
+  height: 100vh; /* Ocupar toda la altura */
+  transition: width 0.3s ease-in-out;
+}
+
+
+.invisible {
+  display: none; /* Oculta completamente el menú cuando está cerrado */
 }
