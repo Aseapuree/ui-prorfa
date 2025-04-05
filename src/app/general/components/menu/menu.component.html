@@ -15,6 +15,13 @@
 
   <!-- Menús y submenús -->
   <ul class="space-y-2">
+<!-- boton de inicio -->
+    <li>
+      <button class="menu-btn flex items-center gap-3 w-full" (click)="principal()">
+        <fa-icon [icon]="faHome" class="text-lg"></fa-icon>
+        <span *ngIf="!menuCerrado" class="flex-grow text-left">Inicio</span>
+      </button>
+    </li>
     <li *ngFor="let menu of menuJerarquico; trackBy: trackById">
       <button class="menu-btn flex items-center gap-3 w-full" 
               (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)">

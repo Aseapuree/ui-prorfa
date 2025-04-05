@@ -6,7 +6,7 @@ import { DTOMenu } from '../../Interface/DTOMenu';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { fontAwesomeIcons } from '../../../campus/components/shared/font-awesome-icons';  // ✅ Importando iconos desde font-awesome-icons.ts
-import { faUserCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faUserCircle, faSignOutAlt,faHome} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-menu',
@@ -22,6 +22,7 @@ export class MenuComponent implements OnInit {
   @Input() nombreRol: string = ''; 
   faUserCircle = faUserCircle;
   faSignOutAlt = faSignOutAlt;
+  faHome = faHome;
 
   menus: DTOMenu[] = [];
   menuJerarquico: any[] = []; // Estructura con submenús
@@ -127,6 +128,16 @@ export class MenuComponent implements OnInit {
     };
   
     return colorClassMap[iconName] || '';
+  }
+  principal() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.clear();
+    } else {
+      console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
+    }
+    
+    // Redirigir manualmente a la nueva URL
+    window.location.href = 'http://localhost:4200/inicio';
   }
   
 }

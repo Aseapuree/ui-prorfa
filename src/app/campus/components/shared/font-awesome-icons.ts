@@ -1,7 +1,7 @@
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { 
   faBook,faHeadset, faSignOutAlt, faStar, faRocket, 
-  faArrowLeft, faPencil, faTrash, faPlus, faMagnifyingGlass, faUserCircle,faSchool,faWrench,
+  faArrowLeft, faPencil, faTrash, faPlus, faMagnifyingGlass, faUserCircle,faSchool,faWrench,faHome,
 } from '@fortawesome/free-solid-svg-icons';
 import { faUser, faNewspaper, faStickyNote } from '@fortawesome/free-regular-svg-icons'
 
@@ -21,6 +21,7 @@ export const fontAwesomeIcons: IconDefinition[] = [
     faPlus,//icono de registrar matricula
     faSchool,//icono para campus
     faWrench,
+    faHome,
    
     faMagnifyingGlass
 ];
