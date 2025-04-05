@@ -1,5 +1,5 @@
 <div class="h-screen flex">
-  <!-- Menú lateral sin aside -->
+  <!-- Menú lateral -->
   <app-menu 
     [nombreUsuario]="usuarioMostrar.nombre || 'undefined'"
     [apellidoPaterno]="usuarioMostrar.apellidopaterno || 'undefined'"
@@ -8,9 +8,16 @@
     (menuToggle)="toggleMenu()">
   </app-menu>
 
-  <!-- Contenido principal -->
+  <!-- Contenedor principal en columna -->
   <div [ngClass]="menuAbierto ? 'w-[calc(100%-16rem)]' : 'w-full'"
-       class="bg-gray-700 p-6 transition-all duration-300 h-screen flex-1">
-    <router-outlet></router-outlet>
+       class="flex flex-col bg-gray-700 transition-all duration-300 h-screen flex-1">
+
+    <!-- Contenido principal que crece -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <router-outlet></router-outlet>
+    </div>
+
+    <!-- Footer al final -->
+    <app-footer></app-footer>
   </div>
 </div>

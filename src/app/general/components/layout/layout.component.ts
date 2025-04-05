@@ -8,13 +8,14 @@ import { DTOMenu } from '../../Interface/DTOMenu';
 import { DTOUsuario } from '../../Interface/DTOUsuario';
 import { ValidateService } from '../../../services/validateAuth.service';
 import {  lastValueFrom } from 'rxjs';
+import { FooterComponent } from '../footer/footer.component';
 
 
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, MenuComponent, CommonModule,],
+  imports: [RouterOutlet, MenuComponent, CommonModule,FooterComponent],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss']
 })
