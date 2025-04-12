@@ -17,11 +17,11 @@
     <app-card 
       *ngFor="let alumnocurso of alumnocursos | paginate: { itemsPerPage: 4, currentPage: page }"
       [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
-      [title]="alumnocurso.curso?.nombre!"
-      [teacher]="(alumnocurso.usuario?.nombre || '') + ' ' + 
-                 (alumnocurso.usuario?.apellidopaterno || '') + ' ' + 
-                 (alumnocurso.usuario?.apellidomaterno || '')"
-     [route]="'/sesiones/alumno/' + alumnocurso.idAlumnoCurso">
+      [title]="alumnocurso.profesorCurso?.curso?.nombre || 'Sin nombre'"
+      [teacher]="(alumnocurso.profesorCurso?.usuario?.nombre || '') + ' ' + 
+                 (alumnocurso.profesorCurso?.usuario?.apellidopaterno || '') + ' ' + 
+                 (alumnocurso.profesorCurso?.usuario?.apellidomaterno || '')"
+      [route]="'/sesiones/alumno/' + alumnocurso.idAlumnoCurso">
     </app-card>
   </ng-container>
 </div>

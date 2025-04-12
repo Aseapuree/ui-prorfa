@@ -1,4 +1,13 @@
-export class Usuario {
+export interface Curso {
+  idCurso?: string;
+  nombre?: string;
+  descripcion?: string;
+  grado?: string;
+  fechaCreacion?: string;
+  fechaActualizacion?: string;
+}
+
+export interface Usuario {
   idusuario?: string;
   nombre?: string;
   apellidopaterno?: string;
@@ -7,13 +16,17 @@ export class Usuario {
   rol?: string;
 }
 
-export class Curso {
-  idCurso?: string;
-  nombre?: string;
+export interface ProfesorCurso {
+  idProfesorCurso?: string;
+  usuario?: Usuario; // Profesor
+  curso?: Curso;
+  grado?: string;
+  fechaAsignacion?: string;
 }
 
-export class AlumnoCurso {
+export interface AlumnoCurso {
   idAlumnoCurso?: string;
-  usuario?: Usuario;
-  curso?: Curso;
+  usuario?: Usuario; // Alumno
+  profesorCurso?: ProfesorCurso;
+  fechaInscripcion?: string;
 }

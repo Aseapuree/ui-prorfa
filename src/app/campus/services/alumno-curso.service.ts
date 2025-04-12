@@ -29,19 +29,18 @@ export class AlumnoCursoService {
   }
 
   // Nuevo método para obtener el idCurso a partir de idAlumnoCurso
-  obtenerCursoIdPorAlumnoCurso(idAlumnoCurso: string): Observable<string> {
-  return this.obtenerCursosPorAlumno(idAlumnoCurso).pipe(
-    map((alumnoCursos: AlumnoCurso[]) => {
-      const alumnoCurso = alumnoCursos.find(ac => ac.idAlumnoCurso === idAlumnoCurso);
-      if (!alumnoCurso || !alumnoCurso.curso?.idCurso) {
-        throw new Error('No se encontró el curso para este idAlumnoCurso');
-      }
-      return alumnoCurso.curso.idCurso;
-    }),
-    catchError(error => {
-      console.error('Error al obtener el ID del curso:', error);
-      return throwError(() => new Error('Error al obtener el ID del curso'));
-    })
-  );
+ // En alumno-curso.service.ts
+obtenerCursoIdPorAlumnoCurso(idAlumnoCurso: string): Observable<string> {
+  return this.clienteHttp.get<any>(`${this.urlBase}/curso-id/${idAlumnoCurso}`, { withCredentials: true })
+    .pipe(
+      map(response => {
+        console.log("ID del curso obtenido:", response.data);
+        return response.data; // Devuelve el UUID como string
+      }),
+      catchError(error => {
+        console.error('Error al obtener el ID del curso:', error);
+        return throwError(() => new Error('Error al obtener el ID del curso'));
+      })
+    );
 }
 }
