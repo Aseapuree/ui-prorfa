@@ -1,1 +1,38 @@
-<p>perfil works!</p>
+<div class="perfil-container p-4 rounded shadow-sm bg-white">
+    <h4 class="mb-4 fw-bold">Mi Perfil</h4>
+  
+    <!-- Imagen de perfil -->
+    <div class="text-center mb-4">
+      <img
+        [src]="imagenPrevia || 'https://via.placeholder.com/120'"
+        alt="Imagen de perfil"
+        class="img-thumbnail rounded-circle mb-2 perfil-img"
+      />
+      <input type="file" class="form-control mt-2" (change)="onImageChange($event)" />
+    </div>
+  
+    <!-- Formulario -->
+    <form [formGroup]="perfilForm" (ngSubmit)="guardarPerfil()">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" formControlName="nombre" class="form-control" />
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" formControlName="correo" class="form-control" />
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label">Nueva contraseña</label>
+        <input type="password" formControlName="contrasena" class="form-control" />
+      </div>
+  
+      <div class="text-end">
+        <button class="btn btn-primary px-4" type="submit" [disabled]="perfilForm.invalid">
+          Guardar cambios
+        </button>
+      </div>
+    </form>
+  </div>
+  
