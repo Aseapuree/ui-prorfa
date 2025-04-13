@@ -1,0 +1,20 @@
+<footer class="w-full text-center py-4 bg-gray-900 text-white mt-auto relative">
+    Desarrollo por Dark Nigth  © {{ anioActual }} - Todos los derechos reservados.
+  
+    <!-- Botón flotante de soporte con imagen -->
+<button class="fixed bottom-6 right-6 bg-white p-3 rounded-full shadow-lg z-50" (click)="mostrarPopup = !mostrarPopup" title="Soporte">
+
+<img src="assets/imagenes/tecnico.png" alt="Soporte" class="w-9 h-9">
+
+</button>
+  
+    <!-- Ventana emergente de soporte -->
+    <div *ngIf="mostrarPopup" class="fixed bottom-20 right-6 bg-white text-black rounded-lg shadow-xl p-4 w-64 z-50">
+    <h4 class="font-semibold mb-2">¿Necesitas ayuda?</h4>
+    <p class="text-sm">Contáctanos o abre un ticket.</p>
+    <button (click)="mostrarPopup = false" class="mt-2 text-blue-600 hover:underline text-sm">Cerrar</button>
+
+    </div>
+
+  </footer>
+  

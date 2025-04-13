@@ -7,14 +7,21 @@
     <div class="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
       <img src="assets/imagenes/usuario.png" alt="Perfil" class="w-16 h-16 rounded-full border-2 border-white">
     </div>
-    <p class="text-lg font-bold text-white mt-2">
+    <p class="text-lg font-bold text-white mt-2" *ngIf="!menuCerrado">
       {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
     </p>
-    <p class="text-sm text-gray-300">{{ nombreRol || 'Sin Rol' }}</p>
+    <p class="text-sm text-gray-300" *ngIf="!menuCerrado">{{ nombreRol || 'Sin Rol' }}</p>
   </div>
 
   <!-- Menús y submenús -->
   <ul class="space-y-2">
+<!-- boton de inicio -->
+    <li>
+      <button class="menu-btn flex items-center gap-3 w-full" (click)="principal()">
+        <fa-icon [icon]="faHome" class="text-lg"></fa-icon>
+        <span *ngIf="!menuCerrado" class="flex-grow text-left">Inicio</span>
+      </button>
+    </li>
     <li *ngFor="let menu of menuJerarquico; trackBy: trackById">
       <button class="menu-btn flex items-center gap-3 w-full" 
               (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)">

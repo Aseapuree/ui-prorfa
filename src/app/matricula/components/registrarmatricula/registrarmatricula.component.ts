@@ -9,12 +9,12 @@ import { MatriculaService } from './../../services/matricula.service';
 function documentLengthValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!control.parent) return null;
-    const tipoDocumento = control.parent.get('tipoDocumento')?.value;
+    const idtipodoc = control.parent.get('idtipodoc')?.value;
     const value: string = control.value;
     if (!value) return null;
-    if (tipoDocumento === '29c2c5c3-2fc9-4410-ab24-52a8114f9c05') {
+    if (idtipodoc === '29c2c5c3-2fc9-4410-ab24-52a8114f9c05') {
       return value.length === 8 ? null : { invalidLength: { requiredLength: 8, actualLength: value.length } };
-    } else if (tipoDocumento === 'fa65a599-60fd-43e1-85e2-7a95f3cf072e') {
+    } else if (idtipodoc === 'fa65a599-60fd-43e1-85e2-7a95f3cf072e') {
       return value.length <= 20 ? null : { invalidLength: { requiredMax: 20, actualLength: value.length } };
     }
     return null;
@@ -102,10 +102,10 @@ export class RegistrarMatriculaComponent implements OnInit {
       })
     });
 
-    this.formMatricula.get('apoderado.tipoDocumento')?.valueChanges.subscribe(() => {
+    this.formMatricula.get('apoderado.idtipodoc')?.valueChanges.subscribe(() => {
       this.formMatricula.get('apoderado.numeroDocumento')?.updateValueAndValidity();
     });
-    this.formMatricula.get('alumno.tipoDocumento')?.valueChanges.subscribe(() => {
+    this.formMatricula.get('alumno.idtipodoc')?.valueChanges.subscribe(() => {
       this.formMatricula.get('alumno.numeroDocumento')?.updateValueAndValidity();
     });
   }
@@ -113,7 +113,7 @@ export class RegistrarMatriculaComponent implements OnInit {
   getNumeroDocumentoMaxLength(groupName: string): number {
     const group = this.formMatricula.get(groupName);
     if (group) {
-      const tipo = group.get('tipoDocumento')?.value;
+      const tipo = group.get('idtipodoc')?.value;
       if (tipo === '29c2c5c3-2fc9-4410-ab24-52a8114f9c05') {
         return 8;
       } else if (tipo === 'fa65a599-60fd-43e1-85e2-7a95f3cf072e') {
@@ -124,11 +124,11 @@ export class RegistrarMatriculaComponent implements OnInit {
   }
 
   buscarApoderado(): void {
-    const tipoDocumento = this.formMatricula.get('apoderado.tipoDocumento')?.value;
+    const idtipodoc = this.formMatricula.get('apoderado.idtipodoc')?.value;
     const numeroDocumento = this.formMatricula.get('apoderado.numeroDocumento')?.value;
-    if (!tipoDocumento || !numeroDocumento) return;
+    if (!idtipodoc || !numeroDocumento) return;
 
-    this.apoderadoService.buscarPorNumeroDocumento(tipoDocumento, numeroDocumento).subscribe({
+    this.apoderadoService.buscarPorNumeroDocumento(idtipodoc, numeroDocumento).subscribe({
       next: (apoderado) => {
         this.apoderadoEncontrado = apoderado;
         this.formMatricula.patchValue({ apoderado: apoderado });

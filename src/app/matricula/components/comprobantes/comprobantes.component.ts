@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ComprobanteService } from './../../services/comprobante.service';
+import { Comprobante } from './../../interfaces/DTOComprobante';
+
 
 interface ComprobanteState {
   dtoComprobante?: any;
@@ -26,25 +28,26 @@ export class ComprobanteComponent implements OnInit {
     ruc: '20123456789'
   };
 
+  readonly TIPO_PAGO = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
+  readonly TIPO_MATRICULA = 'df61cd5c-5609-45d7-a2ad-1d285cabc958';
+
   constructor(
-    private ComprobanteService: ComprobanteService,
+    private comprobanteService: ComprobanteService,
     private router: Router
   ) {}
 
   async ngOnInit() {
-    // Cargar pdfMake dinámicamente
     const pdfMakeModule = await import('pdfmake/build/pdfmake');
     const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
     this.pdfMake = pdfMakeModule.default;
     this.pdfMake.vfs = pdfFontsModule.default.vfs;
-
 
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras?.state as ComprobanteState;
     if (state?.dtoComprobante) {
       this.comprobante = state.dtoComprobante;
     } else {
-      this.ComprobanteService.obtenerComprobantes().subscribe({
+      this.comprobanteService.obtenerComprobantes().subscribe({
         next: (data) => {
           this.comprobante = data?.length ? data[data.length - 1] : null;
         },
@@ -55,6 +58,8 @@ export class ComprobanteComponent implements OnInit {
 
   generarComprobantePago() {
     if (!this.pdfMake || !this.comprobante) return;
+
+    this.comprobante.idtipocomp = this.TIPO_PAGO;
 
     const docDefinition = {
       content: [
@@ -91,11 +96,19 @@ export class ComprobanteComponent implements OnInit {
       styles: this.estilosPDF()
     };
 
-    this.pdfMake.createPdf(docDefinition).open();
+    this.comprobanteService.agregarComprobante(this.comprobante).subscribe({
+      next: (response) => {
+        console.log('Comprobante de pago guardado correctamente:', response);
+        this.pdfMake.createPdf(docDefinition).open();
+      },
+      error: (err) => console.error('Error al guardar comprobante de pago:', err)
+    });
   }
 
   generarComprobanteMatricula() {
     if (!this.pdfMake || !this.comprobante) return;
+
+    this.comprobante.idtipocomp = this.TIPO_MATRICULA;
 
     const docDefinition = {
       content: [
@@ -131,7 +144,13 @@ export class ComprobanteComponent implements OnInit {
       styles: this.estilosPDF()
     };
 
-    this.pdfMake.createPdf(docDefinition).open();
+    this.comprobanteService.agregarComprobante(this.comprobante).subscribe({
+      next: (response) => {
+        console.log('Comprobante de matrícula guardado correctamente:', response);
+        this.pdfMake.createPdf(docDefinition).open();
+      },
+      error: (err) => console.error('Error al guardar comprobante de matrícula:', err)
+    });
   }
 
   private estilosPDF() {

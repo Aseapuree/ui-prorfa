@@ -1,9 +1,18 @@
-import { UUID } from "crypto";
+import { DTOActividad } from './DTOActividad';
 
-export class Sesion {
-    idSesion?: UUID;
-    infoCurso?: UUID;
+export interface Sesion {
+    idSesion?: string;
+    infoCurso?: {
+        idProfesorCurso?: string;
+    };
     titulo?: string;
     descripcion?: string;
-    profesorGuardar?: UUID;
+    fechaAsignada?: string;
+    fechaCreacion?: string;
+    fechaActualizacion?: string;
+    actividades?: DTOActividad[];
+    profesorGuardar?: string;
 }
+
+
+

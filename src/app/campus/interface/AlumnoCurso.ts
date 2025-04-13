@@ -1,32 +1,21 @@
-export interface Curso {
-  idCurso?: string;
-  nombre?: string;
-  descripcion?: string;
-  grado?: string;
-  fechaCreacion?: string;
-  fechaActualizacion?: string;
-}
-
-export interface Usuario {
-  idusuario?: string;
-  nombre?: string;
-  apellidopaterno?: string;
-  apellidomaterno?: string;
-  nombreusuario?: string;
-  rol?: string;
-}
-
-export interface ProfesorCurso {
-  idProfesorCurso?: string;
-  usuario?: Usuario; // Profesor
-  curso?: Curso;
-  grado?: string;
-  fechaAsignacion?: string;
-}
+import { Curso } from './Curso';
+import { Sesion } from './sesion';
+import { Usuario } from './Usuario';
 
 export interface AlumnoCurso {
-  idAlumnoCurso?: string;
-  usuario?: Usuario; // Alumno
-  profesorCurso?: ProfesorCurso;
-  fechaInscripcion?: string;
+    idAlumnoCurso?: string;
+    alumno?: {
+        idAlumno?: string;
+        usuario?: Usuario;
+        nombre?: string;
+        apellidoPaterno?: string;
+        apellidoMaterno?: string;
+    };
+    profesorCurso?: {
+        idProfesorCurso?: string;
+        usuario?: Usuario;
+        curso?: Curso;
+    };
+    fechaInscripcion?: string;
+    sesiones?: Sesion[];
 }

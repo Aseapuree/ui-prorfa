@@ -37,8 +37,8 @@ export class ApoderadoService {
   }
 
   // Buscar un apoderado por tipo y número de documento
-  buscarPorNumeroDocumento(tipoDocumento: string, numeroDocumento: string): Observable<Apoderado> {
-    return this.http.get<any>(`${this.urlBase}/buscar/${tipoDocumento}/${numeroDocumento}`, { withCredentials: true })
+  buscarPorNumeroDocumento(idtipodoc: string, numeroDocumento: string): Observable<Apoderado> {
+    return this.http.get<any>(`${this.urlBase}/buscar/${idtipodoc}/${numeroDocumento}`, { withCredentials: true })
       .pipe(map(response => {
         console.log("Apoderado buscado correctamente.");
         return response.data;

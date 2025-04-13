@@ -8,6 +8,26 @@
   width: 60px;
   overflow: hidden;
   transition: width 0.3s ease-in-out;
+
+  ul {
+    li {
+      .menu-btn, .exit-btn {
+        justify-content: center;
+      }
+
+      .menu-btn span,
+      .exit-btn span,
+      .submenu span {
+        display: none; // Oculta el texto de los botones
+      }
+    }
+  }
+}
+
+// 🔹 Ajuste para que el contenido se expanda cuando el menú está cerrado
+.closed + .content {
+  margin-left: 60px;
+  transition: margin-left 0.3s ease-in-out;
 }
 
 .toggle-menu {
@@ -79,28 +99,6 @@
     transform: scale(1.03);
   }
 }
-
-// 🔹 Menú retraído
-.closed {
-  width: 60px;
-  overflow: hidden;
-  transition: width 0.3s ease-in-out;
-
-  ul {
-    li {
-      .menu-btn, .exit-btn {
-        justify-content: center;
-      }
-
-      .menu-btn span,
-      .exit-btn span,
-      .submenu span {
-        display: none; // Oculta el texto de los botones
-      }
-    }
-  }
-}
-
 
 // 🔹 Clases de colores para los iconos
 .text-green { color: #4CAF50; }  // Verde
