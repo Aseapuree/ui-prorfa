@@ -20,9 +20,10 @@ export const routes: Routes = [
         {path:'campus-general',component:CampusGeneralComponent, canActivate: [AuthGuard]},// Campus general
         {path:'campus',component:CampusComponent, canActivate: [AuthGuard]},// Campus profesor
         {path:'gestion/cursos', component: CampusCursosComponent, canActivate: [AuthGuard]},
-        { path: 'sesiones/:idProfesorCurso', component: CampusSesionesComponent,canActivate: [AuthGuard] },// Campus sesiones profesor
+        { path: 'sesiones/profesor/:idProfesorCurso', component: CampusSesionesComponent,canActivate: [AuthGuard] },// Campus sesiones profesor
         { path: 'sesiones/alumno/:idAlumnoCurso', component: CampusSesionesComponent, canActivate: [AuthGuard] }, // Sesiones para alumnos
         { path: 'card-actividades/:idSesion', component: CampusActividadesComponent,canActivate: [AuthGuard] }, // Campus actividades profesor
+        
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
         {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
         { path:'inicio', component: InicioComponent,canActivate:[AuthGuard]},

@@ -1,19 +1,21 @@
-export class Usuario {
-  idusuario?: string;
-  nombre?: string;
-  apellidopaterno?: string;
-  apellidomaterno?: string;
-  nombreusuario?: string;
-  rol?: string;
-}
+import { Curso } from './Curso';
+import { Sesion } from './sesion';
+import { Usuario } from './Usuario';
 
-export class Curso {
-  idCurso?: string;
-  nombre?: string;
-}
-
-export class AlumnoCurso {
-  idAlumnoCurso?: string;
-  usuario?: Usuario;
-  curso?: Curso;
+export interface AlumnoCurso {
+    idAlumnoCurso?: string;
+    alumno?: {
+        idAlumno?: string;
+        usuario?: Usuario;
+        nombre?: string;
+        apellidoPaterno?: string;
+        apellidoMaterno?: string;
+    };
+    profesorCurso?: {
+        idProfesorCurso?: string;
+        usuario?: Usuario;
+        curso?: Curso;
+    };
+    fechaInscripcion?: string;
+    sesiones?: Sesion[];
 }

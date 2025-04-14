@@ -1,29 +1,30 @@
 <button
-  type="button"
-  (click)="navigate()"
-  [attr.aria-label]="'Abrir curso ' + title"
-  class="w-full flex flex-col items-stretch min-h-40 rounded-md bg-transparent"
+    type="button"
+    [attr.aria-label]="'Abrir sesión ' + title"
+    class="w-full flex flex-col items-stretch min-h-40 rounded-md bg-transparent"
 >
-  <div class="w-full p-4 flex flex-col justify-between">
-    <div class="flex items-center justify-between">
-      <fa-icon
-        [icon]="['fas', 'book']"
-        class="text-gray-500 text-2xl sm:text-3xl mr-4"
-      ></fa-icon>
-      <span
-        class="px-2 py-1 text-xs sm:text-sm text-blue-800 uppercase bg-blue-200 rounded-full dark:bg-blue-300 dark:text-blue-900"
-      >
-        {{ week }}
-      </span>
-    </div>
+    <div class="w-full p-4 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+            <fa-icon
+                [icon]="['fas', 'book']"
+                class="text-gray-500 text-2xl sm:text-3xl mr-4"
+            ></fa-icon>
+            <span
+                class="px-2 py-1 text-xs sm:text-sm text-blue-800 uppercase bg-blue-200 rounded-full dark:bg-blue-300 dark:text-blue-900"
+            >
+                {{ week }}
+            </span>
+        </div>
 
-    <div>
-      <h1 class="text-center mt-2 text-base sm:text-lg font-semibold text-gray-800 dark:text-white">
-        {{ title }}
-      </h1>
-      <p class="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-        {{ description }}
-      </p>
+        <div>
+            <h1
+                class="text-center mt-2 text-base sm:text-lg font-semibold text-gray-800 dark:text-white"
+            >
+                {{ title }}
+            </h1>
+            <p class="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                {{ description }}
+            </p>
+        </div>
     </div>
-  </div>
 </button>

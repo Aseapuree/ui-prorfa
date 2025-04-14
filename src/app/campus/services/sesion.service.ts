@@ -15,6 +15,23 @@ export class SesionService {
 
   constructor(private clienteHttp: HttpClient) { }
 
+  // En sesion.service.ts
+obtenerSesionesPorCursoId(idCurso: string): Observable<Sesion[]> {
+  console.log(`Obteniendo sesiones por curso ID: ${idCurso}`);
+  return this.clienteHttp.get<{ status: number, message: string, data: Sesion[] }>(
+    `${this.urlBase}/curso/${idCurso}`, { withCredentials: true }
+  ).pipe(
+    map(response => {
+      console.log("Respuesta de la API:", response);
+      return response.data;
+    }),
+    catchError(error => {
+      console.error('Error al obtener sesiones por curso:', error);
+      return throwError(() => new Error('Error al obtener sesiones'));
+    })
+  );
+}
+
 
 
   obtenerSesionList(): Observable<Sesion[]> {
@@ -39,23 +56,6 @@ export class SesionService {
         return response.data; // Devolvemos solo las sesiones
       })
     );
-}
-
-// Nuevo método genérico para obtener sesiones por idCurso
-obtenerSesionesPorCursoId(idCurso: string): Observable<Sesion[]> {
-  console.log(`Obteniendo sesiones por curso ID: ${idCurso}`);
-  return this.clienteHttp.get<{ status: number, message: string, data: Sesion[] }>(
-    `${this.urlBase}/curso/${idCurso}`, { withCredentials: true }
-  ).pipe(
-    map(response => {
-      console.log("Respuesta de la API:", response);
-      return response.data;
-    }),
-    catchError(error => {
-      console.error('Error al obtener sesiones por curso:', error);
-      return throwError(() => new Error('Error al obtener sesiones'));
-    })
-  );
 }
 
 agregarSesion(sesion: Sesion): Observable<Sesion> {
