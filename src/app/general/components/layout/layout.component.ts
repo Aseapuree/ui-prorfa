@@ -9,13 +9,14 @@ import { DTOUsuario } from '../../Interface/DTOUsuario';
 import { ValidateService } from '../../../services/validateAuth.service';
 import {  lastValueFrom } from 'rxjs';
 import { FooterComponent } from '../footer/footer.component';
+import { NavbarComponent } from "../navbar/navbar.component";
 
 
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, MenuComponent, CommonModule,FooterComponent],
+  imports: [RouterOutlet, MenuComponent, CommonModule, FooterComponent, NavbarComponent],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss']
 })
@@ -53,23 +54,31 @@ export class LayoutComponent implements OnInit {
       console.warn("⚠ No se encontró un ID de usuario.");
       return;
     }
-
+  
     try {
       const usuarioResponse = await lastValueFrom(this.usuarioService.getUsuario(userId));
       if (!usuarioResponse?.data) {
         console.warn("⚠ No se encontró el usuario con ese ID.");
         return;
       }
-
+  
       this.usuarioMostrar = usuarioResponse.data;
       console.log("Usuario obtenido: ", this.usuarioMostrar);
-
+  
+      // ✅ Guardar perfilUrl en localStorage si existe
+      if (this.usuarioMostrar.perfilurl) {
+        localStorage.setItem("perfilUrl", this.usuarioMostrar.perfilurl);
+        console.log("📦 perfilUrl guardado en localStorage:", this.usuarioMostrar.perfilurl);
+      } else {
+        console.warn("⚠ El usuario no tiene perfilurl.");
+      }
+  
       const idRol = this.usuarioMostrar.rol?.idRol;
       if (!idRol) {
         console.warn("⚠ El usuario no tiene un rol asignado.");
         return;
       }
-
+  
       localStorage.setItem("rol", idRol);
       console.log("Rol guardado en localStorage:", localStorage.getItem("rol"));
       this.cdr.detectChanges();
@@ -83,6 +92,7 @@ export class LayoutComponent implements OnInit {
       console.error("Error en la obtención de usuario o menús:", error);
     }
   }
+  
 
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;

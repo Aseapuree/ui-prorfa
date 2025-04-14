@@ -13,6 +13,7 @@ import { CampusGeneralComponent } from './campus/components/modules/campus-gener
 import { ComprobanteComponent } from './matricula/components/comprobantes/comprobantes.component';
 import { MatriculadosComponent } from './matricula/components/matriculados/matriculados.component';
 import { InicioComponent } from './general/components/inicio/inicio.component';
+import { AsistenciaComponent } from './general/components/asistencia/asistencia.component';
 
 export const routes: Routes = [
     {path: '', component: LayoutComponent, children:[
@@ -25,6 +26,7 @@ export const routes: Routes = [
         { path: 'libreria', component: LibrosListadoComponent, canActivate: [AuthGuard]},
         {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
         { path:'inicio', component: InicioComponent,canActivate:[AuthGuard]},
+        {path:'asistencia',component: AsistenciaComponent,canActivate:[AuthGuard]},
         {path:'matricula/:id', component: MatriculasComponent,canActivate:[AuthGuard]},
         {path:'registrarmatricula', component: RegistrarMatriculaComponent,canActivate:[AuthGuard]},
         {path:'matriculas/primaria', component: MatriculasComponent,canActivate:[AuthGuard]},

@@ -14,7 +14,7 @@ export class CardComponent {
   @Input() session: string = 'Nombre de la sesión';
   @Input() title: string = 'Título de la clase';
   @Input() teacher: string = 'Nombre del profesor';
-  @Input() route: string = '/'; // Nueva propiedad para la ruta
+  @Input() route: string = '/asistencia'; // Nueva propiedad para la ruta
   @Input() idProfesorCurso?: string;
 
   constructor(
