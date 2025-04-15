@@ -28,6 +28,8 @@ export const routes: Routes = [
         {path:'perfil',component: PerfilComponent,canActivate:[AuthGuard]},
         { path:'inicio', component: InicioComponent,canActivate:[AuthGuard]},
         {path:'asistencia',component: AsistenciaComponent,canActivate:[AuthGuard]},
+        { path: 'asistencias/profesor/:idProfesorCurso/:idSesion', component: AsistenciaComponent, canActivate: [AuthGuard] },
+        { path: 'asistencias/alumno/:idAlumnoCurso/:idSesion', component: AsistenciaComponent, canActivate: [AuthGuard] },
         {path:'matricula/:id', component: MatriculasComponent,canActivate:[AuthGuard]},
         {path:'registrarmatricula', component: RegistrarMatriculaComponent,canActivate:[AuthGuard]},
         {path:'matriculas/primaria', component: MatriculasComponent,canActivate:[AuthGuard]},

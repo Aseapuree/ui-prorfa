@@ -3,7 +3,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import {  RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
-type TipoActividad = 'introducciones' | 'materiales' | 'actividades';
+type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias'; // Agregar 'asistencias'
 
 @Component({
   selector: 'app-card-actividades',
@@ -20,7 +20,7 @@ export class CardActividadesComponent {
   @Input() actividad: string = 'Actividad';
   @Input() actividadSeleccionada: TipoActividad | null = null;
   @Input() showBackButton: boolean = true; // Nueva entrada para controlar si se muestra el botón de retroceder 
-
+  @Input() asistencia: string = 'Asistencia'; // Nueva entrada para el texto del botón
   @Output() seleccionarActividad = new EventEmitter<TipoActividad>();
   @Output() retroceder = new EventEmitter<void>(); // Nuevo evento para notificar retroceso
 
