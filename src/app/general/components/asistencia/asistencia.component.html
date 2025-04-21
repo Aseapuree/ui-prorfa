@@ -1,4 +1,7 @@
 <div class="relative overflow-x-auto shadow-lg sm:rounded-xl p-6 bg-gray-900">
+  <!-- Alerta -->
+  <app-alert [message]="alertMessage" [type]="alertType"></app-alert>
+
   <!-- Encabezado -->
   <div class="mb-6 text-center">
     <h1 class="text-2xl font-extrabold text-blue-700 dark:text-blue-400 tracking-wide">
@@ -22,39 +25,27 @@
                 <path d="M12 2C9.243 2 7 4.243 7 7v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7c0-2.757-2.243-5-5-5zm-3 5a3 3 0 116 0v3H9V7z" />
               </svg>
               <svg *ngIf="!bloqueado" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600 hover:text-green-700 transition" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17 8h-1V7a4 4 0 10-8 0h2a2 2 0 114 0v1H7a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2v-8a2 2 0 00-2-2z" />
+                <path d="M17 8h-1V7a4 4 0 00-8 0h2a2 2 0 014 0v1H7a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2v-8a2 2 0 00-2-2z" />
               </svg>
             </button>
-            </div>
+          </div>
         </th>
       </tr>
     </thead>
     <tbody>
-      <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-        <td class="px-6 py-4 font-medium whitespace-nowrap">Juan Pérez</td>
-        <td class="p-4 text-center">
-          <input type="checkbox" [disabled]="bloqueado"
-            class="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" />
+      <!-- Mostrar mensaje si no hay alumnos -->
+      <tr *ngIf="alumnos.length === 0">
+        <td colspan="2" class="text-center py-4 text-gray-500">
+          No hay alumnos inscritos en este curso.
         </td>
       </tr>
-      <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-        <td class="px-6 py-4 font-medium whitespace-nowrap">Ana Torres</td>
-        <td class="p-4 text-center">
-          <input type="checkbox" [disabled]="bloqueado"
-            class="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" />
+      <!-- Listar alumnos dinámicamente -->
+      <tr *ngFor="let alumno of alumnos" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+        <td class="px-6 py-4 font-medium whitespace-nowrap">
+          {{ alumno.nombre }} {{ alumno.apellidoPaterno }} {{ alumno.apellidoMaterno }}
         </td>
-      </tr>
-      <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-        <td class="px-6 py-4 font-medium whitespace-nowrap">Luis Mendoza</td>
         <td class="p-4 text-center">
-          <input type="checkbox" [disabled]="bloqueado"
-            class="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" />
-        </td>
-      </tr>
-      <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-        <td class="px-6 py-4 font-medium whitespace-nowrap">Carla Romero</td>
-        <td class="p-4 text-center">
-          <input type="checkbox" [disabled]="bloqueado"
+          <input type="checkbox" [(ngModel)]="alumno.asistencia" [disabled]="bloqueado"
             class="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" />
         </td>
       </tr>
@@ -64,6 +55,7 @@
   <!-- Botón Enviar -->
   <div class="mt-6 text-end">
     <button
+      (click)="guardarAsistencia()"
       class="px-6 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition duration-200"
     >
       Guardar Asistencia

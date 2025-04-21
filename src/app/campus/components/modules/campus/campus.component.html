@@ -1,30 +1,32 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-dark">
   <!-- Mostrar cursos del profesor si el rol es 'Profesor' -->
   <ng-container *ngIf="rolUsuario === 'Profesor'">
-      <app-card
-          *ngFor="let profesorcurso of profesorcursos | paginate: { itemsPerPage: 4, currentPage: page }"
-          [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
-          [title]="profesorcurso.curso?.nombre || 'Sin nombre'"
-          [teacher]="(profesorcurso.usuario?.nombre || '') + ' ' +
-                     (profesorcurso.usuario?.apellidopaterno || '') + ' ' +
-                     (profesorcurso.usuario?.apellidomaterno || '')"
-          [route]="'/sesiones/profesor/' + profesorcurso.idProfesorCurso"
-      >
-      </app-card>
+    <app-card
+      *ngFor="let profesorcurso of profesorcursos | paginate: { itemsPerPage: 4, currentPage: page }"
+      [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
+      [title]="profesorcurso.curso?.nombre || 'Sin nombre'"
+      [teacher]="(profesorcurso.usuario?.nombre || '') + ' ' +
+                 (profesorcurso.usuario?.apellidopaterno || '') + ' ' +
+                 (profesorcurso.usuario?.apellidomaterno || '')"
+      (click)="seleccionarCurso(profesorcurso)"
+      class="cursor-pointer"
+    >
+    </app-card>
   </ng-container>
 
   <!-- Mostrar cursos del alumno si el rol es 'Alumno' -->
   <ng-container *ngIf="rolUsuario === 'Alumno'">
-      <app-card
-          *ngFor="let alumnocurso of alumnocursos | paginate: { itemsPerPage: 4, currentPage: page }"
-          [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
-          [title]="alumnocurso.profesorCurso?.curso?.nombre || 'Sin nombre'"
-          [teacher]="(alumnocurso.profesorCurso?.usuario?.nombre || '') + ' ' +
-                     (alumnocurso.profesorCurso?.usuario?.apellidopaterno || '') + ' ' +
-                     (alumnocurso.profesorCurso?.usuario?.apellidomaterno || '')"
-          [route]="'/sesiones/alumno/' + alumnocurso.idAlumnoCurso"
-      >
-      </app-card>
+    <app-card
+      *ngFor="let alumnocurso of alumnocursos | paginate: { itemsPerPage: 4, currentPage: page }"
+      [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
+      [title]="alumnocurso.profesorCurso?.curso?.nombre || 'Sin nombre'"
+      [teacher]="(alumnocurso.profesorCurso?.usuario?.nombre || '') + ' ' +
+                 (alumnocurso.profesorCurso?.usuario?.apellidopaterno || '') + ' ' +
+                 (alumnocurso.profesorCurso?.usuario?.apellidomaterno || '')"
+      (click)="seleccionarCurso(alumnocurso)"
+      class="cursor-pointer"
+    >
+    </app-card>
   </ng-container>
 </div>
 

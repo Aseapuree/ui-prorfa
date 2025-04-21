@@ -30,7 +30,7 @@ type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistenc
     SafeUrlPipe,
     FontAwesomeModule,
     NotificationComponent,
-    AsistenciaComponent // Agrega AsistenciaComponent a los imports
+    AsistenciaComponent
   ],
   templateUrl: './campus-actividades.component.html',
   styleUrl: './campus-actividades.component.scss'
@@ -48,6 +48,7 @@ export class CampusActividadesComponent implements OnInit {
   idSesion: string = '';
   idProfesorCurso: string | null = null;
   idAlumnoCurso: string | null = null;
+  idCurso: string | null = null; // Añadir idCurso
   rolUsuario: string | null = null;
   actividadSeleccionada: TipoActividad = 'introducciones';
   contenidoActual: { tipo: 'pdf' | 'video'; url: string; actividad: DTOActividad } | null = null;
@@ -77,9 +78,14 @@ export class CampusActividadesComponent implements OnInit {
         if (navigation?.extras.state) {
           this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
           this.idAlumnoCurso = navigation.extras.state['idAlumnoCurso'] || null;
+          this.idCurso = navigation.extras.state['idCurso'] || localStorage.getItem('idCurso') || null;
+        } else {
+          this.idCurso = localStorage.getItem('idCurso') || null; // Fallback a localStorage
         }
+        console.log('Navigation state:', navigation?.extras.state);
         console.log('idProfesorCurso:', this.idProfesorCurso);
         console.log('idAlumnoCurso:', this.idAlumnoCurso);
+        console.log('idCurso:', this.idCurso);
         console.log('idSesion:', this.idSesion);
 
         if (this.idSesion) {
@@ -152,7 +158,7 @@ export class CampusActividadesComponent implements OnInit {
     } else if (this.actividadSeleccionada === 'actividades') {
       this.actividadesActuales = this.actividadesSesion.data.actividades;
     } else if (this.actividadSeleccionada === 'asistencias') {
-      this.actividadesActuales = []; // No necesitamos cargar actividades para asistencias
+      this.actividadesActuales = [];
     }
     this.isAddButtonDisabled = this.actividadesActuales.length === 0 && this.rolUsuario === 'Profesor';
   }
