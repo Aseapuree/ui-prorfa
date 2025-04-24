@@ -1,18 +1,63 @@
 table {
-    width: 100%;
-    border-collapse: collapse;
-  
-    tbody {
-      tr {
-        transition: background-color 0.3s ease; // Transición suave para el cambio de color
-        &.bg-gray-500 {
-          background-color: #6b7280 !important; // Color más claro para el resaltado
-        }
+  width: 100%;
+  border-collapse: collapse;
+
+  tbody {
+    tr {
+      transition: background-color 0.3s ease; // Transición suave para el cambio de color
+      &.bg-gray-500 {
+        background-color: #6b7280 !important; // Color más claro para el resaltado
       }
     }
   }
-  
-  .error-message {
-    margin-top: 1rem;
-    color: #f87171; // Rojo claro para mensajes de error
+}
+
+.error-message {
+  margin-top: 1rem;
+  color: #f87171; // Rojo claro para mensajes de error
+}
+
+/* Estilo para el efecto de deslizamiento */
+.slide-in {
+  animation: slideIn 0.3s ease-in-out forwards;
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
   }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilo para el panel de notas */
+.notas-panel {
+  background-color: #2d3748; // Fondo oscuro que combina con la interfaz
+  border: 1px solid #4a5568; // Borde gris oscuro
+  border-radius: 8px; // Bordes redondeados
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); // Sombra suave
+  padding: 16px; // Espaciado interno
+}
+
+/* Estilo para los inputs de notas */
+input[type="number"] {
+  -moz-appearance: textfield; // Eliminar flechas en Firefox
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none; // Eliminar flechas en Chrome/Safari
+    margin: 0;
+  }
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  &:focus {
+    border-color: #3182ce; // Borde azul al enfocar
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3); // Sombra azul al enfocar
+  }
+}
+
+/* Estilo para el botón de guardar */
+button {
+  transition: background-color 0.3s ease;
+}

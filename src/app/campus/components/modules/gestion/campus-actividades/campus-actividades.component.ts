@@ -16,8 +16,17 @@ import { UserData, ValidateService } from '../../../../../services/validateAuth.
 import { lastValueFrom } from 'rxjs';
 import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 import { AsistenciaComponent } from '../../../../../general/components/asistencia/asistencia.component';
+import { Sesion } from '../../../../interface/sesion';
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
+
+// Interfaz para los alumnos estáticos
+interface Alumno {
+  idAlumno: string;
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+}
 
 @Component({
   selector: 'app-campus-actividades',
@@ -33,7 +42,7 @@ type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistenc
     AsistenciaComponent
   ],
   templateUrl: './campus-actividades.component.html',
-  styleUrl: './campus-actividades.component.scss'
+  styleUrls: ['./campus-actividades.component.scss']
 })
 export class CampusActividadesComponent implements OnInit {
   actividadesSesion: DTOActividadesSesion = {
@@ -48,13 +57,25 @@ export class CampusActividadesComponent implements OnInit {
   idSesion: string = '';
   idProfesorCurso: string | null = null;
   idAlumnoCurso: string | null = null;
-  idCurso: string | null = null; // Añadir idCurso
+  idCurso: string | null = null;
   rolUsuario: string | null = null;
   actividadSeleccionada: TipoActividad = 'introducciones';
   contenidoActual: { tipo: 'pdf' | 'video'; url: string; actividad: DTOActividad } | null = null;
   errorLoadingFile: boolean = false;
   actividadesActuales: DTOActividad[] = [];
   isAddButtonDisabled: boolean = false;
+  fechaAsignada: string | null = null; // Propiedad para almacenar fechaAsignada
+
+  // Lista estática de alumnos
+  alumnos: Alumno[] = [
+    { idAlumno: '1', nombre: 'Luisa', apellidoPaterno: 'Lopez', apellidoMaterno: 'Diaz' },
+    { idAlumno: '2', nombre: 'Joiser', apellidoPaterno: 'Monsalve', apellidoMaterno: 'Salazar' },
+    { idAlumno: '3', nombre: 'Juana', apellidoPaterno: 'Uriarte', apellidoMaterno: 'Coronel' },
+    { idAlumno: '4', nombre: 'Daniel', apellidoPaterno: 'Quisp', apellidoMaterno: 'Florez' }
+  ];
+
+  // Variable para controlar qué actividad tiene el panel de notas abierto
+  actividadConNotasAbierta: string | null | undefined = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -75,26 +96,84 @@ export class CampusActividadesComponent implements OnInit {
       this.route.paramMap.subscribe(async params => {
         this.idSesion = params.get('idSesion') || '';
         const navigation = this.router.getCurrentNavigation();
+        let sesion: Sesion | null = null;
+
+        // Intentar obtener la sesión desde el state
         if (navigation?.extras.state) {
           this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
           this.idAlumnoCurso = navigation.extras.state['idAlumnoCurso'] || null;
           this.idCurso = navigation.extras.state['idCurso'] || localStorage.getItem('idCurso') || null;
+          sesion = navigation.extras.state['sesion'] || null;
+          if (sesion) {
+            this.fechaAsignada = sesion.fechaAsignada || sesion.fechaAsignacion || null;
+            console.log('fechaAsignada obtenida desde state:', this.fechaAsignada);
+          }
         } else {
-          this.idCurso = localStorage.getItem('idCurso') || null; // Fallback a localStorage
+          this.idCurso = localStorage.getItem('idCurso') || null;
+          this.idProfesorCurso = localStorage.getItem('idProfesorCurso') || null;
+          this.idAlumnoCurso = localStorage.getItem('idAlumnoCurso') || null;
         }
+
         console.log('Navigation state:', navigation?.extras.state);
         console.log('idProfesorCurso:', this.idProfesorCurso);
         console.log('idAlumnoCurso:', this.idAlumnoCurso);
         console.log('idCurso:', this.idCurso);
         console.log('idSesion:', this.idSesion);
 
+        // Si no se obtuvo fechaAsignada desde el state, hacer una solicitud para obtenerla
+        if (!this.fechaAsignada && this.idSesion) {
+          await this.obtenerFechaAsignada();
+        }
+
         if (this.idSesion) {
           await this.obtenerActividades();
+        } else {
+          this.notificationService.showNotification('No se proporcionó un ID de sesión válido', 'error');
+          this.router.navigate(['campus']);
         }
       });
     } catch (error) {
       console.error('Error al obtener el rol del usuario:', error);
       this.notificationService.showNotification('Error al cargar los datos', 'error');
+    }
+  }
+
+  async obtenerFechaAsignada(): Promise<void> {
+    try {
+      if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
+        const sesiones: Sesion[] = await lastValueFrom(this.sesionService.obtenerSesionesPorCurso(this.idProfesorCurso));
+        const sesion = sesiones.find(s => s.idSesion === this.idSesion);
+        if (sesion) {
+          this.fechaAsignada = sesion.fechaAsignada || sesion.fechaAsignacion || null;
+          console.log('fechaAsignada obtenida (Profesor):', this.fechaAsignada);
+        } else {
+          throw new Error('Sesión no encontrada para idSesion: ' + this.idSesion);
+        }
+      } else if (this.rolUsuario === 'Alumno' && this.idAlumnoCurso) {
+        const usuarioId = localStorage.getItem('usuarioId');
+        if (!usuarioId) {
+          throw new Error('No se encontró el ID del usuario');
+        }
+        const cursos = await lastValueFrom(this.alumnoCursoService.obtenerCursosPorAlumno(usuarioId));
+        const curso = cursos.find(c => c.idAlumnoCurso === this.idAlumnoCurso);
+        if (curso && curso.sesiones) {
+          const sesion = curso.sesiones.find(s => s.idSesion === this.idSesion);
+          if (sesion) {
+            this.fechaAsignada = sesion.fechaAsignada || sesion.fechaAsignacion || null;
+            console.log('fechaAsignada obtenida (Alumno):', this.fechaAsignada);
+          } else {
+            throw new Error('Sesión no encontrada para idSesion: ' + this.idSesion);
+          }
+        } else {
+          throw new Error('Curso no encontrado para idAlumnoCurso: ' + this.idAlumnoCurso);
+        }
+      } else {
+        throw new Error('No se pudo determinar el rol del usuario o faltan datos (idProfesorCurso/idAlumnoCurso)');
+      }
+    } catch (error) {
+      console.error('Error al obtener datos de la sesión:', error);
+      this.notificationService.showNotification('Error al obtener datos de la sesión', 'error');
+      this.fechaAsignada = null; // Fallback en caso de error
     }
   }
 
@@ -147,6 +226,7 @@ export class CampusActividadesComponent implements OnInit {
     this.actividadSeleccionada = tipo;
     this.contenidoActual = null;
     this.errorLoadingFile = false;
+    this.actividadConNotasAbierta = null; // Cerrar el panel de notas al cambiar de actividad
     this.actualizarActividadesActuales();
   }
 
@@ -281,5 +361,19 @@ export class CampusActividadesComponent implements OnInit {
 
   handleFileError(): void {
     this.errorLoadingFile = true;
+  }
+
+  // Método para abrir/cerrar el panel de notas
+  toggleNotas(actividad: DTOActividad, event: Event): void {
+    event.stopPropagation();
+    if (!actividad.idActividad) {
+      console.error('idActividad no está definido para esta actividad:', actividad);
+      return;
+    }
+    if (this.actividadConNotasAbierta === actividad.idActividad) {
+      this.actividadConNotasAbierta = null; // Cerrar el panel
+    } else {
+      this.actividadConNotasAbierta = actividad.idActividad; // Abrir el panel
+    }
   }
 }
