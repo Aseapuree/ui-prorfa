@@ -20,10 +20,10 @@ import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 @Component({
   selector: 'app-campus-sesiones',
   standalone: true,
-  imports: [CommonModule, NgxPaginationModule, FontAwesomeModule,RouterModule,CardWeekComponent,HttpClientModule,NotificationComponent],
-  providers: [SesionService,AlumnoCursoService],
+  imports: [CommonModule, NgxPaginationModule, FontAwesomeModule, RouterModule, CardWeekComponent, HttpClientModule, NotificationComponent],
+  providers: [SesionService, AlumnoCursoService],
   templateUrl: './campus-sesiones.component.html',
-  styleUrl: './campus-sesiones.component.scss'
+  styleUrls: ['./campus-sesiones.component.scss']
 })
 export class CampusSesionesComponent {
     public page: number = 1;
@@ -32,15 +32,15 @@ export class CampusSesionesComponent {
     idCurso: string | null = null;
     rolUsuario: string | null = null;
 
-    constructor(
-        private sesionService: SesionService,
-        private alumnoCursoService: AlumnoCursoService,
-        private route: ActivatedRoute,
-        private dialog: MatDialog,
-        private router: Router,
-        private validateService: ValidateService,
-        private notificationService: NotificationService
-    ) {}
+  constructor(
+    private sesionService: SesionService,
+    private alumnoCursoService: AlumnoCursoService,
+    private route: ActivatedRoute,
+    private dialog: MatDialog,
+    private router: Router,
+    private validateService: ValidateService,
+    private notificationService: NotificationService
+  ) {}
 
     async ngOnInit(): Promise<void> {
         try {
@@ -69,22 +69,22 @@ export class CampusSesionesComponent {
         }
       }
 
-    async obtenerSesionesPorProfesor(idProfesorCurso: string): Promise<void> {
-        try {
-            this.sesiones = await lastValueFrom(
-                this.sesionService.obtenerSesionesPorCurso(idProfesorCurso)
-            );
-            if (this.sesiones.length === 0) {
-                this.notificationService.showNotification(
-                    'No hay sesiones disponibles para este curso',
-                    'error'
-                );
-            }
-        } catch (error) {
-            console.error('Error al obtener sesiones:', error);
-            this.notificationService.showNotification('Error al obtener sesiones', 'error');
-        }
+  async obtenerSesionesPorProfesor(idProfesorCurso: string): Promise<void> {
+    try {
+      this.sesiones = await lastValueFrom(
+        this.sesionService.obtenerSesionesPorCurso(idProfesorCurso)
+      );
+      if (this.sesiones.length === 0) {
+        this.notificationService.showNotification(
+          'No hay sesiones disponibles para este curso',
+          'error'
+        );
+      }
+    } catch (error) {
+      console.error('Error al obtener sesiones:', error);
+      this.notificationService.showNotification('Error al obtener sesiones', 'error');
     }
+  }
 
     async obtenerSesionesPorAlumno(idCurso: string): Promise<void> {
       try {
@@ -113,42 +113,42 @@ export class CampusSesionesComponent {
       }
     }
 
-    openAddModal(): void {
-        if (this.rolUsuario !== 'Profesor') return;
-        const dialogRef = this.dialog.open(ModalSesionComponent, {
-            width: '600px',
-            data: {
-                isEditing: false,
-                idProfesorCurso: this.idProfesorCurso,
-            },
-        });
+  openAddModal(): void {
+    if (this.rolUsuario !== 'Profesor') return;
+    const dialogRef = this.dialog.open(ModalSesionComponent, {
+      width: '600px',
+      data: {
+        isEditing: false,
+        idProfesorCurso: this.idProfesorCurso,
+      },
+    });
 
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.obtenerSesionesPorProfesor(this.idProfesorCurso!);
-                this.notificationService.showNotification('Sesión agregada con éxito', 'success');
-            }
-        });
-    }
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.obtenerSesionesPorProfesor(this.idProfesorCurso!);
+        this.notificationService.showNotification('Sesión agregada con éxito', 'success');
+      }
+    });
+  }
 
-    openEditModal(sesion: Sesion): void {
-        if (this.rolUsuario !== 'Profesor') return;
-        const dialogRef = this.dialog.open(ModalSesionComponent, {
-            width: '600px',
-            data: {
-                isEditing: true,
-                sesion: sesion,
-                idProfesorCurso: this.idProfesorCurso,
-            },
-        });
+  openEditModal(sesion: Sesion): void {
+    if (this.rolUsuario !== 'Profesor') return;
+    const dialogRef = this.dialog.open(ModalSesionComponent, {
+      width: '600px',
+      data: {
+        isEditing: true,
+        sesion: sesion,
+        idProfesorCurso: this.idProfesorCurso,
+      },
+    });
 
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.obtenerSesionesPorProfesor(this.idProfesorCurso!);
-                this.notificationService.showNotification('Sesión editada con éxito', 'success');
-            }
-        });
-    }
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.obtenerSesionesPorProfesor(this.idProfesorCurso!);
+        this.notificationService.showNotification('Sesión editada con éxito', 'success');
+      }
+    });
+  }
 
     eliminarSesion(idSesion: string): void {
       if (this.rolUsuario !== 'Profesor') return;

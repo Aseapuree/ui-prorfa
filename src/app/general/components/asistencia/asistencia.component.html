@@ -7,8 +7,11 @@
     <h1 class="text-2xl font-extrabold text-blue-700 dark:text-blue-400 tracking-wide">
       Registro de Asistencia 📋
     </h1>
+    <p *ngIf="ultimaActualizacion" class="text-[10px] font-normal text-gray-500 dark:text-gray-400 mt-1">
+      Última actualización: {{ ultimaActualizacion | date: 'd \'de\' MMMM \'del\' y, HH:mm':undefined:'es' }}
+    </p>
     <p class="text-gray-600 dark:text-gray-300 mt-2 text-sm">
-      Clase del <span class="font-medium">{{ fechaActual | date: 'd \'de\' MMMM \'del\' y':undefined:'es' }}</span>
+      Clase del <span class="font-medium">{{ fechaSesion | date: 'd \'de\' MMMM \'del\' y':undefined:'es' }}</span>
     </p>
   </div>
 
