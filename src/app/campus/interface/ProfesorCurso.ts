@@ -17,5 +17,7 @@ export class ProfesorCurso {
     usuario?: Usuario;
     curso?: Curso;
     grado?: string;
+    seccion?: string;
+    nivel?: string;
     fechaAsignacion?: Date;
 }

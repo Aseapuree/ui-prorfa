@@ -18,6 +18,7 @@ export class CardWeekComponent {
     @Input() description: string = 'Descripción de la semana';
     @Input() route: string = '/';
     @Input() idSesion?: string; // Nuevo input para el ID de la sesión
+    @Input() fechaAsignada?: string;
   
     constructor(
       private router: Router

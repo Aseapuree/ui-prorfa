@@ -26,7 +26,7 @@ export class CampusComponent implements OnInit {
   public page: number = 1;
   profesorcursos: ProfesorCurso[] = [];
   alumnocursos: AlumnoCurso[] = [];
-  usuarioId: string | null = null;
+  idAuth: string | null = null;
   rolUsuario: string | null = null;
 
   constructor(
@@ -42,37 +42,37 @@ export class CampusComponent implements OnInit {
       const userData: UserData = await lastValueFrom(this.authService.getUserData());
       console.log('Datos del usuario:', userData);
 
-      const idAuth = userData?.data?.id;
+      this.idAuth = userData?.data?.id;
       this.rolUsuario = userData?.data?.rol || null;
-      if (!idAuth) {
+      if (!this.idAuth) {
         console.error('No se encontró el id_auth del usuario');
         return;
       }
 
-      this.usuarioId = await lastValueFrom(this.usuarioService.getUsuarioByIdAuth(idAuth));
-      console.log('usuarioId obtenido:', this.usuarioId);
+      localStorage.setItem('idAuth', this.idAuth);
 
-      if (this.usuarioId) {
-        localStorage.setItem('usuarioId', this.usuarioId);
-        if (this.rolUsuario === 'Profesor') {
-          await this.obtenerCursosPorProfesor();
-        } else if (this.rolUsuario === 'Alumno') {
-          await this.obtenerCursosPorAlumno();
+      if (this.rolUsuario === 'Profesor') {
+        const usuarioId = await lastValueFrom(this.usuarioService.getUsuarioByIdAuth(this.idAuth));
+        if (usuarioId) {
+          localStorage.setItem('usuarioId', usuarioId);
+          await this.obtenerCursosPorProfesor(usuarioId);
         } else {
-          console.warn('Rol no reconocido:', this.rolUsuario);
+          console.error('No se encontró el ID del usuario autenticado para el profesor');
         }
+      } else if (this.rolUsuario === 'Alumno') {
+        await this.obtenerCursosPorAlumno();
       } else {
-        console.error('No se encontró el ID del usuario autenticado');
+        console.warn('Rol no reconocido:', this.rolUsuario);
       }
     } catch (error) {
       console.error('Error al inicializar el componente:', error);
     }
   }
 
-  async obtenerCursosPorProfesor(): Promise<void> {
+  async obtenerCursosPorProfesor(usuarioId: string): Promise<void> {
     try {
       this.profesorcursos = await lastValueFrom(
-        this.profesorCursoService.obtenerCursosPorProfesor(this.usuarioId!)
+        this.profesorCursoService.obtenerCursosPorProfesor(usuarioId)
       );
       console.log('Cursos del profesor:', this.profesorcursos);
     } catch (error) {
@@ -83,7 +83,7 @@ export class CampusComponent implements OnInit {
   async obtenerCursosPorAlumno(): Promise<void> {
     try {
       this.alumnocursos = await lastValueFrom(
-        this.alumnoCursoService.obtenerCursosPorAlumno(this.usuarioId!)
+        this.alumnoCursoService.obtenerCursosPorAlumno(this.idAuth!)
       );
       console.log('Cursos del alumno:', this.alumnocursos);
     } catch (error) {
@@ -94,17 +94,16 @@ export class CampusComponent implements OnInit {
   seleccionarCurso(curso: ProfesorCurso | AlumnoCurso): void {
     if (this.rolUsuario === 'Profesor') {
       const profesorCurso = curso as ProfesorCurso;
-      // Verificar que las propiedades existan y no sean undefined
       const grado = profesorCurso.grado ?? '';
-      const seccion = (profesorCurso as any).seccion ?? ''; // Temporal hasta confirmar la interfaz
-      const nivel = (profesorCurso as any).nivel ?? ''; // Temporal hasta confirmar la interfaz
-      const idCurso = profesorCurso.curso?.idCurso ?? ''; // Obtener idCurso
+      const seccion = (profesorCurso as any).seccion ?? '';
+      const nivel = (profesorCurso as any).nivel ?? '';
+      const idCurso = profesorCurso.curso?.idCurso ?? '';
 
       if (grado && seccion && nivel && idCurso) {
         localStorage.setItem('grado', grado);
         localStorage.setItem('seccion', seccion);
         localStorage.setItem('nivel', nivel);
-        localStorage.setItem('idCurso', idCurso); // Guardar idCurso
+        localStorage.setItem('idCurso', idCurso);
 
         console.log('Curso seleccionado (Profesor):', {
           idProfesorCurso: profesorCurso.idProfesorCurso,
@@ -114,7 +113,6 @@ export class CampusComponent implements OnInit {
           nivel
         });
 
-        // Navegar a la vista de sesiones para profesores
         this.router.navigate(['/sesiones/profesor', profesorCurso.idProfesorCurso]);
       } else {
         console.error('Datos incompletos para el curso:', {
@@ -126,12 +124,21 @@ export class CampusComponent implements OnInit {
       }
     } else if (this.rolUsuario === 'Alumno') {
       const alumnoCurso = curso as AlumnoCurso;
-      console.log('Curso seleccionado (Alumno):', {
-        idAlumnoCurso: alumnoCurso.idAlumnoCurso
-      });
+      if (alumnoCurso.idCurso) {
+        localStorage.setItem('idCurso', alumnoCurso.idCurso);
+        localStorage.setItem('grado', alumnoCurso.grado?.toString() || '');
+        localStorage.setItem('seccion', alumnoCurso.seccion || '');
+        localStorage.setItem('nivel', alumnoCurso.nivel || '');
 
-      // Navegar a la vista de sesiones para alumnos
-      this.router.navigate(['/sesiones/alumno', alumnoCurso.idAlumnoCurso]);
+        console.log('Curso seleccionado (Alumno):', alumnoCurso);
+        this.router.navigate(['/sesiones/alumno', alumnoCurso.idCurso]);
+      } else {
+        console.error('Datos incompletos para el curso:', alumnoCurso);
+      }
     }
+  }
+
+  navigateToGrados(nivel: string): void {
+    this.router.navigate(['/campus/grados', nivel]);
   }
 }

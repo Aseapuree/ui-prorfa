@@ -26,10 +26,10 @@ import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
   styleUrl: './campus-sesiones.component.scss'
 })
 export class CampusSesionesComponent {
-  public page: number = 1;
+    public page: number = 1;
     sesiones: Sesion[] = [];
     idProfesorCurso: string | null = null;
-    idAlumnoCurso: string | null = null;
+    idCurso: string | null = null;
     rolUsuario: string | null = null;
 
     constructor(
@@ -44,30 +44,30 @@ export class CampusSesionesComponent {
 
     async ngOnInit(): Promise<void> {
         try {
-            const userData: UserData = await lastValueFrom(this.validateService.getUserData());
-            this.rolUsuario = userData?.data?.rol || null;
-            console.log('Rol del usuario:', this.rolUsuario);
-
-            this.route.paramMap.subscribe(async (params) => {
-                this.idProfesorCurso = params.get('idProfesorCurso');
-                this.idAlumnoCurso = params.get('idAlumnoCurso');
-
-                if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
-                    console.log('Cargando sesiones para profesor con ID:', this.idProfesorCurso);
-                    await this.obtenerSesionesPorProfesor(this.idProfesorCurso);
-                } else if (this.rolUsuario === 'Alumno' && this.idAlumnoCurso) {
-                    console.log('Cargando sesiones para alumno con idAlumnoCurso:', this.idAlumnoCurso);
-                    await this.obtenerSesionesPorAlumno(this.idAlumnoCurso);
-                } else {
-                    this.notificationService.showNotification('No se proporcionó un ID válido', 'error');
-                    this.router.navigate(['campus']);
-                }
-            });
+          const userData: UserData = await lastValueFrom(this.validateService.getUserData());
+          this.rolUsuario = userData?.data?.rol || null;
+          console.log('Rol del usuario:', this.rolUsuario);
+    
+          this.route.paramMap.subscribe(async params => {
+            this.idProfesorCurso = params.get('idProfesorCurso');
+            this.idCurso = params.get('idCurso');
+    
+            if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
+              console.log('Cargando sesiones para profesor con ID:', this.idProfesorCurso);
+              await this.obtenerSesionesPorProfesor(this.idProfesorCurso);
+            } else if (this.rolUsuario === 'Alumno' && this.idCurso) {
+              console.log('Cargando sesiones para alumno con idCurso:', this.idCurso);
+              await this.obtenerSesionesPorAlumno(this.idCurso);
+            } else {
+              this.notificationService.showNotification('No se proporcionó un ID válido', 'error');
+              this.router.navigate(['campus']);
+            }
+          });
         } catch (error) {
-            console.error('Error al inicializar el componente:', error);
-            this.notificationService.showNotification('Error al cargar los datos', 'error');
+          console.error('Error al inicializar el componente:', error);
+          this.notificationService.showNotification('Error al cargar los datos', 'error');
         }
-    }
+      }
 
     async obtenerSesionesPorProfesor(idProfesorCurso: string): Promise<void> {
         try {
@@ -86,31 +86,31 @@ export class CampusSesionesComponent {
         }
     }
 
-    async obtenerSesionesPorAlumno(idAlumnoCurso: string): Promise<void> {
-        try {
-            const usuarioId = localStorage.getItem('usuarioId');
-            if (!usuarioId) {
-                throw new Error('No se encontró el ID del usuario');
-            }
-            const cursos = await lastValueFrom(
-                this.alumnoCursoService.obtenerCursosPorAlumno(usuarioId)
-            );
-            const curso = cursos.find(c => c.idAlumnoCurso === idAlumnoCurso);
-            if (curso && curso.sesiones) {
-                this.sesiones = curso.sesiones;
-                if (this.sesiones.length === 0) {
-                    this.notificationService.showNotification(
-                        'No hay sesiones disponibles para este curso',
-                        'error'
-                    );
-                }
-            } else {
-                throw new Error('Curso no encontrado');
-            }
-        } catch (error) {
-            console.error('Error al obtener sesiones para alumno:', error);
-            this.notificationService.showNotification('Error al obtener sesiones', 'error');
+    async obtenerSesionesPorAlumno(idCurso: string): Promise<void> {
+      try {
+        const idAuth = localStorage.getItem('idAuth'); // Cambiar a idAuth
+        if (!idAuth) {
+          throw new Error('No se encontró el ID del usuario autenticado');
         }
+        const cursos = await lastValueFrom(
+          this.alumnoCursoService.obtenerCursosPorAlumno(idAuth)
+        );
+        const curso = cursos.find(c => c.idCurso === idCurso);
+        if (curso && curso.sesiones) {
+          this.sesiones = curso.sesiones;
+          if (this.sesiones.length === 0) {
+            this.notificationService.showNotification(
+              'No hay sesiones disponibles para este curso',
+              'error'
+            );
+          }
+        } else {
+          throw new Error('Curso no encontrado');
+        }
+      } catch (error) {
+        console.error('Error al obtener sesiones para alumno:', error);
+        this.notificationService.showNotification('Error al obtener sesiones', 'error');
+      }
     }
 
     openAddModal(): void {
@@ -151,34 +151,33 @@ export class CampusSesionesComponent {
     }
 
     eliminarSesion(idSesion: string): void {
-        if (this.rolUsuario !== 'Profesor') return;
-        const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-            width: '1px',
-            height: '1px',
-            data: { message: '¿Estás seguro de que quieres eliminar esta sesión?' },
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.sesionService.eliminarSesion(idSesion).subscribe({
-                    next: () => {
-                        this.obtenerSesionesPorProfesor(this.idProfesorCurso!);
-                        this.notificationService.showNotification('Sesión eliminada con éxito', 'error');
-                    },
-                    error: err => {
-                        this.notificationService.showNotification('Error al eliminar sesión', 'error');
-                        console.error('Error al eliminar una sesión:', err);
-                    },
-                });
-            }
-        });
+      if (this.rolUsuario !== 'Profesor') return;
+      const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
+        width: '1px',
+        height: '1px',
+        data: { message: '¿Estás seguro de que quieres eliminar esta sesión?' },
+      });
+    
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.sesionService.eliminarSesion(idSesion).subscribe({
+            next: () => {
+              this.obtenerSesionesPorProfesor(this.idProfesorCurso!);
+              this.notificationService.showNotification('Sesión eliminada con éxito', 'success'); // Cambiado a 'success'
+            },
+            error: err => {
+              this.notificationService.showNotification('Error al eliminar sesión', 'error');
+              console.error('Error al eliminar una sesión:', err);
+            },
+          });
+        }
+      });
     }
 
     irAActividades(idSesion: string): void {
         this.router.navigate(['/card-actividades', idSesion], {
             state: {
-                idProfesorCurso: this.idProfesorCurso || null,
-                idAlumnoCurso: this.idAlumnoCurso || null
+                idProfesorCurso: this.idProfesorCurso || null
             }
         });
     }

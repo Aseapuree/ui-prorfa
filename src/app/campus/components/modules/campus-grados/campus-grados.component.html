@@ -1,0 +1,51 @@
+<div class="p-4 bg-gray-100 dark:bg-gray-900 min-h-screen">
+  <h1 class="text-2xl font-bold text-center mb-6">{{ nivel }}</h1>
+
+  <!-- Navegación por grados -->
+  <div class="flex justify-center space-x-2 mb-6">
+    <button
+      *ngFor="let grado of grados"
+      (click)="selectGrado(grado)"
+      class="px-4 py-2 rounded-lg transition"
+      [ngClass]="{
+        'bg-blue-500 text-white': selectedGrado === grado,
+        'bg-gray-200 text-gray-800 hover:bg-gray-300': selectedGrado !== grado
+      }"
+    >
+      {{ grado }}
+    </button>
+  </div>
+
+  <!-- Mensaje si no hay cursos -->
+  <div *ngIf="selectedGrado && filteredCursos.length === 0" class="text-center text-gray-600">
+    No se encontraron cursos para el grado {{ selectedGrado }}.
+  </div>
+
+  <!-- Tarjetas de cursos -->
+  <div *ngIf="selectedGrado && filteredCursos.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+    <app-card
+      *ngFor="let curso of filteredCursos | paginate: { itemsPerPage: 4, currentPage: page }"
+      [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
+      [title]="curso.curso?.nombre || 'Sin nombre'"
+      [teacher]="(curso.usuario?.nombre || '') + ' ' +
+                 (curso.usuario?.apellidopaterno || '') + ' ' +
+                 (curso.usuario?.apellidomaterno || '')"
+      [grado]="curso.grado ? curso.grado + '°' : ''"
+      [session]="curso.seccion || 'Sin sección'"
+      (cardClicked)="seleccionarCurso(curso)"
+      class="cursor-pointer"
+    ></app-card>
+  </div>
+
+  <!-- Paginación -->
+  <pagination-controls
+    *ngIf="filteredCursos.length > 0"
+    class="flex justify-center items-center space-x-2 mt-4"
+    (pageChange)="page = $event"
+    previousLabel="«"
+    nextLabel="»"
+    pageLinkClass="px-3 py-1 border rounded-lg hover:bg-gray-200 transition"
+    currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
+    disabledClass="opacity-50 cursor-not-allowed"
+  ></pagination-controls>
+</div>

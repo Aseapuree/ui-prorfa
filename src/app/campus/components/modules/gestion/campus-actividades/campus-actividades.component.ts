@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SesionService } from '../../../../services/sesion.service';
 import { DTOActividad, DTOActividadesSesion } from '../../../../interface/DTOActividad';
@@ -16,6 +16,7 @@ import { UserData, ValidateService } from '../../../../../services/validateAuth.
 import { lastValueFrom } from 'rxjs';
 import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 import { AsistenciaComponent } from '../../../../../general/components/asistencia/asistencia.component';
+import { Actividad } from '../../../../interface/AlumnoCurso';
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
@@ -42,18 +43,18 @@ export class CampusActividadesComponent implements OnInit {
     data: {
       introducciones: [],
       materiales: [],
-      actividades: [],
-    },
+      actividades: []
+    }
   };
   idSesion: string = '';
   idProfesorCurso: string | null = null;
-  idAlumnoCurso: string | null = null;
-  idCurso: string | null = null; // Añadir idCurso
+  idCurso: string | null = null;
   rolUsuario: string | null = null;
   actividadSeleccionada: TipoActividad = 'introducciones';
-  contenidoActual: { tipo: 'pdf' | 'video'; url: string; actividad: DTOActividad } | null = null;
+  contenidoActual: { tipo: 'pdf' | 'video'; url: string; actividad: DTOActividad | Actividad } | null = null;
   errorLoadingFile: boolean = false;
-  actividadesActuales: DTOActividad[] = [];
+  actividadesOriginales: Actividad[] = [];
+  actividadesActuales: (DTOActividad | Actividad)[] = [];
   isAddButtonDisabled: boolean = false;
 
   constructor(
@@ -63,7 +64,8 @@ export class CampusActividadesComponent implements OnInit {
     private dialog: MatDialog,
     private router: Router,
     private notificationService: NotificationService,
-    private validateService: ValidateService
+    private validateService: ValidateService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -77,16 +79,11 @@ export class CampusActividadesComponent implements OnInit {
         const navigation = this.router.getCurrentNavigation();
         if (navigation?.extras.state) {
           this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
-          this.idAlumnoCurso = navigation.extras.state['idAlumnoCurso'] || null;
-          this.idCurso = navigation.extras.state['idCurso'] || localStorage.getItem('idCurso') || null;
+          this.idCurso = navigation.extras.state['idCurso'] || null;
         } else {
-          this.idCurso = localStorage.getItem('idCurso') || null; // Fallback a localStorage
+          this.idCurso = localStorage.getItem('idCurso') || null;
         }
-        console.log('Navigation state:', navigation?.extras.state);
-        console.log('idProfesorCurso:', this.idProfesorCurso);
-        console.log('idAlumnoCurso:', this.idAlumnoCurso);
-        console.log('idCurso:', this.idCurso);
-        console.log('idSesion:', this.idSesion);
+        console.log('idProfesorCurso:', this.idProfesorCurso, 'idCurso:', this.idCurso, 'idSesion:', this.idSesion);
 
         if (this.idSesion) {
           await this.obtenerActividades();
@@ -105,29 +102,26 @@ export class CampusActividadesComponent implements OnInit {
           this.sesionService.obtenerActividadesPorSesion(this.idSesion)
         );
         this.actividadesSesion = response;
-      } else if (this.rolUsuario === 'Alumno' && this.idAlumnoCurso) {
-        const usuarioId = localStorage.getItem('usuarioId');
-        if (!usuarioId) {
-          throw new Error('No se encontró el ID del usuario');
+        this.actualizarActividadesActuales();
+      } else if (this.rolUsuario === 'Alumno' && this.idCurso) {
+        const idAuth = localStorage.getItem('idAuth');
+        if (!idAuth) {
+          throw new Error('No se encontró el ID del usuario autenticado');
         }
         const cursos = await lastValueFrom(
-          this.alumnoCursoService.obtenerCursosPorAlumno(usuarioId)
+          this.alumnoCursoService.obtenerCursosPorAlumno(idAuth)
         );
-        const curso = cursos.find(c => c.idAlumnoCurso === this.idAlumnoCurso);
+        console.log('Cursos obtenidos para alumno:', cursos);
+        const curso = cursos.find(c => c.idCurso === this.idCurso);
         if (curso && curso.sesiones) {
           const sesion = curso.sesiones.find(s => s.idSesion === this.idSesion);
+          console.log('Sesión encontrada:', sesion);
           if (sesion && sesion.actividades) {
-            this.actividadesSesion.data = {
-              introducciones: sesion.actividades.filter(
-                a => a.infoMaestra?.descripcion === 'Introducción'
-              ),
-              materiales: sesion.actividades.filter(
-                a => a.infoMaestra?.descripcion === 'Material'
-              ),
-              actividades: sesion.actividades.filter(
-                a => a.infoMaestra?.descripcion === 'Actividad'
-              ),
-            };
+            console.log('Actividades de la sesión:', sesion.actividades);
+            this.actividadesOriginales = [...sesion.actividades];
+            this.actividadesActuales = [...sesion.actividades];
+            console.log('this.actividadesOriginales después de asignar:', this.actividadesOriginales);
+            this.actualizarActividadesActuales();
           } else {
             throw new Error('Sesión no encontrada');
           }
@@ -135,7 +129,6 @@ export class CampusActividadesComponent implements OnInit {
           throw new Error('Curso no encontrado');
         }
       }
-      this.actualizarActividadesActuales();
     } catch (error) {
       console.error('Error al obtener actividades:', error);
       this.notificationService.showNotification('Error al obtener actividades', 'error');
@@ -151,19 +144,73 @@ export class CampusActividadesComponent implements OnInit {
   }
 
   actualizarActividadesActuales(): void {
-    if (this.actividadSeleccionada === 'introducciones') {
-      this.actividadesActuales = this.actividadesSesion.data.introducciones;
-    } else if (this.actividadSeleccionada === 'materiales') {
-      this.actividadesActuales = this.actividadesSesion.data.materiales;
-    } else if (this.actividadSeleccionada === 'actividades') {
-      this.actividadesActuales = this.actividadesSesion.data.actividades;
-    } else if (this.actividadSeleccionada === 'asistencias') {
-      this.actividadesActuales = [];
+    if (this.rolUsuario === 'Profesor') {
+      if (this.actividadSeleccionada === 'introducciones') {
+        this.actividadesActuales = this.actividadesSesion.data.introducciones;
+      } else if (this.actividadSeleccionada === 'materiales') {
+        this.actividadesActuales = this.actividadesSesion.data.materiales;
+      } else if (this.actividadSeleccionada === 'actividades') {
+        this.actividadesActuales = this.actividadesSesion.data.actividades;
+      } else if (this.actividadSeleccionada === 'asistencias') {
+        this.actividadesActuales = [];
+      }
+    } else if (this.rolUsuario === 'Alumno') {
+      console.log('Actividades originales antes del filtrado:', this.actividadesOriginales);
+  
+      let tipoEsperado: string;
+      switch (this.actividadSeleccionada) {
+        case 'introducciones':
+          tipoEsperado = 'introduccion';
+          break;
+        case 'actividades':
+          tipoEsperado = 'actividad';
+          break;
+        case 'materiales':
+          tipoEsperado = 'material';
+          break;
+        default:
+          tipoEsperado = '';
+          break;
+      }
+  
+      if (!tipoEsperado) {
+        console.warn('Tipo esperado no definido para actividadSeleccionada:', this.actividadSeleccionada);
+        this.actividadesActuales = [];
+        return;
+      }
+  
+      const tipoEsperadoNormalized = normalizeString(tipoEsperado);
+      console.log('Filtrando actividades para tipo:', tipoEsperadoNormalized);
+  
+      const actividadesFiltradas = this.actividadesOriginales.filter(a => {
+        const actividad = a as Actividad;
+        if (!actividad.actividadTipo) {
+          console.warn('Actividad sin actividadTipo:', actividad);
+          return false;
+        }
+        const actividadTipoNormalized = normalizeString(actividad.actividadTipo);
+        console.log('Comparando actividadTipo:', actividadTipoNormalized, 'con tipoEsperado:', tipoEsperadoNormalized);
+        const coincide = actividadTipoNormalized === tipoEsperadoNormalized;
+        console.log('Resultado de la comparación:', coincide, 'para actividad:', actividad);
+        return coincide;
+      });
+  
+      console.log('Actividades filtradas (antes de asignar):', actividadesFiltradas);
+      this.actividadesActuales = actividadesFiltradas;
+  
+      console.log('Actividades filtradas (después de asignar):', this.actividadesActuales);
+      if (this.actividadesActuales.length === 0) {
+        this.notificationService.showNotification(
+          `No hay ${this.actividadSeleccionada} disponibles para esta sesión`,
+          'info'
+        );
+      }
     }
     this.isAddButtonDisabled = this.actividadesActuales.length === 0 && this.rolUsuario === 'Profesor';
+    this.cdr.detectChanges();
   }
 
-  toggleContenido(actividad: DTOActividad): void {
+  toggleContenido(actividad: DTOActividad | Actividad): void {
     if (
       this.contenidoActual &&
       this.contenidoActual.actividad.actividadUrl === actividad.actividadUrl
@@ -174,7 +221,7 @@ export class CampusActividadesComponent implements OnInit {
       this.contenidoActual = {
         tipo: esVideo ? 'video' : 'pdf',
         url: actividad.actividadUrl!,
-        actividad: actividad,
+        actividad: actividad
       };
       this.errorLoadingFile = false;
     }
@@ -189,14 +236,22 @@ export class CampusActividadesComponent implements OnInit {
     );
   }
 
+  // Extraer el nombre del archivo desde la URL
+  getFileNameFromUrl(url: string): string {
+    const parts = url.split('/');
+    const fileId = parts[parts.length - 2];
+    // Opcional: podrías hacer una solicitud al backend para obtener el nombre real del archivo
+    return fileId || 'Archivo desconocido';
+  }
+
   openAddModal(tipo: TipoActividad): void {
     if (this.rolUsuario !== 'Profesor' || tipo === 'asistencias') return;
     const dialogRef = this.dialog.open(ModalActividadComponent, {
       width: '500px',
       data: {
         tipo: tipo,
-        sesionId: this.idSesion,
-      },
+        sesionId: this.idSesion
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -215,8 +270,8 @@ export class CampusActividadesComponent implements OnInit {
       data: {
         tipo: this.actividadSeleccionada,
         sesionId: this.idSesion,
-        actividad: actividad,
-      },
+        actividad: actividad
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -232,7 +287,7 @@ export class CampusActividadesComponent implements OnInit {
     event.stopPropagation();
     const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
       width: '1px',
-      height: '1px',
+      height: '1px'
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -258,23 +313,16 @@ export class CampusActividadesComponent implements OnInit {
       error: err => {
         console.error('Error al eliminar actividad:', err);
         this.notificationService.showNotification('Error al eliminar actividad', 'error');
-      },
+      }
     });
   }
 
   retroceder(): void {
-    console.log(
-      'Retrocediendo a sesiones con idProfesorCurso:',
-      this.idProfesorCurso,
-      'o idAlumnoCurso:',
-      this.idAlumnoCurso
-    );
     if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
       this.router.navigate(['/sesiones/profesor', this.idProfesorCurso]);
-    } else if (this.rolUsuario === 'Alumno' && this.idAlumnoCurso) {
-      this.router.navigate(['/sesiones/alumno', this.idAlumnoCurso]);
+    } else if (this.rolUsuario === 'Alumno' && this.idCurso) {
+      this.router.navigate(['/sesiones/alumno', this.idCurso]);
     } else {
-      console.error('No se pudo determinar la ruta de retroceso');
       this.router.navigate(['campus']);
     }
   }
@@ -283,3 +331,9 @@ export class CampusActividadesComponent implements OnInit {
     this.errorLoadingFile = true;
   }
 }
+
+const normalizeString = (str: string) =>
+  str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();

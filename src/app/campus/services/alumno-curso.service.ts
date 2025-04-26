@@ -8,24 +8,27 @@ import { AlumnoCurso } from '../interface/AlumnoCurso';
   providedIn: 'root'
 })
 export class AlumnoCursoService {
-  private urlBase = 'http://localhost:8080/v1/alumno-curso';
+    private urlBase = 'http://localhost:8080/v1/alumnos';
 
-    constructor(private clienteHttp: HttpClient) { }
+  constructor(private clienteHttp: HttpClient) {}
 
-    // Obtener cursos de un alumno específico
-    obtenerCursosPorAlumno(usuarioId: string): Observable<AlumnoCurso[]> {
-        return this.clienteHttp.get<{ status: number, message: string, data: AlumnoCurso[] }>(
-            `${this.urlBase}/listar-por-alumno/${usuarioId}`,
-            { withCredentials: true }
-        ).pipe(
-            map(response => {
-                console.log('Respuesta del backend:', response);
-                return response.data;
-            }),
-            catchError(error => {
-                console.error('Error al obtener los cursos del alumno', error);
-                return throwError(() => new Error('Error al cargar los cursos'));
-            })
-        );
-    }
+  obtenerCursosPorAlumno(idAuth: string): Observable<AlumnoCurso[]> {
+    return this.clienteHttp
+      .get<{ code: number; message: string; data: { code: number; message: string; data: AlumnoCurso[] }[] }>(
+        `${this.urlBase}/cursos/${idAuth}`,
+        { withCredentials: true }
+      )
+      .pipe(
+        map(response => {
+          console.log('Respuesta cruda del backend:', response); // Inspeccionar respuesta
+          const cursos = response.data.flatMap(item => item.data);
+          console.log('Cursos mapeados:', cursos); // Inspeccionar cursos
+          return cursos;
+        }),
+        catchError(error => {
+          console.error('Error al obtener los cursos del alumno', error);
+          return throwError(() => new Error('Error al cargar los cursos'));
+        })
+      );
+  }
 }

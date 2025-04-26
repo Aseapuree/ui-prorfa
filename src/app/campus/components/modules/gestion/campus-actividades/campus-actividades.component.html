@@ -1,152 +1,154 @@
 <div class="min-h-screen w-full bg-[#4C7B8B] flex flex-col">
-    <div class="w-full bg-[#4C7B8B]">
-      <app-card-actividades
-        [route]="'Sesiones'"
-        [introduccion]="'Introducción'"
-        [material]="'Material'"
-        [actividad]="'Actividad'"
-        [asistencia]="'Asistencia'"
-        [actividadSeleccionada]="actividadSeleccionada"
-        (seleccionarActividad)="seleccionarActividad($event)"
-        (retroceder)="retroceder()"
-      ></app-card-actividades>
-    </div>
-  
-    <div class="bg-gray-900 p-4 mt-4 rounded-md mx-8 min-h-screen">
-      <div class="text-white">
-        <!-- Botón de Agregar (visible solo para Profesor, excepto en Asistencias) -->
-        <div
-          class="flex justify-end mb-4"
-          *ngIf="rolUsuario === 'Profesor' && actividadSeleccionada !== 'asistencias'"
+  <div class="w-full bg-[#4C7B8B]">
+    <app-card-actividades
+      [route]="'Sesiones'"
+      [introduccion]="'Introducción'"
+      [material]="'Material'"
+      [actividad]="'Actividad'"
+      [asistencia]="rolUsuario === 'Profesor' ? 'Asistencia' : undefined"
+      [actividadSeleccionada]="actividadSeleccionada"
+      (seleccionarActividad)="seleccionarActividad($event)"
+      (retroceder)="retroceder()"
+    ></app-card-actividades>
+  </div>
+
+  <div class="bg-gray-900 p-4 mt-4 rounded-md mx-8 min-h-screen">
+    <div class="text-white">
+      <!-- Botón de Agregar (visible solo para Profesor, excepto en Asistencias) -->
+      <div
+        class="flex justify-end mb-4"
+        *ngIf="rolUsuario === 'Profesor' && actividadSeleccionada !== 'asistencias'"
+      >
+        <button
+          (click)="openAddModal(actividadSeleccionada)"
+          [disabled]="isAddButtonDisabled"
+          class="cursor-pointer bg-gray-800 relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 text-gray-300 hover:text-white h-9 rounded-md px-3"
         >
-          <button
-            (click)="openAddModal(actividadSeleccionada)"
-            [disabled]="isAddButtonDisabled"
-            class="cursor-pointer bg-gray-800 relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 text-gray-300 hover:text-white h-9 rounded-md px-3"
-          >
-            <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-            Agregar {{ actividadSeleccionada | titlecase }}
-          </button>
+          <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+          Agregar {{ actividadSeleccionada | titlecase }}
+        </button>
+      </div>
+
+      <!-- Introducciones, Materiales y Actividades -->
+      <div *ngIf="actividadSeleccionada !== 'asistencias'">
+        <!-- Mostrar mensaje si no hay contenido -->
+        <div *ngIf="actividadesActuales.length === 0" class="text-center">
+          No hay contenido disponible para esta sesión.
         </div>
-  
-        <!-- Introducciones, Materiales y Actividades -->
-        <div *ngIf="actividadSeleccionada !== 'asistencias'">
-          <!-- Mostrar mensaje si no hay contenido -->
-          <div *ngIf="actividadesActuales.length === 0" class="text-center">
-            No hay contenido disponible para esta sesión.
-          </div>
-  
-          <!-- Tabla de archivos si hay contenido -->
-          <div *ngIf="actividadesActuales.length > 0" class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-300">
-              <thead class="text-xs text-gray-400 uppercase bg-gray-800">
-                <tr>
-                  <th scope="col" class="px-6 py-3">Nombre del archivo</th>
-                  <th
-                    scope="col"
-                    class="px-6 py-3 text-right"
-                    *ngIf="rolUsuario === 'Profesor'"
-                  >
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  *ngFor="let actividad of actividadesActuales"
-                  [ngClass]="{
-                    'bg-gray-700 border-b border-gray-600 hover:bg-gray-600 cursor-pointer': true,
-                    'bg-gray-500':
-                      contenidoActual &&
-                      contenidoActual.actividad.actividadUrl === actividad.actividadUrl
-                  }"
-                  (click)="toggleContenido(actividad)"
+
+        <!-- Tabla de archivos si hay contenido -->
+        <div *ngIf="actividadesActuales.length > 0" class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-300">
+            <thead class="text-xs text-gray-400 uppercase bg-gray-800">
+              <tr>
+                <th scope="col" class="px-6 py-3">Nombre</th>
+                <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Inicio</th>
+                <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Fin</th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-right"
+                  *ngIf="rolUsuario === 'Profesor'"
                 >
-                  <td class="px-6 py-4">{{ actividad.actividadNombre }}</td>
-                  <td
-                    class="px-6 py-4 text-right"
-                    *ngIf="rolUsuario === 'Profesor'"
-                  >
-                    <button
-                      (click)="openEditModal(actividad, $event)"
-                      class="text-blue-400 hover:text-blue-300 mr-4"
-                    >
-                      <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
-                    </button>
-                    <button
-                      (click)="openDeleteDialog(actividad, $event)"
-                      class="text-red-400 hover:text-red-300"
-                    >
-                      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-  
-            <!-- Contenido del archivo seleccionado -->
-            <div *ngIf="contenidoActual" class="mt-4">
-              <div *ngIf="contenidoActual.tipo === 'pdf'">
-                <iframe
-                  [src]="contenidoActual.url | safeUrl"
-                  width="100%"
-                  height="800px"
-                  style="border: none;"
-                  (error)="handleFileError()"
-                ></iframe>
-                <div
-                  *ngIf="errorLoadingFile"
-                  class="error-message text-red-400"
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let actividad of actividadesActuales"
+                [ngClass]="{
+                  'bg-gray-700 border-b border-gray-600 hover:bg-gray-600 cursor-pointer': true,
+                  'bg-gray-500':
+                    contenidoActual &&
+                    contenidoActual.actividad.actividadUrl === actividad.actividadUrl
+                }"
+                (click)="toggleContenido(actividad)"
+              >
+                <td class="px-6 py-4">{{ actividad.actividadNombre }}</td>
+                <td class="px-6 py-4" *ngIf="actividadSeleccionada === 'actividades'">{{ actividad.fechaInicio | date: 'dd/MM/yyyy' }}</td>
+                <td class="px-6 py-4" *ngIf="actividadSeleccionada === 'actividades'">{{ actividad.fechaFin | date: 'dd/MM/yyyy' }}</td>
+                <td
+                  class="px-6 py-4 text-right"
+                  *ngIf="rolUsuario === 'Profesor'"
                 >
-                  No se pudo obtener una vista previa del archivo.
-                  <a
-                    [href]="contenidoActual.url"
-                    download
-                    class="text-blue-400"
-                    >Descargar</a
+                  <button
+                    (click)="openEditModal(actividad, $event)"
+                    class="text-blue-400 hover:text-blue-300 mr-4"
                   >
-                </div>
+                    <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
+                  </button>
+                  <button
+                    (click)="openDeleteDialog(actividad, $event)"
+                    class="text-red-400 hover:text-red-300"
+                  >
+                    <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Contenido del archivo seleccionado -->
+          <div *ngIf="contenidoActual" class="mt-4">
+            <div *ngIf="contenidoActual.tipo === 'pdf'">
+              <iframe
+                [src]="contenidoActual.url | safeUrl"
+                width="100%"
+                height="800px"
+                style="border: none;"
+                (error)="handleFileError()"
+              ></iframe>
+              <div
+                *ngIf="errorLoadingFile"
+                class="error-message text-red-400"
+              >
+                No se pudo obtener una vista previa del archivo.
+                <a
+                  [href]="contenidoActual.url"
+                  download
+                  class="text-blue-400"
+                  >Descargar</a
+                >
               </div>
-              <div *ngIf="contenidoActual.tipo === 'video'">
-                <video
-                  controls
-                  width="100%"
-                  height="auto"
-                  (error)="handleFileError()"
+            </div>
+            <div *ngIf="contenidoActual.tipo === 'video'">
+              <video
+                controls
+                width="100%"
+                height="auto"
+                (error)="handleFileError()"
+              >
+                <source [src]="contenidoActual.url" type="video/mp4">
+                Tu navegador no soporta la reproducción de videos.
+              </video>
+              <div
+                *ngIf="errorLoadingFile"
+                class="error-message text-red-400"
+              >
+                No se pudo cargar el video.
+                <a
+                  [href]="contenidoActual.url"
+                  download
+                  class="text-blue-400"
+                  >Descargar</a
                 >
-                  <source [src]="contenidoActual.url" type="video/mp4">
-                  Tu navegador no soporta la reproducción de videos.
-                </video>
-                <div
-                  *ngIf="errorLoadingFile"
-                  class="error-message text-red-400"
-                >
-                  No se pudo cargar el video.
-                  <a
-                    [href]="contenidoActual.url"
-                    download
-                    class="text-blue-400"
-                    >Descargar</a
-                  >
-                </div>
               </div>
             </div>
           </div>
         </div>
-  
-        <!-- Asistencias -->
-        <div *ngIf="actividadSeleccionada === 'asistencias'" class="mt-4">
-          <app-asistencia
-            [idSesion]="idSesion"
-            [idProfesorCurso]="idProfesorCurso"
-            [idCurso]="idCurso"
-            [idAlumnoCurso]="idAlumnoCurso"
-            [rolUsuario]="rolUsuario"
-          ></app-asistencia>
-        </div>
+      </div>
+
+      <!-- Asistencias (visible solo para Profesor) -->
+      <div *ngIf="actividadSeleccionada === 'asistencias' && rolUsuario === 'Profesor'" class="mt-4">
+        <app-asistencia
+          [idSesion]="idSesion"
+          [idProfesorCurso]="idProfesorCurso"
+          [idCurso]="idCurso"
+          [rolUsuario]="rolUsuario"
+        ></app-asistencia>
       </div>
     </div>
-  
-    <!-- Componente de notificación -->
-    <app-notification></app-notification>
   </div>
+
+  <app-notification></app-notification>
+</div>

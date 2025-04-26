@@ -7,6 +7,8 @@ import {
 } from '@fortawesome/angular-fontawesome';
 import { fontAwesomeIcons } from './campus/components/shared/font-awesome-icons';
 import { ModalService } from './campus/components/modules/modals/modal/modal.service';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +16,8 @@ import { ModalService } from './campus/components/modules/modals/modal/modal.ser
   imports: [
     RouterOutlet,
     FontAwesomeModule,
+    MatDatepickerModule,
+    MatNativeDateModule
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

@@ -5,6 +5,27 @@
     <mat-form-field appearance="outline" class="w-full">
       <mat-label class="text-gray-400 dark:text-gray-400">Nombre</mat-label>
       <input matInput formControlName="nombre" required class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100" />
+      <mat-error *ngIf="formulario.get('nombre')?.hasError('required')">El nombre es obligatorio</mat-error>
+    </mat-form-field>
+
+    <!-- Campo de fecha de inicio (solo para actividades) -->
+    <mat-form-field *ngIf="tipoContenido === 'actividades'" appearance="outline" class="w-full">
+      <mat-label class="text-gray-400 dark:text-gray-400">Fecha de Inicio</mat-label>
+      <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" required class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100" />
+      <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+      <mat-datepicker #pickerInicio></mat-datepicker>
+      <mat-error *ngIf="formulario.get('fechaInicio')?.hasError('required')">La fecha de inicio es obligatoria</mat-error>
+      <mat-error *ngIf="formulario.get('fechaInicio')?.hasError('futureDate')">La fecha de inicio no puede ser futura</mat-error>
+    </mat-form-field>
+
+    <!-- Campo de fecha de fin (solo para actividades) -->
+    <mat-form-field *ngIf="tipoContenido === 'actividades'" appearance="outline" class="w-full">
+      <mat-label class="text-gray-400 dark:text-gray-400">Fecha de Fin</mat-label>
+      <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" required class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100" />
+      <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+      <mat-datepicker #pickerFin></mat-datepicker>
+      <mat-error *ngIf="formulario.get('fechaFin')?.hasError('required')">La fecha de fin es obligatoria</mat-error>
+      <mat-error *ngIf="formulario.get('fechaFin')?.hasError('invalidEndDate')">La fecha de fin debe ser mayor que la fecha de inicio</mat-error>
     </mat-form-field>
 
     <!-- Campo de archivo personalizado -->
@@ -20,11 +41,11 @@
           type="file"
           (change)="onFileSelected($event)"
           accept=".pdf,.mp4,.avi,.mov"
-          required
+          [required]="!esEdicion"
           class="hidden"
         />
         <span class="text-gray-300 dark:text-gray-300 truncate">
-          {{ archivoSeleccionado ? archivoSeleccionado.name : 'Ningún archivo seleccionado' }}
+          {{ archivoSeleccionado ? archivoSeleccionado.name : (esEdicion ? getFileNameFromUrl(data.actividad?.actividadUrl) : 'Ningún archivo seleccionado') }}
         </span>
       </div>
     </div>

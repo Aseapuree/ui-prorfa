@@ -2,6 +2,10 @@ export interface DTOActividad {
   idActividad?: string;
   actividadNombre?: string;
   actividadUrl?: string;
+  fechaCreacion?: string;
+  fechaActualizacion?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
   infoMaestra?: {
     descripcion?: string;
   };

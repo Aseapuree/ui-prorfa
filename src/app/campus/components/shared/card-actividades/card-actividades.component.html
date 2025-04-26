@@ -49,6 +49,7 @@
 
   <!-- Botón de Asistencia -->
   <button
+    *ngIf="asistencia"
     (click)="seleccionar('asistencias')"
     [ngClass]="{
       'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-green-400': actividadSeleccionada !== 'asistencias',

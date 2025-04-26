@@ -13,6 +13,3 @@ export interface Sesion {
     actividades?: DTOActividad[];
     profesorGuardar?: string;
 }
-
-
-

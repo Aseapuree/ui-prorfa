@@ -9,31 +9,18 @@ import { DialogoConfirmacionComponent } from '../dialogo-confirmacion/dialogo-co
 })
 export class ModalSesionService {
 
-  /*openConfirmDialog(message: string): Promise<boolean> {
-    return this._dialog
-      .open(DialogoConfirmacionComponent, {
-        dta: {message},
-        width: '700px',
-        disableClose: true
-      })
-      .afterClosed()
-      .toPromise();
-  }
-      */
+  constructor(private dialog: MatDialog) {}
 
-  private readonly _dialog = inject(MatDialog);
-
-  openModal<CT, T = Sesion>(componentRef: ComponentType<CT>, data?: T, isEditing = false): void{
-    console.log('Modal sesion abierto...');
-    const config = { data, isEditing };
-
-    this._dialog.open(componentRef, {
-      data: config,
-      width: '100px'
+  openModal<CT, T = Sesion>(componentRef: ComponentType<CT>, data?: T, isEditing = false): void {
+    console.log('Modal sesión abierto...');
+    this.dialog.open(componentRef, {
+      data: { sesion: data, isEditing, idProfesorCurso: (data as any)?.idProfesorCurso },
+      width: '1px', // Aumentar el ancho para mejor visualización
+      disableClose: true // Evitar cerrar el diálogo al hacer clic fuera
     });
   }
 
-  closeModal(): void{
-    this._dialog.closeAll();
+  closeModal(): void {
+    this.dialog.closeAll();
   }
 }
