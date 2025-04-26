@@ -97,9 +97,6 @@ export class CampusActividadesComponent implements OnInit {
       this.route.paramMap.subscribe(async params => {
         this.idSesion = params.get('idSesion') || '';
         const navigation = this.router.getCurrentNavigation();
-        let sesion: Sesion | null = null;
-
-        // Intentar obtener la sesión desde el state
         if (navigation?.extras.state) {
           this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
           this.idCurso = navigation.extras.state['idCurso'] || null;
@@ -110,53 +107,11 @@ export class CampusActividadesComponent implements OnInit {
 
         if (this.idSesion) {
           await this.obtenerActividades();
-        } else {
-          this.notificationService.showNotification('No se proporcionó un ID de sesión válido', 'error');
-          this.router.navigate(['campus']);
         }
       });
     } catch (error) {
       console.error('Error al obtener el rol del usuario:', error);
       this.notificationService.showNotification('Error al cargar los datos', 'error');
-    }
-  }
-
-  async obtenerFechaAsignada(): Promise<void> {
-    try {
-      if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
-        const sesiones: Sesion[] = await lastValueFrom(this.sesionService.obtenerSesionesPorCurso(this.idProfesorCurso));
-        const sesion = sesiones.find(s => s.idSesion === this.idSesion);
-        if (sesion) {
-          this.fechaAsignada = sesion.fechaAsignada || sesion.fechaAsignacion || null;
-          console.log('fechaAsignada obtenida (Profesor):', this.fechaAsignada);
-        } else {
-          throw new Error('Sesión no encontrada para idSesion: ' + this.idSesion);
-        }
-      } else if (this.rolUsuario === 'Alumno' && this.idAlumnoCurso) {
-        const usuarioId = localStorage.getItem('usuarioId');
-        if (!usuarioId) {
-          throw new Error('No se encontró el ID del usuario');
-        }
-        const cursos = await lastValueFrom(this.alumnoCursoService.obtenerCursosPorAlumno(usuarioId));
-        const curso = cursos.find(c => c.idAlumnoCurso === this.idAlumnoCurso);
-        if (curso && curso.sesiones) {
-          const sesion = curso.sesiones.find(s => s.idSesion === this.idSesion);
-          if (sesion) {
-            this.fechaAsignada = sesion.fechaAsignada || sesion.fechaAsignacion || null;
-            console.log('fechaAsignada obtenida (Alumno):', this.fechaAsignada);
-          } else {
-            throw new Error('Sesión no encontrada para idSesion: ' + this.idSesion);
-          }
-        } else {
-          throw new Error('Curso no encontrado para idAlumnoCurso: ' + this.idAlumnoCurso);
-        }
-      } else {
-        throw new Error('No se pudo determinar el rol del usuario o faltan datos (idProfesorCurso/idAlumnoCurso)');
-      }
-    } catch (error) {
-      console.error('Error al obtener datos de la sesión:', error);
-      this.notificationService.showNotification('Error al obtener datos de la sesión', 'error');
-      this.fechaAsignada = null; // Fallback en caso de error
     }
   }
 
