@@ -13,6 +13,7 @@ import { UserData, ValidateService } from '../../../../services/validateAuth.ser
 import { UsuarioService } from '../../../services/usuario.service';
 import { AlumnoCursoService } from '../../../services/alumno-curso.service';
 import { AlumnoCurso } from '../../../interface/AlumnoCurso';
+import { SesionService } from '../../../services/sesion.service';
 
 @Component({
   selector: 'app-campus',
@@ -28,9 +29,12 @@ export class CampusComponent implements OnInit {
   alumnocursos: AlumnoCurso[] = [];
   idAuth: string | null = null;
   rolUsuario: string | null = null;
+  niveles: { nivel: string; cursos: ProfesorCurso[]; sesiones: number }[] = [];
+  hasCursos: boolean = false;
 
   constructor(
     private profesorCursoService: ProfesorCursoService,
+    private sesionService: SesionService,
     private alumnoCursoService: AlumnoCursoService,
     private authService: ValidateService,
     private usuarioService: UsuarioService,
@@ -49,13 +53,17 @@ export class CampusComponent implements OnInit {
         return;
       }
 
+      console.log('idAuth:', this.idAuth);
       localStorage.setItem('idAuth', this.idAuth);
 
       if (this.rolUsuario === 'Profesor') {
         const usuarioId = await lastValueFrom(this.usuarioService.getUsuarioByIdAuth(this.idAuth));
+        console.log('usuarioId:', usuarioId);
         if (usuarioId) {
           localStorage.setItem('usuarioId', usuarioId);
           await this.obtenerCursosPorProfesor(usuarioId);
+          await this.prepararNiveles();
+          this.hasCursos = this.niveles.length > 0;
         } else {
           console.error('No se encontró el ID del usuario autenticado para el profesor');
         }
@@ -71,12 +79,16 @@ export class CampusComponent implements OnInit {
 
   async obtenerCursosPorProfesor(usuarioId: string): Promise<void> {
     try {
-      this.profesorcursos = await lastValueFrom(
+      const rawResponse = await lastValueFrom(
         this.profesorCursoService.obtenerCursosPorProfesor(usuarioId)
       );
-      console.log('Cursos del profesor:', this.profesorcursos);
+      console.log('Respuesta cruda del backend:', rawResponse);
+
+      this.profesorcursos = Array.isArray(rawResponse) ? rawResponse : [];
+      console.log('Cursos del profesor (mapeados):', this.profesorcursos);
     } catch (error) {
-      console.error('Error al obtener los cursos del profesor', error);
+      console.error('Error al obtener los cursos del profesor:', error);
+      this.profesorcursos = [];
     }
   }
 
@@ -87,16 +99,71 @@ export class CampusComponent implements OnInit {
       );
       console.log('Cursos del alumno:', this.alumnocursos);
     } catch (error) {
-      console.error('Error al obtener los cursos del alumno', error);
+      console.error('Error al obtener los cursos del alumno:', error);
     }
+  }
+
+  async prepararNiveles(): Promise<void> {
+    console.log('Preparando niveles con cursos:', this.profesorcursos);
+
+    // Filtrar cursos por nivel (insensible a mayúsculas/minúsculas)
+    const primariaCursos = this.profesorcursos.filter(curso =>
+      curso.nivel?.toLowerCase() === 'primaria'
+    );
+
+    const secundariaCursos = this.profesorcursos.filter(curso =>
+      curso.nivel?.toLowerCase() === 'secundaria'
+    );
+
+    console.log('Cursos Primaria:', primariaCursos);
+    console.log('Cursos Secundaria:', secundariaCursos);
+
+    this.niveles = [];
+
+    if (primariaCursos.length > 0) {
+      const sesionesPrimaria = await this.contarSesiones(primariaCursos);
+      this.niveles.push({
+        nivel: 'Primaria', // Valor que se muestra en la tarjeta
+        cursos: primariaCursos,
+        sesiones: sesionesPrimaria,
+      });
+    }
+
+    if (secundariaCursos.length > 0) {
+      const sesionesSecundaria = await this.contarSesiones(secundariaCursos);
+      this.niveles.push({
+        nivel: 'Secundaria', // Valor que se muestra en la tarjeta
+        cursos: secundariaCursos,
+        sesiones: sesionesSecundaria,
+      });
+    }
+
+    console.log('Niveles preparados:', this.niveles);
+  }
+
+  async contarSesiones(cursos: ProfesorCurso[]): Promise<number> {
+    let totalSesiones = 0;
+    for (const curso of cursos) {
+      if (curso.idProfesorCurso) {
+        try {
+          const sesiones = await lastValueFrom(
+            this.sesionService.obtenerSesionesPorCurso(curso.idProfesorCurso)
+          );
+          totalSesiones += sesiones.length;
+        } catch (error) {
+          console.error(`Error al obtener sesiones para el curso ${curso.idProfesorCurso}:`, error);
+        }
+      }
+    }
+    return totalSesiones;
   }
 
   seleccionarCurso(curso: ProfesorCurso | AlumnoCurso): void {
     if (this.rolUsuario === 'Profesor') {
       const profesorCurso = curso as ProfesorCurso;
       const grado = profesorCurso.grado ?? '';
-      const seccion = (profesorCurso as any).seccion ?? '';
-      const nivel = (profesorCurso as any).nivel ?? '';
+      const seccion = profesorCurso.seccion ?? '';
+      const nivel = profesorCurso.nivel ?? ''; // Ya no necesitamos inferir el nivel
       const idCurso = profesorCurso.curso?.idCurso ?? '';
 
       if (grado && seccion && nivel && idCurso) {
@@ -110,7 +177,7 @@ export class CampusComponent implements OnInit {
           idCurso,
           grado,
           seccion,
-          nivel
+          nivel,
         });
 
         this.router.navigate(['/sesiones/profesor', profesorCurso.idProfesorCurso]);
@@ -119,7 +186,7 @@ export class CampusComponent implements OnInit {
           idCurso,
           grado,
           seccion,
-          nivel
+          nivel,
         });
       }
     } else if (this.rolUsuario === 'Alumno') {

@@ -13,7 +13,7 @@ import { ComprobanteComponent } from './matricula/components/comprobantes/compro
 import { MatriculadosComponent } from './matricula/components/matriculados/matriculados.component';
 import { InicioComponent } from './general/components/inicio/inicio.component';
 import { AsistenciaComponent } from './general/components/asistencia/asistencia.component';
-import { CampusGradosComponent } from './campus/components/modules/campus-grados/campus-grados.Component';
+import { CampusGradosComponent } from './campus/components/modules/campus-grados/campus-grados.component';
 
 export const routes: Routes = [
     {

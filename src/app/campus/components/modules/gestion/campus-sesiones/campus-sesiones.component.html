@@ -1,7 +1,14 @@
-<div *ngIf="sesiones.length === 0" class="text-center text-gray-500">
+<div class="p-6">
+  <!-- Título dinámico -->
+  <h1 class="text-3xl md:text-4xl font-bold text-gray-100 mb-6 bg-gray-800 bg-opacity-50 border-l-4 border-blue-500 pl-4 py-2 rounded-r-md">
+    Sesiones del curso <span class="text-blue-400">{{ cursoNombre }}</span> de {{ grado }}° "{{ seccion }}"
+  </h1>
+
+  <!-- Mensaje si no hay sesiones -->
+  <div *ngIf="sesiones.length === 0" class="text-center text-gray-500">
     No hay sesiones disponibles para este curso.
   </div>
-  
+
   <!-- Botón Agregar (visible solo para Profesor) -->
   <div class="flex justify-end p-4" *ngIf="rolUsuario === 'Profesor'">
     <div class="bg-white border divide-x rounded-lg overflow-hidden dark:bg-gray-900 dark:border-gray-700 dark:divide-gray-700">
@@ -14,7 +21,8 @@
       </button>
     </div>
   </div>
-  
+
+  <!-- Tarjetas de sesiones -->
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-dark">
     <div
       *ngFor="let sesion of sesiones | paginate: { itemsPerPage: 4, currentPage: page }; let i = index"
@@ -30,7 +38,7 @@
         [fechaAsignada]="sesion.fechaAsignada"
         (click)="irAActividades(sesion.idSesion!)"
       ></app-card-week>
-  
+
       <!-- Botones Editar y Eliminar (visibles solo para Profesor) -->
       <div class="flex border-t divide-x dark:border-gray-700 dark:divide-gray-700" *ngIf="rolUsuario === 'Profesor'">
         <button
@@ -50,7 +58,8 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- Paginación -->
   <pagination-controls
     class="flex justify-center items-center space-x-2 mt-4"
     (pageChange)="page = $event"
@@ -60,5 +69,6 @@
     currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
     disabledClass="opacity-50 cursor-not-allowed"
   ></pagination-controls>
-  
+
   <app-notification></app-notification>
+</div>

@@ -16,18 +16,17 @@
     <div class="text-white">
       <!-- Botón de Agregar (visible solo para Profesor, excepto en Asistencias) -->
       <div
-        class="flex justify-end mb-4"
-        *ngIf="rolUsuario === 'Profesor' && actividadSeleccionada !== 'asistencias'"
-      >
-        <button
-          (click)="openAddModal(actividadSeleccionada)"
-          [disabled]="isAddButtonDisabled"
-          class="cursor-pointer bg-gray-800 relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 text-gray-300 hover:text-white h-9 rounded-md px-3"
-        >
-          <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-          Agregar {{ actividadSeleccionada | titlecase }}
-        </button>
-      </div>
+  class="flex justify-end mb-4"
+  *ngIf="rolUsuario === 'Profesor' && actividadSeleccionada !== 'asistencias'"
+>
+  <button
+    (click)="openAddModal(actividadSeleccionada)"
+    class="cursor-pointer bg-gray-800 relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-gray-700 text-gray-300 hover:text-white h-9 rounded-md px-3"
+  >
+    <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+    Agregar {{ actividadSeleccionada | titlecase }}
+  </button>
+</div>
 
       <!-- Introducciones, Materiales y Actividades -->
       <div *ngIf="actividadSeleccionada !== 'asistencias'">
