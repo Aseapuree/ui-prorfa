@@ -61,14 +61,15 @@
 
   <!-- Paginación -->
   <pagination-controls
-    class="flex justify-center items-center space-x-2 mt-4"
-    (pageChange)="page = $event"
-    previousLabel="«"
-    nextLabel="»"
-    pageLinkClass="px-3 py-1 border rounded-lg hover:bg-gray-200 transition"
-    currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
-    disabledClass="opacity-50 cursor-not-allowed"
-  ></pagination-controls>
+  *ngIf="sesiones.length > 4"
+  class="flex justify-center items-center space-x-2 mt-4"
+  (pageChange)="page = $event"
+  previousLabel=""
+  nextLabel=""
+  pageLinkClass="px-3 py-1 border rounded-lg hover:bg-gray-200 transition"
+  currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
+  disabledClass="opacity-50 cursor-not-allowed"
+></pagination-controls>
 
   <app-notification></app-notification>
 </div>

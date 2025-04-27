@@ -233,15 +233,15 @@ export class CampusSesionesComponent {
   }
 
   irAActividades(idSesion: string): void {
-    // Almacenar idProfesorCurso en localStorage para el rol Profesor
-    if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
-      localStorage.setItem('idProfesorCurso', this.idProfesorCurso);
-    }
-    this.router.navigate(['/card-actividades', idSesion], {
-      state: {
-        idProfesorCurso: this.idProfesorCurso || null,
-        idCurso: this.idCurso || null
-      }
-    });
+  // Almacenar idProfesorCurso en localStorage para el rol Profesor
+  if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
+    localStorage.setItem('idProfesorCurso', this.idProfesorCurso);
   }
+  this.router.navigate(['/card-actividades', idSesion], {
+    state: {
+      idProfesorCurso: this.idProfesorCurso || null,
+      idCurso: this.idCurso || null
+    }
+  });
+}
 }
