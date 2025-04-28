@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SesionService } from '../../../../services/sesion.service';
 import { DTOActividad, DTOActividadesSesion } from '../../../../interface/DTOActividad';
@@ -17,15 +17,20 @@ import { lastValueFrom } from 'rxjs';
 import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 import { AsistenciaComponent } from '../../../../../general/components/asistencia/asistencia.component';
 import { Actividad } from '../../../../interface/AlumnoCurso';
+import { NotasService } from '../../../../services/notas.service';
+import { DTONota, AlumnoNotas, ActividadNota } from '../../../../interface/DTONota';
+import { FormsModule } from '@angular/forms'; // Importar FormsModule para usar ngModel
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
-// Interfaz para los alumnos estáticos
+// Interfaz para los alumnos
 interface Alumno {
   idAlumno: string;
   nombre: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
+  nota?: number; // Campo para almacenar la nota ingresada
+  comentario?: string; // Campo para almacenar el comentario
 }
 
 @Component({
@@ -39,7 +44,8 @@ interface Alumno {
     SafeUrlPipe,
     FontAwesomeModule,
     NotificationComponent,
-    AsistenciaComponent
+    AsistenciaComponent,
+    FormsModule // Añadir FormsModule para usar ngModel
   ],
   templateUrl: './campus-actividades.component.html',
   styleUrls: ['./campus-actividades.component.scss']
@@ -63,14 +69,24 @@ export class CampusActividadesComponent implements OnInit {
   errorLoadingFile: boolean = false;
   actividadesOriginales: Actividad[] = [];
   actividadesActuales: (DTOActividad | Actividad)[] = [];
+  isAddButtonDisabled: boolean = false;
   fechaAsignada: string | null = null;
+  isUploading: boolean = false;
+
+  // Lista de alumnos (con campos para nota y comentario)
   alumnos: Alumno[] = [
-    { idAlumno: '1', nombre: 'Luisa', apellidoPaterno: 'Lopez', apellidoMaterno: 'Diaz' },
-    { idAlumno: '2', nombre: 'Joiser', apellidoPaterno: 'Monsalve', apellidoMaterno: 'Salazar' },
-    { idAlumno: '3', nombre: 'Juana', apellidoPaterno: 'Uriarte', apellidoMaterno: 'Coronel' },
-    { idAlumno: '4', nombre: 'Daniel', apellidoPaterno: 'Quisp', apellidoMaterno: 'Florez' }
+    { idAlumno: '1', nombre: 'Luisa', apellidoPaterno: 'Lopez', apellidoMaterno: 'Diaz', nota: undefined, comentario: '' },
+    { idAlumno: '2', nombre: 'Joiser', apellidoPaterno: 'Monsalve', apellidoMaterno: 'Salazar', nota: undefined, comentario: '' },
+    { idAlumno: '3', nombre: 'Juana', apellidoPaterno: 'Uriarte', apellidoMaterno: 'Coronel', nota: undefined, comentario: '' },
+    { idAlumno: '4', nombre: 'Daniel', apellidoPaterno: 'Quisp', apellidoMaterno: 'Florez', nota: undefined, comentario: '' }
   ];
+
   actividadConNotasAbierta: string | null | undefined = null;
+  alumnoConTareaAbierta: string | null = null;
+
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+  private readonly DRIVE_FOLDER_ID = '1NCETkDrcpY4fAPeay_5kd17OjEJCnqwM';
 
   constructor(
     private route: ActivatedRoute,
@@ -80,6 +96,7 @@ export class CampusActividadesComponent implements OnInit {
     private router: Router,
     private notificationService: NotificationService,
     private validateService: ValidateService,
+    private notasService: NotasService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -190,6 +207,7 @@ export class CampusActividadesComponent implements OnInit {
     this.contenidoActual = null;
     this.errorLoadingFile = false;
     this.actividadConNotasAbierta = null;
+    this.alumnoConTareaAbierta = null;
     this.actualizarActividadesActuales();
   }
 
@@ -206,6 +224,7 @@ export class CampusActividadesComponent implements OnInit {
       }
     } else if (this.rolUsuario === 'Alumno') {
       console.log('Actividades originales antes del filtrado:', this.actividadesOriginales);
+
       let tipoEsperado: string;
       switch (this.actividadSeleccionada) {
         case 'introducciones':
@@ -221,13 +240,16 @@ export class CampusActividadesComponent implements OnInit {
           tipoEsperado = '';
           break;
       }
+
       if (!tipoEsperado) {
         console.warn('Tipo esperado no definido para actividadSeleccionada:', this.actividadSeleccionada);
         this.actividadesActuales = [];
         return;
       }
+
       const tipoEsperadoNormalized = normalizeString(tipoEsperado);
       console.log('Filtrando actividades para tipo:', tipoEsperadoNormalized);
+
       const actividadesFiltradas = this.actividadesOriginales.filter(a => {
         const actividad = a as Actividad;
         if (!actividad.actividadTipo) {
@@ -240,8 +262,10 @@ export class CampusActividadesComponent implements OnInit {
         console.log('Resultado de la comparación:', coincide, 'para actividad:', actividad);
         return coincide;
       });
+
       console.log('Actividades filtradas (antes de asignar):', actividadesFiltradas);
       this.actividadesActuales = actividadesFiltradas;
+
       console.log('Actividades filtradas (después de asignar):', this.actividadesActuales);
       if (this.actividadesActuales.length === 0) {
         this.notificationService.showNotification(
@@ -396,8 +420,143 @@ export class CampusActividadesComponent implements OnInit {
     }
     if (this.actividadConNotasAbierta === actividad.idActividad) {
       this.actividadConNotasAbierta = null;
+      this.alumnoConTareaAbierta = null;
     } else {
       this.actividadConNotasAbierta = actividad.idActividad;
+      this.alumnoConTareaAbierta = null;
+    }
+  }
+
+  toggleTarea(alumno: Alumno): void {
+    if (this.alumnoConTareaAbierta === alumno.idAlumno) {
+      this.alumnoConTareaAbierta = null;
+    } else {
+      this.alumnoConTareaAbierta = alumno.idAlumno;
+    }
+  }
+
+  async subirTarea(): Promise<void> {
+    if (this.rolUsuario !== 'Alumno') {
+      this.notificationService.showNotification('Acción no permitida para este rol', 'error');
+      return;
+    }
+
+    if (!this.contenidoActual || !this.contenidoActual.actividad.idActividad) {
+      this.notificationService.showNotification('Por favor, selecciona una actividad primero', 'error');
+      return;
+    }
+
+    const fileList: FileList | null = this.fileInput.nativeElement.files;
+    if (!fileList || fileList.length === 0) {
+      this.notificationService.showNotification('Por favor, selecciona un archivo', 'error');
+      return;
+    }
+
+    const archivo: File = fileList[0];
+    console.log('Archivo seleccionado:', archivo.name);
+
+    const allowedExtensions = ['pdf', 'mp4', 'avi', 'mov'];
+    const extension = archivo.name.split('.').pop()?.toLowerCase();
+    if (!extension || !allowedExtensions.includes(extension)) {
+      this.notificationService.showNotification('Solo se permiten archivos PDF, MP4, AVI o MOV', 'error');
+      return;
+    }
+
+    this.isUploading = true;
+    this.cdr.detectChanges();
+
+    try {
+      const urlArchivo = await lastValueFrom(
+        this.notasService.subirArchivoDrive(archivo, this.DRIVE_FOLDER_ID)
+      );
+      console.log('URL del archivo subido:', urlArchivo);
+
+      const idAuth = localStorage.getItem('idAuth');
+      if (!idAuth) {
+        throw new Error('No se encontró el ID del usuario autenticado');
+      }
+
+      const nota: DTONota = {
+        idalumano: idAuth,
+        idactividad: this.contenidoActual.actividad.idActividad,
+        idSesion: this.idSesion,
+        notatareaurl: urlArchivo
+      };
+
+      const response = await lastValueFrom(this.notasService.registrarNota(nota));
+      console.log('Respuesta del servidor al registrar la nota:', response);
+
+      this.notificationService.showNotification('Tarea registrada con éxito', 'success');
+      this.fileInput.nativeElement.value = '';
+    } catch (error: any) {
+      console.error('Error completo:', error);
+      const errorMessage = error.message || 'Error al registrar la tarea';
+      this.notificationService.showNotification(errorMessage, 'error');
+    } finally {
+      this.isUploading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  async guardarNotas(): Promise<void> {
+    if (this.rolUsuario !== 'Profesor') {
+      this.notificationService.showNotification('Acción no permitida para este rol', 'error');
+      return;
+    }
+
+    if (!this.actividadConNotasAbierta) {
+      this.notificationService.showNotification('No hay una actividad seleccionada para asignar notas', 'error');
+      return;
+    }
+
+    // Validar que haya al menos una nota ingresada
+    const alumnosConNotas = this.alumnos.filter(alumno => alumno.nota !== undefined && alumno.nota >= 0 && alumno.nota <= 20);
+    if (alumnosConNotas.length === 0) {
+      this.notificationService.showNotification('Por favor, ingresa al menos una nota válida (0-20)', 'error');
+      return;
+    }
+
+    try {
+      const idAuth = localStorage.getItem('idAuth');
+      if (!idAuth) {
+        throw new Error('No se encontró el ID del usuario autenticado');
+      }
+
+      // Preparar la lista de AlumnoNotas
+      const notas: AlumnoNotas[] = alumnosConNotas.map(alumno => ({
+        idAlumno: alumno.idAlumno,
+        actividades: [
+          {
+            idActividad: this.actividadConNotasAbierta!,
+            nota: alumno.nota!
+          }
+        ]
+      }));
+
+      // Preparar el payload DTONota para el profesor
+      const dtoNota: DTONota = {
+        idSesion: this.idSesion,
+        idCurso: this.idCurso || undefined,
+        grado: '1', // Estos valores deben venir del contexto real (puedes obtenerlos de la sesión o curso)
+        seccion: 'A', // Ajusta según el contexto
+        nivel: 'Primaria', // Ajusta según el contexto
+        usuarioCreacion: idAuth,
+        notas: notas
+      };
+
+      const response = await lastValueFrom(this.notasService.registrarNota(dtoNota));
+      console.log('Respuesta del servidor al registrar las notas:', response);
+
+      this.notificationService.showNotification('Notas registradas con éxito', 'success');
+      this.actividadConNotasAbierta = null; // Cerrar el panel de notas
+      this.alumnos.forEach(alumno => {
+        alumno.nota = undefined; // Limpiar las notas ingresadas
+        alumno.comentario = ''; // Limpiar los comentarios
+      });
+    } catch (error: any) {
+      console.error('Error al registrar las notas:', error);
+      const errorMessage = error.message || 'Error al registrar las notas';
+      this.notificationService.showNotification(errorMessage, 'error');
     }
   }
 }
