@@ -1,11 +1,52 @@
 :host {
-    display: block;
-  }
-  
-  button {
-    transition: all 0.3s ease;
-  }
-  
-  button:hover {
-    transform: scale(1.05);
-  }
+  display: block;
+}
+
+.fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+nav button {
+  transition: all 0.3s ease;
+}
+
+nav button:hover {
+  transform: scale(1.05);
+}
+
+.active-tab {
+  background-color: #1e293b; /* Fondo para pestaña activa */
+  color: white; /* Texto blanco para claridad */
+}
+
+/* Pestañas inactivas */
+nav button:not(.active-tab) {
+  background: transparent; /* Sin fondo */
+  color: rgba(255, 255, 255, 0.9); /* Texto con opacidad */
+}
+
+/* Contenedores sin fondo */
+div {
+  background: transparent;
+}
+
+.grid {
+  background: transparent;
+}
+
+/* Tarjetas sin fondo ni marco */
+app-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* Tarjeta de bienvenida con fondo específico */
+.welcome-card {
+  background: #1f2937 !important; /* Color purple-900 en Tailwind, forzado con !important */
+}

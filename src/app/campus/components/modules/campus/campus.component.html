@@ -1,28 +1,48 @@
-<div >
+<div class="p-4 min-h-screen">
   <!-- Mostrar cursos del profesor si el rol es 'Profesor' -->
   <ng-container *ngIf="rolUsuario === 'Profesor'">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
-      <!-- Tarjeta Primaria -->
-      <div
-        class="bg-blue-500 text-white rounded-lg shadow-lg p-8 text-center cursor-pointer hover:bg-blue-600 transition-transform transform hover:scale-105"
-        (click)="navigateToGrados('Primaria')"
-      >
-        <h2 class="text-3xl font-bold">Primaria</h2>
+    <div class="flex flex-wrap justify-center gap-6 p-4">
+      <!-- Mensaje si no hay cursos -->
+      <div *ngIf="!hasCursos" class="text-center text-gray-600 w-full">
+        No tienes cursos asignados.
       </div>
-      <!-- Tarjeta Secundaria -->
-      <div
-        class="bg-red-500 text-white rounded-lg shadow-lg p-8 text-center cursor-pointer hover:bg-red-600 transition-transform transform hover:scale-105"
-        (click)="navigateToGrados('Secundaria')"
-      >
-        <h2 class="text-3xl font-bold">Secundaria</h2>
+
+      <!-- Tarjetas dinámicas según niveles -->
+      <div *ngFor="let nivelData of niveles" class="card w-[300px] bg-white rounded-xl shadow-lg overflow-hidden relative">
+        <!-- Sección de imagen -->
+        <div class="h-[210px] w-full">
+          <img
+            src="https://www.campuseducacion.com/blog/wp-content/uploads/2019/09/foto03.jpg"
+            alt="Campus Image"
+            class="w-full h-full object-cover rounded-t-xl"
+          />
+        </div>
+      
+        <!-- Sección de texto -->
+        <div class="p-6 text-center">
+          <span class="text-pink-500 text-sm">Nivel Educativo</span>
+          <h2 class="text-2xl font-bold mt-2">{{ nivelData.nivel }}</h2>
+          <p class="text-gray-500 text-sm mt-2">Cursos asignados: {{ nivelData.cursos.length }}</p>
+          <p class="text-gray-600 text-sm mt-2">Sesiones activas: {{ nivelData.sesiones }}</p>
+        </div>
+      
+        <!-- Sección de botón -->
+        <div class="bg-gray-800 p-4 flex justify-center">
+          <button
+            class="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-700 transition"
+            (click)="navigateToGrados(nivelData.nivel)"
+          >
+            Gestionar cursos
+          </button>
+        </div>
       </div>
     </div>
   </ng-container>
 
   <!-- Mostrar cursos del alumno si el rol es 'Alumno' -->
   <ng-container *ngIf="rolUsuario === 'Alumno'">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-dark">
-    <app-card
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+      <app-card
         *ngFor="let curso of alumnocursos | paginate: { itemsPerPage: 4, currentPage: page }"
         [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
         [title]="curso.nombreCurso || 'Sin nombre'"
@@ -33,15 +53,14 @@
         class="cursor-pointer"
       ></app-card>
     </div>
-  <pagination-controls
-  class="flex justify-center items-center space-x-2 mt-4"
-  (pageChange)="page = $event"
-  previousLabel="«"
-  nextLabel="»"
-  pageLinkClass="px-3 py-1 border rounded-lg hover:bg-gray-200 transition"
-  currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
-  disabledClass="opacity-50 cursor-not-allowed"
-></pagination-controls>
+    <pagination-controls
+      class="flex justify-center items-center space-x-2 mt-4"
+      (pageChange)="page = $event"
+      previousLabel="«"
+      nextLabel="»"
+      pageLinkClass="px-3 py-1 border rounded-lg hover:bg-gray-200 transition"
+      currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
+      disabledClass="opacity-50 cursor-not-allowed"
+    ></pagination-controls>
   </ng-container>
 </div>
-

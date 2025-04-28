@@ -61,7 +61,9 @@ export class LayoutComponent implements OnInit {
         console.warn("⚠ No se encontró el usuario con ese ID.");
         return;
       }
+
       localStorage.setItem("IDUSER",userId)
+
   
       this.usuarioMostrar = usuarioResponse.data;
       console.log("Usuario obtenido: ", this.usuarioMostrar);

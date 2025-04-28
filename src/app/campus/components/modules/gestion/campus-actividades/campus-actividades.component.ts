@@ -113,17 +113,28 @@ export class CampusActividadesComponent implements OnInit {
           this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
           this.idCurso = navigation.extras.state['idCurso'] || null;
         } else {
+          this.idProfesorCurso = localStorage.getItem('idProfesorCurso') || null;
           this.idCurso = localStorage.getItem('idCurso') || null;
         }
-        console.log('idProfesorCurso:', this.idProfesorCurso, 'idCurso:', this.idCurso, 'idSesion:', this.idSesion);
+        console.log('Datos de navegación:', {
+          idSesion: this.idSesion,
+          idProfesorCurso: this.idProfesorCurso,
+          idCurso: this.idCurso,
+          rolUsuario: this.rolUsuario
+        });
 
         if (this.idSesion) {
           await this.obtenerActividades();
+        } else {
+          console.error('No se proporcionó idSesion');
+          this.notificationService.showNotification('Error: No se proporcionó ID de sesión', 'error');
+          this.router.navigate(['campus']);
         }
       });
     } catch (error) {
       console.error('Error al obtener el rol del usuario:', error);
       this.notificationService.showNotification('Error al cargar los datos', 'error');
+      this.router.navigate(['campus']);
     }
   }
 
@@ -240,7 +251,6 @@ export class CampusActividadesComponent implements OnInit {
         );
       }
     }
-    this.isAddButtonDisabled = this.actividadesActuales.length === 0 && this.rolUsuario === 'Profesor';
     this.cdr.detectChanges();
   }
 
@@ -285,7 +295,6 @@ export class CampusActividadesComponent implements OnInit {
         sesionId: this.idSesion
       }
     });
-
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.obtenerActividades();
@@ -305,7 +314,6 @@ export class CampusActividadesComponent implements OnInit {
         actividad: actividad
       }
     });
-
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.obtenerActividades();
@@ -321,7 +329,6 @@ export class CampusActividadesComponent implements OnInit {
       width: '1px',
       height: '1px'
     });
-
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.eliminarActividad(actividad);
@@ -340,7 +347,7 @@ export class CampusActividadesComponent implements OnInit {
         ) {
           this.contenidoActual = null;
         }
-        this.notificationService.showNotification('Actividad eliminada con éxito', 'error');
+        this.notificationService.showNotification('Actividad eliminada con éxito', 'success');
       },
       error: err => {
         console.error('Error al eliminar actividad:', err);
@@ -350,11 +357,20 @@ export class CampusActividadesComponent implements OnInit {
   }
 
   retroceder(): void {
+    console.log('Ejecutando retroceder:', {
+      rolUsuario: this.rolUsuario,
+      idProfesorCurso: this.idProfesorCurso,
+      idCurso: this.idCurso
+    });
     if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
+      console.log('Navegando a sesiones/profesor con idProfesorCurso:', this.idProfesorCurso);
       this.router.navigate(['/sesiones/profesor', this.idProfesorCurso]);
     } else if (this.rolUsuario === 'Alumno' && this.idCurso) {
+      console.log('Navegando a sesiones/alumno con idCurso:', this.idCurso);
       this.router.navigate(['/sesiones/alumno', this.idCurso]);
     } else {
+      console.warn('No se pudo determinar la ruta de navegación, redirigiendo a campus');
+      this.notificationService.showNotification('Error: No se pudo determinar la ruta de regreso', 'error');
       this.router.navigate(['campus']);
     }
   }
