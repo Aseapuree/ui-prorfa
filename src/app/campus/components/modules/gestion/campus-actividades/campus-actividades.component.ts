@@ -20,6 +20,7 @@ import { Actividad } from '../../../../interface/AlumnoCurso';
 import { NotasService } from '../../../../services/notas.service';
 import { DTONota, AlumnoNotas, ActividadNota } from '../../../../interface/DTONota';
 import { FormsModule } from '@angular/forms'; // Importar FormsModule para usar ngModel
+import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
@@ -45,7 +46,8 @@ interface Alumno {
     FontAwesomeModule,
     NotificationComponent,
     AsistenciaComponent,
-    FormsModule // Añadir FormsModule para usar ngModel
+    FormsModule, // Añadir FormsModule para usar ngModel
+    GeneralLoadingSpinnerComponent
   ],
   templateUrl: './campus-actividades.component.html',
   styleUrls: ['./campus-actividades.component.scss']
@@ -72,6 +74,8 @@ export class CampusActividadesComponent implements OnInit {
   isAddButtonDisabled: boolean = false;
   fechaAsignada: string | null = null;
   isUploading: boolean = false;
+  isLoading: boolean = false; // Property to control the spinner
+  loadingMessage: string = 'Cargando actividades...'; // Dynamic loading message
 
   // Lista de alumnos (con campos para nota y comentario)
   alumnos: Alumno[] = [
@@ -101,6 +105,7 @@ export class CampusActividadesComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.isLoading = true; // Activate spinner
     try {
       const userData: UserData = await lastValueFrom(this.validateService.getUserData());
       this.rolUsuario = userData?.data?.rol || null;
@@ -135,10 +140,14 @@ export class CampusActividadesComponent implements OnInit {
       console.error('Error al obtener el rol del usuario:', error);
       this.notificationService.showNotification('Error al cargar los datos', 'error');
       this.router.navigate(['campus']);
+    } finally {
+      this.isLoading = false; // Deactivate spinner
     }
   }
 
   async obtenerActividades(): Promise<void> {
+    this.isLoading = true; // Activate spinner
+    this.loadingMessage = 'Cargando actividades...';
     try {
       if (this.rolUsuario === 'Profesor') {
         const response = await lastValueFrom(
@@ -193,6 +202,8 @@ export class CampusActividadesComponent implements OnInit {
     } catch (error) {
       console.error('Error al obtener actividades:', error);
       this.notificationService.showNotification('Error al obtener actividades', 'error');
+    } finally {
+      this.isLoading = false; // Deactivate spinner
     }
   }
 

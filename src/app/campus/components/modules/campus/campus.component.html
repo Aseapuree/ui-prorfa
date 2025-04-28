@@ -1,4 +1,6 @@
 <div class="p-4 min-h-screen">
+  <!-- Spinner de carga -->
+  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando cursos...'"></app-general-loading-spinner>
   <!-- Mostrar cursos del profesor si el rol es 'Profesor' -->
   <ng-container *ngIf="rolUsuario === 'Profesor'">
     <div class="flex flex-wrap justify-center gap-6 p-4">

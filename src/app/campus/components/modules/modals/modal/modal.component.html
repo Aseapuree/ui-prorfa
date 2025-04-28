@@ -1,36 +1,39 @@
-<div class=" ">
-<div mat-dialog-title>
-    <h1 class="text-xl font-bold">Formulario Cursos</h1>
-</div>
-<form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
-    <div mat-dialog-content class="content">
+<div>
+    <div mat-dialog-title>
+      <h1 class="text-xl font-bold">{{ getTitle() }}</h1>
+    </div>
+    <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+      <div mat-dialog-content class="content">
         <div class="row">
-            <mat-form-field class="w-full " appearance="outline">
-                <mat-label>Nombre</mat-label>
-                <input matInput type="text" formControlName="nombre">
-            </mat-form-field>
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput type="text" formControlName="nombre">
+            <mat-error *ngIf="contactForm.get('nombre')?.hasError('required')">Nombre es requerido</mat-error>
+          </mat-form-field>
         </div>
         <div class="row">
-            <mat-form-field class="w-full" appearance="outline">
-                <mat-label class="noBorder">Descripción</mat-label>
-                <input matInput type="text" formControlName="descripcion" >
-            </mat-form-field>
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Descripción</mat-label>
+            <input matInput type="text" formControlName="descripcion">
+            <mat-error *ngIf="contactForm.get('descripcion')?.hasError('required')">Descripción es requerida</mat-error>
+          </mat-form-field>
         </div>
         <div class="row">
-            <mat-form-field class="w-full" appearance="outline">
-                <mat-label>Grado</mat-label>
-                <input matInput type="text" formControlName="grado">
-            </mat-form-field>
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Abreviatura</mat-label>
+            <input matInput type="text" formControlName="abreviatura">
+            <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('required')">Abreviatura es requerida</mat-error>
+          </mat-form-field>
         </div>
         <div mat-dialog-actions class="flex justify-end space-x-2">
-            <button mat-raised-button [mat-dialog-close]="false" type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
-                Cancelar
-            </button>
-            <button [disabled]="!contactForm.valid" mat-raised-button color="primary" type="submit" 
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                {{ getTitle() }}
-            </button>
+          <button mat-raised-button [mat-dialog-close]="false" type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+            Cancelar
+          </button>
+          <button [disabled]="!contactForm.valid" mat-raised-button color="primary" type="submit" 
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            {{ getTitle() }}
+          </button>
         </div>
-    </div>
-</form>
-</div>
+      </div>
+    </form>
+  </div>

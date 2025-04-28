@@ -1,4 +1,6 @@
 <div class="min-h-screen w-full bg-[#4C7B8B] flex flex-col">
+  <!-- Spinner de carga -->
+  <app-general-loading-spinner [visible]="isLoading" [message]="loadingMessage"></app-general-loading-spinner>
   <div class="w-full bg-[#4C7B8B]">
     <app-card-actividades
       [route]="'Sesiones'"
