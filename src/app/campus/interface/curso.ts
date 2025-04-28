@@ -3,6 +3,7 @@ export class Curso {
     nombre?: string;
     descripcion?: string;
     grado?: string;
+    abreviatura?: string;
     fechaCreacion?: string;
     fechaActualizacion?: string;
 }

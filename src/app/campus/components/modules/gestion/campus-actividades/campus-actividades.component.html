@@ -64,8 +64,12 @@
                 (click)="toggleContenido(actividad)"
               >
                 <td class="px-6 py-4">{{ actividad.actividadNombre }}</td>
-                <td class="px-6 py-4" *ngIf="actividadSeleccionada === 'actividades'">{{ actividad.fechaInicio | date: 'dd/MM/yyyy' }}</td>
-                <td class="px-6 py-4" *ngIf="actividadSeleccionada === 'actividades'">{{ actividad.fechaFin | date: 'dd/MM/yyyy' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
+                  {{ actividad.fechaInicio | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
+                  {{ actividad.fechaFin | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
+                </td>
                 <td
                   class="px-6 py-4 text-right"
                   *ngIf="rolUsuario === 'Profesor'"
@@ -87,53 +91,67 @@
             </tbody>
           </table>
 
-          <!-- Contenido del archivo seleccionado -->
-          <div *ngIf="contenidoActual" class="mt-4">
-            <div *ngIf="contenidoActual.tipo === 'pdf'">
-              <iframe
-                [src]="contenidoActual.url | safeUrl"
-                width="100%"
-                height="800px"
-                style="border: none;"
-                (error)="handleFileError()"
-              ></iframe>
-              <div
-                *ngIf="errorLoadingFile"
-                class="error-message text-red-400"
-              >
-                No se pudo obtener una vista previa del archivo.
-                <a
-                  [href]="contenidoActual.url"
-                  download
-                  class="text-blue-400"
-                  >Descargar</a
-                >
-              </div>
-            </div>
-            <div *ngIf="contenidoActual.tipo === 'video'">
-              <video
-                controls
-                width="100%"
-                height="auto"
-                (error)="handleFileError()"
-              >
-                <source [src]="contenidoActual.url" type="video/mp4">
-                Tu navegador no soporta la reproducción de videos.
-              </video>
-              <div
-                *ngIf="errorLoadingFile"
-                class="error-message text-red-400"
-              >
-                No se pudo cargar el video.
-                <a
-                  [href]="contenidoActual.url"
-                  download
-                  class="text-blue-400"
-                  >Descargar</a
-                >
-              </div>
-            </div>
-          </div>
+         <!-- Contenido del archivo seleccionado -->
+<div *ngIf="contenidoActual" class="mt-4">
+  <!-- PDF -->
+  <div *ngIf="contenidoActual.tipo === 'pdf'">
+    <iframe
+      [src]="contenidoActual.url | safeUrl"
+      width="100%"
+      height="800px"
+      style="border: none;"
+      (error)="handleFileError()"
+    ></iframe>
+    <div
+      *ngIf="errorLoadingFile"
+      class="error-message text-red-400"
+    >
+      No se pudo obtener una vista previa del archivo.
+      <a
+        [href]="contenidoActual.url"
+        download
+        class="text-blue-400"
+        >Descargar</a
+      >
+    </div>
+  </div>
+  <!-- Video -->
+  <div *ngIf="contenidoActual.tipo === 'video'">
+    <video
+      controls
+      width="100%"
+      height="auto"
+      (error)="handleFileError()"
+    >
+      <source [src]="contenidoActual.url" type="video/mp4">
+      Tu navegador no soporta la reproducción de videos.
+    </video>
+    <div
+      *ngIf="errorLoadingFile"
+      class="error-message text-red-400"
+    >
+      No se pudo cargar el video.
+      <a
+        [href]="contenidoActual.url"
+        download
+        class="text-blue-400"
+        >Descargar</a
+      >
+    </div>
+  </div>
+  <!-- TXT y DOCX -->
+  <div *ngIf="contenidoActual.tipo === 'text' || contenidoActual.tipo === 'docx'">
+    <div class="text-gray-300">
+      Este archivo no puede visualizarse en el navegador. Por favor, descárgalo para verlo.
+    </div>
+    <a
+      [href]="contenidoActual.url"
+      download
+      class="text-blue-400 hover:text-blue-300 mt-2 inline-block"
+      >Descargar {{ contenidoActual.actividad.actividadNombre }}</a
+    >
+  </div>
+</div>
         </div>
       </div>
 

@@ -14,11 +14,12 @@ import { UsuarioService } from '../../../services/usuario.service';
 import { AlumnoCursoService } from '../../../services/alumno-curso.service';
 import { AlumnoCurso } from '../../../interface/AlumnoCurso';
 import { SesionService } from '../../../services/sesion.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
 
 @Component({
   selector: 'app-campus',
   standalone: true,
-  imports: [RouterModule, CardComponent, HttpClientModule, CommonModule, NgxPaginationModule, MatButtonModule, MatDialogModule],
+  imports: [RouterModule, CardComponent, HttpClientModule, CommonModule, NgxPaginationModule, MatButtonModule, MatDialogModule,PaginationComponent],
   providers: [ProfesorCursoService, AlumnoCursoService],
   templateUrl: './campus.component.html',
   styleUrl: './campus.component.scss'
