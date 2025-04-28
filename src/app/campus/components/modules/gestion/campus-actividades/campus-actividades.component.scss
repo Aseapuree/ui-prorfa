@@ -1,18 +1,134 @@
 table {
-    width: 100%;
-    border-collapse: collapse;
-  
-    tbody {
-      tr {
-        transition: background-color 0.3s ease; // Transición suave para el cambio de color
-        &.bg-gray-500 {
-          background-color: #6b7280 !important; // Color más claro para el resaltado
-        }
+  width: 100%;
+  border-collapse: collapse;
+
+  tbody {
+    tr {
+      transition: background-color 0.3s ease; // Transición suave para el cambio de color
+      &.bg-gray-500 {
+        background-color: #6b7280 !important; // Color más claro para el resaltado
       }
     }
   }
-  
-  .error-message {
-    margin-top: 1rem;
-    color: #f87171; // Rojo claro para mensajes de error
+}
+
+.error-message {
+  margin-top: 1rem;
+  color: #f87171; // Rojo claro para mensajes de error
+}
+
+/* Estilo para el efecto de deslizamiento */
+.slide-in {
+  animation: slideIn 0.3s ease-in-out forwards;
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
   }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilo para el panel de notas */
+.notas-panel {
+  background-color: #2d3748; // Fondo oscuro que combina con la interfaz
+  border: 1px solid #4a5568; // Borde gris oscuro
+  border-radius: 8px; // Bordes redondeados
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); // Sombra suave
+  padding: 20px; // Espaciado interno aumentado para mejor apariencia
+  width: 100%; // Asegurar que ocupe todo el ancho disponible
+}
+
+/* Estilo para la tabla dentro del panel */
+.notas-panel table {
+  width: 100%; // Asegurar que la tabla interna ocupe todo el ancho del panel
+}
+
+/* Estilo para el panel de tarea */
+.tarea-panel {
+  background-color: #1f2937; // Fondo más oscuro para diferenciarlo
+  border: 1px solid #4a5568; // Borde gris oscuro
+  border-radius: 8px; // Bordes redondeados
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); // Sombra más ligera
+  padding: 16px; // Espaciado interno
+  margin-top: 8px; // Espacio entre la fila y el panel
+}
+
+/* Estilo para los inputs de notas */
+input[type="number"] {
+  -moz-appearance: textfield; // Eliminar flechas en Firefox
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none; // Eliminar flechas en Chrome/Safari
+    margin: 0;
+  }
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  &:focus {
+    border-color: #3182ce; // Borde azul al enfocar
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3); // Sombra azul al enfocar
+  }
+  // Mejorar el diseño del input
+  background-color: #374151; // Fondo gris oscuro
+  color: #e2e8f0; // Texto gris claro
+  border-radius: 6px; // Bordes más redondeados
+  padding: 6px 10px; // Más espaciado interno
+}
+
+/* Estilo para el textarea de comentarios */
+textarea {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  &:focus {
+    border-color: #3182ce; // Borde azul al enfocar
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3); // Sombra azul al enfocar
+  }
+  background-color: #374151; // Fondo gris oscuro
+  color: #e2e8f0; // Texto gris claro
+  border-radius: 6px; // Bordes más redondeados
+  padding: 6px 10px; // Más espaciado interno
+}
+
+/* Estilo para la información de la tarea enviada */
+.tarea-info {
+  max-width: 200px; // Limitar el ancho para mejor alineación
+}
+
+/* Estilo para el botón de ver tarea */
+button {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Estilo para el panel de subir tarea */
+.subir-tarea-panel {
+  background-color: #2d3748; // Fondo oscuro que combina con la interfaz
+  border: 1px solid #4a5568; // Borde gris oscuro
+  border-radius: 8px; // Bordes redondeados
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); // Sombra suave
+  padding: 20px; // Espaciado interno aumentado
+  width: 100%; // Asegurar que ocupe todo el ancho disponible
+}
+
+/* Estilo para el input de tipo archivo */
+.file-input {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  &:focus {
+    border-color: #3182ce; // Borde azul al enfocar
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3); // Sombra azul al enfocar
+  }
+  /* Personalizar el botón de selección de archivo */
+  &::file-selector-button {
+    background-color: #4a5568; // Fondo gris oscuro para el botón
+    color: #e2e8f0; // Texto gris claro
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+    &:hover {
+      background-color: #718096; // Gris más claro al pasar el mouse
+    }
+  }
+}

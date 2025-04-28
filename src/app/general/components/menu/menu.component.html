@@ -4,9 +4,21 @@
 
   <div [ngClass]="{ 'hidden': menuCerrado, 'flex': !menuCerrado }" class="flex flex-col items-center justify-center mb-6">
     <!-- Ícono del usuario y nombre -->
-    <div class="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
-      <img src="assets/imagenes/usuario.png" alt="Perfil" class="w-16 h-16 rounded-full border-2 border-white">
+    <!-- Si NO hay imagen, mostrar las iniciales -->
+    <div
+    *ngIf="!imagenValida"
+    class="w-20 h-20 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center text-white text-2xl">
+    {{ obtenerIniciales() }}
     </div>
+
+    <!-- Si hay imagen válida, mostrarla -->
+    <img
+    *ngIf="imagenValida"
+    [src]="perfilUrl"
+    alt="Foto de perfil"
+    class="w-20 h-20 rounded-full object-cover border-2 border-white">
+
+    
     <p class="text-lg font-bold text-white mt-2" *ngIf="!menuCerrado">
       {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
     </p>

@@ -8,7 +8,6 @@
     <fa-icon [icon]="['fas', 'arrow-left']" class="text-white"></fa-icon>
     Salir
   </button>
-
   <!-- Botón de Introducción -->
   <button
     (click)="seleccionar('introducciones')"
@@ -46,5 +45,19 @@
   >
     <fa-icon [icon]="['far', 'sticky-note']" class="text-yellow-500"></fa-icon>
     {{ actividad }}
+  </button>
+
+  <!-- Botón de Asistencia -->
+  <button
+    *ngIf="asistencia"
+    (click)="seleccionar('asistencias')"
+    [ngClass]="{
+      'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-green-400': actividadSeleccionada !== 'asistencias',
+      'bg-gray-700 text-green-400': actividadSeleccionada === 'asistencias'
+    }"
+    class="cursor-pointer relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 rounded-md px-3 w-full sm:w-auto"
+  >
+    <fa-icon [icon]="['fas', 'users']" class="text-green-500"></fa-icon>
+    {{ asistencia }}
   </button>
 </div>

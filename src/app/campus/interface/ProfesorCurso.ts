@@ -10,6 +10,7 @@ export class Usuario {
 export class Curso {
     idCurso?: string;
     nombre?: string;
+    abreviatura?: string;
 }
 
 export class ProfesorCurso {
@@ -17,5 +18,7 @@ export class ProfesorCurso {
     usuario?: Usuario;
     curso?: Curso;
     grado?: string;
+    seccion?: string;
+    nivel?: string;
     fechaAsignacion?: Date;
 }

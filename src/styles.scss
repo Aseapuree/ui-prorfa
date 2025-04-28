@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
 
 :root {
     --primary-dark: #0D1B2A;

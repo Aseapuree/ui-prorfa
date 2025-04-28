@@ -18,19 +18,19 @@ export class CardWeekComponent {
     @Input() description: string = 'Descripción de la semana';
     @Input() route: string = '/';
     @Input() idSesion?: string; // Nuevo input para el ID de la sesión
+    @Input() fechaAsignada?: string;
   
     constructor(
-      private router: Router,
-      private _matDialog: MatDialog
+      private router: Router
     ) {}
     
     navigate() {
       if (this.idSesion) {
-        this.router.navigate([this.route, this.idSesion]); // Redirige con el ID de la sesión
+          this.router.navigate([this.route, this.idSesion]);
       } else {
-        this.router.navigate([this.route]);
+          this.router.navigate([this.route]);
       }
-    }
+  }
 
     
 }

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 
 
@@ -14,7 +14,8 @@ export class CardComponent {
   @Input() session: string = 'Nombre de la sesión';
   @Input() title: string = 'Título de la clase';
   @Input() teacher: string = 'Nombre del profesor';
-  @Input() route: string = '/'; // Nueva propiedad para la ruta
+  @Input() grado: string = '';
+  @Output() cardClicked = new EventEmitter<void>(); // Nueva propiedad para la ruta
   @Input() idProfesorCurso?: string;
 
   constructor(
@@ -22,8 +23,8 @@ export class CardComponent {
   ) {}
 
   //Metodo para navegar a la ruta
-  navigate() {
-    this.router.navigate([this.route]);
+  onClick() {
+    this.cardClicked.emit();
   }
 
   

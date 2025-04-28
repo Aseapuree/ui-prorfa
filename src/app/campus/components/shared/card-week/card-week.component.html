@@ -1,7 +1,6 @@
 <button
   type="button"
-  (click)="navigate()"
-  [attr.aria-label]="'Abrir curso ' + title"
+  [attr.aria-label]="'Abrir sesión ' + title"
   class="w-full flex flex-col items-stretch min-h-40 rounded-md bg-transparent"
 >
   <div class="w-full p-4 flex flex-col justify-between">
@@ -18,11 +17,19 @@
     </div>
 
     <div>
-      <h1 class="text-center mt-2 text-base sm:text-lg font-semibold text-gray-800 dark:text-white">
+      <h1
+        class="text-center mt-2 text-base sm:text-lg font-semibold text-gray-800 dark:text-white"
+      >
         {{ title }}
       </h1>
       <p class="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
         {{ description }}
+      </p>
+      <p
+        class="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400"
+        *ngIf="fechaAsignada"
+      >
+        Fecha asignada: {{ fechaAsignada | date: 'dd/MM/yyyy' }}
       </p>
     </div>
   </div>

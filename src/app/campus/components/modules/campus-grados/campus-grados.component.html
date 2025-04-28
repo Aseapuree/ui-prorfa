@@ -1,0 +1,115 @@
+<div class="bg-[#0f172a] min-h-screen">
+  <!-- Navegación -->
+  <nav id="tabNav" class="flex border-b border-gray-600 px-6 pt-6">
+    <!-- Tab Inicio -->
+    <button
+      id="tab-inicio"
+      class="flex items-center gap-2 px-4 py-2 text-white"
+      [ngClass]="{
+        'active-tab border border-gray-600 rounded-t-md border-b-transparent': !selectedGrado,
+        'text-opacity-90 border-b border-gray-600': selectedGrado
+      }"
+      [attr.aria-selected]="!selectedGrado"
+      role="tab"
+      [tabindex]="!selectedGrado ? 0 : -1"
+      (click)="navigateToInicio()"
+    >
+      <i class="fas fa-home"></i>
+      <span class="text-sm font-normal">Inicio</span>
+    </button>
+    <!-- Tabs de Grados Dinámicos -->
+    <button
+      *ngFor="let grado of grados"
+      id="tab-grado{{grado.replace('°', '')}}"
+      class="flex items-center gap-2 px-4 py-2 text-white"
+      [ngClass]="{
+        'active-tab border border-gray-600 rounded-t-md border-b-transparent': selectedGrado === grado,
+        'text-opacity-90 border-b border-gray-600': selectedGrado !== grado
+      }"
+      [attr.aria-selected]="selectedGrado === grado"
+      role="tab"
+      [tabindex]="selectedGrado === grado ? 0 : -1"
+      (click)="selectGrado(grado)"
+    >
+      <i class="fas fa-graduation-cap"></i>
+      <span class="text-sm font-normal">{{grado}} {{nivel}}</span>
+    </button>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <div class="p-6">
+    <!-- Pantalla de Bienvenida (Inicio) -->
+    <div *ngIf="!selectedGrado" class="fade-in">
+      <div class="welcome-card bg-purple-900 rounded-lg shadow-lg p-6 max-w-6xl mx-auto">
+        <h1 class="text-4xl font-bold text-gray-100 mb-4">¡Hola, {{profesorNombre}}!</h1>
+        <p class="text-xl text-gray-300 mb-6 font-medium">
+          Bienvenido a tu panel de cursos. ¡Gestiona tus cursos con facilidad!
+        </p>
+        <p class="text-gray-300 mb-8 leading-relaxed">
+          Explora los cursos por grado, gestiona sesiones, actividades, asistencia y calificaciones. ¡Selecciona un grado en la barra superior para comenzar ahora!
+        </p>
+    
+        <div class="mt-8">
+          <h2 class="text-2xl font-semibold text-gray-100 mb-6">¿Qué puedes hacer?</h2>
+          <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+            <li class="flex items-center gap-3">
+              <i class="fas fa-book text-blue-400"></i>
+              <span>Explorar cursos por grado</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <i class="fas fa-laptop-code text-blue-400"></i>
+              <span>Acceder a sesiones y actividades</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <i class="fas fa-upload text-blue-400"></i>
+              <span>Subir y actualizar materiales</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <i class="fas fa-user-check text-blue-400"></i>
+              <span>Controlar la asistencia</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <i class="fas fa-pen text-blue-400"></i>
+              <span>Registrar calificaciones</span>
+            </li>
+          </ul>
+        </div>
+    
+        <div class="mt-10 text-center">
+          <p class="text-lg italic text-gray-400">
+            "La educación transforma vidas y construye futuros." 🌟
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje si no hay cursos para el grado seleccionado -->
+    <div *ngIf="selectedGrado && filteredCursos.length === 0" class="text-center text-gray-300 fade-in">
+      No se encontraron cursos para el grado {{selectedGrado}}.
+    </div>
+
+    <!-- Tarjetas de cursos -->
+    <div *ngIf="selectedGrado && filteredCursos.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 fade-in">
+      <app-card
+        *ngFor="let curso of filteredCursos | paginate: { itemsPerPage: 4, currentPage: page }"
+        [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
+        [title]="curso.curso?.nombre || 'Sin nombre'"
+        [teacher]="(curso.usuario?.nombre || '') + ' ' +
+                   (curso.usuario?.apellidopaterno || '') + ' ' +
+                   (curso.usuario?.apellidomaterno || '')"
+        [grado]="curso.grado ? curso.grado + '°' : ''"
+        [session]="curso.seccion || 'Sin sección'"
+        (cardClicked)="seleccionarCurso(curso)"
+        class="cursor-pointer"
+      ></app-card>
+    </div>
+
+    <!-- Paginación -->
+    <app-pagination
+  *ngIf="selectedGrado && filteredCursos.length > 0"
+  [currentPage]="page"
+  [itemsPerPage]="4"
+  [totalItems]="filteredCursos.length"
+  (pageChange)="page = $event"
+></app-pagination>
+  </div>

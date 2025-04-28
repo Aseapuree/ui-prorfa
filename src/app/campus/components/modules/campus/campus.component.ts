@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CardComponent } from '../../shared/card/card.component';
 import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
@@ -13,11 +13,13 @@ import { UserData, ValidateService } from '../../../../services/validateAuth.ser
 import { UsuarioService } from '../../../services/usuario.service';
 import { AlumnoCursoService } from '../../../services/alumno-curso.service';
 import { AlumnoCurso } from '../../../interface/AlumnoCurso';
+import { SesionService } from '../../../services/sesion.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
 
 @Component({
   selector: 'app-campus',
   standalone: true,
-  imports: [RouterModule, CardComponent, HttpClientModule, CommonModule, NgxPaginationModule, MatButtonModule, MatDialogModule],
+  imports: [RouterModule, CardComponent, HttpClientModule, CommonModule, NgxPaginationModule, MatButtonModule, MatDialogModule,PaginationComponent],
   providers: [ProfesorCursoService, AlumnoCursoService],
   templateUrl: './campus.component.html',
   styleUrl: './campus.component.scss'
@@ -25,114 +27,186 @@ import { AlumnoCurso } from '../../../interface/AlumnoCurso';
 export class CampusComponent implements OnInit {
   public page: number = 1;
   profesorcursos: ProfesorCurso[] = [];
-  alumnocursos: AlumnoCurso[] = []; // Lista para cursos de alumnos
-  usuarioId: string | null = null; // ID del usuario autenticado
-  rolUsuario: string | null = null; // Rol del usuario autenticado
+  alumnocursos: AlumnoCurso[] = [];
+  idAuth: string | null = null;
+  rolUsuario: string | null = null;
+  niveles: { nivel: string; cursos: ProfesorCurso[]; sesiones: number }[] = [];
+  hasCursos: boolean = false;
 
   constructor(
     private profesorCursoService: ProfesorCursoService,
-    private alumnoCursoService: AlumnoCursoService, // Inyectar el servicio
-    private authService: ValidateService, // Inyecta el servicio
-    private usuarioService: UsuarioService // Inyecta el nuevo servicio
+    private sesionService: SesionService,
+    private alumnoCursoService: AlumnoCursoService,
+    private authService: ValidateService,
+    private usuarioService: UsuarioService,
+    private router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
-      // Obtener los datos del usuario autenticado
       const userData: UserData = await lastValueFrom(this.authService.getUserData());
       console.log('Datos del usuario:', userData);
 
-      // Extraer el id_auth y el rol
-      const idAuth = userData?.data?.id;
+      this.idAuth = userData?.data?.id;
       this.rolUsuario = userData?.data?.rol || null;
-      if (!idAuth) {
+      if (!this.idAuth) {
         console.error('No se encontró el id_auth del usuario');
         return;
       }
 
-      // Obtener el idusuario a partir del id_auth
-      this.usuarioId = await lastValueFrom(this.usuarioService.getUsuarioByIdAuth(idAuth));
-      console.log('usuarioId obtenido:', this.usuarioId);
+      console.log('idAuth:', this.idAuth);
+      localStorage.setItem('idAuth', this.idAuth);
 
-      if (this.usuarioId) {
-        localStorage.setItem('usuarioId', this.usuarioId);
-        // Cargar cursos según el rol del usuario
-        if (this.rolUsuario === 'Profesor') {
-          await this.obtenerCursosPorProfesor();
-        } else if (this.rolUsuario === 'Alumno') {
-          await this.obtenerCursosPorAlumno();
+      if (this.rolUsuario === 'Profesor') {
+        const usuarioId = await lastValueFrom(this.usuarioService.getUsuarioByIdAuth(this.idAuth));
+        console.log('usuarioId:', usuarioId);
+        if (usuarioId) {
+          localStorage.setItem('usuarioId', usuarioId);
+          await this.obtenerCursosPorProfesor(usuarioId);
+          await this.prepararNiveles();
+          this.hasCursos = this.niveles.length > 0;
         } else {
-          console.warn('Rol no reconocido:', this.rolUsuario);
+          console.error('No se encontró el ID del usuario autenticado para el profesor');
         }
+      } else if (this.rolUsuario === 'Alumno') {
+        await this.obtenerCursosPorAlumno();
       } else {
-        console.error('No se encontró el ID del usuario autenticado');
+        console.warn('Rol no reconocido:', this.rolUsuario);
       }
     } catch (error) {
       console.error('Error al inicializar el componente:', error);
     }
   }
 
-  // Obtener cursos del profesor
-  async obtenerCursosPorProfesor(): Promise<void> {
+  async obtenerCursosPorProfesor(usuarioId: string): Promise<void> {
     try {
-      this.profesorcursos = await lastValueFrom(this.profesorCursoService.obtenerCursosPorProfesor(this.usuarioId!));
-      console.log("Cursos del profesor: ", this.profesorcursos);
+      const rawResponse = await lastValueFrom(
+        this.profesorCursoService.obtenerCursosPorProfesor(usuarioId)
+      );
+      console.log('Respuesta cruda del backend:', rawResponse);
+
+      this.profesorcursos = Array.isArray(rawResponse) ? rawResponse : [];
+      console.log('Cursos del profesor (mapeados):', this.profesorcursos);
     } catch (error) {
-      console.error('Error al obtener los cursos del profesor', error);
+      console.error('Error al obtener los cursos del profesor:', error);
+      this.profesorcursos = [];
     }
   }
 
-  // Obtener cursos del alumno
   async obtenerCursosPorAlumno(): Promise<void> {
     try {
-      this.alumnocursos = await lastValueFrom(this.alumnoCursoService.obtenerCursosPorAlumno(this.usuarioId!));
-      console.log("Cursos del alumno: ", this.alumnocursos);
+      this.alumnocursos = await lastValueFrom(
+        this.alumnoCursoService.obtenerCursosPorAlumno(this.idAuth!)
+      );
+      console.log('Cursos del alumno:', this.alumnocursos);
     } catch (error) {
-      console.error('Error al obtener los cursos del alumno', error);
+      console.error('Error al obtener los cursos del alumno:', error);
     }
   }
 
-  // Obtener cursos
-  async obtenerCurso(): Promise<void> {
-    try {
-      this.profesorcursos = await lastValueFrom(this.profesorCursoService.obtenerCourseList());
-      console.log("PROFESOR CURSOS: ", this.profesorcursos)
-    } catch (error) {
-      console.error('Error al obtener los cursos', error);
+  async prepararNiveles(): Promise<void> {
+    console.log('Preparando niveles con cursos:', this.profesorcursos);
+
+    // Filtrar cursos por nivel (insensible a mayúsculas/minúsculas)
+    const primariaCursos = this.profesorcursos.filter(curso =>
+      curso.nivel?.toLowerCase() === 'primaria'
+    );
+
+    const secundariaCursos = this.profesorcursos.filter(curso =>
+      curso.nivel?.toLowerCase() === 'secundaria'
+    );
+
+    console.log('Cursos Primaria:', primariaCursos);
+    console.log('Cursos Secundaria:', secundariaCursos);
+
+    this.niveles = [];
+
+    if (primariaCursos.length > 0) {
+      const sesionesPrimaria = await this.contarSesiones(primariaCursos);
+      this.niveles.push({
+        nivel: 'Primaria', // Valor que se muestra en la tarjeta
+        cursos: primariaCursos,
+        sesiones: sesionesPrimaria,
+      });
+    }
+
+    if (secundariaCursos.length > 0) {
+      const sesionesSecundaria = await this.contarSesiones(secundariaCursos);
+      this.niveles.push({
+        nivel: 'Secundaria', // Valor que se muestra en la tarjeta
+        cursos: secundariaCursos,
+        sesiones: sesionesSecundaria,
+      });
+    }
+
+    console.log('Niveles preparados:', this.niveles);
+  }
+
+  async contarSesiones(cursos: ProfesorCurso[]): Promise<number> {
+    let totalSesiones = 0;
+    for (const curso of cursos) {
+      if (curso.idProfesorCurso) {
+        try {
+          const sesiones = await lastValueFrom(
+            this.sesionService.obtenerSesionesPorCurso(curso.idProfesorCurso)
+          );
+          totalSesiones += sesiones.length;
+        } catch (error) {
+          console.error(`Error al obtener sesiones para el curso ${curso.idProfesorCurso}:`, error);
+        }
+      }
+    }
+    return totalSesiones;
+  }
+
+  seleccionarCurso(curso: ProfesorCurso | AlumnoCurso): void {
+    if (this.rolUsuario === 'Profesor') {
+      const profesorCurso = curso as ProfesorCurso;
+      const grado = profesorCurso.grado ?? '';
+      const seccion = profesorCurso.seccion ?? '';
+      const nivel = profesorCurso.nivel ?? ''; // Ya no necesitamos inferir el nivel
+      const idCurso = profesorCurso.curso?.idCurso ?? '';
+
+      if (grado && seccion && nivel && idCurso) {
+        localStorage.setItem('grado', grado);
+        localStorage.setItem('seccion', seccion);
+        localStorage.setItem('nivel', nivel);
+        localStorage.setItem('idCurso', idCurso);
+
+        console.log('Curso seleccionado (Profesor):', {
+          idProfesorCurso: profesorCurso.idProfesorCurso,
+          idCurso,
+          grado,
+          seccion,
+          nivel,
+        });
+
+        this.router.navigate(['/sesiones/profesor', profesorCurso.idProfesorCurso]);
+      } else {
+        console.error('Datos incompletos para el curso:', {
+          idCurso,
+          grado,
+          seccion,
+          nivel,
+        });
+      }
+    } else if (this.rolUsuario === 'Alumno') {
+      const alumnoCurso = curso as AlumnoCurso;
+      if (alumnoCurso.idCurso) {
+        localStorage.setItem('idCurso', alumnoCurso.idCurso);
+        localStorage.setItem('grado', alumnoCurso.grado?.toString() || '');
+        localStorage.setItem('seccion', alumnoCurso.seccion || '');
+        localStorage.setItem('nivel', alumnoCurso.nivel || '');
+
+        console.log('Curso seleccionado (Alumno):', alumnoCurso);
+        this.router.navigate(['/sesiones/alumno', alumnoCurso.idCurso]);
+      } else {
+        console.error('Datos incompletos para el curso:', alumnoCurso);
+      }
     }
   }
 
-  // Agregar curso
-  async agregarCurso(nuevoCurso: ProfesorCurso): Promise<void> {
-    try {
-      const cursoGuardado = await lastValueFrom(this.profesorCursoService.agregarCurso(nuevoCurso));
-      this.profesorcursos.push(cursoGuardado);
-      console.log("Curso agregado correctamente", cursoGuardado);
-    } catch (error) {
-      console.error("Error al agregar el curso", error);
-    }
+  navigateToGrados(nivel: string): void {
+    this.router.navigate(['/campus/grados', nivel]);
   }
-
-  // Editar curso
-  async editarCurso(id: string, cursoEditado: ProfesorCurso): Promise<void> {
-    try {
-      await lastValueFrom(this.profesorCursoService.editarCurso(id, cursoEditado));
-      this.profesorcursos = this.profesorcursos.map(curso => curso.idProfesorCurso === id ? cursoEditado : curso);
-      console.log("Curso editado correctamente");
-    } catch (error) {
-      console.error("Error al editar el curso", error);
-    }
-  }
-
-  // Eliminar curso
-  async eliminarCurso(id: string): Promise<void> {
-    try {
-      await lastValueFrom(this.profesorCursoService.eliminarCurso(id));
-      this.profesorcursos = this.profesorcursos.filter(curso => curso.idProfesorCurso !== id);
-      console.log("Curso eliminado correctamente");
-    } catch (error) {
-      console.error("Error al eliminar el curso", error);
-    }
-  }
-
 }
