@@ -8,47 +8,89 @@
       <mat-error *ngIf="formulario.get('nombre')?.hasError('required')">El nombre es obligatorio</mat-error>
     </mat-form-field>
 
-    <!-- Campo de fecha de inicio (solo para actividades) -->
-    <mat-form-field *ngIf="tipoContenido === 'actividades'" appearance="outline" class="w-full">
+   <!-- Campo de fecha y hora de inicio (solo para actividades) -->
+   <div *ngIf="tipoContenido === 'actividades'" class="flex space-x-4">
+    <mat-form-field appearance="outline" class="w-1/2">
       <mat-label class="text-gray-400 dark:text-gray-400">Fecha de Inicio</mat-label>
-      <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" required class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100" />
+      <input
+        matInput
+        [matDatepicker]="pickerInicio"
+        formControlName="fechaInicio"
+        required
+        class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
+        (dateChange)="onDateChange('fechaInicio', $event)"
+      />
       <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
       <mat-datepicker #pickerInicio></mat-datepicker>
       <mat-error *ngIf="formulario.get('fechaInicio')?.hasError('required')">La fecha de inicio es obligatoria</mat-error>
       <mat-error *ngIf="formulario.get('fechaInicio')?.hasError('futureDate')">La fecha de inicio no puede ser futura</mat-error>
     </mat-form-field>
+    <mat-form-field appearance="outline" class="w-1/2">
+      <mat-label class="text-gray-400 dark:text-gray-400">Hora de Inicio</mat-label>
+      <input
+        matInput
+        type="time"
+        formControlName="horaInicio"
+        required
+        class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
+      />
+      <mat-hint>Formato 24 horas (ej. 18:30)</mat-hint>
+      <mat-error *ngIf="formulario.get('horaInicio')?.hasError('required')">La hora de inicio es obligatoria</mat-error>
+    </mat-form-field>
+  </div>
 
-    <!-- Campo de fecha de fin (solo para actividades) -->
-    <mat-form-field *ngIf="tipoContenido === 'actividades'" appearance="outline" class="w-full">
+  <!-- Campo de fecha y hora de fin (solo para actividades) -->
+  <div *ngIf="tipoContenido === 'actividades'" class="flex space-x-4">
+    <mat-form-field appearance="outline" class="w-1/2">
       <mat-label class="text-gray-400 dark:text-gray-400">Fecha de Fin</mat-label>
-      <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" required class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100" />
+      <input
+        matInput
+        [matDatepicker]="pickerFin"
+        formControlName="fechaFin"
+        required
+        class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
+        (dateChange)="onDateChange('fechaFin', $event)"
+      />
       <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
       <mat-datepicker #pickerFin></mat-datepicker>
       <mat-error *ngIf="formulario.get('fechaFin')?.hasError('required')">La fecha de fin es obligatoria</mat-error>
       <mat-error *ngIf="formulario.get('fechaFin')?.hasError('invalidEndDate')">La fecha de fin debe ser mayor que la fecha de inicio</mat-error>
     </mat-form-field>
+    <mat-form-field appearance="outline" class="w-1/2">
+      <mat-label class="text-gray-400 dark:text-gray-400">Hora de Fin</mat-label>
+      <input
+        matInput
+        type="time"
+        formControlName="horaFin"
+        required
+        class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
+      />
+      <mat-hint>Formato 24 horas (ej. 19:45)</mat-hint>
+      <mat-error *ngIf="formulario.get('horaFin')?.hasError('required')">La hora de fin es obligatoria</mat-error>
+    </mat-form-field>
+  </div>
 
     <!-- Campo de archivo personalizado -->
-    <div class="w-full">
-      <label for="archivo" class="block text-gray-400 dark:text-gray-400 mb-2">Archivo* (Formatos válidos: PDF, mp4, avi, mov)</label>
-      <div class="flex items-center space-x-3">
-        <button type="button" (click)="fileInput.click()" class="px-4 py-2 bg-gray-700 dark:bg-gray-700 text-gray-100 dark:text-gray-100 rounded-md hover:bg-gray-600 dark:hover:bg-gray-600 transition-colors duration-300">
-          Seleccionar archivo
-        </button>
-        <input
-          #fileInput
-          id="archivo"
-          type="file"
-          (change)="onFileSelected($event)"
-          accept=".pdf,.mp4,.avi,.mov"
-          [required]="!esEdicion"
-          class="hidden"
-        />
-        <span class="text-gray-300 dark:text-gray-300 truncate">
-          {{ archivoSeleccionado ? archivoSeleccionado.name : (esEdicion ? getFileNameFromUrl(data.actividad?.actividadUrl) : 'Ningún archivo seleccionado') }}
-        </span>
-      </div>
-    </div>
+<div class="w-full">
+  <label for="archivo" class="block text-gray-400 dark:text-gray-400 mb-2">Archivo* (Formatos válidos: PDF, MP4, AVI, MOV, TXT, DOCX)</label>
+  <div class="flex items-center space-x-3">
+    <button type="button" (click)="fileInput.click()" class="px-4 py-2 bg-gray-700 dark:bg-gray-700 text-gray-100 dark:text-gray-100 rounded-md hover:bg-gray-600 dark:hover:bg-gray-600 transition-colors duration-300">
+      Seleccionar archivo
+    </button>
+    <input
+      #fileInput
+      id="archivo"
+      type="file"
+      (change)="onFileSelected($event)"
+      accept=".pdf,.mp4,.avi,.mov,.txt,.docx"
+      [required]="!esEdicion"
+      class="hidden"
+    />
+    <span class="text-gray-300 dark:text-gray-300 truncate">
+      {{ archivoSeleccionado ? archivoSeleccionado.name : (esEdicion ? getFileNameFromUrl(data.actividad?.actividadUrl) : 'Ningún archivo seleccionado') }}
+    </span>
+  </div>
+</div>
 
     <!-- Mostrar mensaje de error o advertencia -->
     <app-alert [message]="alertMessage" [type]="alertType" class="block"></app-alert>

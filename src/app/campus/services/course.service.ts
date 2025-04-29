@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
-import { Curso } from '../interface/Curso';
+import { catchError, map, Observable, throwError } from 'rxjs';
+import { Curso } from '../interface/curso';
 import { response } from 'express';
 import { DTOResponse } from '../interface/DTOResponse';
 
@@ -16,19 +16,52 @@ export class CourseService {
   constructor(private clienteHttp: HttpClient) { }
 
 
-  obtenerListaCursos(): Observable<Curso[]> {
-    return this.clienteHttp.get<{ data: { content: Curso[] } }>(`${this.urlBase}/listar`,{withCredentials:true})
-      .pipe(map(response => response.data.content));
+  obtenerListaCursos(page: number, size: number): Observable<{ content: Curso[], totalElements: number }> {
+    return this.clienteHttp
+      .get<{ data: { content: Curso[], totalElements: number } }>(
+        `${this.urlBase}/listar?page=${page - 1}&size=${size}`,
+        { withCredentials: true }
+      )
+      .pipe(
+        map(response => ({
+          content: response.data.content,
+          totalElements: response.data.totalElements
+        }))
+      );
   }
 
   agregarCurso(curso: Curso): Observable<Curso> {
     return this.clienteHttp
       .post<DTOResponse<Curso>>(`${this.urlBase}/agregar`, curso, { withCredentials: true })
-      .pipe(map((response) => response.data));
+      .pipe(
+        map((response) => {
+          if (response.code !== 201) {
+            throw new Error(response.message || 'Error al agregar el curso');
+          }
+          return response.data;
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error en agregarCurso:', error);
+          return throwError(() => new Error(error.message || 'Error al agregar el curso'));
+        })
+      );
   }
-  
-  actualizarCurso(id: string, curso: Curso): Observable<Curso> {
-    return this.clienteHttp.put<Curso>(`${this.urlBase}/editar/${id}`, curso,{withCredentials:true});
+
+  actualizarCurso(id: string, curso: Partial<Curso>): Observable<Curso> {
+    return this.clienteHttp
+      .put<DTOResponse<Curso>>(`${this.urlBase}/editar/${id}`, curso, { withCredentials: true })
+      .pipe(
+        map((response) => {
+          if (response.code !== 200) {
+            throw new Error(response.message || 'Error al actualizar el curso');
+          }
+          return response.data;
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error en actualizarCurso:', error);
+          return throwError(() => new Error(error.message || 'Error al actualizar el curso'));
+        })
+      );
   }
 
   eliminarCurso(id: string): Observable<void> {
@@ -43,6 +76,11 @@ export class CourseService {
           return response.data; 
         })
       );
+  }
+
+  obtenerConteoCursos(): Observable<number> {
+    return this.clienteHttp.get<DTOResponse<number>>(`${this.urlBase}/contar`, { withCredentials: true })
+      .pipe(map(response => response.data));
   }
   
 }

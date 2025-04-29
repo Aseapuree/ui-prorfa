@@ -1,4 +1,6 @@
 <div class="bg-[#0f172a] min-h-screen">
+  <!-- Spinner de carga -->
+  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando grados y cursos...'"></app-general-loading-spinner>
   <!-- Navegación -->
   <nav id="tabNav" class="flex border-b border-gray-600 px-6 pt-6">
     <!-- Tab Inicio -->
@@ -105,14 +107,11 @@
     </div>
 
     <!-- Paginación -->
-    <pagination-controls
-      *ngIf="selectedGrado && filteredCursos.length > 0"
-      class="flex justify-center items-center space-x-2 mt-4 fade-in"
-      (pageChange)="page = $event"
-      previousLabel="«"
-      nextLabel="»"
-      pageLinkClass="px-3 py-1 border rounded-lg hover:bg-gray-200 transition"
-      currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
-      disabledClass="opacity-50 cursor-not-allowed"
-    ></pagination-controls>
+    <app-pagination
+  *ngIf="selectedGrado && filteredCursos.length > 0"
+  [currentPage]="page"
+  [itemsPerPage]="4"
+  [totalItems]="filteredCursos.length"
+  (pageChange)="page = $event"
+></app-pagination>
   </div>

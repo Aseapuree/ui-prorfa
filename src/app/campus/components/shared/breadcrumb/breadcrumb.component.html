@@ -1,0 +1,26 @@
+<nav aria-label="Breadcrumb" class="p-4">
+  <ol class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+    <li *ngFor="let item of items; let last = last">
+      <a
+        *ngIf="!last"
+        [routerLink]="item.url"
+        [queryParams]="item.queryParams"
+        class="block transition-colors hover:text-gray-900 dark:hover:text-white cursor-pointer"
+      >
+        {{ item.label }}
+      </a>
+      <span
+        *ngIf="last"
+        class="text-gray-500 dark:text-gray-400"
+        [ngClass]="{ 'font-semibold': item.isActive }"
+      >
+        {{ item.label }}
+      </span>
+      <fa-icon
+        *ngIf="!last"
+        [icon]="faChevronRight"
+        class="size-4 text-gray-500 dark:text-gray-400 mx-2 rtl:rotate-180"
+      ></fa-icon>
+    </li>
+  </ol>
+</nav>

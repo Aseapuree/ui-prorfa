@@ -1,4 +1,6 @@
 <div class="p-4 min-h-screen">
+  <!-- Spinner de carga -->
+  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando cursos...'"></app-general-loading-spinner>
   <!-- Mostrar cursos del profesor si el rol es 'Profesor' -->
   <ng-container *ngIf="rolUsuario === 'Profesor'">
     <div class="flex flex-wrap justify-center gap-6 p-4">
@@ -53,14 +55,11 @@
         class="cursor-pointer"
       ></app-card>
     </div>
-    <pagination-controls
-      class="flex justify-center items-center space-x-2 mt-4"
+    <app-pagination
+      [currentPage]="page"
+      [itemsPerPage]="4"
+      [totalItems]="alumnocursos.length"
       (pageChange)="page = $event"
-      previousLabel="«"
-      nextLabel="»"
-      pageLinkClass="px-3 py-1 border rounded-lg hover:bg-gray-200 transition"
-      currentPageClass="bg-blue-500 text-white font-bold border border-blue-500 px-3 py-1 rounded-lg"
-      disabledClass="opacity-50 cursor-not-allowed"
-    ></pagination-controls>
+    ></app-pagination>
   </ng-container>
 </div>

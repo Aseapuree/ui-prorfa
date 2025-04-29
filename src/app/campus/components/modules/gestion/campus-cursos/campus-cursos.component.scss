@@ -1,0 +1,15 @@
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  table {
+    width: 100%;
+    table-layout: auto;
+  }
+  
+  @media (max-width: 640px) {
+    table {
+      min-width: 800px; /* Ajusta según el contenido mínimo de tu tabla */
+    }
+  }

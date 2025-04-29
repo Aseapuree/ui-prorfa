@@ -19,7 +19,8 @@ import { AsistenciaComponent } from '../../../../../general/components/asistenci
 import { Actividad } from '../../../../interface/AlumnoCurso';
 import { NotasService } from '../../../../services/notas.service';
 import { DTONota, AlumnoNotas, ActividadNota } from '../../../../interface/DTONota';
-import { FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms'; // Importar FormsModule para usar ngModel
+import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
@@ -44,7 +45,8 @@ interface Alumno {
     FontAwesomeModule,
     NotificationComponent,
     AsistenciaComponent,
-    FormsModule
+    FormsModule, // Añadir FormsModule para usar ngModel
+    GeneralLoadingSpinnerComponent
   ],
   templateUrl: './campus-actividades.component.html',
   styleUrls: ['./campus-actividades.component.scss']
@@ -64,13 +66,15 @@ export class CampusActividadesComponent implements OnInit {
   idCurso: string | null = null;
   rolUsuario: string | null = null;
   actividadSeleccionada: TipoActividad = 'introducciones';
-  contenidoActual: { tipo: 'pdf' | 'video'; url: string; actividad: DTOActividad | Actividad } | null = null;
+  contenidoActual: { tipo: 'pdf' | 'video' | 'text' | 'docx'; url: string; actividad: DTOActividad | Actividad } | null = null;
   errorLoadingFile: boolean = false;
   actividadesOriginales: Actividad[] = [];
   actividadesActuales: (DTOActividad | Actividad)[] = [];
   isAddButtonDisabled: boolean = false;
   fechaAsignada: string | null = null;
   isUploading: boolean = false;
+  isLoading: boolean = false; // Property to control the spinner
+  loadingMessage: string = 'Cargando actividades...'; // Dynamic loading message
 
   // Lista de alumnos (con campos para nota y comentario)
   alumnos: Alumno[] = [
@@ -103,6 +107,7 @@ export class CampusActividadesComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.isLoading = true; // Activate spinner
     try {
       const userData: UserData = await lastValueFrom(this.validateService.getUserData());
       this.rolUsuario = userData?.data?.rol || null;
@@ -146,16 +151,31 @@ export class CampusActividadesComponent implements OnInit {
       console.error('Error al obtener el rol del usuario:', error);
       this.notificationService.showNotification('Error al cargar los datos', 'error');
       this.router.navigate(['campus']);
+    } finally {
+      this.isLoading = false; // Deactivate spinner
     }
   }
 
   async obtenerActividades(): Promise<void> {
+    this.isLoading = true; // Activate spinner
+    this.loadingMessage = 'Cargando actividades...';
     try {
       if (this.rolUsuario === 'Profesor') {
         const response = await lastValueFrom(
           this.sesionService.obtenerActividadesPorSesion(this.idSesion)
         );
         this.actividadesSesion = response;
+        // Convertir fechas a objetos Date en UTC
+        this.actividadesSesion.data.actividades.forEach(actividad => {
+          if (actividad.fechaInicio) {
+            actividad.fechaInicio = this.parseUTCDate(actividad.fechaInicio as string);
+            console.log('FechaInicio convertida:', actividad.fechaInicio);
+          }
+          if (actividad.fechaFin) {
+            actividad.fechaFin = this.parseUTCDate(actividad.fechaFin as string);
+            console.log('FechaFin convertida:', actividad.fechaFin);
+          }
+        });
         this.actualizarActividadesActuales();
       } else if (this.rolUsuario === 'Alumno' && this.idCurso) {
         const idAuth = localStorage.getItem('idAuth');
@@ -165,16 +185,23 @@ export class CampusActividadesComponent implements OnInit {
         const cursos = await lastValueFrom(
           this.alumnoCursoService.obtenerCursosPorAlumno(idAuth)
         );
-        console.log('Cursos obtenidos para alumno:', cursos);
         const curso = cursos.find(c => c.idCurso === this.idCurso);
         if (curso && curso.sesiones) {
           const sesion = curso.sesiones.find(s => s.idSesion === this.idSesion);
-          console.log('Sesión encontrada:', sesion);
           if (sesion && sesion.actividades) {
-            console.log('Actividades de la sesión:', sesion.actividades);
             this.actividadesOriginales = [...sesion.actividades];
+            // Convertir fechas a objetos Date en UTC
+            this.actividadesOriginales.forEach(actividad => {
+              if (actividad.fechaInicio) {
+                actividad.fechaInicio = this.parseUTCDate(actividad.fechaInicio as string);
+                console.log('FechaInicio convertida (alumno):', actividad.fechaInicio);
+              }
+              if (actividad.fechaFin) {
+                actividad.fechaFin = this.parseUTCDate(actividad.fechaFin as string);
+                console.log('FechaFin convertida (alumno):', actividad.fechaFin);
+              }
+            });
             this.actividadesActuales = [...sesion.actividades];
-            console.log('this.actividadesOriginales después de asignar:', this.actividadesOriginales);
             this.actualizarActividadesActuales();
           } else {
             throw new Error('Sesión no encontrada');
@@ -186,7 +213,14 @@ export class CampusActividadesComponent implements OnInit {
     } catch (error) {
       console.error('Error al obtener actividades:', error);
       this.notificationService.showNotification('Error al obtener actividades', 'error');
+    } finally {
+      this.isLoading = false; // Deactivate spinner
     }
+  }
+
+  parseUTCDate(dateString: string): Date {
+    const utcDateString = dateString.replace(' ', 'T') + 'Z';
+    return new Date(utcDateString);
   }
 
   async subirTarea(): Promise<void> {
@@ -341,9 +375,9 @@ export class CampusActividadesComponent implements OnInit {
     ) {
       this.contenidoActual = null;
     } else {
-      const esVideo = this.esVideo(actividad.actividadUrl!);
+      const tipoArchivo = this.getFileType(actividad.actividadUrl!);
       this.contenidoActual = {
-        tipo: esVideo ? 'video' : 'pdf',
+        tipo: tipoArchivo,
         url: actividad.actividadUrl!,
         actividad: actividad
       };
@@ -352,12 +386,22 @@ export class CampusActividadesComponent implements OnInit {
   }
 
   esVideo(url: string): boolean {
-    const videoExtensions = ['.mp4', '.webm', '.avi', '.mov'];
-    const videoDomains = ['youtube.com', 'vimeo.com'];
-    return (
-      videoExtensions.some(ext => url.toLowerCase().includes(ext)) ||
-      videoDomains.some(domain => url.toLowerCase().includes(domain))
-    );
+    const videoExtensions = ['.mp4', '.avi', '.mov'];
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  }
+
+  getFileType(url: string): 'pdf' | 'video' | 'text' | 'docx' {
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes('.pdf')) {
+      return 'pdf';
+    } else if (this.esVideo(lowerUrl)) {
+      return 'video';
+    } else if (lowerUrl.includes('.txt')) {
+      return 'text';
+    } else if (lowerUrl.includes('.docx')) {
+      return 'docx';
+    }
+    return 'pdf'; // Valor por defecto
   }
 
   getFileNameFromUrl(url: string): string {

@@ -1,127 +1,156 @@
 <section class="container px-4 mx-auto">
-    <div class="mt-6 md:flex md:items-center md:justify-between">
-      <div>
-        <div class="flex items-center gap-x-3">
-          <h2 class="text-lg font-medium text-gray-800 dark:text-white">Cursos</h2>
-          <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400"
-            >+ 30 Cursos</span
-          >
-        </div>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">Distribuidos a todo el nivel secundario</p>
-      </div>
-      <button
-        (click)="openAddModal()"
-        class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
-      >
-        <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-        <span>Agregar</span>
-      </button>
-  
-      <div class="relative flex items-center mt-4 md:mt-0">
-        <span class="absolute">
-          <fa-icon
-            [icon]="['fas', 'magnifying-glass']"
-            class="w-5 h-5 mx-3 text-gray-400 dark:text-gray-600"
-          ></fa-icon>
+  <div class="mt-6 md:flex md:items-center md:justify-between">
+    <div>
+      <div class="flex items-center gap-x-3">
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Cursos</h2>
+        <span
+          class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400"
+        >
+          {{ totalCursos }} Cursos
         </span>
-        <input
-          [(ngModel)]="keyword"
-          (ngModelChange)="buscarCursos()"
-          type="text"
-          placeholder="Search"
-          class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40"
-        />
       </div>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">
+        Distribuidos a todo el nivel educativo
+      </p>
     </div>
-  
-    <!-- Tabla de cursos -->
-    <div class="flex flex-col mt-6">
-      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-          <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead class="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  <th class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400">Nombre</th>
-                  <th class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400">Descripción</th>
-                  <th class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400">Grado</th>
-                  <th class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400">Fecha de Creación</th>
-                  <th class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400">Fecha Actualización</th>
-                  <th class="relative py-3.5 px-4">
-                    <span class="sr-only">Acciones</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                
-                class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900"
+    <button
+      (click)="openAddModal()"
+      class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+    >
+      <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+      <span>Agregar</span>
+    </button>
+
+    <div class="relative flex items-center mt-4 md:mt-0">
+      <span class="absolute">
+        <fa-icon
+          [icon]="['fas', 'magnifying-glass']"
+          class="w-5 h-5 mx-3 text-gray-400 dark:text-gray-600"
+        ></fa-icon>
+      </span>
+      <input
+        [(ngModel)]="keyword"
+        (ngModelChange)="buscarCursos()"
+        type="text"
+        placeholder="Search"
+        class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40"
+      />
+    </div>
+  </div>
+
+  <!-- Tabla de cursos -->
+  <div class="flex flex-col mt-6">
+    <div class="table-container">
+      <div class="min-w-full py-2 align-middle">
+        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th
+                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                >
+                  Nombre
+                </th>
+                <th
+                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                >
+                  Descripción
+                </th>
+                <th
+                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                >
+                  Abreviatura
+                </th>
+                <th
+                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                >
+                  Fecha de Creación
+                </th>
+                <th
+                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                >
+                  Fecha Actualización
+                </th>
+                <th class="relative py-3.5 px-4">
+                  <span class="sr-only">Acciones</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900"
+            >
+              <tr
+                *ngFor="let curso of cursos | paginate: { itemsPerPage: itemsPerPage, currentPage: page, totalItems: totalCursos }"
               >
-                <tr *ngFor="let curso of cursos | paginate: { itemsPerPage: 12, currentPage: page }">
-                  <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">{{ curso.nombre }}</td>
-                  <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">{{ curso.descripcion }}</td>
-                  <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">{{ curso.grado }}</td>
-                  <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">{{ curso.fechaCreacion }}</td>
-                  <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">{{ curso.fechaActualizacion }}</td>
-                  <td class="px-4 py-4 text-sm whitespace-nowrap">
-                    <div class="flex items-center gap-x-6">
-                      <button (click)="openEditModal(curso)" class="text-gray-500 hover:text-yellow-500">
-                        <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
-                      </button>
-                      <button (click)="eliminarCurso(curso.idCurso!)" class="text-gray-500 hover:text-red-500">
-                        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                <td
+                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                >
+                  {{ curso.nombre }}
+                </td>
+                <td
+                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                >
+                  {{ curso.descripcion }}
+                </td>
+                <td
+                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                >
+                  {{ curso.abreviatura }}
+                </td>
+                <td
+                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                >
+                  {{ curso.fechaCreacion | date: 'yyyy-MM-dd HH:mm' }}
+                </td>
+                <td
+                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                >
+                  {{ curso.fechaActualizacion | date: 'yyyy-MM-dd HH:mm' }}
+                </td>
+                <td class="px-4 py-4 text-sm whitespace-nowrap">
+                  <div class="flex items-center gap-x-6">
+                    <button
+                      (click)="openEditModal(curso)"
+                      class="text-gray-500 hover:text-yellow-500"
+                    >
+                      <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
+                    </button>
+                    <button
+                      (click)="eliminarCurso(curso.idCurso!)"
+                      class="text-gray-500 hover:text-red-500"
+                    >
+                      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  
-    <!-- Paginación -->
-    <div class="mt-6 sm:flex sm:items-center sm:justify-between">
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        Página <span class="font-medium text-gray-700 dark:text-gray-100">{{ page }} de {{ totalPages }}</span>
-      </div>
-      <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-        <button
-          (click)="previousPage()"
-          [disabled]="page === 1"
-          class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-5 h-5 rtl:-scale-x-100"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
-          </svg>
-          <span>Anterior</span>
-        </button>
-        <button
-          (click)="nextPage()"
-          [disabled]="page === totalPages"
-          class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span>Siguiente</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-5 h-5 rtl:-scale-x-100"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
-          </svg>
-        </button>
-      </div>
+  </div>
+
+  <!-- Paginación -->
+  <div class="mt-6 sm:flex sm:items-center sm:justify-between">
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+      Página
+      <span class="font-medium text-gray-700 dark:text-gray-100"
+        >{{ page }} de {{ totalPages }}</span
+      >
     </div>
-    <!-- Componente de notificaciones -->
+    <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
+      <pagination-controls
+        (pageChange)="onPageChange($event)"
+        [maxSize]="7"
+        [directionLinks]="true"
+        [autoHide]="true"
+        [responsive]="true"
+        previousLabel="Anterior"
+        nextLabel="Siguiente"
+      ></pagination-controls>
+    </div>
+  </div>
+  <!-- Componente de notificaciones -->
   <app-notification></app-notification>
-  </section>
+</section>

@@ -20,6 +20,23 @@
           class="bg-gray-800 dark:bg-gray-800 border-gray-700 dark:border-gray-700"
         ></textarea>
       </mat-form-field>
+
+      <!-- Campo de fecha asignada -->
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label class="text-gray-400 dark:text-gray-400">Fecha Asignada</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          formControlName="fechaAsignada"
+          required
+          class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="sesionForm.get('fechaAsignada')?.hasError('required')">
+          La fecha asignada es obligatoria
+        </mat-error>
+      </mat-form-field>
     </div>
     <div class="flex justify-end space-x-2 mt-4">
       <button

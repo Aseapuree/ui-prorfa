@@ -2,7 +2,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CourseService } from '../../../../services/course.service';
-import { Curso } from '../../../../interface/Curso';
+import { Curso } from '../../../../interface/curso';
 import { CommonModule } from '@angular/common';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -25,14 +25,16 @@ import { NotificationService } from '../../../shared/notificaciones/notification
 })
 export class CampusCursosComponent {
   public page: number = 1;
-  totalPages: number = 2; // Inicializamos en 0 y lo calcularemos dinámicamente
+  public itemsPerPage: number = 12;
+  totalPages: number = 1;
   cursos: Curso[] = [];
   keyword: string = '';
+  totalCursos: number = 0;
 
   constructor(
     private modalService: ModalService,
     private courseService: CourseService,
-    private dialog: MatDialog, 
+    private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private notificationService: NotificationService
   ) {}
@@ -41,39 +43,66 @@ export class CampusCursosComponent {
   private readonly _courseSVC = inject(CourseService);
 
   ngOnInit(): void {
+    this.cargarConteoCursos();
     this.cargarCursos();
   }
-  
 
-  previousPage() {
-    if (this.page > 1) {
-      this.page--;
-    }
-  }
-  
-  nextPage() {
-    if (this.page < this.totalPages) {
-      this.page++;
-    }
+  cargarConteoCursos(): void {
+    this.courseService.obtenerConteoCursos().subscribe({
+      next: (count) => {
+        this.totalCursos = count;
+        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.totalCursos = 0;
+        this.notificationService.showNotification(
+          'Error al cargar el conteo de cursos: ' + err.message,
+          'error'
+        );
+        console.error('Error al cargar conteo:', err);
+      },
+    });
   }
 
-   // Hacer funcionar el
-   cargarCursos(): void {
-    this.courseService.obtenerListaCursos().subscribe({
-      next: (cursos) => {
-        this.cursos = cursos || [];
-        this.totalPages = Math.ceil(this.cursos.length / 12);
+  cargarCursos(): void {
+    this.courseService.obtenerListaCursos(this.page, this.itemsPerPage).subscribe({
+      next: (response) => {
+        this.cursos = response.content || [];
+        this.totalCursos = response.totalElements;
+        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.cursos = [];
-        this.totalPages = 0;
-        this.notificationService.showNotification('Error al cargar cursos', 'error');
+        this.totalPages = 1;
+        this.notificationService.showNotification(
+          'Error al cargar cursos: ' + err.message,
+          'error'
+        );
         this.cdr.detectChanges();
       },
     });
   }
 
+  previousPage() {
+    if (this.page > 1) {
+      this.page--;
+      this.cargarCursos();
+    }
+  }
+
+  nextPage() {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.cargarCursos();
+    }
+  }
+
+  onPageChange(page: number) {
+    this.page = page;
+    this.cargarCursos();
+  }
 
   openAddModal(): void {
     const dialogRef = this.dialog.open(ModalComponent, {
@@ -81,33 +110,24 @@ export class CampusCursosComponent {
       data: { isEditing: false },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        const nuevoCurso: Curso = {
-          nombre: result.nombre,
-          descripcion: result.descripcion,
-          grado: result.grado,
-        };
-
-        this.courseService.agregarCurso(nuevoCurso).subscribe({
-          next: (cursoAgregado) => {
-            this.cursos.push(cursoAgregado); // Agregar el nuevo curso a la lista localmente
-            this.totalPages = Math.ceil(this.cursos.length / 12);
-            this.notificationService.showNotification('Curso agregado con éxito', 'success');
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            this.notificationService.showNotification('Error al agregar curso', 'error');
-            console.error('Error al agregar curso:', err);
-          },
-        });
+    dialogRef.afterClosed().subscribe((cursoAgregado: Curso) => {
+      if (cursoAgregado) {
+        this.cargarCursos();
+        this.cargarConteoCursos();
+        this.notificationService.showNotification(
+          'Curso agregado con éxito',
+          'success'
+        );
       }
     });
   }
-  
+
   openEditModal(curso: Curso): void {
     if (!curso.idCurso) {
-      this.notificationService.showNotification('El curso no tiene un ID válido', 'error');
+      this.notificationService.showNotification(
+        'El curso no tiene un ID válido',
+        'error'
+      );
       return;
     }
 
@@ -116,24 +136,14 @@ export class CampusCursosComponent {
       data: { ...curso, isEditing: true },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        const cursoEditado: Partial<Curso> = {
-          nombre: result.nombre,
-          descripcion: result.descripcion,
-          grado: result.grado,
-        };
-
-        this.courseService.actualizarCurso(curso.idCurso!, cursoEditado).subscribe({
-          next: () => {
-            this.cargarCursos(); // Recargar la lista de cursos
-            this.notificationService.showNotification('Curso actualizado con éxito', 'success');
-          },
-          error: (err) => {
-            this.notificationService.showNotification('Error al actualizar curso', 'error');
-            console.error('Error al actualizar curso:', err);
-          },
-        });
+    dialogRef.afterClosed().subscribe((cursoActualizado: Curso) => {
+      if (cursoActualizado) {
+        this.cargarCursos();
+        this.cargarConteoCursos();
+        this.notificationService.showNotification(
+          'Curso actualizado con éxito',
+          'success'
+        );
       }
     });
   }
@@ -150,36 +160,44 @@ export class CampusCursosComponent {
         this.courseService.eliminarCurso(idCurso).subscribe({
           next: () => {
             this.cargarCursos();
-            this.notificationService.showNotification('Curso eliminado con éxito', 'error'); // Rojo para eliminación
+            this.cargarConteoCursos();
+            this.notificationService.showNotification(
+              'Curso eliminado con éxito',
+              'success'
+            );
           },
           error: (err) => {
-            this.notificationService.showNotification('Error al eliminar curso', 'error');
+            this.notificationService.showNotification(
+              'Error al eliminar curso: ' + err.message,
+              'error'
+            );
             console.error('Error al eliminar curso:', err);
           },
         });
       }
     });
   }
-   
-  
+
   buscarCursos() {
     if (!this.keyword.trim()) {
-      this.cargarCursos(); // Si no hay keyword, cargar todos los cursos
+      this.cargarCursos();
       return;
     }
 
     this.courseService.buscarCursos(this.keyword).subscribe({
       next: (resultado) => {
         this.cursos = resultado;
-        this.totalPages = Math.ceil(this.cursos.length / 12);
+        this.totalPages = Math.ceil(this.cursos.length / this.itemsPerPage);
         this.page = 1;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.notificationService.showNotification('Error al buscar cursos', 'error');
+        this.notificationService.showNotification(
+          'Error al buscar cursos: ' + err.message,
+          'error'
+        );
         console.error('Error en la búsqueda:', err);
       },
     });
   }
-  
 }
