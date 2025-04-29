@@ -8,6 +8,9 @@ export interface UserInfo {
   rol?: string;
   username?: string;
   fechaCreacion?: string;
+  nombre?: string; // Agregar nombre
+  apellidoPaterno?: string; // Agregar apellidoPaterno
+  apellidoMaterno?: string; // Agregar apellidoMaterno
 }
 
 // Interfaz para la respuesta completa

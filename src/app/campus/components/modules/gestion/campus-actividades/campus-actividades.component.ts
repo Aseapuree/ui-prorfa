@@ -19,18 +19,17 @@ import { AsistenciaComponent } from '../../../../../general/components/asistenci
 import { Actividad } from '../../../../interface/AlumnoCurso';
 import { NotasService } from '../../../../services/notas.service';
 import { DTONota, AlumnoNotas, ActividadNota } from '../../../../interface/DTONota';
-import { FormsModule } from '@angular/forms'; // Importar FormsModule para usar ngModel
+import { FormsModule } from '@angular/forms';
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
-// Interfaz para los alumnos
 interface Alumno {
   idAlumno: string;
   nombre: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
-  nota?: number; // Campo para almacenar la nota ingresada
-  comentario?: string; // Campo para almacenar el comentario
+  nota?: number;
+  comentario?: string;
 }
 
 @Component({
@@ -45,7 +44,7 @@ interface Alumno {
     FontAwesomeModule,
     NotificationComponent,
     AsistenciaComponent,
-    FormsModule // Añadir FormsModule para usar ngModel
+    FormsModule
   ],
   templateUrl: './campus-actividades.component.html',
   styleUrls: ['./campus-actividades.component.scss']
@@ -84,6 +83,9 @@ export class CampusActividadesComponent implements OnInit {
   actividadConNotasAbierta: string | null | undefined = null;
   alumnoConTareaAbierta: string | null = null;
 
+  // Nueva propiedad para almacenar el nombre completo del usuario autenticado
+  private nombreCompletoUsuario: string | null = null;
+
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   private readonly DRIVE_FOLDER_ID = '1NCETkDrcpY4fAPeay_5kd17OjEJCnqwM';
@@ -104,7 +106,16 @@ export class CampusActividadesComponent implements OnInit {
     try {
       const userData: UserData = await lastValueFrom(this.validateService.getUserData());
       this.rolUsuario = userData?.data?.rol || null;
-      console.log('Rol del usuario:', this.rolUsuario);
+      console.log('Datos completos del usuario (userData):', userData);
+
+      // Intentar obtener el nombre completo del usuario autenticado
+      if (userData?.data?.nombre && userData?.data?.apellidoPaterno && userData?.data?.apellidoMaterno) {
+        this.nombreCompletoUsuario = `${userData.data.nombre} ${userData.data.apellidoPaterno} ${userData.data.apellidoMaterno}`;
+      } else {
+        // Si no está disponible en userData, usar un valor temporal
+        this.nombreCompletoUsuario = 'Joiser Monsalve Salazar';
+      }
+      console.log('Nombre completo del usuario:', this.nombreCompletoUsuario);
 
       this.route.paramMap.subscribe(async params => {
         this.idSesion = params.get('idSesion') || '';
@@ -177,6 +188,75 @@ export class CampusActividadesComponent implements OnInit {
       this.notificationService.showNotification('Error al obtener actividades', 'error');
     }
   }
+
+  async subirTarea(): Promise<void> {
+    if (this.rolUsuario !== 'Alumno') {
+      this.notificationService.showNotification('Acción no permitida para este rol', 'error');
+      return;
+    }
+
+    if (!this.contenidoActual || !this.contenidoActual.actividad.idActividad) {
+      this.notificationService.showNotification('Por favor, selecciona una actividad primero', 'error');
+      return;
+    }
+
+    const fileList: FileList | null = this.fileInput.nativeElement.files;
+    if (!fileList || fileList.length === 0) {
+      this.notificationService.showNotification('Por favor, selecciona un archivo', 'error');
+      return;
+    }
+
+    const archivo: File = fileList[0];
+    console.log('Archivo seleccionado:', archivo.name);
+
+    const allowedExtensions = ['pdf', 'mp4', 'avi', 'mov'];
+    const extension = archivo.name.split('.').pop()?.toLowerCase();
+    if (!extension || !allowedExtensions.includes(extension)) {
+      this.notificationService.showNotification('Solo se permiten archivos PDF, MP4, AVI o MOV', 'error');
+      return;
+    }
+
+    this.isUploading = true;
+    this.cdr.detectChanges();
+
+    try {
+      const urlArchivo = await lastValueFrom(
+        this.notasService.subirArchivoDrive(archivo, this.DRIVE_FOLDER_ID)
+      );
+      console.log('URL del archivo subido:', urlArchivo);
+
+      // Obtener el idAlumno usando el nombre completo del usuario
+      if (!this.nombreCompletoUsuario) {
+        throw new Error('No se encontró el nombre completo del usuario autenticado');
+      }
+      const idAlumno = await lastValueFrom(
+        this.notasService.obtenerIdAlumnoPorNombre(this.nombreCompletoUsuario)
+      );
+      console.log('idAlumno obtenido:', idAlumno);
+
+      const nota: DTONota = {
+        idalumano: idAlumno, // Usar el idAlumno correcto
+        idactividad: this.contenidoActual.actividad.idActividad,
+        idSesion: this.idSesion,
+        notatareaurl: urlArchivo
+      };
+
+      const response = await lastValueFrom(this.notasService.registrarNota(nota));
+      console.log('Respuesta del servidor al registrar la nota:', response);
+
+      this.notificationService.showNotification('Tarea registrada con éxito', 'success');
+      this.fileInput.nativeElement.value = '';
+    } catch (error: any) {
+      console.error('Error completo:', error);
+      const errorMessage = error.message || 'Error al registrar la tarea';
+      this.notificationService.showNotification(errorMessage, 'error');
+    } finally {
+      this.isUploading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // ... resto del código sin cambios ...
 
   seleccionarActividad(tipo: TipoActividad): void {
     console.log('Seleccionando actividad:', tipo);
@@ -402,69 +482,6 @@ export class CampusActividadesComponent implements OnInit {
     }
   }
 
-  async subirTarea(): Promise<void> {
-    if (this.rolUsuario !== 'Alumno') {
-      this.notificationService.showNotification('Acción no permitida para este rol', 'error');
-      return;
-    }
-
-    if (!this.contenidoActual || !this.contenidoActual.actividad.idActividad) {
-      this.notificationService.showNotification('Por favor, selecciona una actividad primero', 'error');
-      return;
-    }
-
-    const fileList: FileList | null = this.fileInput.nativeElement.files;
-    if (!fileList || fileList.length === 0) {
-      this.notificationService.showNotification('Por favor, selecciona un archivo', 'error');
-      return;
-    }
-
-    const archivo: File = fileList[0];
-    console.log('Archivo seleccionado:', archivo.name);
-
-    const allowedExtensions = ['pdf', 'mp4', 'avi', 'mov'];
-    const extension = archivo.name.split('.').pop()?.toLowerCase();
-    if (!extension || !allowedExtensions.includes(extension)) {
-      this.notificationService.showNotification('Solo se permiten archivos PDF, MP4, AVI o MOV', 'error');
-      return;
-    }
-
-    this.isUploading = true;
-    this.cdr.detectChanges();
-
-    try {
-      const urlArchivo = await lastValueFrom(
-        this.notasService.subirArchivoDrive(archivo, this.DRIVE_FOLDER_ID)
-      );
-      console.log('URL del archivo subido:', urlArchivo);
-
-      const idAuth = localStorage.getItem('idAuth');
-      if (!idAuth) {
-        throw new Error('No se encontró el ID del usuario autenticado');
-      }
-
-      const nota: DTONota = {
-        idalumano: idAuth,
-        idactividad: this.contenidoActual.actividad.idActividad,
-        idSesion: this.idSesion,
-        notatareaurl: urlArchivo
-      };
-
-      const response = await lastValueFrom(this.notasService.registrarNota(nota));
-      console.log('Respuesta del servidor al registrar la nota:', response);
-
-      this.notificationService.showNotification('Tarea registrada con éxito', 'success');
-      this.fileInput.nativeElement.value = '';
-    } catch (error: any) {
-      console.error('Error completo:', error);
-      const errorMessage = error.message || 'Error al registrar la tarea';
-      this.notificationService.showNotification(errorMessage, 'error');
-    } finally {
-      this.isUploading = false;
-      this.cdr.detectChanges();
-    }
-  }
-
   async guardarNotas(): Promise<void> {
     if (this.rolUsuario !== 'Profesor') {
       this.notificationService.showNotification('Acción no permitida para este rol', 'error');
@@ -476,7 +493,6 @@ export class CampusActividadesComponent implements OnInit {
       return;
     }
 
-    // Validar que haya al menos una nota ingresada
     const alumnosConNotas = this.alumnos.filter(alumno => alumno.nota !== undefined && alumno.nota >= 0 && alumno.nota <= 20);
     if (alumnosConNotas.length === 0) {
       this.notificationService.showNotification('Por favor, ingresa al menos una nota válida (0-20)', 'error');
@@ -489,7 +505,6 @@ export class CampusActividadesComponent implements OnInit {
         throw new Error('No se encontró el ID del usuario autenticado');
       }
 
-      // Preparar la lista de AlumnoNotas
       const notas: AlumnoNotas[] = alumnosConNotas.map(alumno => ({
         idAlumno: alumno.idAlumno,
         actividades: [
@@ -500,13 +515,12 @@ export class CampusActividadesComponent implements OnInit {
         ]
       }));
 
-      // Preparar el payload DTONota para el profesor
       const dtoNota: DTONota = {
         idSesion: this.idSesion,
         idCurso: this.idCurso || undefined,
-        grado: '1', // Estos valores deben venir del contexto real (puedes obtenerlos de la sesión o curso)
-        seccion: 'A', // Ajusta según el contexto
-        nivel: 'Primaria', // Ajusta según el contexto
+        grado: '1',
+        seccion: 'A',
+        nivel: 'Primaria',
         usuarioCreacion: idAuth,
         notas: notas
       };
@@ -515,10 +529,10 @@ export class CampusActividadesComponent implements OnInit {
       console.log('Respuesta del servidor al registrar las notas:', response);
 
       this.notificationService.showNotification('Notas registradas con éxito', 'success');
-      this.actividadConNotasAbierta = null; // Cerrar el panel de notas
+      this.actividadConNotasAbierta = null;
       this.alumnos.forEach(alumno => {
-        alumno.nota = undefined; // Limpiar las notas ingresadas
-        alumno.comentario = ''; // Limpiar los comentarios
+        alumno.nota = undefined;
+        alumno.comentario = '';
       });
     } catch (error: any) {
       console.error('Error al registrar las notas:', error);
