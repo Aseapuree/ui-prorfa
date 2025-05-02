@@ -13,23 +13,31 @@ import { ModalService } from '../../modals/modal/modal.service';
 import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/dialogo-confirmacion.component';
 import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
+import { PaginationComponent } from '../../../../../general/components/pagination/pagination.component';
+import { TooltipComponent } from '../../../../../general/components/tooltip/tooltip.component';
+import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 
 
 @Component({
   selector: 'app-campus-cursos',
   standalone: true,
-  imports: [RouterModule, HttpClientModule,CommonModule, NgxPaginationModule, FontAwesomeModule, FormsModule,NotificationComponent],
+  imports: [RouterModule,GeneralLoadingSpinnerComponent,TooltipComponent,PaginationComponent, HttpClientModule,CommonModule, NgxPaginationModule, FontAwesomeModule, FormsModule,NotificationComponent],
   providers: [CourseService],
   templateUrl: './campus-cursos.component.html',
   styleUrl: './campus-cursos.component.scss'
 })
 export class CampusCursosComponent {
   public page: number = 1;
-  public itemsPerPage: number = 12;
+  public itemsPerPage: number = 6;
   totalPages: number = 1;
   cursos: Curso[] = [];
   keyword: string = '';
   totalCursos: number = 0;
+  private lastValidKeyword: string = '';
+  sortBy: string = 'fechaCreacion';
+  sortDir: string = 'asc';
+  isLoading: boolean = false;
+  
 
   constructor(
     private modalService: ModalService,
@@ -42,8 +50,79 @@ export class CampusCursosComponent {
   private readonly _dialog = inject(MatDialog);
   private readonly _courseSVC = inject(CourseService);
 
+
   ngOnInit(): void {
     this.cargarConteoCursos();
+    this.cargarCursos();
+  }
+
+  // Validar si el keyword cumple con el regex (para búsqueda)
+  isKeywordValid(): boolean {
+    if (!this.keyword) return true; // Permitir campo vacío
+    const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+)*$/;
+    return regex.test(this.keyword.trim());
+  }
+
+  // Manejar la entrada del usuario
+  onInputChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let newValue = input.value;
+
+    // Bloquear espacios al inicio
+    if (newValue.startsWith(' ')) {
+      input.value = this.lastValidKeyword;
+      this.keyword = this.lastValidKeyword;
+      this.notificationService.showNotification(
+        'No se permiten espacios al inicio.',
+        'info'
+      );
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Normalizar el valor: reemplazar múltiples espacios por un solo espacio
+    newValue = newValue.replace(/\s+/g, ' ');
+
+    // Si el valor está vacío, permitirlo
+    if (newValue === '') {
+      this.keyword = '';
+      this.lastValidKeyword = '';
+      input.value = '';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Permitir un espacio después de una palabra como estado intermedio
+    const intermediateRegex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)*$/;
+    if (!intermediateRegex.test(newValue)) {
+      // Restaurar el último valor válido
+      input.value = this.lastValidKeyword;
+      this.keyword = this.lastValidKeyword;
+      this.notificationService.showNotification(
+        'Solo se permiten letras, números, acentos, ñ y un solo espacio entre palabras.',
+        'info'
+      );
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Si el valor es válido, actualizar keyword y lastValidKeyword
+    this.keyword = newValue;
+    this.lastValidKeyword = newValue.trim(); // Guardar versión sin espacio final
+    input.value = this.keyword; // Asegurar que el input refleja el valor válido
+    this.cdr.detectChanges();
+  }
+
+  cambiarOrdenamiento(columna: string): void {
+    if (this.sortBy === columna) {
+      // Cambiar dirección si es la misma columna
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      // Establecer nueva columna y dirección ascendente por defecto
+      this.sortBy = columna;
+      this.sortDir = 'asc';
+    }
+    this.page = 1; // Reiniciar a la primera página
     this.cargarCursos();
   }
 
@@ -66,12 +145,14 @@ export class CampusCursosComponent {
   }
 
   cargarCursos(): void {
-    this.courseService.obtenerListaCursos(this.page, this.itemsPerPage).subscribe({
+    this.isLoading = true;
+    this.courseService.obtenerListaCursos(this.page, this.itemsPerPage, this.sortBy, this.sortDir).subscribe({
       next: (response) => {
         this.cursos = response.content || [];
         this.totalCursos = response.totalElements;
         this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
         this.cdr.detectChanges();
+        this.isLoading = false;
       },
       error: (err) => {
         this.cursos = [];
@@ -81,22 +162,9 @@ export class CampusCursosComponent {
           'error'
         );
         this.cdr.detectChanges();
+        this.isLoading = false;
       },
     });
-  }
-
-  previousPage() {
-    if (this.page > 1) {
-      this.page--;
-      this.cargarCursos();
-    }
-  }
-
-  nextPage() {
-    if (this.page < this.totalPages) {
-      this.page++;
-      this.cargarCursos();
-    }
   }
 
   onPageChange(page: number) {
@@ -178,13 +246,24 @@ export class CampusCursosComponent {
     });
   }
 
-  buscarCursos() {
+  buscarCursos(): void {
+    // No realizar búsqueda si el keyword no es válido
+    if (!this.isKeywordValid()) {
+      this.notificationService.showNotification(
+        'El término de búsqueda no es válido. Use solo letras, números, acentos, ñ y un solo espacio entre palabras.',
+        'info'
+      );
+      return;
+    }
+
+    // Si el keyword está vacío, cargar todos los cursos
     if (!this.keyword.trim()) {
       this.cargarCursos();
       return;
     }
 
-    this.courseService.buscarCursos(this.keyword).subscribe({
+    // Realizar la búsqueda
+    this.courseService.buscarCursos(this.keyword.trim()).subscribe({
       next: (resultado) => {
         this.cursos = resultado;
         this.totalPages = Math.ceil(this.cursos.length / this.itemsPerPage);

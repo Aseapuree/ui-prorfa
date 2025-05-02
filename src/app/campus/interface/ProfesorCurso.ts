@@ -21,4 +21,5 @@ export class ProfesorCurso {
     seccion?: string;
     nivel?: string;
     fechaAsignacion?: Date;
+    fechaActualizacion?: Date;
 }

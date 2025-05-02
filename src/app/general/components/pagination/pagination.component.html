@@ -1,0 +1,88 @@
+<div class="mt-6 sm:flex sm:items-center sm:justify-between">
+  <div class="text-sm text-gray-500 dark:text-gray-400">
+    Página
+    <span class="font-medium text-gray-700 dark:text-gray-100">{{ page }} de {{ totalPages }}</span>
+  </div>
+  <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
+    <div class="flex">
+      <!-- Botón Anterior -->
+      <button
+        (click)="onPageChange(page - 1)"
+        class="flex items-center justify-center px-4 py-2 mx-1 text-gray-500 capitalize bg-white rounded-md rtl:-scale-x-100 dark:bg-gray-800 dark:text-gray-200 transition-colors duration-300"
+        [ngClass]="{
+          'cursor-not-allowed opacity-50': page === 1,
+          'hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 dark:hover:text-gray-200': page !== 1
+        }"
+        [disabled]="page === 1"
+        aria-label="Página anterior"
+      >
+        <fa-icon [icon]="['fas', 'arrow-left']" class="w-5 h-5"></fa-icon>
+      </button>
+
+      <!-- Primera Página -->
+      <button
+        *ngIf="shouldShowEllipsisBefore()"
+        (click)="onPageChange(1)"
+        class="hidden px-4 py-2 mx-1 text-gray-700 transition-colors duration-300 transform bg-white rounded-md sm:inline dark:bg-gray-800 dark:text-gray-200 hover:bg-blue-500 dark:hover:bg-blue-500 hover:text-white dark:hover:text-gray-200"
+        aria-label="Página 1"
+      >
+        1
+      </button>
+
+      <!-- Puntos Suspensivos Antes -->
+      <span
+        *ngIf="shouldShowEllipsisBefore()"
+        class="hidden px-4 py-2 mx-1 text-gray-700 bg-white rounded-md sm:inline dark:bg-gray-800 dark:text-gray-200"
+      >
+        ...
+      </span>
+
+      <!-- Números de Página -->
+      <button
+        *ngFor="let p of pagesToShow"
+        (click)="onPageChange(p)"
+        class="hidden px-4 py-2 mx-1 transition-colors duration-300 transform bg-white rounded-md sm:inline dark:bg-gray-800 dark:text-gray-200 hover:bg-blue-500 dark:hover:bg-blue-500 hover:text-white dark:hover:text-gray-200"
+        [ngClass]="{
+          'text-gray-700': p !== page,
+          'bg-blue-500 text-white': p === page
+        }"
+        [attr.aria-current]="p === page ? 'page' : null"
+        [attr.aria-label]="'Página ' + p"
+      >
+        {{ p }}
+      </button>
+
+      <!-- Puntos Suspensivos Después -->
+      <span
+        *ngIf="shouldShowEllipsisAfter()"
+        class="hidden px-4 py-2 mx-1 text-gray-700 bg-white rounded-md sm:inline dark:bg-gray-800 dark:text-gray-200"
+      >
+        ...
+      </span>
+
+      <!-- Última Página -->
+      <button
+        *ngIf="shouldShowEllipsisAfter()"
+        (click)="onPageChange(totalPages)"
+        class="hidden px-4 py-2 mx-1 text-gray-700 transition-colors duration-300 transform bg-white rounded-md sm:inline dark:bg-gray-800 dark:text-gray-200 hover:bg-blue-500 dark:hover:bg-blue-500 hover:text-white dark:hover:text-gray-200"
+        [attr.aria-label]="'Página ' + totalPages"
+      >
+        {{ totalPages }}
+      </button>
+
+      <!-- Botón Siguiente -->
+      <button
+        (click)="onPageChange(page + 1)"
+        class="flex items-center justify-center px-4 py-2 mx-1 text-gray-700 capitalize bg-white rounded-md rtl:-scale-x-100 dark:bg-gray-800 dark:text-gray-200 transition-colors duration-300"
+        [ngClass]="{
+          'cursor-not-allowed opacity-50': page === totalPages,
+          'hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 dark:hover:text-gray-200': page !== totalPages
+        }"
+        [disabled]="page === totalPages"
+        aria-label="Página siguiente"
+      >
+        <fa-icon [icon]="['fas', 'arrow-right']" class="w-5 h-5"></fa-icon>
+      </button>
+    </div>
+  </div>
+</div>

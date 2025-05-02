@@ -1,4 +1,6 @@
 <section class="container px-4 mx-auto">
+  <!-- Spinner de carga -->
+  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando cursos...'"></app-general-loading-spinner>
   <div class="mt-6 md:flex md:items-center md:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
@@ -13,66 +15,105 @@
         Distribuidos a todo el nivel educativo
       </p>
     </div>
-    <button
-      (click)="openAddModal()"
-      class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
-    >
-      <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-      <span>Agregar</span>
-    </button>
+    <app-tooltip tooltipText="Agregar un nuevo curso">
+      <button
+        (click)="openAddModal()"
+        class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+      >
+        <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+        <span>Agregar</span>
+      </button>
+    </app-tooltip>
 
     <div class="relative flex items-center mt-4 md:mt-0">
-      <span class="absolute">
-        <fa-icon
-          [icon]="['fas', 'magnifying-glass']"
-          class="w-5 h-5 mx-3 text-gray-400 dark:text-gray-600"
-        ></fa-icon>
-      </span>
       <input
         [(ngModel)]="keyword"
-        (ngModelChange)="buscarCursos()"
+        (input)="onInputChange($event)"
+        (keyup.enter)="buscarCursos()"
         type="text"
-        placeholder="Search"
-        class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40"
+        placeholder="Buscar cursos..."
+        class="block w-full py-1.5 pr-10 pl-4 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40"
       />
+      <span
+        (click)="buscarCursos()"
+        [class.cursor-not-allowed]="!isKeywordValid()"
+        [class.text-gray-400]="isKeywordValid()"
+        [class.text-gray-600]="!isKeywordValid()"
+        class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer hover:text-blue-600 dark:text-gray-600 dark:hover:text-blue-300"
+      >
+        <fa-icon [icon]="['fas', 'magnifying-glass']" class="w-5 h-5"></fa-icon>
+      </span>
     </div>
   </div>
 
   <!-- Tabla de cursos -->
+  <!-- Tabla de cursos -->
   <div class="flex flex-col mt-6">
-    <div class="table-container">
-      <div class="min-w-full py-2 align-middle">
+    <div class="overflow-x-auto shadow-sm">
+      <div class="inline-block min-w-full py-2 align-middle">
         <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <table class="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th
-                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[150px]"
+                  (click)="cambiarOrdenamiento('nombre')"
                 >
-                  Nombre
+                  <div class="flex items-center">
+                    Nombre
+                    <fa-icon
+                      [icon]="sortBy === 'nombre' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
                 </th>
                 <th
-                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[200px]"
+                  (click)="cambiarOrdenamiento('descripcion')"
                 >
-                  Descripción
+                  <div class="flex items-center">
+                    Descripción
+                    <fa-icon
+                      [icon]="sortBy === 'descripcion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
                 </th>
                 <th
-                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 max-w-[100px]"
                 >
                   Abreviatura
                 </th>
                 <th
-                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
+                  (click)="cambiarOrdenamiento('fechaCreacion')"
                 >
-                  Fecha de Creación
+                  <div class="flex items-center">
+                    Fecha de Creación
+                    <fa-icon
+                      [icon]="sortBy === 'fechaCreacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
                 </th>
                 <th
-                  class="py-3.5 px-4 text-sm font-normal text-left text-gray-500 dark:text-gray-400"
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
+                  (click)="cambiarOrdenamiento('fechaActualizacion')"
                 >
-                  Fecha Actualización
+                  <div class="flex items-center">
+                    Fecha Actualización
+                    <fa-icon
+                      [icon]="sortBy === 'fechaActualizacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
                 </th>
-                <th class="relative py-3.5 px-4">
-                  <span class="sr-only">Acciones</span>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
+                >
+                  <div class="flex items-center">
+                    Acciones
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -83,44 +124,48 @@
                 *ngFor="let curso of cursos | paginate: { itemsPerPage: itemsPerPage, currentPage: page, totalItems: totalCursos }"
               >
                 <td
-                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate"
                 >
                   {{ curso.nombre }}
                 </td>
                 <td
-                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[200px] truncate"
                 >
                   {{ curso.descripcion }}
                 </td>
                 <td
-                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate"
                 >
                   {{ curso.abreviatura }}
                 </td>
                 <td
-                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate"
                 >
                   {{ curso.fechaCreacion | date: 'yyyy-MM-dd HH:mm' }}
                 </td>
                 <td
-                  class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap"
+                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate"
                 >
                   {{ curso.fechaActualizacion | date: 'yyyy-MM-dd HH:mm' }}
                 </td>
-                <td class="px-4 py-4 text-sm whitespace-nowrap">
-                  <div class="flex items-center gap-x-6">
-                    <button
-                      (click)="openEditModal(curso)"
-                      class="text-gray-500 hover:text-yellow-500"
-                    >
-                      <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
-                    </button>
-                    <button
-                      (click)="eliminarCurso(curso.idCurso!)"
-                      class="text-gray-500 hover:text-red-500"
-                    >
-                      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
-                    </button>
+                <td class="px-4 md:px-2 py-4 text-sm max-w-[100px]">
+                  <div class="flex items-center gap-x-6 md:gap-x-3">
+                    <app-tooltip tooltipText="Editar curso">
+                      <button
+                        (click)="openEditModal(curso)"
+                        class="text-gray-500 hover:text-yellow-500"
+                      >
+                        <fa-icon [icon]="['fas', 'pencil']" class="h-8 w-8"></fa-icon>
+                      </button>
+                    </app-tooltip>
+                    <app-tooltip tooltipText="Eliminar curso">
+                      <button
+                        (click)="eliminarCurso(curso.idCurso!)"
+                        class="text-gray-500 hover:text-red-500"
+                      >
+                        <fa-icon [icon]="['fas', 'trash']" class="h-8 w-8"></fa-icon>
+                      </button>
+                    </app-tooltip>
                   </div>
                 </td>
               </tr>
@@ -132,25 +177,12 @@
   </div>
 
   <!-- Paginación -->
-  <div class="mt-6 sm:flex sm:items-center sm:justify-between">
-    <div class="text-sm text-gray-500 dark:text-gray-400">
-      Página
-      <span class="font-medium text-gray-700 dark:text-gray-100"
-        >{{ page }} de {{ totalPages }}</span
-      >
-    </div>
-    <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-      <pagination-controls
-        (pageChange)="onPageChange($event)"
-        [maxSize]="7"
-        [directionLinks]="true"
-        [autoHide]="true"
-        [responsive]="true"
-        previousLabel="Anterior"
-        nextLabel="Siguiente"
-      ></pagination-controls>
-    </div>
-  </div>
+  <app-pagination
+  [page]="page"
+  [totalPages]="totalPages"
+  [maxSize]="7"
+  (pageChange)="onPageChange($event)"
+></app-pagination>
   <!-- Componente de notificaciones -->
   <app-notification></app-notification>
 </section>

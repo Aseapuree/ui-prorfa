@@ -16,10 +16,10 @@ export class CourseService {
   constructor(private clienteHttp: HttpClient) { }
 
 
-  obtenerListaCursos(page: number, size: number): Observable<{ content: Curso[], totalElements: number }> {
+  obtenerListaCursos(page: number, size: number, sortBy: string, sortDir: string): Observable<{ content: Curso[], totalElements: number }> {
     return this.clienteHttp
       .get<{ data: { content: Curso[], totalElements: number } }>(
-        `${this.urlBase}/listar?page=${page - 1}&size=${size}`,
+        `${this.urlBase}/listar?page=${page - 1}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`,
         { withCredentials: true }
       )
       .pipe(
