@@ -14,6 +14,7 @@ import { MatriculadosComponent } from './matricula/components/matriculados/matri
 import { InicioComponent } from './general/components/inicio/inicio.component';
 import { AsistenciaComponent } from './general/components/asistencia/asistencia.component';
 import { CampusGradosComponent } from './campus/components/modules/campus-grados/campus-grados.component';
+import { ProfesorCursoComponent } from './campus/components/modules/gestion/profesor-curso/profesor-curso.component';
 
 export const routes: Routes = [
     {
@@ -23,6 +24,7 @@ export const routes: Routes = [
           { path: 'campus', component: CampusComponent, canActivate: [AuthGuard] },
           { path: 'campus/grados/:nivel', component: CampusGradosComponent, canActivate: [AuthGuard] },
           { path: 'gestion/cursos', component: CampusCursosComponent, canActivate: [AuthGuard] },
+          { path: 'gestion/profesor-curso', component: ProfesorCursoComponent, canActivate: [AuthGuard] },
           { path: 'sesiones/profesor/:idProfesorCurso', component: CampusSesionesComponent, canActivate: [AuthGuard] },
           { path: 'sesiones/alumno/:idCurso', component: CampusSesionesComponent, canActivate: [AuthGuard] },
           { path: 'card-actividades/:idSesion', component: CampusActividadesComponent, canActivate: [AuthGuard] },

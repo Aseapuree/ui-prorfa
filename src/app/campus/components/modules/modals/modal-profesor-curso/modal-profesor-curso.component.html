@@ -1,0 +1,71 @@
+<div>
+  <div mat-dialog-title>
+    <h1 class="text-xl font-bold">{{ getTitle() }}</h1>
+  </div>
+  <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+    <div mat-dialog-content class="content">
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Profesor</mat-label>
+          <mat-select formControlName="usuario" required>
+            <mat-option *ngFor="let usuario of usuarios" [value]="usuario">
+              {{ usuario.nombre }} {{ usuario.apellidopaterno }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="contactForm.get('usuario')?.hasError('required')">Profesor es requerido</mat-error>
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Curso</mat-label>
+          <mat-select formControlName="curso" required>
+            <mat-option *ngFor="let curso of cursos" [value]="curso">
+              {{ curso.nombre }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="contactForm.get('curso')?.hasError('required')">Curso es requerido</mat-error>
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Grado</mat-label>
+          <input matInput type="text" formControlName="grado">
+          <mat-error *ngIf="contactForm.get('grado')?.hasError('required')">Grado es requerido</mat-error>
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Sección</mat-label>
+          <input matInput type="text" formControlName="seccion">
+          <mat-error *ngIf="contactForm.get('seccion')?.hasError('required')">Sección es requerida</mat-error>
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Nivel</mat-label>
+          <input matInput type="text" formControlName="nivel">
+          <mat-error *ngIf="contactForm.get('nivel')?.hasError('required')">Nivel es requerido</mat-error>
+        </mat-form-field>
+      </div>
+      <div mat-dialog-actions class="flex justify-end space-x-2">
+        <button
+          mat-raised-button
+          [mat-dialog-close]="false"
+          type="button"
+          class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        >
+          Cancelar
+        </button>
+        <button
+          [disabled]="!contactForm.valid"
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        >
+          {{ getTitle() }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

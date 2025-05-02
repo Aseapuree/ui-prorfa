@@ -2,6 +2,14 @@
   display: block;
 }
 
+::ng-deep .cdk-overlay-container {
+  z-index: 10000 !important;
+}
+
+::ng-deep .mat-datepicker-content {
+  z-index: 10001 !important;
+}
+
 mat-form-field {
   width: 100%;
 }
@@ -94,3 +102,4 @@ input[type="file"] {
     background: none !important; // Eliminar fondo por defecto del botón primario
   }
 }
+

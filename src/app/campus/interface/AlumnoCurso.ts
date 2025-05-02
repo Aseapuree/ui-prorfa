@@ -2,11 +2,12 @@
 export interface AlumnoCurso {
     idCurso?: string;
     nombreCurso?: string;
-    grado?: number;
+    grado?: string;
     seccion?: string;
     nivel?: string;
     nombreProfesor?: string;
     sesiones?: Sesion[];
+    abreviatura?: string;
   }
   
   export interface Sesion {
@@ -23,6 +24,6 @@ export interface AlumnoCurso {
     actividadUrl?: string;
     actividadTipo?: string; // Debe ser 'introduccion', 'material' o 'actividad'
     fechaCreacion?: string;
-    fechaInicio?: string;
-  fechaFin?: string;
+    fechaInicio?: Date | string | null; // Permitir Date, string, o null
+  fechaFin?: Date | string | null;    // Permitir Date, string, o null
   }

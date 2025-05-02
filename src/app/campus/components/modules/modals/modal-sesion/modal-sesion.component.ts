@@ -2,7 +2,7 @@ import { Component, Inject, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatFormField, MatFormFieldModule, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { CourseService } from '../../../../services/course.service';
 import { ModalSesionService } from './modal-sesion.service';
@@ -11,8 +11,10 @@ import { SesionService } from '../../../../services/sesion.service';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
 import { AlertComponent } from '../../../shared/alert/alert.component';
 import { CommonModule } from '@angular/common';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
-const MATERIAL_MODULES = [MatLabel, MatFormField, MatInput, MatDialogModule, MatButtonModule]
+const MATERIAL_MODULES = [MatLabel, MatFormField, MatInput, MatDialogModule, MatButtonModule,MatDatepickerModule,MatNativeDateModule,MatFormFieldModule]
 
 @Component({
   selector: 'app-modal-sesion',
@@ -23,7 +25,7 @@ const MATERIAL_MODULES = [MatLabel, MatFormField, MatInput, MatDialogModule, Mat
 })
 export class ModalSesionComponent implements OnInit{
   sesionForm!: FormGroup;
-  titleError: string | null = null; // Para almacenar el mensaje de error del título duplicado
+  titleError: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -36,7 +38,11 @@ export class ModalSesionComponent implements OnInit{
   ngOnInit(): void {
     this._buildForm();
     if (this.data.isEditing && this.data.sesion) {
-      this.sesionForm.patchValue(this.data.sesion);
+      this.sesionForm.patchValue({
+        titulo: this.data.sesion.titulo,
+        descripcion: this.data.sesion.descripcion,
+        fechaAsignada: this.data.sesion.fechaAsignada ? new Date(this.data.sesion.fechaAsignada) : null
+      });
     }
   }
 
@@ -44,6 +50,7 @@ export class ModalSesionComponent implements OnInit{
     this.sesionForm = this.fb.group({
       titulo: ['', Validators.required],
       descripcion: ['', Validators.required],
+      fechaAsignada: ['', Validators.required]
     });
 
     // Limpiar el mensaje de error cuando el usuario cambie el título
@@ -61,16 +68,20 @@ export class ModalSesionComponent implements OnInit{
       if (this.sesionForm.get('descripcion')?.hasError('required')) {
         errorMessages.push('La descripción es requerida');
       }
+      if (this.sesionForm.get('fechaAsignada')?.hasError('required')) {
+        errorMessages.push('La fecha asignada es requerida');
+      }
       this.notificationService.showNotification(errorMessages.join(' y '), 'error');
       return;
     }
-  
+
     const sesionData: Sesion = {
       ...this.sesionForm.value,
       idSesion: this.data.isEditing ? this.data.sesion.idSesion : undefined,
       profesorGuardar: this.data.idProfesorCurso,
+      fechaAsignada: this.formatDate(this.sesionForm.get('fechaAsignada')?.value)
     };
-  
+
     if (this.data.isEditing) {
       this.sesionService.editarSesion(this.data.sesion.idSesion, sesionData).subscribe({
         next: (response) => {
@@ -104,6 +115,14 @@ export class ModalSesionComponent implements OnInit{
         },
       });
     }
+  }
+
+  formatDate(date: Date): string {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}T00:00:00`;
   }
 }
 
