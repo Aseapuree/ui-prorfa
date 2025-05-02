@@ -1,50 +1,117 @@
-import { Matricula } from './../interfaces/DTOMatricula';
-import { HttpClient } from '@angular/common/http';
+// --- FRONTEND: MatriculaService (Angular) ---
+import { HttpClient, HttpErrorResponse } from '@angular/common/http'; // Importar HttpErrorResponse
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of } from 'rxjs';
+import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { Matricula } from '../interfaces/DTOMatricula'; // Asegúrate de importar Matricula
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root'
 })
 export class MatriculaService {
-  private urlBase = "http://localhost:8080/v1/matriculas";
+  private urlBase = "http://localhost:8080/v1/matriculas";
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { }
 
-  // Obtener una lista de matrículas
-  obtenerMatriculas(): Observable<Matricula[]> {
-    return this.http.get<any>(`${this.urlBase}/listar`, { withCredentials: true })
-      .pipe(map(response => {
-        console.log("Lista de matrículas cargada correctamente.");
-        return response.data.content;
-      }));
-  }
 
-  // Agregar una nueva matrícula
-  agregarMatricula(matricula: Matricula): Observable<Matricula> {
-    return this.http.post<Matricula>(`${this.urlBase}/agregar`, matricula, { withCredentials: true });
-  }
+  obtenerMatriculas(): Observable<Matricula[]> {
+    return this.http.get<any>(`${this.urlBase}/listar`, { withCredentials: true })
+      .pipe(map(response => {
+        return response.data.content;
+      }),
+      catchError(this.handleError)
+    );
+  }
 
-  // Editar una matrícula
-  editarMatricula(id: string, matricula: Matricula): Observable<Matricula> {
-    return this.http.put<Matricula>(`${this.urlBase}/editar/${id}`, matricula, { withCredentials: true });
-  }
 
-  // Eliminar una matrícula
-  eliminarMatricula(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true });
-  }
+  obtenerMatricula(id: string): Observable<Matricula | null> {
+    console.log(`MatriculaService: Calling backend endpoint: ${this.urlBase}/listar/${id}`);
+    return this.http.get<any>(`${this.urlBase}/listar/${id}`, { withCredentials: true })
+      .pipe(map(response => {
+        if (response && response.code === 200 && response.data) {
+            return response.data;
+        } else if (response && response.code === 404) {
+            return null;
+        } else {
+            throw new Error(response?.message );
+        }
+      }),
+      catchError(error => {
+          console.error(`MatriculaService: Error al obtener matrícula por ID ${id}:`, error);
+          if (error instanceof HttpErrorResponse && error.status === 404) {
+          }
+          return throwError(() => error);
+      })
+    );
+  }
 
-  // Asignar una sección aleatoriamente
-  asignarSeccion(grado: number): Observable<string> {
-    return this.http.get<string>(`${this.urlBase}/asignarSeccion/${grado}`, { withCredentials: true })
-      .pipe(
-        catchError(err => of(err.error))
-      );
-  }
+  agregarMatricula(matricula: Matricula): Observable<Matricula> {
+    return this.http.post<Matricula>(`${this.urlBase}/agregar`, matricula, { withCredentials: true }).pipe(
+    );
+  }
 
-  // Obtener número de vacantes por nivel
-  vacantesPorNivel(nivel: string): Observable<Map<number, Map<string, number>>> {
-    return this.http.get<Map<number, Map<string, number>>>(`${this.urlBase}/vacantes/${nivel}`, { withCredentials: true });
+  editarMatricula(id: string, matricula: Matricula): Observable<Matricula> {
+    return this.http.put<Matricula>(`${this.urlBase}/editar/${id}`, matricula, { withCredentials: true }).pipe(
+    );
+  }
+
+  eliminarMatricula(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true }).pipe(
+    );
+  }
+
+  asignarSeccion(grado: number): Observable<string> {
+    return this.http.get(`${this.urlBase}/asignarSeccion/${grado}`, {
+      withCredentials: true,
+      responseType: 'text'
+    }).pipe(
+    );
+  }
+
+  vacantesPorNivel(nivel: string): Observable<{ [grado: number]: { [seccion: string]: number } }> {
+    return this.http.get<{ [grado: number]: { [seccion: string]: number } }>(`${this.urlBase}/vacantes/${nivel}`, { withCredentials: true }).pipe(
+    );
+  }
+
+  public handleError = (error: HttpErrorResponse | any): Observable<never> => {
+    let errorMessage = 'Error desconocido al comunicar con el backend.';
+
+    if (error instanceof HttpErrorResponse) {
+        console.error(
+            `MatriculaService: Error del lado del servidor: Código ${error.status}, ` +
+            `Body: ${JSON.stringify(error.error)}`);
+
+        if (error.status === 0) {
+            errorMessage = 'Error de conexión con el backend. Asegúrate de que el servidor esté corriendo y accesible.';
+            if (error.error && (error.error as any).message && (error.error as any).message.includes('ECONNREFUSED')) {
+                 errorMessage = 'Error de conexión: El backend rechazo la conexión. Verifica que esté corriendo en http://localhost:8080.';
+            }
+        } else {
+            if (error.error instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                };
+                reader.readAsText(error.error);
+                errorMessage = `Error del servidor (${error.status}): El servidor devolvió un archivo binario en la respuesta de error.`;
+            } else {
+                if (error.error && error.error.message) {
+                    errorMessage = `Error del servidor (${error.status}): ${error.error.message}`;
+                } else {
+                    errorMessage = `Error del servidor (${error.status}): ${error.statusText || 'Mensaje desconocido'}`;
+                }
+            }
+        }
+    } else if (error instanceof Error) {
+        console.error('MatriculaService: Error del lado del cliente o de red:', error.message);
+        errorMessage = `Error en la aplicación: ${error.message}`;
+         if (error.message.includes('ErrorEvent is not defined')) {
+             errorMessage = 'Error interno del navegador al procesar la respuesta.';
+         }
+    } else {
+        console.error('MatriculaService: Otro tipo de error:', error);
+        errorMessage = `Ocurrió un error inesperado: ${JSON.stringify(error)}`;
+    }
+
+    console.error('MatriculaService: Error completo:', error);
+    return throwError(() => new Error(errorMessage));
   }
 }
