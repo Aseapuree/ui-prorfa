@@ -71,7 +71,6 @@ input[type="number"] {
     border-color: #3182ce; // Borde azul al enfocar
     box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3); // Sombra azul al enfocar
   }
-  // Mejorar el diseño del input
   background-color: #374151; // Fondo gris oscuro
   color: #e2e8f0; // Texto gris claro
   border-radius: 6px; // Bordes más redondeados
@@ -89,16 +88,6 @@ textarea {
   color: #e2e8f0; // Texto gris claro
   border-radius: 6px; // Bordes más redondeados
   padding: 6px 10px; // Más espaciado interno
-}
-
-/* Estilo para la información de la tarea enviada */
-.tarea-info {
-  max-width: 200px; // Limitar el ancho para mejor alineación
-}
-
-/* Estilo para el botón de ver tarea */
-button {
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Estilo para el panel de subir tarea */
@@ -132,3 +121,128 @@ button {
     }
   }
 }
+
+/* Estilo para el panel de tarea enviada */
+.tarea-enviada-panel {
+  background-color: #1f2937; // Fondo más oscuro para diferenciarlo
+  border: 1px solid #4a5568; // Borde gris oscuro
+  border-radius: 8px; // Bordes redondeados
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); // Sombra ligera
+  padding: 12px; // Espaciado interno
+  width: 100%; // Asegurar que ocupe todo el ancho disponible
+}
+
+/* Estilo para el botón de ver tarea */
+.ver-tarea-btn {
+  display: inline-flex;
+  align-items: center;
+  background-color: #3182ce; // Fondo azul
+  color: #ffffff; // Texto blanco
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none; // Eliminar subrayado del enlace
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  &:hover {
+    background-color: #2563eb; // Azul más claro al pasar el mouse
+    transform: translateY(-1px); // Efecto de elevación
+  }
+  &:active {
+    transform: translateY(0); // Volver a la posición original al hacer clic
+  }
+}
+
+/* Responsividad */
+@media (max-width: 640px) {
+  .subir-tarea-panel {
+    padding: 16px; // Reducir padding en pantallas pequeñas
+  }
+
+  .file-input {
+    font-size: 14px; // Reducir tamaño de fuente en pantallas pequeñas
+    &::file-selector-button {
+      padding: 4px 8px; // Reducir padding del botón de selección
+      font-size: 14px; // Reducir tamaño de fuente
+    }
+  }
+
+  .ver-tarea-btn {
+    padding: 6px 12px; // Reducir padding en pantallas pequeñas
+    font-size: 14px; // Reducir tamaño de fuente
+  }
+}
+
+.file-input::file-selector-button {
+  background-color: #4b6cb7;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.file-input::file-selector-button:hover {
+  background-color: #3b5ca6;
+}
+
+/* Estilos para el panel de comentarios */
+.comentario-panel {
+  animation: slideIn 0.3s ease-in-out;
+  border: 1px solid #4a5568; /* Borde gris oscuro para que combine con el tema */
+}
+
+/* Estilo para la tabla de Asignar Notas */
+.notas-panel table {
+  width: 100%; // Asegurar que la tabla ocupe todo el ancho disponible
+  min-width: 800px; // Establecer un ancho mínimo para evitar que las columnas se compriman demasiado
+}
+
+/* Contenedor de la tabla para permitir desplazamiento horizontal en pantallas pequeñas */
+.notas-panel {
+  overflow-x: auto; // Permitir desplazamiento horizontal si la tabla es más ancha que el contenedor
+}
+
+/* Ajustar el encabezado "Nota (0-20)" */
+.notas-panel table thead th {
+  white-space: nowrap; // Evitar que el texto del encabezado se envuelva
+  padding: 8px 16px; // Ajustar el padding para dar más espacio
+  font-size: 0.75rem; // Reducir el tamaño de la fuente para que "Nota (0-20)" quepa mejor
+}
+
+/* Ajustar las celdas del cuerpo de la tabla */
+.notas-panel table tbody td {
+  padding: 8px 16px; // Ajustar el padding para consistencia
+  font-size: 0.875rem; // Tamaño de fuente legible
+}
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 768px) {
+  .notas-panel table thead th,
+  .notas-panel table tbody td {
+    padding: 6px 12px; // Reducir el padding en pantallas pequeñas
+    font-size: 0.7rem; // Reducir aún más el tamaño de la fuente
+  }
+
+  .notas-panel table input[type="number"],
+  .notas-panel table input[type="text"] {
+    font-size: 0.75rem; // Reducir el tamaño de los inputs
+    padding: 4px 8px; // Reducir el padding de los inputs
+  }
+
+  .notas-panel table input[type="number"] {
+    width: 50px; // Asegurar que el input de la nota sea más pequeño
+  }
+
+  .notas-panel table input[type="text"] {
+    width: 100%; // Asegurar que el input de comentario ocupe el ancho disponible
+  }
+}
+
+/* Asegurar que los enlaces de "Descargar Tarea" no se desborden */
+.notas-panel table a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px; // Espacio entre el ícono y el texto
+  white-space: nowrap; // Evitar que el texto del enlace se envuelva
+}
+

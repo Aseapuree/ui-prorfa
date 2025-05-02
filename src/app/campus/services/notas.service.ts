@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { DTOResponse } from '../interface/DTOResponse';
-import { DTONota, AlumnoNotas } from '../interface/DTONota';
+import { DTONota, AlumnoNotas, DTONotaResponse } from '../interface/DTONota';
 
 // Interfaz para la respuesta del endpoint /alumnByNumDoc
 interface DTOAlumno {
@@ -46,6 +46,25 @@ export class NotasService {
     );
   }
 
+  // Nuevo método para obtener los datos completos del alumno dado un nombre completo
+  obtenerDatosAlumnoPorNombre(nombreCompleto: string): Observable<DTOAlumno> {
+    console.log('Obteniendo datos del alumno para nombre:', nombreCompleto);
+    return this.clienteHttp.get<DTOResponse<DTOAlumno>>(`${this.alumnoUrlBase}/alumnByNumDoc?name=${nombreCompleto}`, { withCredentials: true }).pipe(
+      map(response => {
+        console.log('Respuesta del servidor (obtenerDatosAlumnoPorNombre):', response);
+        if (response.code === 200 && response.data) {
+          return response.data;
+        } else {
+          throw new Error('No se encontraron datos del alumno con el nombre proporcionado');
+        }
+      }),
+      catchError(error => {
+        console.error('Error al obtener los datos del alumno:', error);
+        return throwError(() => new Error('Error al obtener los datos del alumno: ' + (error.message || error)));
+      })
+    );
+  }
+
   // Método para subir el archivo a Google Drive
   subirArchivoDrive(archivo: File, idCarpeta: string): Observable<string> {
     const formData = new FormData();
@@ -79,6 +98,36 @@ export class NotasService {
       catchError(error => {
         console.error('Error al registrar la nota:', error);
         return throwError(() => new Error('Error al registrar la nota: ' + (error.error?.message || error.message)));
+      })
+    );
+  }
+
+  // Método para listar las notas por sesión usando el endpoint /sesion/{idSesion}
+  listarNotasPorSesion(idSesion: string): Observable<DTOResponse<DTONotaResponse[]>> {
+    console.log('Listando notas para la sesión:', idSesion);
+    return this.clienteHttp.get<DTOResponse<DTONotaResponse[]>>(`${this.urlBase}/sesion/${idSesion}`, { withCredentials: true }).pipe(
+      map(response => {
+        console.log('Respuesta del servidor (listarNotasPorSesion):', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('Error al listar las notas:', error);
+        return throwError(() => new Error('Error al listar las notas: ' + (error.message || error)));
+      })
+    );
+  }
+
+  // Método para editar las notas usando el endpoint /editar
+  editarNota(nota: DTONota): Observable<DTOResponse<AlumnoNotas[]>> {
+    console.log('Payload enviado a /editar:', JSON.stringify(nota, null, 2));
+    return this.clienteHttp.put<DTOResponse<AlumnoNotas[]>>(`${this.urlBase}/editar`, nota, { withCredentials: true }).pipe(
+      map(response => {
+        console.log('Respuesta del servidor (editarNota):', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('Error al editar la nota:', error);
+        return throwError(() => new Error('Error al editar la nota: ' + (error.error?.message || error.message)));
       })
     );
   }
