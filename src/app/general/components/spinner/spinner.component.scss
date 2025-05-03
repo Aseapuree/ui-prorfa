@@ -1,6 +1,6 @@
 /* Overlay de Carga General */
 .general-loading-overlay {
-  position: fixed; /* Cubre toda la pantalla */
+  position: fixed; /* Cubre toda la pantalla- */
   top: 0;
   left: 0;
   width: 100%;
@@ -42,5 +42,5 @@
 .general-loading-content p {
   font-size: 1.2rem;
   font-weight: 500;
-  margin: 0; 
+  margin: 0;
 }

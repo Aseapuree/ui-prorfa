@@ -2,7 +2,7 @@
 export interface AlumnoCurso {
     idCurso?: string;
     nombreCurso?: string;
-    grado?: number;
+    grado?: string;
     seccion?: string;
     nivel?: string;
     nombreProfesor?: string;

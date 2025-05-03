@@ -1,7 +1,7 @@
-import { Alumno } from './../interfaces/DTOAlumno';
+import { Alumno } from '../interfaces/DTOAlumno';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,26 +12,29 @@ export class AlumnoService {
 
   constructor(private http: HttpClient) { }
 
-  // Obtener lista de alumnos
   obtenerAlumnoList(): Observable<Alumno[]> {
     return this.http.get<any>(`${this.urlBase}/listar`, { withCredentials: true })
       .pipe(map(response => {
-        console.log("Lista de alumnos cargada correctamente.");
         return response.data.content;
       }));
   }
 
-  // Agregar un nuevo alumno
+  obtenerAlumno(id: string): Observable<Alumno> {
+    return this.http.get<any>(`${this.urlBase}/listar/${id}`, { withCredentials: true })
+      .pipe(map(response => {
+        return response.data;
+      }),
+    );
+  }
+
   agregarAlumno(alumno: Alumno): Observable<Alumno> {
     return this.http.post<Alumno>(`${this.urlBase}/agregar`, alumno, { withCredentials: true });
   }
 
-  // Editar un alumno existente
   editarAlumno(id: string, alumno: Alumno): Observable<Alumno> {
     return this.http.put<Alumno>(`${this.urlBase}/editar/${id}`, alumno, { withCredentials: true });
   }
 
-  // Eliminar un alumno
   eliminarAlumno(id: string): Observable<void> {
     return this.http.delete<void>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true });
   }

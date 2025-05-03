@@ -18,5 +18,8 @@ export interface DTOActividadesSesion {
     introducciones: DTOActividad[];
     materiales: DTOActividad[];
     actividades: DTOActividad[];
+    grado?: string; // Agregamos grado como opcional
+    seccion?: string; // Agregamos seccion como opcional
+    nivel?: string; // Agregamos nivel como opcional
   };
 }

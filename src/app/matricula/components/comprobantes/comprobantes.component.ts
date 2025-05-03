@@ -1,178 +1,238 @@
+import { NotificationService } from './../../../campus/components/shared/notificaciones/notification.service';
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ComprobanteService } from '../../services/comprobante.service';
+import { Comprobante } from '../../interfaces/DTOComprobante';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { ComprobanteService } from './../../services/comprobante.service';
-import { Comprobante } from './../../interfaces/DTOComprobante';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
+import {
+  faArrowLeft,
+  faCalendarAlt,
+  faCheckCircle,
+  faCircleInfo,
+  faDownload,
+  faFilePdf,
+  faGraduationCap,
+  faHashtag,
+  faIdCard,
+  faLink,
+  faMoneyBillWave,
+  faReceipt,
+  faSpinner,
+  faTimesCircle,
+  faTriangleExclamation
+} from '@fortawesome/free-solid-svg-icons';
+
+import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 
 
-interface ComprobanteState {
-  dtoComprobante?: any;
-}
+const TIPO_DOCUMENTO_NOMBRES_MAP: { [key: string]: string } = {
+  'df61cd5c-5609-45d7-a2ad-1d285cabc958': 'Matrícula',
+  'b5dc4013-5d65-4969-8342-906ae82ee70c': 'Pago',
+};
+
 
 @Component({
   selector: 'app-comprobante',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FontAwesomeModule,
+    GeneralLoadingSpinnerComponent
+  ],
   templateUrl: './comprobantes.component.html',
   styleUrls: ['./comprobantes.component.scss']
 })
 export class ComprobanteComponent implements OnInit {
-  pdfMake: any;
-  comprobante: any;
 
-  colegioInfo = {
-    nombre: 'Colegio Nacional Juan Apóstol 11578',
-    direccion: 'Calle Principal 123, Chiclayo, Lambayeque',
-    telefono: '01-987654321',
-    email: 'contacto@colegiojuanapostol.edu.pe',
-    ruc: '20123456789'
-  };
+  comprobante: Comprobante | null = null;
+  isLoading = true;
 
-  readonly TIPO_PAGO = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
-  readonly TIPO_MATRICULA = 'df61cd5c-5609-45d7-a2ad-1d285cabc958';
+  isMatriculaLoading = false;
+  isPagoLoading = false;
+
+  isGeneratingPdf = false;
+  isNavigating = false;
+
+  error: string | null = null;
+  idMatricula: string | null = null;
+
+  private createdPdfUrls: string[] = [];
+  nivel: string | null = null;
+
+
+  faFilePdf = faFilePdf;
+  faCheckCircle = faCheckCircle;
+  faTimesCircle = faTimesCircle;
+  faMoneyBillWave = faMoneyBillWave;
+  faGraduationCap = faGraduationCap;
+  faIdCard = faIdCard;
+  faLink = faLink;
+  faReceipt = faReceipt;
+  faCircleInfo = faCircleInfo;
+  faTriangleExclamation = faTriangleExclamation;
+  faCalendarAlt = faCalendarAlt;
+  faSpinner = faSpinner;
+  faDownload = faDownload;
+  faArrowLeft = faArrowLeft;
+  faHashtag = faHashtag;
+
+  private readonly TIPO_COMPROBANTE_MATRICULA_UUID = 'df61cd5c-5609-45d7-a2ad-1d285cabc958';
+  private readonly TIPO_COMPROBANTE_PAGO_UUID = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
+
 
   constructor(
+    private route: ActivatedRoute,
+    private router: Router,
     private comprobanteService: ComprobanteService,
-    private router: Router
-  ) {}
+    private NotificationService: NotificationService
+  ) { }
 
-  async ngOnInit() {
-    const pdfMakeModule = await import('pdfmake/build/pdfmake');
-    const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
-    this.pdfMake = pdfMakeModule.default;
-    this.pdfMake.vfs = pdfFontsModule.default.vfs;
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      this.idMatricula = params['idMatricula'];
+      this.nivel = params['nivel'] || null;
+      console.log('ComprobanteComponent: Received idMatricula from route:', this.idMatricula);
+      console.log('ComprobanteComponent: Received nivel from route:', this.nivel);
 
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras?.state as ComprobanteState;
-    if (state?.dtoComprobante) {
-      this.comprobante = state.dtoComprobante;
+      if (this.idMatricula) {
+        this.loadComprobanteDetails(this.idMatricula);
+      } else {
+        this.error = 'No se proporcionó un ID de matrícula.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadComprobanteDetails(idMatricula: string): void {
+    this.isLoading = true;
+    this.error = null;
+    this.comprobanteService.obtenerComprobantePorIdMatricula(idMatricula).subscribe({
+      next: (comprobante) => {
+        console.log('ComprobanteComponent: Comprobante details loaded:', comprobante);
+        this.comprobante = comprobante;
+        this.isLoading = false;
+        if (!comprobante) {
+            this.error = 'No se encontró un comprobante asociado a esta matrícula.';
+        } else {
+        }
+      },
+      error: (err) => {
+        console.error('ComprobanteComponent: Error loading comprobante details:', err);
+        if (err && err.error && err.error.message) {
+            this.error = 'Error al cargar los detalles del comprobante: ' + err.error.message;
+        } else {
+            this.error = 'Error al cargar los detalles del comprobante: ' + (err.message || 'Error desconocido');
+        }
+        this.isLoading = false;
+        this.comprobante = null;
+      }
+    });
+  }
+
+  openPdf(tipo: 'matricula' | 'pago'): void {
+    if (!this.idMatricula) {
+        console.warn('ComprobanteComponent: idMatricula no disponible para abrir PDF.');
+        this.NotificationService.showNotification('No se pudo generar el PDF: ID de matrícula no disponible.', 'error');
+        return;
+    }
+
+    this.isGeneratingPdf = true;
+
+    let tipoComprobanteUuid: string;
+    let filename: string;
+    let montoTotal: number | undefined;
+
+    if (tipo === 'matricula') {
+      this.isMatriculaLoading = true;
+      tipoComprobanteUuid = this.TIPO_COMPROBANTE_MATRICULA_UUID;
+      filename = 'comprobante_matricula.pdf';
+      montoTotal = this.comprobante?.montototal ? parseFloat(this.comprobante.montototal) : undefined;
+
     } else {
-      this.comprobanteService.obtenerComprobantes().subscribe({
-        next: (data) => {
-          this.comprobante = data?.length ? data[data.length - 1] : null;
-        },
-        error: (err) => console.error('Error al obtener comprobantes:', err)
-      });
+      this.isPagoLoading = true;
+      tipoComprobanteUuid = this.TIPO_COMPROBANTE_PAGO_UUID;
+      filename = 'comprobante_pago.pdf';
+      montoTotal = this.comprobante?.montototal ? parseFloat(this.comprobante.montototal) : undefined;
     }
-  }
 
-  generarComprobantePago() {
-    if (!this.pdfMake || !this.comprobante) return;
+    console.log(`ComprobanteComponent: Requesting ${tipo} PDF for matricula ID: ${this.idMatricula} with type UUID: ${tipoComprobanteUuid}`);
 
-    this.comprobante.idtipocomp = this.TIPO_PAGO;
+    this.comprobanteService.generarPdfDirecto(this.idMatricula, tipoComprobanteUuid, montoTotal).subscribe({
+      next: (blob: Blob) => {
+        console.log(`ComprobanteComponent: Received ${tipo} PDF Blob of size:`, blob.size);
+        const blobUrl = URL.createObjectURL(blob);
+        this.createdPdfUrls.push(blobUrl);
 
-    const docDefinition = {
-      content: [
-        { text: this.colegioInfo.nombre, style: 'header' },
-        { text: this.colegioInfo.direccion, style: 'subheader' },
-        { text: `Teléfono: ${this.colegioInfo.telefono} | Email: ${this.colegioInfo.email}`, style: 'subheader' },
-        { text: `RUC: ${this.colegioInfo.ruc}`, style: 'subheader' },
-        { text: 'COMPROBANTE DE PAGO', style: 'titulo' },
-        { text: `Fecha de Emisión: ${this.formatearFecha(this.comprobante.fechaCreacion)}`, style: 'subtitulo' },
+        const newTab = window.open(blobUrl, '_blank');
 
-        { text: 'DATOS DEL APODERADO', style: 'seccion' },
-        { text: `Nombre: ${this.comprobante.apoderadoNombre || 'N/A'}`, style: 'contenido' },
-        { text: `DNI: ${this.comprobante.apoderadoDocumento || 'N/A'}`, style: 'contenido' },
-        { text: `Contacto: ${this.comprobante.apoderadoTelefono || 'N/A'}`, style: 'contenido' },
+        if (newTab) {
+           setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        } else {
+            console.warn('ComprobanteComponent: Pop-up blocked. Could not open PDF in new tab.');
+            this.NotificationService.showNotification('Error: El navegador bloqueó la apertura del PDF. Por favor, permita pop-ups.', 'error');
+        }
 
-        { text: 'DETALLES DE PAGO', style: 'seccion' },
-        {
-          ul: [
-            `Matrícula 2025: S/ ${this.comprobante.montoMatricula || 'N/A'}`,
-            `Otros conceptos: S/ ${this.comprobante.montoOtros || 'N/A'}`,
-            { text: `TOTAL PAGADO: S/ ${this.comprobante.totalPago || 'N/A'}`, bold: true }
-          ],
-          style: 'contenido'
-        },
-        { text: `Forma de Pago: ${this.comprobante.metodoPago || 'Efectivo'}`, style: 'contenido' },
-
-        { text: 'Nota Legal:', style: 'nota' },
-        { text: 'Este comprobante debe ser conservado...', style: 'nota' },
-
-        { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1 }] },
-        { text: 'Firma Digital/Sello del Colegio', style: 'firma' },
-        { text: 'Gracias por confiar en nuestra institución...', style: 'agradecimiento' }
-      ],
-      styles: this.estilosPDF()
-    };
-
-    this.comprobanteService.agregarComprobante(this.comprobante).subscribe({
-      next: (response) => {
-        console.log('Comprobante de pago guardado correctamente:', response);
-        this.pdfMake.createPdf(docDefinition).open();
+        if (tipo === 'matricula') {
+          this.isMatriculaLoading = false;
+        } else {
+          this.isPagoLoading = false;
+        }
+        this.isGeneratingPdf = false;
       },
-      error: (err) => console.error('Error al guardar comprobante de pago:', err)
+      error: (err) => {
+        console.error(`ComprobanteComponent: Error generating/fetching ${tipo} PDF:`, err);
+        if (err && err.error && err.error.message) {
+            this.error = `Error al generar el comprobante de ${tipo}: ` + err.error.message;
+            this.NotificationService.showNotification(`Error al generar el comprobante de ${tipo}: ${err.error.message}`, 'error');
+        } else {
+            this.error = `Error al generar el comprobante de ${tipo}: ` + (err.message || 'Error desconocido');
+            this.NotificationService.showNotification(`Error al generar el comprobante de ${tipo}: ${err.message || 'Error desconocido'}`, 'error');
+        }
+
+        if (tipo === 'matricula') {
+          this.isMatriculaLoading = false;
+        } else {
+          this.isPagoLoading = false;
+        }
+        this.isGeneratingPdf = false;
+      }
     });
   }
 
-  generarComprobanteMatricula() {
-    if (!this.pdfMake || !this.comprobante) return;
+  finalizar(): void {
+    console.log('ComprobanteComponent: Botón Finalizar clickeado.');
+    this.isNavigating = true;
 
-    this.comprobante.idtipocomp = this.TIPO_MATRICULA;
+    this.createdPdfUrls.forEach(url => URL.revokeObjectURL(url));
+    this.createdPdfUrls = [];
 
-    const docDefinition = {
-      content: [
-        { text: this.colegioInfo.nombre, style: 'header' },
-        { text: this.colegioInfo.direccion, style: 'subheader' },
-        { text: `Teléfono: ${this.colegioInfo.telefono} | Email: ${this.colegioInfo.email}`, style: 'subheader' },
-        { text: 'COMPROBANTE DE MATRÍCULA', style: 'titulo' },
-        { text: `Fecha de Emisión: ${this.formatearFecha(this.comprobante.fechaCreacion)}`, style: 'subtitulo' },
-
-        { text: 'DATOS DEL ESTUDIANTE', style: 'seccion' },
-        { text: `Nombre: ${this.comprobante.alumnoNombre || 'N/A'}`, style: 'contenido' },
-        { text: `DNI: ${this.comprobante.alumnoDocumento || 'N/A'}`, style: 'contenido' },
-        { text: `Fecha Nacimiento: ${this.formatearFecha(this.comprobante.alumnoFechaNacimiento)}`, style: 'contenido' },
-        { text: `Grado: ${this.comprobante.grado || 'N/A'} - Sección: ${this.comprobante.seccion || 'N/A'}`, style: 'contenido' },
-        { text: `Código Estudiante: STU-2025-${this.comprobante.codigoAlumno || '000000'}`, style: 'contenido' },
-
-        { text: 'DATOS DEL APODERADO', style: 'seccion' },
-        { text: `Nombre: ${this.comprobante.apoderadoNombre || 'N/A'}`, style: 'contenido' },
-        { text: `DNI: ${this.comprobante.apoderadoDocumento || 'N/A'}`, style: 'contenido' },
-        { text: `Contacto: ${this.comprobante.apoderadoTelefono || 'N/A'}`, style: 'contenido' },
-
-        { text: 'ESTADO DE MATRÍCULA', style: 'seccion' },
-        { text: 'Confirmado - Documentos validados', style: 'contenido' },
-        { text: `Código de Matrícula: ${this.comprobante.codigoMatricula || 'MTRC-00000'}`, style: 'contenido' },
-
-        { text: 'OBSERVACIONES', style: 'seccion' },
-        { text: this.comprobante.observaciones || 'Documentación completa...', style: 'contenido' },
-
-        { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1 }] },
-        { text: 'Firma Digital/Sello del Colegio', style: 'firma' },
-        { text: 'Este comprobante es oficial y confirma...', style: 'nota' }
-      ],
-      styles: this.estilosPDF()
-    };
-
-    this.comprobanteService.agregarComprobante(this.comprobante).subscribe({
-      next: (response) => {
-        console.log('Comprobante de matrícula guardado correctamente:', response);
-        this.pdfMake.createPdf(docDefinition).open();
-      },
-      error: (err) => console.error('Error al guardar comprobante de matrícula:', err)
-    });
-  }
-
-  private estilosPDF() {
-    return {
-      header: { fontSize: 14, bold: true, alignment: 'center', margin: [0, 0, 0, 5] },
-      subheader: { fontSize: 9, alignment: 'center', margin: [0, 0, 0, 3] },
-      titulo: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 10, 0, 10] },
-      subtitulo: { fontSize: 10, alignment: 'center', margin: [0, 0, 0, 10] },
-      seccion: { fontSize: 12, bold: true, margin: [0, 10, 0, 5] },
-      contenido: { fontSize: 10, margin: [0, 0, 0, 3] },
-      nota: { fontSize: 8, alignment: 'center', margin: [0, 10, 0, 3] },
-      firma: { fontSize: 9, bold: true, alignment: 'center', margin: [0, 10, 0, 3] },
-      agradecimiento: { fontSize: 9, alignment: 'center', color: '#555' }
-    };
-  }
-
-  private formatearFecha(fechaStr: string): string {
-    if (!fechaStr) return 'N/A';
-    const dateObj = new Date(fechaStr);
-    if (isNaN(dateObj.getTime())) {
-      return 'N/A';
+    if (this.nivel) {
+      const targetRoute = `/matriculas/${this.nivel.toLowerCase()}`;
+      console.log('ComprobanteComponent: Navegando a:', targetRoute);
+      this.router.navigate([targetRoute]);
+    } else {
+      console.warn('ComprobanteComponent: Nivel no disponible en finalizar(). Navegando a lista general.');
+      this.NotificationService.showNotification('No se pudo determinar el nivel para navegar.', 'error');
+      this.router.navigate(['/matriculas/listar']);
     }
-    return dateObj.toLocaleDateString('es-PE');
   }
+
+  getSpinnerMessage(): string {
+    if (this.isLoading) {
+      return 'Cargando detalles del comprobante...';
+    } else if (this.isGeneratingPdf) {
+      return 'Generando comprobante...';
+    } else if (this.isNavigating) {
+      return 'Volviendo a matrículas...';
+    }
+    return 'Cargando...';
+  }
+
+  getNombreTipoDocumento(idTipoDoc?: string | null): string {
+      if (!idTipoDoc) return 'N/A';
+      return TIPO_DOCUMENTO_NOMBRES_MAP[idTipoDoc] || 'Desconocido';
+  }
+
 }
