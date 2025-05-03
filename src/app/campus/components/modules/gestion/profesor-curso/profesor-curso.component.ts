@@ -42,6 +42,7 @@ import { UsuarioService } from '../../../../services/usuario.service';
 export class ProfesorCursoComponent implements OnInit {
   public page: number = 1;
   public itemsPerPage: number = 6;
+  public pageSizeOptions: number[] = []; // Opciones dinámicas para el selector
   totalPages: number = 1;
   asignaciones: ProfesorCurso[] = [];
   keyword: string = '';
@@ -50,6 +51,7 @@ export class ProfesorCursoComponent implements OnInit {
   sortBy: string = 'fechaAsignacion';
   sortDir: string = 'asc';
   isLoading: boolean = false;
+  appliedFilters: any = null; // Almacena los filtros aplicados
 
   // Variables de filtros
   profesores: Usuario[] = [];
@@ -85,10 +87,62 @@ export class ProfesorCursoComponent implements OnInit {
   private readonly _dialog = inject(MatDialog);
 
   ngOnInit(): void {
+    // Cargar itemsPerPage desde localStorage si existe
+    const savedItemsPerPage = localStorage.getItem('itemsPerPage');
+    if (savedItemsPerPage) {
+      this.itemsPerPage = parseInt(savedItemsPerPage, 10);
+    }
     this.cargarConteoAsignaciones();
     this.cargarAsignaciones();
     this.cargarProfesores();
     this.cargarCursos();
+  }
+
+  // Calcular opciones dinámicas para el selector de itemsPerPage
+  private updatePageSizeOptions(): void {
+    const previousItemsPerPage = this.itemsPerPage;
+    this.pageSizeOptions = [];
+    const increment = 5;
+    for (let i = increment; i <= this.totalAsignaciones; i += increment) {
+      this.pageSizeOptions.push(i);
+    }
+
+    // Asegurar que itemsPerPage sea válido sin resetearlo innecesariamente
+    if (this.pageSizeOptions.length > 0) {
+      // Mantener itemsPerPage si es válido, de lo contrario usar la opción más cercana
+      if (!this.pageSizeOptions.includes(this.itemsPerPage)) {
+        const validOption = this.pageSizeOptions
+          .filter((option) => option <= this.totalAsignaciones)
+          .reduce(
+            (prev, curr) =>
+              Math.abs(curr - this.itemsPerPage) < Math.abs(prev - this.itemsPerPage) ? curr : prev,
+            this.pageSizeOptions[0]
+          );
+        this.itemsPerPage = validOption;
+        localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+        console.log(
+          `itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage} porque no estaba en pageSizeOptions:`,
+          this.pageSizeOptions
+        );
+      }
+    } else {
+      this.pageSizeOptions = [5]; // Opción por defecto si no hay asignaciones
+      this.itemsPerPage = 5;
+      localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+      console.log(
+        `itemsPerPage establecido a 5 porque no hay asignaciones. pageSizeOptions:`,
+        this.pageSizeOptions
+      );
+    }
+  }
+
+  // Actualizar itemsPerPage cuando el usuario selecciona una nueva opción
+  onItemsPerPageChange(newSize: number): void {
+    console.log(`onItemsPerPageChange: Cambiando itemsPerPage a ${newSize}`);
+    this.itemsPerPage = newSize;
+    localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+    this.page = 1; // Reiniciar a la primera página
+    this.cargarAsignaciones();
   }
 
   cargarProfesores(): void {
@@ -99,7 +153,7 @@ export class ProfesorCursoComponent implements OnInit {
       },
       error: (err) => {
         this.notificationService.showNotification('Error al cargar profesores', 'error');
-      }
+      },
     });
   }
 
@@ -140,8 +194,10 @@ export class ProfesorCursoComponent implements OnInit {
         fechaFin: '',
         fechaTipo: 'asignacion'
       };
+      this.appliedFilters = null; // Limpiar filtros aplicados
       this.grados = [];
       this.keyword = '';
+      this.page = 1; // Reiniciar página
       this.cargarAsignaciones(); // Recargar asignaciones después de limpiar filtros
     } else {
       (this.filters as any)[filter] = filter === 'fechaTipo' ? 'asignacion' : '';
@@ -227,50 +283,100 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   cargarConteoAsignaciones(): void {
-    // Assuming a method exists in the service to get the count
     this.profesorCursoService.obtenerConteoAsignaciones().subscribe({
       next: (count) => {
         this.totalAsignaciones = count;
+        this.updatePageSizeOptions();
         this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.totalAsignaciones = 0;
+        this.pageSizeOptions = [5];
+        this.itemsPerPage = 5;
+        localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
         this.notificationService.showNotification(
           'Error al cargar el conteo de asignaciones: ' + err.message,
           'error'
         );
         console.error('Error al cargar conteo:', err);
-      }
+      },
     });
   }
 
   cargarAsignaciones(): void {
     this.isLoading = true;
-    this.profesorCursoService.obtenerCourseList(this.page, this.itemsPerPage, this.sortBy, this.sortDir).subscribe({
-      next: (response) => {
-        this.asignaciones = response.content || [];
-        this.totalAsignaciones = response.totalElements;
-        this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
-        this.cdr.detectChanges();
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.asignaciones = [];
-        this.totalPages = 1;
-        this.notificationService.showNotification(
-          'Error al cargar asignaciones: ' + err.message,
-          'error'
-        );
-        this.cdr.detectChanges();
-        this.isLoading = false;
-      }
+    console.log('Cargando asignaciones con:', {
+      page: this.page,
+      itemsPerPage: this.itemsPerPage,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir,
+      filters: this.appliedFilters,
     });
+
+    if (this.appliedFilters) {
+      this.profesorCursoService
+        .buscarAsignaciones(this.appliedFilters, this.page, this.itemsPerPage, this.sortBy, this.sortDir)
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de buscarAsignaciones:', response);
+            this.asignaciones = response.content || [];
+            this.totalAsignaciones = response.totalElements;
+            this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+            this.updatePageSizeOptions();
+            if (this.page > this.totalPages) {
+              this.page = 1;
+              this.cargarAsignaciones();
+              return;
+            }
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            console.error('Error en buscarAsignaciones:', err);
+            this.asignaciones = [];
+            this.totalPages = 1;
+            this.notificationService.showNotification('Error al cargar asignaciones: ' + err.message, 'error');
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+        });
+    } else {
+      this.profesorCursoService
+        .obtenerCourseList(this.page, this.itemsPerPage, this.sortBy, this.sortDir)
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de obtenerCourseList:', response);
+            this.asignaciones = response.content || [];
+            this.totalAsignaciones = response.totalElements;
+            this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+            this.updatePageSizeOptions();
+            if (this.page > this.totalPages) {
+              this.page = 1;
+              this.cargarAsignaciones();
+              return;
+            }
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            console.error('Error en obtenerCourseList:', err);
+            this.asignaciones = [];
+            this.totalPages = 1;
+            this.notificationService.showNotification('Error al cargar asignaciones: ' + err.message, 'error');
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+        });
+    }
   }
 
   onPageChange(page: number) {
-    this.page = page;
-    this.cargarAsignaciones();
+    if (page >= 1 && page <= this.totalPages) {
+      console.log(`onPageChange: Cambiando a página ${page}`);
+      this.page = page;
+      this.cargarAsignaciones();
+    }
   }
 
   openAddModal(): void {
@@ -349,10 +455,7 @@ export class ProfesorCursoComponent implements OnInit {
 
   buscarAsignaciones(): void {
     if (!this.isKeywordValid()) {
-      this.notificationService.showNotification(
-        'El término de búsqueda no es válido.',
-        'info'
-      );
+      this.notificationService.showNotification('El término de búsqueda no es válido.', 'info');
       return;
     }
 
@@ -370,25 +473,48 @@ export class ProfesorCursoComponent implements OnInit {
       nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
       fechaInicio: this.filters.fechaInicio ? new Date(this.filters.fechaInicio).toISOString() : undefined,
       fechaFin: this.filters.fechaFin ? new Date(this.filters.fechaFin).toISOString() : undefined,
-      fechaTipo: this.filters.fechaTipo || undefined
+      fechaTipo: this.filters.fechaTipo || undefined,
     };
 
-    console.log('Filtros enviados al backend:', filters);
+    this.appliedFilters = filters;
 
-    this.profesorCursoService.buscarAsignaciones(filters).subscribe({
-      next: (resultado) => {
-        this.asignaciones = Array.isArray(resultado) ? resultado : [];
-        this.totalPages = Math.ceil(this.asignaciones.length / this.itemsPerPage);
-        this.page = 1;
-        this.cdr.detectChanges();
-        this.isLoading = false;
-        console.log('Resultados recibidos:', this.asignaciones);
-      },
-      error: (err) => {
-        console.error('Error en la búsqueda:', err);
-        this.notificationService.showNotification('Error al buscar asignaciones. Verifique los filtros o contacte al administrador.', 'error');
-        this.isLoading = false;
-      }
+    console.log('Enviando solicitud con:', {
+      filters,
+      page: this.page,
+      itemsPerPage: this.itemsPerPage,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir,
     });
+
+    this.profesorCursoService
+      .buscarAsignaciones(filters, this.page, this.itemsPerPage, this.sortBy, this.sortDir)
+      .subscribe({
+        next: (resultado) => {
+          console.log('Resultados recibidos:', resultado);
+          this.asignaciones = resultado.content;
+          this.totalAsignaciones = resultado.totalElements;
+          this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+          this.updatePageSizeOptions();
+          if (this.page > this.totalPages) {
+            this.page = 1;
+            this.buscarAsignaciones();
+            return;
+          }
+          this.cdr.detectChanges();
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda:', err);
+          this.notificationService.showNotification(
+            'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
+            'error'
+          );
+          this.asignaciones = [];
+          this.totalAsignaciones = 0;
+          this.totalPages = 1;
+          this.updatePageSizeOptions();
+          this.isLoading = false;
+        },
+      });
   }
 }

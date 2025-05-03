@@ -28,7 +28,8 @@ import { GeneralLoadingSpinnerComponent } from '../../../../../general/component
 })
 export class CampusCursosComponent {
   public page: number = 1;
-  public itemsPerPage: number = 6;
+  public itemsPerPage: number = 5; // Valor inicial
+  public pageSizeOptions: number[] = []; // Opciones dinámicas para el selector
   totalPages: number = 1;
   cursos: Curso[] = [];
   keyword: string = '';
@@ -52,7 +53,51 @@ export class CampusCursosComponent {
 
 
   ngOnInit(): void {
+    // Cargar itemsPerPage desde localStorage si existe
+    const savedItemsPerPage = localStorage.getItem('itemsPerPage');
+    if (savedItemsPerPage) {
+      this.itemsPerPage = parseInt(savedItemsPerPage, 10);
+    }
     this.cargarConteoCursos();
+    this.cargarCursos();
+  }
+
+  // Calcular opciones dinámicas para el selector de itemsPerPage
+  // Calcular opciones dinámicas para el selector de itemsPerPage
+  private updatePageSizeOptions(): void {
+    const previousItemsPerPage = this.itemsPerPage;
+    this.pageSizeOptions = [];
+    const increment = 5;
+    for (let i = increment; i <= this.totalCursos; i += increment) {
+      this.pageSizeOptions.push(i);
+    }
+
+    // Asegurar que itemsPerPage sea válido sin resetearlo innecesariamente
+    if (this.pageSizeOptions.length > 0) {
+      // Mantener itemsPerPage si es válido, de lo contrario usar la opción más cercana
+      if (!this.pageSizeOptions.includes(this.itemsPerPage)) {
+        // Buscar la opción más cercana que sea menor o igual a totalCursos
+        const validOption = this.pageSizeOptions
+          .filter(option => option <= this.totalCursos)
+          .reduce((prev, curr) => (Math.abs(curr - this.itemsPerPage) < Math.abs(prev - this.itemsPerPage) ? curr : prev), this.pageSizeOptions[0]);
+        this.itemsPerPage = validOption;
+        localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+        console.log(`itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage} porque no estaba en pageSizeOptions:`, this.pageSizeOptions);
+      }
+    } else {
+      this.pageSizeOptions = [5]; // Opción por defecto si no hay cursos
+      this.itemsPerPage = 5;
+      localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+      console.log(`itemsPerPage establecido a 5 porque no hay cursos. pageSizeOptions:`, this.pageSizeOptions);
+    }
+  }
+
+  // Actualizar itemsPerPage cuando el usuario selecciona una nueva opción
+  onItemsPerPageChange(newSize: number): void {
+    console.log(`onItemsPerPageChange: Cambiando itemsPerPage a ${newSize}`);
+    this.itemsPerPage = newSize;
+    localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+    this.page = 1; // Reiniciar a la primera página
     this.cargarCursos();
   }
 
@@ -130,15 +175,16 @@ export class CampusCursosComponent {
     this.courseService.obtenerConteoCursos().subscribe({
       next: (count) => {
         this.totalCursos = count;
+        this.updatePageSizeOptions();
         this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.totalCursos = 0;
-        this.notificationService.showNotification(
-          'Error al cargar el conteo de cursos: ' + err.message,
-          'error'
-        );
+        this.pageSizeOptions = [5];
+        this.itemsPerPage = 5;
+        localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+        this.notificationService.showNotification('Error al cargar el conteo de cursos: ' + err.message, 'error');
         console.error('Error al cargar conteo:', err);
       },
     });
@@ -146,30 +192,43 @@ export class CampusCursosComponent {
 
   cargarCursos(): void {
     this.isLoading = true;
-    this.courseService.obtenerListaCursos(this.page, this.itemsPerPage, this.sortBy, this.sortDir).subscribe({
-      next: (response) => {
-        this.cursos = response.content || [];
-        this.totalCursos = response.totalElements;
-        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
-        this.cdr.detectChanges();
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.cursos = [];
-        this.totalPages = 1;
-        this.notificationService.showNotification(
-          'Error al cargar cursos: ' + err.message,
-          'error'
-        );
-        this.cdr.detectChanges();
-        this.isLoading = false;
-      },
-    });
+
+    if (this.keyword.trim()) {
+      this.buscarCursos();
+    } else {
+      this.courseService
+        .obtenerListaCursos(this.page, this.itemsPerPage, this.sortBy, this.sortDir)
+        .subscribe({
+          next: (response) => {
+            this.cursos = response.content || [];
+            this.totalCursos = response.totalElements;
+            this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
+            this.updatePageSizeOptions();
+            // Asegurar que la página actual sea válida
+            if (this.page > this.totalPages) {
+              this.page = 1;
+              this.cargarCursos();
+              return;
+            }
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            this.cursos = [];
+            this.totalPages = 1;
+            this.notificationService.showNotification('Error al cargar cursos: ' + err.message, 'error');
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+        });
+    }
   }
 
   onPageChange(page: number) {
-    this.page = page;
-    this.cargarCursos();
+    if (page >= 1 && page <= this.totalPages) {
+      this.page = page;
+      this.cargarCursos();
+    }
   }
 
   openAddModal(): void {
@@ -247,7 +306,6 @@ export class CampusCursosComponent {
   }
 
   buscarCursos(): void {
-    // No realizar búsqueda si el keyword no es válido
     if (!this.isKeywordValid()) {
       this.notificationService.showNotification(
         'El término de búsqueda no es válido. Use solo letras, números, acentos, ñ y un solo espacio entre palabras.',
@@ -256,26 +314,37 @@ export class CampusCursosComponent {
       return;
     }
 
-    // Si el keyword está vacío, cargar todos los cursos
     if (!this.keyword.trim()) {
       this.cargarCursos();
       return;
     }
 
-    // Realizar la búsqueda
-    this.courseService.buscarCursos(this.keyword.trim()).subscribe({
+    this.isLoading = true;
+    this.courseService.buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir).subscribe({
       next: (resultado) => {
-        this.cursos = resultado;
-        this.totalPages = Math.ceil(this.cursos.length / this.itemsPerPage);
-        this.page = 1;
+        this.totalCursos = resultado.length;
+        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
+        // Paginación manual: tomar los elementos de la página actual
+        const startIndex = (this.page - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        this.cursos = resultado.slice(startIndex, endIndex);
+        this.updatePageSizeOptions();
+        // Asegurar que la página actual sea válida
+        if (this.page > this.totalPages) {
+          this.page = 1;
+          this.buscarCursos();
+          return;
+        }
         this.cdr.detectChanges();
+        this.isLoading = false;
       },
       error: (err) => {
-        this.notificationService.showNotification(
-          'Error al buscar cursos: ' + err.message,
-          'error'
-        );
+        this.cursos = [];
+        this.totalCursos = 0;
+        this.totalPages = 1;
+        this.notificationService.showNotification('Error al buscar cursos: ' + err.message, 'error');
         console.error('Error en la búsqueda:', err);
+        this.isLoading = false;
       },
     });
   }
