@@ -1,10 +1,10 @@
-import { GeneralLoadingSpinnerComponent } from './../../../general/components/spinner/spinner.component';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatriculaService } from './../../services/matricula.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faGraduationCap, faChair, faSortNumericDown, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 
 interface NivelVacantes {
   nombre: string;
@@ -19,7 +19,7 @@ interface NivelVacantes {
     CommonModule,
     RouterModule,
     FontAwesomeModule,
-    GeneralLoadingSpinnerComponent, // spinner
+    GeneralLoadingSpinnerComponent,
   ],
   templateUrl: './matriculas.component.html',
   styleUrls: ['./matriculas.component.scss']
@@ -33,8 +33,8 @@ export class MatriculasComponent implements OnInit {
   faSortNumericDown = faSortNumericDown;
   faCheck = faCheck;
 
-  // mensaje spinner
-  loadingMessage: string = 'Cargando vacantes...';
+  // Propiedad para el mensaje del spinner
+  loadingMessage: string = 'Cargando vacantes...'; // Mensaje por defecto
 
   constructor(
     private matriculaService: MatriculaService,
