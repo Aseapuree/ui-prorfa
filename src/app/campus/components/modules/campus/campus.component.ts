@@ -15,11 +15,12 @@ import { AlumnoCursoService } from '../../../services/alumno-curso.service';
 import { AlumnoCurso } from '../../../interface/AlumnoCurso';
 import { SesionService } from '../../../services/sesion.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { GeneralLoadingSpinnerComponent } from '../../../../general/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-campus',
   standalone: true,
-  imports: [RouterModule, CardComponent, HttpClientModule, CommonModule, NgxPaginationModule, MatButtonModule, MatDialogModule,PaginationComponent],
+  imports: [RouterModule, CardComponent, HttpClientModule, CommonModule, NgxPaginationModule, MatButtonModule, MatDialogModule,PaginationComponent,GeneralLoadingSpinnerComponent],
   providers: [ProfesorCursoService, AlumnoCursoService],
   templateUrl: './campus.component.html',
   styleUrl: './campus.component.scss'
@@ -32,6 +33,7 @@ export class CampusComponent implements OnInit {
   rolUsuario: string | null = null;
   niveles: { nivel: string; cursos: ProfesorCurso[]; sesiones: number }[] = [];
   hasCursos: boolean = false;
+  isLoading: boolean = false; // Propiedad para controlar el spinner
 
   constructor(
     private profesorCursoService: ProfesorCursoService,
@@ -43,6 +45,7 @@ export class CampusComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.isLoading = true; // Activa el spinner al iniciar
     try {
       const userData: UserData = await lastValueFrom(this.authService.getUserData());
       console.log('Datos del usuario:', userData);
@@ -51,6 +54,7 @@ export class CampusComponent implements OnInit {
       this.rolUsuario = userData?.data?.rol || null;
       if (!this.idAuth) {
         console.error('No se encontró el id_auth del usuario');
+        this.isLoading = false; // Desactiva el spinner si hay error
         return;
       }
 
@@ -75,10 +79,13 @@ export class CampusComponent implements OnInit {
       }
     } catch (error) {
       console.error('Error al inicializar el componente:', error);
+    } finally {
+      this.isLoading = false; // Desactiva el spinner al finalizar
     }
   }
 
   async obtenerCursosPorProfesor(usuarioId: string): Promise<void> {
+    this.isLoading = true; // Activa el spinner
     try {
       const rawResponse = await lastValueFrom(
         this.profesorCursoService.obtenerCursosPorProfesor(usuarioId)
@@ -90,10 +97,13 @@ export class CampusComponent implements OnInit {
     } catch (error) {
       console.error('Error al obtener los cursos del profesor:', error);
       this.profesorcursos = [];
+    } finally {
+      this.isLoading = false; // Desactiva el spinner
     }
   }
 
   async obtenerCursosPorAlumno(): Promise<void> {
+    this.isLoading = true; // Activa el spinner
     try {
       this.alumnocursos = await lastValueFrom(
         this.alumnoCursoService.obtenerCursosPorAlumno(this.idAuth!)
@@ -101,45 +111,51 @@ export class CampusComponent implements OnInit {
       console.log('Cursos del alumno:', this.alumnocursos);
     } catch (error) {
       console.error('Error al obtener los cursos del alumno:', error);
+    } finally {
+      this.isLoading = false; // Desactiva el spinner
     }
   }
 
   async prepararNiveles(): Promise<void> {
-    console.log('Preparando niveles con cursos:', this.profesorcursos);
+    this.isLoading = true; // Activa el spinner
+    try {
+      console.log('Preparando niveles con cursos:', this.profesorcursos);
 
-    // Filtrar cursos por nivel (insensible a mayúsculas/minúsculas)
-    const primariaCursos = this.profesorcursos.filter(curso =>
-      curso.nivel?.toLowerCase() === 'primaria'
-    );
+      const primariaCursos = this.profesorcursos.filter(curso =>
+        curso.nivel?.toLowerCase() === 'primaria'
+      );
 
-    const secundariaCursos = this.profesorcursos.filter(curso =>
-      curso.nivel?.toLowerCase() === 'secundaria'
-    );
+      const secundariaCursos = this.profesorcursos.filter(curso =>
+        curso.nivel?.toLowerCase() === 'secundaria'
+      );
 
-    console.log('Cursos Primaria:', primariaCursos);
-    console.log('Cursos Secundaria:', secundariaCursos);
+      console.log('Cursos Primaria:', primariaCursos);
+      console.log('Cursos Secundaria:', secundariaCursos);
 
-    this.niveles = [];
+      this.niveles = [];
 
-    if (primariaCursos.length > 0) {
-      const sesionesPrimaria = await this.contarSesiones(primariaCursos);
-      this.niveles.push({
-        nivel: 'Primaria', // Valor que se muestra en la tarjeta
-        cursos: primariaCursos,
-        sesiones: sesionesPrimaria,
-      });
+      if (primariaCursos.length > 0) {
+        const sesionesPrimaria = await this.contarSesiones(primariaCursos);
+        this.niveles.push({
+          nivel: 'Primaria',
+          cursos: primariaCursos,
+          sesiones: sesionesPrimaria,
+        });
+      }
+
+      if (secundariaCursos.length > 0) {
+        const sesionesSecundaria = await this.contarSesiones(secundariaCursos);
+        this.niveles.push({
+          nivel: 'Secundaria',
+          cursos: secundariaCursos,
+          sesiones: sesionesSecundaria,
+        });
+      }
+
+      console.log('Niveles preparados:', this.niveles);
+    } finally {
+      this.isLoading = false; // Desactiva el spinner
     }
-
-    if (secundariaCursos.length > 0) {
-      const sesionesSecundaria = await this.contarSesiones(secundariaCursos);
-      this.niveles.push({
-        nivel: 'Secundaria', // Valor que se muestra en la tarjeta
-        cursos: secundariaCursos,
-        sesiones: sesionesSecundaria,
-      });
-    }
-
-    console.log('Niveles preparados:', this.niveles);
   }
 
   async contarSesiones(cursos: ProfesorCurso[]): Promise<number> {

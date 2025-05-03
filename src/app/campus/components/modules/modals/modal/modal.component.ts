@@ -1,18 +1,26 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogContent, MatDialogModule } from '@angular/material/dialog';
-import { MatInput } from '@angular/material/input'
-import { MatFormField, MatLabel } from '@angular/material/form-field'
+import { MAT_DIALOG_DATA, MatDialogContent, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatInput, MatInputModule } from '@angular/material/input'
+import { MatFormField, MatFormFieldModule, MatLabel } from '@angular/material/form-field'
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CourseService } from '../../../../services/course.service';
 import { ModalService } from './modal.service';
 import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
+import { Curso } from '../../../../interface/curso';
 
-const MATERIAL_MODULES = [MatLabel, MatFormField, MatInput, MatDialogModule, MatButtonModule]
+const MATERIAL_MODULES = [
+  MatDialogModule,
+  MatFormFieldModule, // Agregar para mat-error y mat-label
+  MatInputModule,     // Agregar para matInput
+  MatButtonModule,
+  MatDialogContent
+];
 
 @Component({
   selector: 'app-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, MATERIAL_MODULES],
+  imports: [ReactiveFormsModule,CommonModule, MATERIAL_MODULES],
   templateUrl: './modal.component.html',
   styleUrl: './modal.component.scss',
 })
@@ -23,86 +31,58 @@ export class ModalComponent implements OnInit {
   private readonly _matDialog = inject(MAT_DIALOG_DATA);
   private readonly _contactSVC = inject(CourseService);
   private readonly _modalSvc = inject(ModalService);
+  private readonly _dialogRef = inject(MatDialogRef<ModalComponent>);
 
   ngOnInit(): void {
-    console.log('ModalComponent iniciado'); // Depuración
-    this._builForm();
-    console.log("Datos recibidos en el modal:", this._matDialog); // Depuración: Verifica los datos
-  
-    if (this._matDialog.isEditing && this._matDialog.data) {
-      const curso = this._matDialog.data;
-      console.log("Curso recibido para editar:", curso); // Depuración: Verifica el ID
+    this._buildForm();
+    if (this._matDialog.isEditing && this._matDialog) {
       this.contactForm.patchValue({
-        ...curso,
-        fechaCreacion: curso.fechaCreacion ? new Date(curso.fechaCreacion).toISOString().split('T')[0] : '',
-        fechaActualizacion: curso.fechaActualizacion ? new Date(curso.fechaActualizacion).toISOString().split('T')[0] : '',
+        idCurso: this._matDialog.idCurso,
+        nombre: this._matDialog.nombre,
+        descripcion: this._matDialog.descripcion,
+        abreviatura: this._matDialog.abreviatura,
       });
     }
   }
-  
 
   async onSubmit() {
-    const curso = this.contactForm.value;
-    console.log("Datos del formulario antes de formatear:", curso); // Depuración
-  
-    // Formatear fechas correctamente
-    curso.fechaCreacion = curso.fechaCreacion ? new Date(curso.fechaCreacion).toISOString().slice(0, 19) : null;
-    curso.fechaActualizacion = new Date().toISOString().slice(0, 19);
-  
-    console.log("Datos del formulario después de formatear:", curso); // Depuración
-  
-    if (this._matDialog.isEditing) {
-      if (curso.idCurso) {
-        console.log("Editando curso:", curso); // Depuración
-  
-        // Enviar campos
-        const datosParaEnviar = {
-          idCurso: curso.idCurso,
-          nombre: curso.nombre,
-          descripcion: curso.descripcion,
-          grado: curso.grado,
-          fechaCreacion: curso.fechaCreacion,
-          fechaActualizacion: curso.fechaActualizacion
-        };
-  
-        this._contactSVC.actualizarCurso(curso.idCurso, datosParaEnviar).subscribe({
-          next: () => this._modalSvc.closeModal(),
-          error: (err) => console.error('Error al actualizar curso:', err)
-        });
-      } else {
-        console.error('ID no definido');
-      }
+    if (this.contactForm.invalid) return;
+
+    const curso: Curso = this.contactForm.value;
+
+    if (this._matDialog.isEditing && curso.idCurso) {
+      this._contactSVC.actualizarCurso(curso.idCurso, curso).subscribe({
+        next: (cursoActualizado) => {
+          this._dialogRef.close(cursoActualizado); // Cerrar el modal y devolver el curso actualizado
+        },
+        error: (err) => {
+          console.error('Error al actualizar curso:', err);
+        },
+      });
     } else {
-      console.log("Agregando curso:", curso); 
       this._contactSVC.agregarCurso(curso).subscribe({
-        next: () => this._modalSvc.closeModal(),
-        error: (err) => console.error('Error al agregar curso:', err)
+        next: (cursoAgregado) => {
+          this._dialogRef.close(cursoAgregado); // Cerrar el modal y devolver el curso agregado
+        },
+        error: (err) => {
+          console.error('Error al agregar curso:', err);
+        },
       });
     }
   }
-  
 
   getTitle(): string {
     return this._matDialog.isEditing ? 'Editar Curso' : 'Agregar Curso';
   }
 
-  private _builForm(): void {
+  private _buildForm(): void {
     this.contactForm = this._fb.group({
-      idCurso: [this._matDialog?.idCurso || ''],
-      nombre: [this._matDialog?.nombre || '', Validators.required],
-      descripcion: [this._matDialog?.descripcion || '', Validators.required],
-      grado: [this._matDialog?.grado || '', Validators.required]
+      idCurso: [''],
+      nombre: ['', Validators.required],
+      descripcion: ['', Validators.required],
+      abreviatura: ['', Validators.required],
     });
-  
-    // Formatear fechaCreacion si está presente
-    if (this._matDialog?.fechaCreacion) {
-      const fechaCreacionFormateada = new Date(this._matDialog.fechaCreacion).toISOString().slice(0, 16);
-      this.contactForm.patchValue({ fechaCreacion: fechaCreacionFormateada });
-    }
   }
-
- 
-  
 }
 
   

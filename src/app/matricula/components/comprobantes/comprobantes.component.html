@@ -1,44 +1,121 @@
-<div class="container" *ngIf="comprobante; else sinComprobante">
-  <h2>📄 Comprobante</h2>
+<app-general-loading-spinner [visible]="isLoading || isGeneratingPdf || isNavigating" [message]="getSpinnerMessage()"></app-general-loading-spinner>
 
-  <p>
-    <strong>👤 Apoderado:</strong>
-    {{ comprobante.apoderadoNombre }} (DNI: {{ comprobante.apoderadoDocumento }})
-  </p>
-  <p>
-    <strong>👨‍🎓 Alumno:</strong>
-    {{ comprobante.alumnoNombre }} (DNI: {{ comprobante.alumnoDocumento }})
-  </p>
-  <p>
-    <strong>🏫 Grado/Sección:</strong>
-    {{ comprobante.grado }}/{{ comprobante.seccion }}
-  </p>
-  <p>
-    <strong>🔢 Código Matrícula:</strong>
-    {{ comprobante.codigoMatricula }}
-  </p>
-  <p>
-    <strong>🆔 Código Alumno:</strong>
-    {{ comprobante.codigoAlumno }}
-  </p>
-  <p>
-    <strong>📅 Fecha Creación:</strong>
-    {{ comprobante.fechaCreacion }}
-  </p>
-  <p>
-    <strong>💳 Método de Pago:</strong>
-    {{ comprobante.metodoPago }}
-  </p>
-  <p>
-    <strong>📝 Observaciones:</strong>
-    {{ comprobante.observaciones }}
-  </p>
-
-  <hr>
-  <button (click)="generarComprobantePago()">💰 Generar Comprobante de Pago</button>
-  <button (click)="generarComprobanteMatricula()">✅ Generar Comprobante de Matrícula</button>
+<div *ngIf="error && !isLoading && !isGeneratingPdf && !isNavigating" class="flex flex-col items-center justify-center min-h-screen bg-red-100 p-4 rounded-lg shadow-md mx-auto max-w-lg">
+  <fa-icon [icon]="faTriangleExclamation" size="2x" class="text-red-500 mb-3"></fa-icon>
+  <p class="text-red-700 text-lg font-semibold text-center">{{ error }}</p>
+  <p class="mt-2 text-red-600 text-sm text-center">Por favor, verifique el ID de matrícula o intente más tarde.</p>
+  <button (click)="finalizar()" class="mt-4 px-4 py-2 bg-red-600 text-white font-semibold rounded-md shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+    Volver
+  </button>
 </div>
 
-<ng-template #sinComprobante>
-  <p>⚠️ No hay comprobante disponible.</p>
-</ng-template>
+<div *ngIf="comprobante && !isLoading && !error && !isGeneratingPdf && !isNavigating" class="container mx-auto p-6 bg-white rounded-lg shadow-xl my-8">
+  <h2 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center">
+    <fa-icon [icon]="faReceipt" class="mr-3 text-blue-600"></fa-icon>
+    Comprobantes Generados
+  </h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+    <div class="flex flex-col justify-between">
+      <div class="info-general">
+        <h4>
+          <fa-icon [icon]="faCircleInfo" class="fa-icon"></fa-icon> Información General
+        </h4>
+        <div class="space-y-3 text-sm">
+          <div class="data-row">
+            <span class="label">
+              <fa-icon [icon]="faHashtag" class="fa-icon"></fa-icon> Código Matrícula:
+            </span>
+            <span class="value">{{ comprobante.codigomatricula || 'N/A' }}</span>
+          </div>
+          <div class="data-row">
+            <span class="label">
+              <fa-icon [icon]="faHashtag" class="fa-icon"></fa-icon> Código Alumno:
+            </span>
+            <span class="value">{{ comprobante.codigoalumno || 'N/A' }}</span>
+          </div>
+          <div class="data-row">
+            <span class="label">
+              <fa-icon [icon]="faHashtag" class="fa-icon"></fa-icon> Código Pago:
+            </span>
+            <span class="value">{{ comprobante.codigopago || 'N/A' }}</span>
+          </div>
+          <div class="data-row">
+            <span class="label">
+              <fa-icon [icon]="faCalendarAlt" class="fa-icon"></fa-icon> Fecha Creación:
+            </span>
+            <span class="value">{{ comprobante.fechaCreacion ? (comprobante.fechaCreacion | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
+          </div>
+        </div>
+        <div class="form-footer">
+          <button
+              (click)="finalizar()"
+              class="finalize-button"
+              [disabled]="isGeneratingPdf || isNavigating"  > Finalizar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-column">
+      <div class="comprobante-section matricula-section">
+        <h3>
+          <fa-icon [icon]="faGraduationCap" class="fa-icon"></fa-icon> Comprobante de Matrícula
+        </h3>
+        <div *ngIf="comprobante.urlMatricula; else noUrlMatricula">
+          <button
+            [disabled]="isMatriculaLoading || isPagoLoading || isGeneratingPdf || isNavigating" (click)="openPdf('matricula')"
+            class="btn-view-pdf matricula" >
+            <ng-container *ngIf="!isMatriculaLoading">
+              <fa-icon [icon]="faFilePdf" class="fa-icon"></fa-icon> Ver / Imprimir PDF Matrícula
+              <fa-icon [icon]="faLink" class="fa-icon"></fa-icon>
+            </ng-container>
+            <ng-container *ngIf="isMatriculaLoading">
+              <fa-icon [icon]="faSpinner" [spin]="true" class="fa-icon"></fa-icon> Generando...
+            </ng-container>
+          </button>
+        </div>
+        <ng-template #noUrlMatricula>
+          <div class="url-link no-url">
+            <fa-icon [icon]="faTimesCircle" class="fa-icon"></fa-icon> No hay PDF de Matrícula disponible.
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="comprobante-section pago-section">
+        <h3>
+          <fa-icon [icon]="faMoneyBillWave" class="fa-icon"></fa-icon> Comprobante de Pago
+        </h3>
+        <div *ngIf="comprobante.urlPago; else noUrlPago">
+          <button
+            [disabled]="isPagoLoading || isMatriculaLoading || isGeneratingPdf || isNavigating" (click)="openPdf('pago')"
+            class="btn-view-pdf pago" >
+            <ng-container *ngIf="!isPagoLoading">
+              <fa-icon [icon]="faFilePdf" class="fa-icon"></fa-icon> Ver / Imprimir PDF Pago
+              <fa-icon [icon]="faLink" class="fa-icon"></fa-icon>
+            </ng-container>
+            <ng-container *ngIf="isPagoLoading">
+              <fa-icon [icon]="faSpinner" [spin]="true" class="fa-icon"></fa-icon> Generando...
+            </ng-container>
+          </button>
+        </div>
+        <ng-template #noUrlPago>
+          <div class="url-link no-url">
+            <fa-icon [icon]="faTimesCircle" class="fa-icon"></fa-icon> No hay PDF de Pago disponible.
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="!comprobante && !isLoading && !error && !isGeneratingPdf && !isNavigating" class="no-data">
+  <fa-icon [icon]="faTriangleExclamation" class="fa-icon"></fa-icon>
+  <p>No se encontró información de comprobante para esta matrícula.</p>
+  <p class="text-gray-600 text-sm text-center">Si acabas de registrar una matrícula, puede que haya habido un problema al generar o recuperar los comprobantes.</p>
+  <button (click)="finalizar()" class="btn-back">
+    Volver a Matrículas
+  </button>
+</div>

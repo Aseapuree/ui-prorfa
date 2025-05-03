@@ -1,0 +1,370 @@
+<section class="container px-4 mx-auto">
+  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando asignaciones...'"></app-general-loading-spinner>
+  <div class="mt-6 md:flex md:items-center md:justify-between">
+    <div>
+      <div class="flex items-center gap-x-3">
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Asignación de profesores</h2>
+        <span
+          class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400"
+        >
+          {{ totalAsignaciones }} Asignaciones
+        </span>
+      </div>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">
+        Asignaciones de profesores a cursos
+      </p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+<div class="mt-4 flex flex-col gap-4 w-full">
+  <!-- Fila Superior: Profesor, Curso, Nivel, Grado, Sección -->
+  <div class="flex flex-wrap gap-4 sm:gap-6">
+    <!-- Filtro de Profesor -->
+    <div class="w-60 space-y-3">
+      <label for="profesorId" class="block text-sm font-medium text-gray-700 dark:text-white">Profesor</label>
+      <input 
+        type="text" 
+        id="profesorId" 
+        [(ngModel)]="filters.profesorId" 
+        placeholder="Nombre del profesor" 
+        class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+      />
+    </div>
+
+    <!-- Filtro de Curso -->
+    <div class="w-60 space-y-3">
+      <label for="cursoId" class="block text-sm font-medium text-gray-700 dark:text-white">Curso</label>
+      <input 
+        type="text" 
+        id="cursoId" 
+        [(ngModel)]="filters.cursoId" 
+        placeholder="Nombre del curso" 
+        class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+      />
+    </div>
+
+    <!-- Filtro de Nivel -->
+    <div class="w-60 space-y-3">
+      <label for="nivel" class="block text-sm font-medium text-gray-700 dark:text-white">Nivel</label>
+      <div class="relative">
+        <select 
+          id="nivel" 
+          [(ngModel)]="filters.nivel" 
+          (change)="onNivelChange()" 
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          [ngClass]="{'border-teal-500': filters.nivel, 'border-gray-200': !filters.nivel}"
+        >
+          <option value="">Seleccionar nivel</option>
+          <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
+        </select>
+        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.nivel">
+          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtro de Grado -->
+    <div class="w-60 space-y-3">
+      <label for="grado" class="block text-sm font-medium text-gray-700 dark:text-white">Grado</label>
+      <div class="relative">
+        <select 
+          id="grado" 
+          [(ngModel)]="filters.grado" 
+          [disabled]="!filters.nivel" 
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          [ngClass]="{'border-teal-500': filters.grado, 'border-gray-200': !filters.grado, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+        >
+          <option value="">Seleccionar grado</option>
+          <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
+        </select>
+        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.grado">
+          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtro de Sección -->
+    <div class="w-60 space-y-3">
+      <label for="seccion" class="block text-sm font-medium text-gray-700 dark:text-white">Sección</label>
+      <div class="relative">
+        <select 
+          id="seccion" 
+          [(ngModel)]="filters.seccion" 
+          [disabled]="!filters.nivel" 
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          [ngClass]="{'border-teal-500': filters.seccion, 'border-gray-200': !filters.seccion, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+        >
+          <option value="">Seleccionar sección</option>
+          <option *ngFor="let seccion of secciones" [value]="seccion">{{ seccion }}</option>
+        </select>
+        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.seccion">
+          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fila Inferior: Tipo de Fecha, Fecha Inicio, Fecha Fin -->
+  <div class="flex flex-wrap gap-4 sm:gap-6">
+    <!-- Tipo de Fecha -->
+    <div class="w-60 space-y-3">
+      <label for="fechaTipo" class="block text-sm font-medium text-gray-700 dark:text-white">Tipo de Fecha</label>
+      <div class="relative">
+        <select 
+          id="fechaTipo" 
+          [(ngModel)]="filters.fechaTipo" 
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          [ngClass]="{'border-teal-500': filters.fechaTipo, 'border-gray-200': !filters.fechaTipo}"
+        >
+          <option *ngFor="let tipo of fechaTipos" [value]="tipo.value">{{ tipo.label }}</option>
+        </select>
+        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.fechaTipo">
+          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fecha Inicio -->
+    <div class="w-60 space-y-3">
+      <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Inicio</label>
+      <input 
+        type="date" 
+        id="fechaInicio" 
+        [(ngModel)]="filters.fechaInicio" 
+        class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+      />
+    </div>
+
+    <!-- Fecha Fin -->
+    <div class="w-60 space-y-3">
+      <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Fin</label>
+      <input 
+        type="date" 
+        id="fechaFin" 
+        [(ngModel)]="filters.fechaFin" 
+        [min]="getMinFechaFin()" 
+        class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+      />
+    </div>
+  </div>
+
+      <!-- Selector de cantidad de datos por página y botones -->
+    <div class="mt-4 flex items-center justify-between">
+      <!-- Selector a la izquierda -->
+      <div class="flex items-center">
+        <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">
+          Mostrar:
+        </label>
+        <select
+          id="itemsPerPage"
+          [(ngModel)]="itemsPerPage"
+          (ngModelChange)="onItemsPerPageChange($event)"
+          class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
+        >
+          <option *ngFor="let option of pageSizeOptions" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
+      </div>
+
+      <!-- Botones a la derecha -->
+      <div class="flex items-center gap-x-2">
+        <app-tooltip tooltipText="Buscar asignaciones">
+          <button 
+            (click)="buscarAsignaciones()" 
+            class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          >
+            <fa-icon [icon]="['fas', 'search']"></fa-icon>
+            <span>Buscar</span>
+          </button>
+        </app-tooltip>
+        <app-tooltip tooltipText="Agregar nueva asignación">
+          <button 
+            (click)="openAddModal()" 
+            class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          >
+            <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+            <span>Agregar</span>
+          </button>
+        </app-tooltip>
+        <app-tooltip tooltipText="Limpiar filtros">
+          <button 
+            (click)="resetFilter('all')" 
+            class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          >
+            <fa-icon [icon]="['fas', 'broom']"></fa-icon>
+            <span>Limpiar</span>
+          </button>
+        </app-tooltip>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="flex flex-col mt-6">
+    <div class="overflow-x-auto shadow-sm">
+      <div class="inline-block min-w-full py-2 align-middle">
+        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+          <table class="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[150px]"
+                  (click)="cambiarOrdenamiento('profesor')"
+                >
+                  <div class="flex items-center">
+                    Profesor
+                    <fa-icon
+                      [icon]="sortBy === 'profesor' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
+                </th>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[150px]"
+                  (click)="cambiarOrdenamiento('curso')"
+                >
+                  <div class="flex items-center">
+                    Curso
+                    <fa-icon
+                      [icon]="sortBy === 'curso' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
+                </th>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
+                  (click)="cambiarOrdenamiento('grado')"
+                >
+                  <div class="flex items-center">
+                    Grado
+                    <fa-icon
+                      [icon]="sortBy === 'grado' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
+                </th>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
+                  (click)="cambiarOrdenamiento('seccion')"
+                >
+                  <div class="flex items-center">
+                    Sección
+                    <fa-icon
+                      [icon]="sortBy === 'seccion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
+                </th>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
+                  (click)="cambiarOrdenamiento('nivel')"
+                >
+                  <div class="flex items-center">
+                    Nivel
+                    <fa-icon
+                      [icon]="sortBy === 'nivel' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
+                </th>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
+                  (click)="cambiarOrdenamiento('fechaAsignacion')"
+                >
+                  <div class="flex items-center">
+                    Fecha Asignación
+                    <fa-icon
+                      [icon]="sortBy === 'fechaAsignacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
+                </th>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
+                  (click)="cambiarOrdenamiento('fechaActualizacion')"
+                >
+                  <div class="flex items-center">
+                    Fecha Actualización
+                    <fa-icon
+                      [icon]="sortBy === 'fechaActualizacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
+                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
+                    ></fa-icon>
+                  </div>
+                </th>
+                <th
+                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 max-w-[100px]"
+                >
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+              <tr *ngFor="let asignacion of asignaciones">
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate">
+                  {{ asignacion.usuario?.nombre }} {{ asignacion.usuario?.apellidopaterno }}
+                </td>
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate">
+                  {{ asignacion.curso?.nombre }}
+                </td>
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
+                  {{ asignacion.grado }}
+                </td>
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
+                  {{ asignacion.seccion }}
+                </td>
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
+                  {{ asignacion.nivel }}
+                </td>
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
+                  {{ asignacion.fechaAsignacion | date: 'yyyy-MM-dd HH:mm' }}
+                </td>
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
+                  {{ asignacion.fechaActualizacion ? (asignacion.fechaActualizacion | date: 'yyyy-MM-dd HH:mm') : 'Sin actualizar' }}
+                </td>
+                <td class="px-4 md:px-2 py-4 text-sm max-w-[100px]">
+                  <div class="flex items-center gap-x-6 md:gap-x-3">
+                    <app-tooltip tooltipText="Editar asignación">
+                      <button
+                        (click)="openEditModal(asignacion)"
+                        class="text-gray-500 hover:text-yellow-500"
+                      >
+                        <fa-icon [icon]="['fas', 'pencil']" class="h-8 w-8"></fa-icon>
+                      </button>
+                    </app-tooltip>
+                    <app-tooltip tooltipText="Eliminar asignación">
+                      <button
+                        (click)="eliminarAsignacion(asignacion.idProfesorCurso!)"
+                        class="text-gray-500 hover:text-red-500"
+                      >
+                        <fa-icon [icon]="['fas', 'trash']" class="h-8 w-8"></fa-icon>
+                      </button>
+                    </app-tooltip>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-pagination
+    [page]="page"
+    [totalPages]="totalPages"
+    [maxSize]="7"
+    (pageChange)="onPageChange($event)"
+  ></app-pagination>
+  <app-notification></app-notification>
+</section>

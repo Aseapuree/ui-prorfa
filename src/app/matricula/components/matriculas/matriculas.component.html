@@ -1,37 +1,38 @@
-<div *ngIf="cargando" class="loading-container">
-  <div class="spinner"></div>
-  <p>Cargando vacantes...</p>
-</div>
+<app-general-loading-spinner [visible]="cargando" [message]="loadingMessage"></app-general-loading-spinner>
 
-<div *ngIf="!cargando">
-  <div *ngFor="let nivel of niveles">
-    <h2>{{ nivel.nombre }}</h2>
-    <div class="card-container">
-      <div
-        class="card"
-        *ngFor="let grado of nivel.grados"
-        (click)="matricular(nivel.nombre, grado)"
-      >
-        <div class="front">
-          <h3>🎓 Grado {{ grado }}</h3>
-        </div>
-        <div class="back">
-          <p>Vacantes disponibles: <span>💺</span></p>
-          <div *ngFor="let seccion of getSecciones(nivel.vacantes[grado])">
-            <p>
-              Sección {{ seccion }}: {{ nivel.vacantes[grado][seccion] }}
-              <span>🔢</span>
-            </p>
+<ng-container *ngIf="!cargando">
+  <ng-container *ngFor="let nivel of niveles">
+    <div *ngIf="nivel.nombre.toLowerCase() === selectedNivel">
+      <div class="card-container">
+        <div class="card" *ngFor="let grado of nivel.grados">
+          <div class="front">
+            <h3>
+              <fa-icon [icon]="faGraduationCap"></fa-icon>
+              {{ grado }}°
+            </h3>
           </div>
-          <button
-            *ngIf="hayVacantes(nivel.vacantes[grado])"
-            class="button"
-            (click)="matricular(nivel.nombre, grado); $event.stopPropagation()"
-          >
-            Matricular <span>✅</span>
-          </button>
+          <div class="back">
+            <p>
+              Vacantes disponibles:
+              <fa-icon [icon]="faChair"></fa-icon>
+            </p>
+            <div *ngFor="let seccion of getSecciones(nivel.vacantes[grado])">
+              <p>
+                Sección {{ seccion }}: {{ nivel.vacantes[grado][seccion] }}
+                <fa-icon [icon]="faSortNumericDown"></fa-icon>
+              </p>
+            </div>
+            <button
+              *ngIf="hayVacantes(nivel.vacantes[grado])"
+              class="button"
+              (click)="matricular(nivel.nombre, grado); $event.stopPropagation()"
+            >
+              Matricular
+              <fa-icon [icon]="faCheck"></fa-icon>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
+  </ng-container>
+</ng-container>

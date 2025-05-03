@@ -19,16 +19,18 @@ import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 import { ProfesorCursoService } from '../../../../services/profesor-curso.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
+import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 
 interface BreadcrumbItem {
   label: string;
   url: string;
   isActive?: boolean;
+  queryParams?: { [key: string]: any }; // Agregar queryParams como opcional
 }
 @Component({
   selector: 'app-campus-sesiones',
   standalone: true,
-  imports: [CommonModule, NgxPaginationModule, FontAwesomeModule, RouterModule, CardWeekComponent, HttpClientModule, NotificationComponent,PaginationComponent,BreadcrumbComponent],
+  imports: [CommonModule, NgxPaginationModule, FontAwesomeModule, RouterModule, CardWeekComponent, HttpClientModule, NotificationComponent,PaginationComponent,BreadcrumbComponent,GeneralLoadingSpinnerComponent],
   providers: [SesionService, AlumnoCursoService,ProfesorCursoService],
   templateUrl: './campus-sesiones.component.html',
   styleUrls: ['./campus-sesiones.component.scss']
@@ -45,6 +47,8 @@ export class CampusSesionesComponent {
   seccion: string = '';
   nivel: string = '';
   breadcrumbItems: BreadcrumbItem[] = [];
+  isLoading: boolean = false;
+  private loadingTasks: number = 0;
 
   constructor(
     private sesionService: SesionService,
@@ -57,7 +61,26 @@ export class CampusSesionesComponent {
     private notificationService: NotificationService
   ) {}
 
+  // Método auxiliar para actualizar el estado del spinner
+  private updateLoadingState(): void {
+    this.isLoading = this.loadingTasks > 0;
+  }
+
+  // Método para incrementar el contador de tareas
+  private startLoadingTask(): void {
+    this.loadingTasks++;
+    this.updateLoadingState();
+  }
+
+  // Método para decrementar el contador de tareas
+  private completeLoadingTask(): void {
+    this.loadingTasks--;
+    if (this.loadingTasks < 0) this.loadingTasks = 0; // Evitar valores negativos
+    this.updateLoadingState();
+  }
+
   async ngOnInit(): Promise<void> {
+    this.startLoadingTask(); // Iniciar la primera tarea de carga
     try {
       const userData: UserData = await lastValueFrom(this.validateService.getUserData());
       this.rolUsuario = userData?.data?.rol || null;
@@ -89,8 +112,10 @@ export class CampusSesionesComponent {
             console.error('No se encontró usuarioId en localStorage');
             this.notificationService.showNotification('Error: No se encontró el ID del usuario', 'error');
             this.router.navigate(['campus']);
+            this.completeLoadingTask();
             return;
           }
+          this.startLoadingTask(); // Iniciar tarea para obtener cursos
           try {
             const cursos = await lastValueFrom(
               this.profesorCursoService.obtenerCursosPorProfesor(usuarioId)
@@ -100,7 +125,7 @@ export class CampusSesionesComponent {
             console.log('Curso encontrado:', curso);
             if (curso && curso.curso) {
               this.cursoNombre = curso.curso.nombre || 'Curso';
-              this.cursoAbreviatura = curso.curso.abreviatura || ''; // Store abbreviation
+              this.cursoAbreviatura = curso.curso.abreviatura || '';
             } else {
               console.warn('No se encontró el curso para idProfesorCurso:', this.idProfesorCurso);
               this.notificationService.showNotification('No se pudo obtener el nombre del curso', 'error');
@@ -112,8 +137,11 @@ export class CampusSesionesComponent {
             this.notificationService.showNotification('Error al cargar los datos del curso', 'error');
             this.cursoNombre = 'Curso';
             this.cursoAbreviatura = '';
+          } finally {
+            this.completeLoadingTask(); // Completar tarea de cursos
           }
         } else if (this.rolUsuario === 'Alumno' && this.idCurso) {
+          this.startLoadingTask(); // Iniciar tarea para obtener cursos
           try {
             const cursos = await lastValueFrom(
               this.alumnoCursoService.obtenerCursosPorAlumno(localStorage.getItem('idAuth')!)
@@ -121,16 +149,19 @@ export class CampusSesionesComponent {
             console.log('Cursos del alumno:', cursos);
             const curso = cursos.find(c => c.idCurso === this.idCurso);
             this.cursoNombre = curso?.nombreCurso || 'Curso';
-            this.cursoAbreviatura = curso?.abreviatura || ''; // Assuming AlumnoCurso has abreviatura
+            this.cursoAbreviatura = curso?.abreviatura || '';
           } catch (error) {
             console.error('Error al obtener cursos del alumno:', error);
             this.notificationService.showNotification('Error al cargar los datos del curso', 'error');
             this.cursoNombre = 'Curso';
             this.cursoAbreviatura = '';
+          } finally {
+            this.completeLoadingTask(); // Completar tarea de cursos
           }
         } else {
           this.notificationService.showNotification('No se proporcionó un ID válido', 'error');
           this.router.navigate(['campus']);
+          this.completeLoadingTask();
           return;
         }
 
@@ -149,27 +180,32 @@ export class CampusSesionesComponent {
     } catch (error) {
       console.error('Error al inicializar el componente:', error);
       this.notificationService.showNotification('Error al cargar los datos', 'error');
+    } finally {
+      this.completeLoadingTask(); // Completar la tarea inicial
     }
   }
 
   private buildBreadcrumb(): void {
     if (this.rolUsuario === 'Alumno') {
-      //
       this.breadcrumbItems = [
         { label: 'Campus', url: '/campus' },
-        { label: `sesiones[${this.cursoAbreviatura || this.cursoNombre}]`, url: '', isActive: true }
+        { label: `sesiones de ${this.cursoAbreviatura || this.cursoNombre}`, url: '', isActive: true }
       ];
     } else {
-      // Campus > Grado > Sesiones[Abreviatura]
       this.breadcrumbItems = [
         { label: 'Campus', url: '/campus' },
-        { label: `${this.grado}°`, url: `/campus/grados/${this.nivel}` },
+        {
+          label: `${this.grado}`,
+          url: `/campus/grados/${this.nivel}`,
+          queryParams: { fromBreadcrumb: true }
+        },
         { label: `Sesiones de ${this.cursoAbreviatura || this.cursoNombre}`, url: '', isActive: true }
       ];
     }
   }
 
   async obtenerSesionesPorProfesor(idProfesorCurso: string): Promise<void> {
+    this.startLoadingTask(); // Iniciar tarea para sesiones
     try {
       this.sesiones = await lastValueFrom(
         this.sesionService.obtenerSesionesPorCurso(idProfesorCurso)
@@ -183,10 +219,13 @@ export class CampusSesionesComponent {
     } catch (error) {
       console.error('Error al obtener sesiones:', error);
       this.notificationService.showNotification('Error al obtener sesiones', 'error');
+    } finally {
+      this.completeLoadingTask(); // Completar tarea de sesiones
     }
   }
 
   async obtenerSesionesPorAlumno(idCurso: string): Promise<void> {
+    this.startLoadingTask(); // Iniciar tarea para sesiones
     try {
       const idAuth = localStorage.getItem('idAuth');
       if (!idAuth) {
@@ -210,6 +249,8 @@ export class CampusSesionesComponent {
     } catch (error) {
       console.error('Error al obtener sesiones para alumno:', error);
       this.notificationService.showNotification('Error al obtener sesiones', 'error');
+    } finally {
+      this.completeLoadingTask(); // Completar tarea de sesiones
     }
   }
 

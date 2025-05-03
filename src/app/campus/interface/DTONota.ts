@@ -1,25 +1,49 @@
 export interface DTONota {
-    idSesion?: string; // Requerido para ambos casos (alumno y profesor)
-    idCurso?: string; // Requerido para el profesor
-    grado?: string; // Requerido para el profesor
-    seccion?: string; // Requerido para el profesor
-    nivel?: string; // Requerido para el profesor
-    usuarioCreacion?: string; // Requerido para el profesor
-    notas?: AlumnoNotas[]; // Requerido para el profesor
-    // Campos para el alumno subiendo una tarea
-    idalumano?: string; // ID del alumno (en formato string porque se toma de localStorage)
-    idactividad?: string; // ID de la actividad
-    notatareaurl?: string; // URL del archivo subido
-  }
-  
-  // Sub-interfaz para AlumnoNotas (usada por el profesor para registrar notas)
-  export interface AlumnoNotas {
-    idAlumno: string; // ID del alumno
-    actividades: ActividadNota[]; // Lista de actividades con notas
-  }
-  
-  // Sub-interfaz para ActividadNota (usada dentro de AlumnoNotas)
-  export interface ActividadNota {
-    idActividad: string; // ID de la actividad
-    nota: number; // Nota asignada por el profesor (0-20)
-  }
+  idSesion?: string;
+  idCurso?: string;
+  grado?: string;
+  seccion?: string;
+  nivel?: string;
+  usuarioCreacion?: string; // Coincide con DTONota.java
+  usuarioActualizacion?: string; // Coincide con DTONota.java
+  nombreArchivo?: string; // Nuevo campo para el nombre del archivo
+  fecharegistro?: string;
+  comentario?: string;
+  notas?: AlumnoNotas[];
+  idalumano?: string;
+  idactividad?: string;
+  notatareaurl?: string;
+}
+
+export interface AlumnoNotas {
+  idAlumno: string;
+  actividades: ActividadNota[];
+}
+
+export interface ActividadNota {
+  idActividad: string;
+  nota: number;
+  nombreArchivo?: string; // Nuevo campo
+  comentario: string | null; // Añadir soporte para comentario
+}
+
+// Nueva interfaz para mapear los objetos dentro de "data" en la respuesta del endpoint /sesion/{idSesion}
+export interface DTONotaResponse {
+  idNota: string;
+  idAlumno: string;
+  nombre: string;
+  apellidos: string;
+  idActividad: string;
+  nombreActividad: string;
+  nota: number | null;
+  grado: string;
+  seccion: string;
+  nivel: string;
+  notatareaurl: string;
+  usuarioCreacion: string | null; // Ajustado para coincidir con DTONotaResponse.java
+  usuarioActualizacion: string | null; // Ajustado para coincidir con DTONotaResponse.java
+  nombreArchivo?: string; // Nuevo campo
+  comentario: string | null;
+  fechaRegistro: string;
+  fechaActualizacion: string; // Ajustado para coincidir con DTONotaResponse.java
+}

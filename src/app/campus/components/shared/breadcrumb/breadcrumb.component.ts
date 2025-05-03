@@ -8,6 +8,7 @@ interface BreadcrumbItem {
   label: string;
   url: string;
   isActive?: boolean;
+  queryParams?: { [key: string]: any }; // Agregar queryParams como opcional
 }
 
 @Component({

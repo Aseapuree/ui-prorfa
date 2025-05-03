@@ -4,6 +4,7 @@
       <a
         *ngIf="!last"
         [routerLink]="item.url"
+        [queryParams]="item.queryParams"
         class="block transition-colors hover:text-gray-900 dark:hover:text-white cursor-pointer"
       >
         {{ item.label }}

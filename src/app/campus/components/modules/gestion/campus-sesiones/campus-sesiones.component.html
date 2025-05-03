@@ -1,8 +1,10 @@
 <div class="p-6">
+  <!-- Spinner de carga -->
+  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando sesiones...'"></app-general-loading-spinner>
   <app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
   <!-- Título dinámico -->
   <h1 class="text-3xl md:text-4xl font-bold text-gray-100 mb-6 bg-gray-800 bg-opacity-50 border-l-4 border-blue-500 pl-4 py-2 rounded-r-md">
-    Sesiones del curso <span class="text-blue-400">{{ cursoNombre }}</span> de {{ grado }}° "{{ seccion }}"
+    Sesiones del curso <span class="text-blue-400">{{ cursoNombre }}</span> de {{ grado }} "{{ seccion }}"
   </h1>
 
   <!-- Mensaje si no hay sesiones -->

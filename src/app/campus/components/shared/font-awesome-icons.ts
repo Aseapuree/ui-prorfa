@@ -2,7 +2,13 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { 
   faBook, faHeadset, faSignOutAlt, faStar, faRocket, 
   faArrowLeft, faPencil, faTrash, faPlus, faMagnifyingGlass, faUserCircle, faSchool, faWrench, faHome,
-  faUsers // Agrega faUsers aquí
+  faUsers, // Agrega faUsers aquí
+  faArrowRight,
+  faArrowDown,
+  faArrowUp,
+  faSort,
+  faBroom,
+  faSearch
 } from '@fortawesome/free-solid-svg-icons';
 import { faUser, faNewspaper, faStickyNote } from '@fortawesome/free-regular-svg-icons'
 
@@ -24,5 +30,12 @@ export const fontAwesomeIcons: IconDefinition[] = [
     faWrench,
     faHome,
     faMagnifyingGlass,
-    faUsers // Agrega faUsers a la lista
+    faUsers, // Agrega faUsers a la lista
+    faArrowLeft,
+    faArrowRight,
+    faSort,      // Añadir faSort
+    faArrowUp,   // Añadir faArrowUp
+    faArrowDown,  // Añadir faArrowDown
+    faBroom,
+    faSearch
 ];
