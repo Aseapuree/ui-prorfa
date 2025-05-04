@@ -104,7 +104,6 @@ eliminarCurso(id: string): Observable<void> {
     );
 }
 
-// Buscar asignaciones por palabra clave
 buscarAsignaciones(filters: {
   keyword?: string,
   profesorId?: string,
@@ -115,9 +114,13 @@ buscarAsignaciones(filters: {
   fechaInicio?: string,
   fechaFin?: string,
   fechaTipo?: string
-}): Observable<ProfesorCurso[]> {
+}, page: number, size: number, sortBy: string, sortDir: string): Observable<{ content: ProfesorCurso[], totalElements: number }> {
   let params = new HttpParams();
-  if (filters.keyword) params = params.set('palabraClave', filters.keyword); // Ajusta según el backend
+  params = params.set('page', (page - 1).toString());
+  params = params.set('size', size.toString());
+  params = params.set('sortBy', sortBy);
+  params = params.set('sortDir', sortDir);
+  if (filters.keyword) params = params.set('palabraClave', filters.keyword);
   if (filters.profesorId) params = params.set('profesorId', filters.profesorId);
   if (filters.cursoId) params = params.set('cursoId', filters.cursoId);
   if (filters.grado) params = params.set('grado', filters.grado);
@@ -127,12 +130,25 @@ buscarAsignaciones(filters: {
   if (filters.fechaFin) params = params.set('fechaFin', filters.fechaFin);
   if (filters.fechaTipo) params = params.set('fechaTipo', filters.fechaTipo);
 
-  console.log('Parámetros de la solicitud:', params.toString()); // Depuración
+  console.log('Parámetros enviados al backend:', params.toString());
 
   return this.clienteHttp
-    .get<{ data: ProfesorCurso[] }>(`${this.urlBase}/buscar`, { params, withCredentials: true })
+    .get<any>(`${this.urlBase}/buscar`, { params, withCredentials: true })
     .pipe(
-      map(response => response.data || []),
+      map(response => {
+        console.log('Respuesta del backend:', response);
+        let content: ProfesorCurso[] = [];
+        let totalElements: number = 0;
+
+        if (response.data && response.data.content) {
+          content = response.data.content || [];
+          totalElements = response.data.totalElements || 0;
+        } else {
+          console.warn('Estructura de respuesta no reconocida:', response);
+        }
+
+        return { content, totalElements };
+      }),
       catchError(error => {
         console.error('Error al buscar asignaciones:', error);
         return throwError(() => new Error('Error al buscar asignaciones'));

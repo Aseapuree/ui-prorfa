@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { forkJoin } from 'rxjs';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { MatriculaService } from './../../services/matricula.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faGraduationCap, faChair, faSortNumericDown, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 
 interface NivelVacantes {
   nombre: string;
@@ -11,12 +14,27 @@ interface NivelVacantes {
 
 @Component({
   selector: 'app-matriculas',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    FontAwesomeModule,
+    GeneralLoadingSpinnerComponent,
+  ],
   templateUrl: './matriculas.component.html',
   styleUrls: ['./matriculas.component.scss']
 })
 export class MatriculasComponent implements OnInit {
   niveles: NivelVacantes[] = [];
   cargando: boolean = true;
+  selectedNivel: string = '';
+  faGraduationCap = faGraduationCap;
+  faChair = faChair;
+  faSortNumericDown = faSortNumericDown;
+  faCheck = faCheck;
+
+  // Propiedad para el mensaje del spinner
+  loadingMessage: string = 'Cargando vacantes...'; // Mensaje por defecto
 
   constructor(
     private matriculaService: MatriculaService,
@@ -24,41 +42,45 @@ export class MatriculasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const currentUrl = this.router.url;
+    const level = currentUrl.split('/').pop();
+    if (level) {
+      this.selectedNivel = level.toLowerCase();
+    }
     this.cargarVacantes();
   }
 
   cargarVacantes(): void {
-    forkJoin({
-      primaria: this.matriculaService.vacantesPorNivel('primaria'),
-      secundaria: this.matriculaService.vacantesPorNivel('secundaria')
-    }).subscribe({
-      next: ({ primaria, secundaria }) => {
+    this.cargando = true; // Mostrar spinner al iniciar la carga
+    this.loadingMessage = 'Cargando vacantes...'; // Establecer mensaje de carga
+    this.matriculaService.vacantesPorNivel(this.selectedNivel).subscribe({
+      next: (vacantes) => {
+        let grados: number[] = [];
+        if (this.selectedNivel === 'primaria') {
+          grados = [1, 2, 3, 4, 5, 6];
+        } else if (this.selectedNivel === 'secundaria') {
+          grados = [1, 2, 3, 4, 5];
+        }
         this.niveles = [
           {
-            nombre: 'Primaria',
-            grados: [1, 2, 3, 4, 5, 6],
-            vacantes: primaria ? { ...primaria } : {}
-          },
-          {
-            nombre: 'Secundaria',
-            grados: [1, 2, 3, 4, 5],
-            vacantes: secundaria ? { ...secundaria } : {}
+            nombre: this.selectedNivel.charAt(0).toUpperCase() + this.selectedNivel.slice(1),
+            grados,
+            vacantes: vacantes ? { ...vacantes } : {}
           }
         ];
-        this.cargando = false;
+        this.cargando = false; // Ocultar spinner al finalizar
       },
       error: (error) => {
         console.error('Error al cargar vacantes:', error);
+        this.loadingMessage = 'Error al cargar datos.';
         this.cargando = false;
       }
     });
   }
 
-
   hayVacantes(secciones: { [seccion: string]: number } = {}): boolean {
     return Object.values(secciones).some(v => v > 0);
   }
-
 
   getSecciones(vacantes: { [seccion: string]: number } = {}): string[] {
     return Object.keys(vacantes);

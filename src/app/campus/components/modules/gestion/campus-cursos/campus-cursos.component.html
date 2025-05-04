@@ -46,6 +46,24 @@
     </div>
   </div>
 
+  <!-- Selector de cantidad de datos por página -->
+  <div class="mt-4 flex items-center">
+    <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">
+      Mostrar:
+    </label>
+    <select
+  id="itemsPerPage"
+  [(ngModel)]="itemsPerPage"
+  (ngModelChange)="onItemsPerPageChange($event)"
+  class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
+>
+  <option *ngFor="let option of pageSizeOptions" [value]="option">
+    {{ option }}
+  </option>
+</select>
+    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por pagina</span>
+  </div>
+
   <!-- Tabla de cursos -->
   <!-- Tabla de cursos -->
   <div class="flex flex-col mt-6">
@@ -117,52 +135,32 @@
                 </th>
               </tr>
             </thead>
-            <tbody
-              class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900"
-            >
-              <tr
-                *ngFor="let curso of cursos | paginate: { itemsPerPage: itemsPerPage, currentPage: page, totalItems: totalCursos }"
-              >
-                <td
-                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate"
-                >
+            <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+              <tr *ngFor="let curso of cursos">
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate">
                   {{ curso.nombre }}
                 </td>
-                <td
-                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[200px] truncate"
-                >
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[200px] truncate">
                   {{ curso.descripcion }}
                 </td>
-                <td
-                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate"
-                >
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
                   {{ curso.abreviatura }}
                 </td>
-                <td
-                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate"
-                >
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
                   {{ curso.fechaCreacion | date: 'yyyy-MM-dd HH:mm' }}
                 </td>
-                <td
-                  class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate"
-                >
+                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
                   {{ curso.fechaActualizacion | date: 'yyyy-MM-dd HH:mm' }}
                 </td>
                 <td class="px-4 md:px-2 py-4 text-sm max-w-[100px]">
                   <div class="flex items-center gap-x-6 md:gap-x-3">
                     <app-tooltip tooltipText="Editar curso">
-                      <button
-                        (click)="openEditModal(curso)"
-                        class="text-gray-500 hover:text-yellow-500"
-                      >
+                      <button (click)="openEditModal(curso)" class="text-gray-500 hover:text-yellow-500">
                         <fa-icon [icon]="['fas', 'pencil']" class="h-8 w-8"></fa-icon>
                       </button>
                     </app-tooltip>
                     <app-tooltip tooltipText="Eliminar curso">
-                      <button
-                        (click)="eliminarCurso(curso.idCurso!)"
-                        class="text-gray-500 hover:text-red-500"
-                      >
+                      <button (click)="eliminarCurso(curso.idCurso!)" class="text-gray-500 hover:text-red-500">
                         <fa-icon [icon]="['fas', 'trash']" class="h-8 w-8"></fa-icon>
                       </button>
                     </app-tooltip>

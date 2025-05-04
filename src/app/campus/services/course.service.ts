@@ -68,13 +68,11 @@ export class CourseService {
     return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`,{withCredentials:true});
   }
 
-  buscarCursos(keyword: string): Observable<Curso[]> {
-    return this.clienteHttp.get<{ data: Curso[] }>(`${this.urlBase}/buscar?keyword=${keyword}`,{withCredentials:true})
+  buscarCursos(keyword: string, sortBy: string = 'fechaCreacion', sortDir: string = 'asc'): Observable<Curso[]> {
+    return this.clienteHttp
+      .get<{ data: Curso[] }>(`${this.urlBase}/buscar?keyword=${keyword}&sortBy=${sortBy}&sortDir=${sortDir}`, { withCredentials: true })
       .pipe(
-        map(response => {
-          console.log("Respuesta del backend:", response);
-          return response.data; 
-        })
+        map(response => response.data)
       );
   }
 

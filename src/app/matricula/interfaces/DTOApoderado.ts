@@ -1,9 +1,9 @@
 export class Apoderado{
   idapoderado?: string;
-  relacionEstudiante?: string;
   nombre?: string;
   apellidoPaterno?: string;
   apellidoMaterno?: string;
+  genero?: string;
   idtipodoc?: string;
   numeroDocumento?: string;
   fechaNacimiento?: string;
