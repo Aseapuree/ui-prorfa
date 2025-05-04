@@ -288,7 +288,7 @@
             <!-- Si la tarea no ha sido enviada -->
             <div *ngIf="!tareaSubidaUrl">
               <!-- Tarea no presencial: Mostrar input para subir archivo -->
-              <div *ngIf="!contenidoActual.actividad.esActividadPresencial" class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+              <div *ngIf="!contenidoActual.actividad.presencial" class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
                 <input
                   #fileInput
                   type="file"
@@ -305,7 +305,7 @@
                 </button>
               </div>
               <!-- Tarea presencial: Mostrar botón de Finalizar -->
-              <div *ngIf="contenidoActual.actividad.esActividadPresencial">
+              <div *ngIf="contenidoActual.actividad.presencial">
                 <button
                   (click)="finalizarActividadPresencial()"
                   [disabled]="isUploading"
@@ -347,7 +347,7 @@
                         {{ notaActual ?? 0 }} de 20{{ notaActual == null ? ' - Sin calificar' : '' }}
                       </td>
                     </tr>
-                    <tr *ngIf="!contenidoActual.actividad.esActividadPresencial">
+                    <tr *ngIf="!contenidoActual.actividad.presencial">
                       <td class="px-4 py-2 text-gray-400">Nombre del archivo:</td>
                       <td class="px-4 py-2 text-gray-300">
                         <a [href]="tareaSubidaUrl" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center space-x-2">
