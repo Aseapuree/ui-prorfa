@@ -413,7 +413,7 @@
               <span><fa-icon [icon]="faTag"></fa-icon></span>
               <select id="alumno_tipoObservacion" formControlName="tipoObservacion">
                 <option value="" disabled selected>Selecciona una opción</option>
-                <option value="">Ninguna</option> <option *ngFor="let tipo of tiposObservacion" [value]="tipo.valor">{{ tipo.nombre }}</option>
+                <option *ngFor="let tipo of tiposObservacion" [value]="tipo.valor">{{ tipo.nombre }}</option>
               </select>
             </div>
             </div>

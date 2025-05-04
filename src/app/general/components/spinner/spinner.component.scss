@@ -1,6 +1,6 @@
 /* Overlay de Carga General */
 .general-loading-overlay {
-  position: fixed; /* Cubre toda la pantalla- */
+  position: fixed; /* Cubre toda la pantalla */
   top: 0;
   left: 0;
   width: 100%;
@@ -12,6 +12,8 @@
   z-index: 1000; /* Asegura que esté por encima de todo */
   flex-direction: column; /* Para apilar icono y texto */
   color: var(--primary-dark); /* Color del spinner y texto, usando tu variable */
+  backdrop-filter: blur(20px); /* intensidad del desenfoque */
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* Contenedor para el spinner y el texto, centrado */
