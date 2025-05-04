@@ -72,10 +72,13 @@ export class ModalActividadComponent implements OnInit {
           null,
           this.tipoContenido === 'actividades' ? Validators.required : null,
         ],
+        presencial: [
+          { value: this.tipoContenido === 'actividades' ? null : false, disabled: this.esEdicion }, // Valor inicial: false si no es actividad
+          this.tipoContenido === 'actividades' ? Validators.required : null,
+        ],
       },
       {
-        validators:
-          this.tipoContenido === 'actividades' ? this.dateValidators() : null,
+        validators: this.tipoContenido === 'actividades' ? this.dateValidators() : null,
       }
     );
   }
@@ -106,6 +109,7 @@ export class ModalActividadComponent implements OnInit {
         horaFin: fechaFin
           ? `${String(fechaFin.getUTCHours()).padStart(2, '0')}:${String(fechaFin.getUTCMinutes()).padStart(2, '0')}`
           : null,
+        presencial: this.data.actividad.presencial,
       });
       console.log('Formulario inicializado con:', this.formulario.value);
     }
@@ -186,6 +190,8 @@ export class ModalActividadComponent implements OnInit {
     return parts[parts.length - 2] || 'Archivo desconocido';
   }
 
+  
+
   agregarContenido(): void {
     console.log(
       'Intentando guardar. Formulario válido:',
@@ -193,20 +199,27 @@ export class ModalActividadComponent implements OnInit {
       'Valores:',
       this.formulario.value
     );
+  
+    // Si no es una actividad, ignorar el control presencial para la validación
+    if (this.tipoContenido !== 'actividades') {
+      this.formulario.get('presencial')?.clearValidators();
+      this.formulario.get('presencial')?.updateValueAndValidity();
+    }
+  
     if (this.formulario.invalid) {
       this.alertMessage = 'Por favor, completa todos los campos requeridos.';
       this.alertType = 'error';
       console.error('Formulario inválido:', this.formulario.errors);
       return;
     }
-
+  
     if (!this.archivoSeleccionado && !this.esEdicion) {
       this.alertMessage = 'Por favor, selecciona un archivo válido.';
       this.alertType = 'error';
       console.error('No se seleccionó archivo en modo agregar');
       return;
     }
-
+  
     this.cargando = true;
     this.alertMessage = null;
     const formData = new FormData();
@@ -222,25 +235,26 @@ export class ModalActividadComponent implements OnInit {
       },
       fechaInicio: null,
       fechaFin: null,
+      presencial: this.tipoContenido === 'actividades' ? this.formulario.get('presencial')?.value : null,
     };
-
+  
     if (this.tipoContenido === 'actividades') {
       const fechaInicio = this.formulario.get('fechaInicio')?.value;
       const horaInicio = this.formulario.get('horaInicio')?.value;
       const fechaFin = this.formulario.get('fechaFin')?.value;
       const horaFin = this.formulario.get('horaFin')?.value;
-
+  
       if (fechaInicio && horaInicio) {
         const fechaInicioDate = this.combineDateAndTime(fechaInicio, horaInicio);
         actividad.fechaInicio = fechaInicioDate.toISOString();
       }
-
+  
       if (fechaFin && horaFin) {
         const fechaFinDate = this.combineDateAndTime(fechaFin, horaFin);
         actividad.fechaFin = fechaFinDate.toISOString();
       }
     }
-
+  
     console.log('Datos de actividad a enviar:', actividad);
     formData.append(
       'actividad',
@@ -253,7 +267,7 @@ export class ModalActividadComponent implements OnInit {
         this.archivoSeleccionado.name
       );
     }
-
+  
     const request = this.esEdicion
       ? this.sesionService.editarActividad(
           this.data.sesionId,
@@ -261,7 +275,7 @@ export class ModalActividadComponent implements OnInit {
           formData
         )
       : this.sesionService.agregarActividad(this.data.sesionId, formData);
-
+  
     request.subscribe({
       next: () => {
         this.cargando = false;

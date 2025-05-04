@@ -210,27 +210,66 @@ export class ProfesorCursoComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  isKeywordValid(): boolean {
-    if (!this.keyword) return true;
+  isKeywordValid(value: string): boolean {
+    if (!value) return true; // Permitir campo vacío
     const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+)*$/;
-    return regex.test(this.keyword.trim());
+    return regex.test(value.trim());
   }
 
-  onInputChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let newValue = input.value;
-    newValue = newValue.replace(/\s+/g, ' ').trimStart();
-    this.keyword = newValue;
-    if (newValue && !this.isKeywordValid()) {
-      this.notificationService.showNotification(
-        'Solo se permiten letras, números, acentos, ñ y un solo espacio entre palabras.',
-        'info'
-      );
-    } else {
-      this.lastValidKeyword = newValue.trim();
-    }
+  // Agregar una propiedad para almacenar el último valor válido por campo
+private lastValidValues: { [key: string]: string } = {
+  profesorId: '',
+  cursoId: ''
+};
+
+onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
+  const input = event.target as HTMLInputElement;
+  let newValue = input.value;
+
+  // Bloquear espacios al inicio
+  if (newValue.startsWith(' ')) {
+    input.value = this.lastValidValues[field];
+    this.filters[field] = this.lastValidValues[field];
+    this.notificationService.showNotification(
+      'No se permiten espacios al inicio.',
+      'info'
+    );
     this.cdr.detectChanges();
+    return;
   }
+
+  // Normalizar el valor: reemplazar múltiples espacios por un solo espacio
+  newValue = newValue.replace(/\s+/g, ' ');
+
+  // Si el valor está vacío, permitirlo
+  if (newValue === '') {
+    this.filters[field] = '';
+    this.lastValidValues[field] = '';
+    input.value = '';
+    this.cdr.detectChanges();
+    return;
+  }
+
+  // Permitir un espacio después de una palabra como estado intermedio
+  const intermediateRegex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)*$/;
+  if (!intermediateRegex.test(newValue)) {
+    // Restaurar el último valor válido
+    input.value = this.lastValidValues[field];
+    this.filters[field] = this.lastValidValues[field];
+    this.notificationService.showNotification(
+      'Solo se permiten letras, números, acentos, ñ y un solo espacio entre palabras.',
+      'info'
+    );
+    this.cdr.detectChanges();
+    return;
+  }
+
+  // Si el valor es válido, actualizar el campo y el último valor válido
+  this.filters[field] = newValue;
+  this.lastValidValues[field] = newValue.trim(); // Guardar versión sin espacio final
+  input.value = this.filters[field]; // Asegurar que el input refleja el valor válido
+  this.cdr.detectChanges();
+}
 
   validateDates(): boolean {
     if (this.filters.fechaInicio && this.filters.fechaFin) {
@@ -454,20 +493,31 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   buscarAsignaciones(): void {
-    if (!this.isKeywordValid()) {
-      this.notificationService.showNotification('El término de búsqueda no es válido.', 'info');
+    // Validar profesorId y cursoId
+    if (this.filters.profesorId && !this.isKeywordValid(this.filters.profesorId)) {
+      this.notificationService.showNotification(
+        'El nombre del profesor contiene caracteres no válidos.',
+        'info'
+      );
       return;
     }
-
+  
+    if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
+      this.notificationService.showNotification(
+        'El nombre del curso contiene caracteres no válidos.',
+        'info'
+      );
+      return;
+    }
+  
     if (!this.validateDates()) {
       return;
     }
-
+  
     this.isLoading = true;
     const filters = {
-      keyword: this.keyword.trim() || undefined,
-      profesorId: this.filters.profesorId || undefined,
-      cursoId: this.filters.cursoId || undefined,
+      profesorId: this.filters.profesorId ? this.filters.profesorId.trim() : undefined,
+      cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
       grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
       seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
       nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
@@ -475,9 +525,9 @@ export class ProfesorCursoComponent implements OnInit {
       fechaFin: this.filters.fechaFin ? new Date(this.filters.fechaFin).toISOString() : undefined,
       fechaTipo: this.filters.fechaTipo || undefined,
     };
-
+  
     this.appliedFilters = filters;
-
+  
     console.log('Enviando solicitud con:', {
       filters,
       page: this.page,
@@ -485,7 +535,7 @@ export class ProfesorCursoComponent implements OnInit {
       sortBy: this.sortBy,
       sortDir: this.sortDir,
     });
-
+  
     this.profesorCursoService
       .buscarAsignaciones(filters, this.page, this.itemsPerPage, this.sortBy, this.sortDir)
       .subscribe({

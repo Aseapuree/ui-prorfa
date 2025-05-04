@@ -6,6 +6,7 @@ export interface DTOActividad {
   fechaActualizacion?: string;
   fechaInicio?: Date | string | null; // Permitir Date, string, o null
   fechaFin?: Date | string | null;   // Permitir Date, string, o null
+  presencial?: boolean | null;
   infoMaestra?: {
     descripcion?: string;
   };
