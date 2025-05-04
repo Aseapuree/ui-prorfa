@@ -1,10 +1,12 @@
 <div class="h-screen flex">
   <!-- Menú lateral -->
   <app-menu 
+    *ngIf="datosListos"
     [nombreUsuario]="usuarioMostrar.nombre || 'undefined'"
     [apellidoPaterno]="usuarioMostrar.apellidopaterno || 'undefined'"
     [apellidoMaterno]="usuarioMostrar.apellidomaterno || 'undefined'"
     [nombreRol]="usuarioMostrar.rol?.nombreRol || 'undefined'"
+    [idRol]="usuarioMostrar.rol?.idRol || 'undefined'"
     [perfilUrl]="usuarioMostrar.perfilurl || 'undefined'"
     (menuToggle)="toggleMenu()">
   </app-menu>

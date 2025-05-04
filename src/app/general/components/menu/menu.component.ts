@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, Input, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Input, Inject, PLATFORM_ID, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { DTOmenuService } from '../../Services/dtomenu.service';
@@ -16,19 +16,20 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.scss']
 })
-export class MenuComponent implements OnInit {
+export class MenuComponent implements OnInit, OnChanges {
   @Input() nombreUsuario: string = '';
-  @Input() apellidoPaterno: string = '';  
-  @Input() apellidoMaterno: string = '';  
-  @Input() nombreRol: string = '';
+  @Input() apellidoPaterno: string = '';
+  @Input() apellidoMaterno: string = '';
+  @Input() nombreRol: string = ''; // Para mostrar en la interfaz
+  @Input() idRol: string = ''; // Para cargar los menús
   @Input() perfilUrl: string | null = null;
   faUserCircle = faUserCircle;
   faSignOutAlt = faSignOutAlt;
   faHome = faHome;
 
   menus: DTOMenu[] = [];
-  menuJerarquico: any[] = []; // Estructura con submenús
-  subMenuOpen: { [key: string]: boolean } = {}; 
+  menuJerarquico: any[] = [];
+  subMenuOpen: { [key: string]: boolean } = {};
   menuCerrado = false;
 
   constructor(
@@ -40,8 +41,16 @@ export class MenuComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.cargarDatosDesdeLocalStorage();
+    this.cargarImagenDesdeLocalStorage();
+  }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['idRol'] && this.idRol && this.idRol !== 'undefined') {
+      this.obtenerMenus(this.idRol);
+    }
+  }
+
+  cargarImagenDesdeLocalStorage() {
     if (isPlatformBrowser(this.platformId)) {
       console.log("✅ Plataforma es navegador (browser)");
       const urlImagen = localStorage.getItem("perfilUrl");
@@ -53,20 +62,6 @@ export class MenuComponent implements OnInit {
       }
     } else {
       console.warn("⚠ Plataforma no es navegador, localStorage no está disponible.");
-    }
-  }
-
-  cargarDatosDesdeLocalStorage() {
-    if (isPlatformBrowser(this.platformId)) {
-      let rol = localStorage.getItem("rol");
-
-      if (rol) {
-        this.obtenerMenus(rol);
-      } else {
-        console.warn("⚠ No se encontró un rol en localStorage.");
-      }
-    } else {
-      console.warn("⚠ localStorage no está disponible en este entorno.");
     }
   }
 
@@ -107,7 +102,6 @@ export class MenuComponent implements OnInit {
       return match[1];
     }
 
-    // Verificar si ya es un ID
     const regexId = /^[a-zA-Z0-9_-]+$/;
     if (regexId.test(url)) {
       return url;
