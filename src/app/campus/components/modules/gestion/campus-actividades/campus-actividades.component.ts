@@ -26,6 +26,11 @@ import { faStickyNote as farStickyNote } from '@fortawesome/free-regular-svg-ico
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
+// Nueva interfaz para agregar esActividadPresencial como opcional
+interface ActividadWithPresencial extends DTOActividad, Actividad {
+  esActividadPresencial?: boolean;
+}
+
 interface Alumno {
   idAlumno: string;
   nombre: string;
@@ -34,8 +39,8 @@ interface Alumno {
   nota?: number | null | undefined;
   tareaUrl?: string;
   fechaEnvio?: string;
-  comentario?: string | null; // Nueva propiedad para el comentario
-  fechaActualizacion?: string; // Nueva propiedad para Fecha de actualización
+  comentario?: string | null;
+  fechaActualizacion?: string;
 }
 
 @Component({
@@ -71,10 +76,10 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
   idCurso: string | null = null;
   rolUsuario: string | null = null;
   actividadSeleccionada: TipoActividad = 'introducciones';
-  contenidoActual: { tipo: 'pdf' | 'video' | 'text' | 'docx'; url: string; actividad: DTOActividad | Actividad } | null = null;
+  contenidoActual: { tipo: 'pdf' | 'video' | 'text' | 'docx'; url: string; actividad: ActividadWithPresencial } | null = null;
   errorLoadingFile: boolean = false;
   actividadesOriginales: Actividad[] = [];
-  actividadesActuales: (DTOActividad | Actividad)[] = [];
+  actividadesActuales: ActividadWithPresencial[] = [];
   isAddButtonDisabled: boolean = false;
   fechaAsignada: string | null = null;
   isUploading: boolean = false;
@@ -86,14 +91,12 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
   idAlumno: string | null = null;
   notaActual: number | null = null;
   uploadedFileName: string | null = null;
-  // Nuevas propiedades para manejar el apartado de comentarios
-  isComentarioPanelOpen: boolean = false; // Controla si el panel de comentarios está abierto
-  comentarioActual: string | null = null; // Almacena el comentario de la tarea actual
-  comentarioCount: number = 0; // Contador de comentarios (0 o 1)
+  isComentarioPanelOpen: boolean = false;
+  comentarioActual: string | null = null;
+  comentarioCount: number = 0;
   private isViewInitialized: boolean = false;
-  // Nuevas propiedades para el estado de calificación
-  isCalificada: boolean = false; // Indica si la tarea ha sido calificada
-  fechaCalificacion: string | null = null; // Fecha de calificación (basada en fechaActualizacion si hay nota)
+  isCalificada: boolean = false;
+  fechaCalificacion: string | null = null;
 
   alumnos: Alumno[] = [];
 
@@ -243,7 +246,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       console.warn('No se puede validar notas: idSesion o idAlumno no están definidos');
       return;
     }
-  
+
     try {
       const response = await lastValueFrom(this.notasService.listarNotasPorSesion(this.idSesion));
       if (response.code === 200 && response.data) {
@@ -255,12 +258,12 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
             this.tareaSubidaUrl = nota.notatareaurl;
             this.tareaFechaEnvio = this.formatFechaEnvio(nota.fechaRegistro);
             this.notaActual = nota.nota ?? 0;
-            this.uploadedFileName = nota.nombreArchivo || 'Archivo no encontrado'; // Usar nombreArchivo del backend
-            this.comentarioActual = nota.comentario; // Capturar el comentario
-            this.comentarioCount = nota.comentario ? 1 : 0; // Si hay comentario, contador es 1; si no, 0
-            this.isCalificada = nota.nota !== null && nota.nota >= 0; // Tarea calificada si tiene nota
+            this.uploadedFileName = nota.nombreArchivo || 'Archivo no encontrado';
+            this.comentarioActual = nota.comentario;
+            this.comentarioCount = nota.comentario ? 1 : 0;
+            this.isCalificada = nota.nota !== null && nota.nota >= 0;
             this.fechaCalificacion = this.isCalificada ? this.formatFechaEnvio(nota.fechaActualizacion) : 'Sin fecha de calificación';
-            localStorage.setItem(`tareaSubida_${this.idSesion}_${idActividad}`, nota.notatareaurl);
+            localStorage.setItem(`tareaSubida_${this.idSesion}_${idActividad}`, nota.notatareaurl || '');
             localStorage.setItem(`tareaFechaEnvio_${this.idSesion}_${idActividad}`, this.tareaFechaEnvio);
             localStorage.setItem(`nota_${this.idSesion}_${idActividad}`, this.notaActual.toString());
             console.log('Nombre del archivo recuperado desde el backend:', this.uploadedFileName);
@@ -269,9 +272,9 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
             this.tareaFechaEnvio = null;
             this.notaActual = null;
             this.uploadedFileName = null;
-            this.comentarioActual = null; // Resetear comentario
-            this.comentarioCount = 0; // Resetear contador
-            this.isComentarioPanelOpen = false; // Cerrar el panel si no hay tarea
+            this.comentarioActual = null;
+            this.comentarioCount = 0;
+            this.isComentarioPanelOpen = false;
             localStorage.removeItem(`tareaSubida_${this.idSesion}_${idActividad}`);
             localStorage.removeItem(`tareaFechaEnvio_${this.idSesion}_${idActividad}`);
             localStorage.removeItem(`nota_${this.idSesion}_${idActividad}`);
@@ -303,9 +306,9 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
         this.tareaFechaEnvio = null;
         this.notaActual = null;
         this.uploadedFileName = null;
-        this.comentarioActual = null; // Resetear comentario
-        this.comentarioCount = 0; // Resetear contador
-        this.isComentarioPanelOpen = false; // Cerrar el panel
+        this.comentarioActual = null;
+        this.comentarioCount = 0;
+        this.isComentarioPanelOpen = false;
       }
     } catch (error) {
       console.error('Error al validar notas:', error);
@@ -314,7 +317,6 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
     this.cdr.detectChanges();
   }
 
-  // Nuevo método para alternar el panel de comentarios
   toggleComentarioPanel(): void {
     this.isComentarioPanelOpen = !this.isComentarioPanelOpen;
     this.cdr.detectChanges();
@@ -333,7 +335,13 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
         this.seccion = response.data.seccion || this.seccion || undefined;
         this.nivel = response.data.nivel || this.nivel || undefined;
         console.log('Datos de la sesión desde obtenerActividades:', { grado: this.grado, seccion: this.seccion, nivel: this.nivel });
-
+  
+        // Asignar esActividadPresencial a cada actividad basada en el nombre
+        this.actividadesSesion.data.actividades = this.actividadesSesion.data.actividades.map(actividad => ({
+          ...actividad,
+          esActividadPresencial: (actividad.actividadNombre ?? '').includes('listo') || (actividad.actividadNombre ?? '').includes('listo2')
+        })) as ActividadWithPresencial[];
+  
         this.actividadesSesion.data.actividades.forEach(actividad => {
           if (actividad.fechaInicio) {
             actividad.fechaInicio = this.parseUTCDate(actividad.fechaInicio as string);
@@ -361,8 +369,13 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
             this.seccion = curso.seccion || this.seccion || undefined;
             this.nivel = curso.nivel || this.nivel || undefined;
             console.log('Datos del curso/sesión (alumno):', { grado: this.grado, seccion: this.seccion, nivel: this.nivel });
-
-            this.actividadesOriginales = [...sesion.actividades];
+  
+            // Asignar esActividadPresencial a cada actividad basada en el nombre
+            this.actividadesOriginales = sesion.actividades.map(actividad => ({
+              ...actividad,
+              esActividadPresencial: (actividad.actividadNombre ?? '').includes('prueba') || (actividad.actividadNombre ?? '').includes('Hola')
+            })) as ActividadWithPresencial[];
+  
             this.actividadesOriginales.forEach(actividad => {
               if (actividad.fechaInicio) {
                 actividad.fechaInicio = this.parseUTCDate(actividad.fechaInicio as string);
@@ -373,7 +386,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
                 console.log('FechaFin convertida (alumno):', actividad.fechaFin);
               }
             });
-            this.actividadesActuales = [...sesion.actividades];
+            this.actividadesActuales = [...this.actividadesOriginales];
             this.actualizarActividadesActuales();
           } else {
             throw new Error('Sesión no encontrada');
@@ -400,12 +413,12 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       this.notificationService.showNotification('Acción no permitida para este rol', 'error');
       return;
     }
-  
+
     if (!this.contenidoActual || !this.contenidoActual.actividad.idActividad) {
       this.notificationService.showNotification('Por favor, selecciona una actividad válida', 'error');
       return;
     }
-  
+
     if (!this.isViewInitialized || !this.fileInput || !this.fileInput.nativeElement) {
       console.error('fileInput no está definido o la vista no está inicializada:', {
         isViewInitialized: this.isViewInitialized,
@@ -418,31 +431,30 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       this.notificationService.showNotification('Error: No se pudo acceder al selector de archivos. Asegúrate de estar en la sección de actividades y que no hayas enviado una tarea previamente.', 'error');
       return;
     }
-  
+
     const fileList: FileList | null = this.fileInput.nativeElement.files;
     if (!fileList || fileList.length === 0) {
       this.notificationService.showNotification('Por favor, selecciona un archivo', 'error');
       return;
     }
-  
+
     const archivo: File = fileList[0];
     console.log('Archivo seleccionado:', archivo.name);
     this.uploadedFileName = archivo.name;
-  
-    // Limpiar el input inmediatamente después de obtener el archivo
+
     this.fileInput.nativeElement.value = '';
-  
+
     const allowedExtensions = ['pdf', 'mp4', 'avi', 'mov'];
     const extension = archivo.name.split('.').pop()?.toLowerCase();
     if (!extension || !allowedExtensions.includes(extension)) {
       this.notificationService.showNotification('Solo se permiten archivos PDF, MP4, AVI o MOV', 'error');
       return;
     }
-  
+
     this.isUploading = true;
     this.uploadProgress = 0;
     this.cdr.detectChanges();
-  
+
     const progressInterval = setInterval(() => {
       this.uploadProgress += 10;
       if (this.uploadProgress >= 90) {
@@ -451,13 +463,13 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       }
       this.cdr.detectChanges();
     }, 500);
-  
+
     try {
       const urlArchivo = await lastValueFrom(
         this.notasService.subirArchivoDrive(archivo, this.DRIVE_FOLDER_ID)
       );
       console.log('URL del archivo subido:', urlArchivo);
-  
+
       if (!this.nombreCompletoUsuario) {
         throw new Error('No se encontró el nombre completo del usuario autenticado');
       }
@@ -465,30 +477,30 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
         this.notasService.obtenerIdAlumnoPorNombre(this.nombreCompletoUsuario)
       );
       console.log('idAlumno obtenido:', idAlumno);
-  
+
       if (!this.usuarioId) {
         throw new Error('No se encontró el ID del usuario autenticado');
       }
-  
+
       const nota: DTONota = {
         idalumano: idAlumno,
         idactividad: this.contenidoActual.actividad.idActividad,
         idSesion: this.idSesion,
         notatareaurl: urlArchivo,
-        nombreArchivo: this.uploadedFileName, // Incluir el nombre del archivo
+        nombreArchivo: this.uploadedFileName,
         usuarioCreacion: this.usuarioId
       };
-  
+
       console.log('Payload enviado a /registrar:', JSON.stringify(nota, null, 2));
-  
+
       const response = await lastValueFrom(this.notasService.registrarNota(nota));
       console.log('Respuesta del servidor al registrar la nota:', response);
-  
+
       this.uploadProgress = 100;
       this.cdr.detectChanges();
-  
+
       await this.validarNotas(this.contenidoActual.actividad.idActividad);
-  
+
       this.notificationService.showNotification('Tarea enviada con éxito', 'success');
     } catch (error: any) {
       console.error('Error completo:', error);
@@ -504,15 +516,13 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
 
   private formatFechaEnvio(fecha: string): string {
     const date = new Date(fecha);
-  
-    // Obtener las partes de la fecha
-    const dia = String(date.getDate()).padStart(2, '0'); // Asegura 2 dígitos (ej. 01)
-    const mes = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() devuelve 0-11, sumamos 1
+
+    const dia = String(date.getDate()).padStart(2, '0');
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
     const anio = date.getFullYear();
-    const horas = String(date.getHours()).padStart(2, '0'); // Asegura 2 dígitos (ej. 08)
-    const minutos = String(date.getMinutes()).padStart(2, '0'); // Asegura 2 dígitos (ej. 00)
-  
-    // Formatear la fecha como DD/MM/YYYY HH:mm
+    const horas = String(date.getHours()).padStart(2, '0');
+    const minutos = String(date.getMinutes()).padStart(2, '0');
+
     return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
   }
 
@@ -531,7 +541,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
     this.actualizarActividadesActuales();
   }
 
-  async toggleContenido(actividad: DTOActividad | Actividad): Promise<void> {
+  async toggleContenido(actividad: ActividadWithPresencial): Promise<void> {
     if (
       this.contenidoActual &&
       this.contenidoActual.actividad.actividadUrl === actividad.actividadUrl
@@ -541,24 +551,24 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       this.tareaFechaEnvio = null;
       this.notaActual = null;
       this.uploadedFileName = null;
-      this.comentarioActual = null; // Resetear comentario
-      this.comentarioCount = 0; // Resetear contador
-      this.isComentarioPanelOpen = false; // Cerrar el panel de comentarios
+      this.comentarioActual = null;
+      this.comentarioCount = 0;
+      this.isComentarioPanelOpen = false;
     } else {
       if (!actividad.actividadUrl) {
         this.notificationService.showNotification('No se encontró la URL de la actividad', 'error');
         return;
       }
       const tipoArchivo = this.getFileType(actividad.actividadUrl);
+      const actividadConPresencial = { ...actividad, esActividadPresencial: actividad.esActividadPresencial ?? true} as ActividadWithPresencial;
       this.contenidoActual = {
         tipo: tipoArchivo,
         url: actividad.actividadUrl,
-        actividad: actividad
+        actividad: actividadConPresencial
       };
       this.errorLoadingFile = false;
       if (this.rolUsuario === 'Alumno' && actividad.idActividad) {
         await this.validarNotas(actividad.idActividad);
-        // No necesitamos recuperar uploadedFileName de localStorage, ya que validarNotas() lo asigna
       }
     }
     this.cdr.detectChanges();
@@ -567,11 +577,11 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
   actualizarActividadesActuales(): void {
     if (this.rolUsuario === 'Profesor') {
       if (this.actividadSeleccionada === 'introducciones') {
-        this.actividadesActuales = this.actividadesSesion.data.introducciones;
+        this.actividadesActuales = this.actividadesSesion.data.introducciones as ActividadWithPresencial[];
       } else if (this.actividadSeleccionada === 'materiales') {
-        this.actividadesActuales = this.actividadesSesion.data.materiales;
+        this.actividadesActuales = this.actividadesSesion.data.materiales as ActividadWithPresencial[];
       } else if (this.actividadSeleccionada === 'actividades') {
-        this.actividadesActuales = this.actividadesSesion.data.actividades;
+        this.actividadesActuales = this.actividadesSesion.data.actividades as ActividadWithPresencial[];
       } else if (this.actividadSeleccionada === 'asistencias') {
         this.actividadesActuales = [];
       }
@@ -617,7 +627,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       });
 
       console.log('Actividades filtradas (antes de asignar):', actividadesFiltradas);
-      this.actividadesActuales = actividadesFiltradas;
+      this.actividadesActuales = actividadesFiltradas as ActividadWithPresencial[];
 
       console.log('Actividades filtradas (después de asignar):', this.actividadesActuales);
       if (this.actividadesActuales.length === 0) {
@@ -672,7 +682,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  openEditModal(actividad: DTOActividad, event: Event): void {
+  openEditModal(actividad: ActividadWithPresencial, event: Event): void {
     if (this.rolUsuario !== 'Profesor') return;
     event.stopPropagation();
     const dialogRef = this.dialog.open(ModalActividadComponent, {
@@ -691,7 +701,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  openDeleteDialog(actividad: DTOActividad, event: Event): void {
+  openDeleteDialog(actividad: ActividadWithPresencial, event: Event): void {
     if (this.rolUsuario !== 'Profesor' || !actividad.idActividad) return;
     event.stopPropagation();
     const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
@@ -705,7 +715,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  eliminarActividad(actividad: DTOActividad): void {
+  eliminarActividad(actividad: ActividadWithPresencial): void {
     if (this.rolUsuario !== 'Profesor' || !actividad.idActividad) return;
     this.sesionService.eliminarActividad(this.idSesion, actividad.idActividad).subscribe({
       next: () => {
@@ -748,7 +758,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
     this.errorLoadingFile = true;
   }
 
-  async toggleNotas(actividad: DTOActividad, event: Event): Promise<void> {
+  async toggleNotas(actividad: ActividadWithPresencial, event: Event): Promise<void> {
     event.stopPropagation();
     if (!actividad.idActividad) {
       console.error('idActividad no está definido para esta actividad:', actividad);
@@ -799,8 +809,8 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
               nota: nota.nota,
               tareaUrl: nota.notatareaurl,
               fechaEnvio: this.formatFechaEnvio(nota.fechaRegistro),
-              fechaActualizacion: nota.fechaActualizacion ? this.formatFechaEnvio(nota.fechaActualizacion) : 'Sin Actualizar', // Validar si fechaActualizacion existe
-              comentario: nota.comentario || null // Capturar el comentario desde el backend
+              fechaActualizacion: nota.fechaActualizacion ? this.formatFechaEnvio(nota.fechaActualizacion) : 'Sin Actualizar',
+              comentario: nota.comentario || null
             };
           });
 
@@ -848,7 +858,6 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Agregar log para inspeccionar los comentarios
     console.log('Valores de alumno.comentario antes de construir el payload:', 
       alumnosConNotas.map(alumno => ({ idAlumno: alumno.idAlumno, comentario: alumno.comentario }))
     );
@@ -864,7 +873,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
           {
             idActividad: this.actividadConNotasAbierta!,
             nota: alumno.nota!,
-            comentario: alumno.comentario || null // Incluir el comentario en el payload
+            comentario: alumno.comentario || null
           }
         ]
       }));
@@ -907,6 +916,57 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       console.error('Error al guardar las notas:', error);
       const errorMessage = error.message || 'Error al guardar las notas';
       this.notificationService.showNotification(errorMessage, 'error');
+    }
+  }
+
+  async finalizarActividadPresencial(): Promise<void> {
+    if (this.rolUsuario !== 'Alumno') {
+      this.notificationService.showNotification('Acción no permitida para este rol', 'error');
+      return;
+    }
+
+    if (!this.contenidoActual || !this.contenidoActual.actividad.idActividad || !this.contenidoActual.actividad.esActividadPresencial) {
+      this.notificationService.showNotification('Por favor, selecciona una actividad presencial válida', 'error');
+      return;
+    }
+
+    this.isUploading = true;
+    this.cdr.detectChanges();
+
+    try {
+      if (!this.nombreCompletoUsuario) {
+        throw new Error('No se encontró el nombre completo del usuario autenticado');
+      }
+      const idAlumno = await lastValueFrom(this.notasService.obtenerIdAlumnoPorNombre(this.nombreCompletoUsuario));
+      console.log('idAlumno obtenido:', idAlumno);
+
+      if (!this.usuarioId) {
+        throw new Error('No se encontró el ID del usuario autenticado');
+      }
+
+      const nota: DTONota = {
+        idalumano: idAlumno,
+        idactividad: this.contenidoActual.actividad.idActividad,
+        idSesion: this.idSesion,
+        notatareaurl: 'Tarea presencial',
+        nombreArchivo: 'Tarea presencial',
+        usuarioCreacion: this.usuarioId
+      };
+
+      console.log('Payload enviado a /registrar para actividad presencial:', JSON.stringify(nota, null, 2));
+
+      const response = await lastValueFrom(this.notasService.registrarNota(nota));
+      console.log('Respuesta del servidor al registrar la nota presencial:', response);
+
+      await this.validarNotas(this.contenidoActual.actividad.idActividad);
+      this.notificationService.showNotification('Tarea registrada con éxito', 'success');
+    } catch (error: any) {
+      console.error('Error completo:', error);
+      const errorMessage = error.message || 'Error al registrar la tarea presencial';
+      this.notificationService.showNotification(errorMessage, 'error');
+    } finally {
+      this.isUploading = false;
+      this.cdr.detectChanges();
     }
   }
 }

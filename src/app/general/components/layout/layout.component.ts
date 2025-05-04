@@ -9,14 +9,13 @@ import { DTOUsuario } from '../../Interface/DTOUsuario';
 import { ValidateService } from '../../../services/validateAuth.service';
 import {  lastValueFrom } from 'rxjs';
 import { FooterComponent } from '../footer/footer.component';
-import { NavbarComponent } from "../navbar/navbar.component";
 
 
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, MenuComponent, CommonModule, FooterComponent, NavbarComponent],
+  imports: [RouterOutlet, MenuComponent, CommonModule, FooterComponent],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss']
 })
