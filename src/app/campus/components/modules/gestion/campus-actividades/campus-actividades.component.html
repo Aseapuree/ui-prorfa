@@ -16,323 +16,375 @@
 
   <div class="bg-gray-900 p-4 mt-4 rounded-md mx-8 min-h-screen">
     <div class="text-white">
-      <!-- Botón de Agregar (visible solo para Profesor, excepto en Asistencias) -->
-      <div
-        class="flex justify-end mb-4"
-        *ngIf="rolUsuario === 'Profesor' && actividadSeleccionada !== 'asistencias'"
-      >
-        <button
-          (click)="openAddModal(actividadSeleccionada)"
-          class="cursor-pointer bg-gray-800 relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-gray-700 text-gray-300 hover:text-white h-9 rounded-md px-3"
+      <!-- Vista para Profesores -->
+      <div *ngIf="rolUsuario === 'Profesor'">
+        <!-- Botón de Agregar (visible solo para Profesor, excepto en Asistencias) -->
+        <div
+          class="flex justify-end mb-4"
+          *ngIf="actividadSeleccionada !== 'asistencias'"
         >
-          <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-          Agregar {{ actividadSeleccionada | titlecase }}
-        </button>
-      </div>
-
-      <!-- Introducciones, Materiales y Actividades -->
-      <div *ngIf="actividadSeleccionada !== 'asistencias'">
-        <!-- Mostrar mensaje si no hay contenido -->
-        <div *ngIf="actividadesActuales.length === 0" class="text-center">
-          No hay contenido disponible para esta sesión.
+          <button
+            (click)="openAddModal(actividadSeleccionada)"
+            class="cursor-pointer bg-gray-800 relative inline-flex items-center justify-center gap-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-gray-700 text-gray-300 hover:text-white h-9 rounded-md px-3"
+          >
+            <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+            Agregar {{ actividadSeleccionada | titlecase }}
+          </button>
         </div>
 
-        <!-- Tabla de archivos si hay contenido -->
-        <div *ngIf="actividadesActuales.length > 0" class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-gray-300">
-            <thead class="text-xs text-gray-400 uppercase bg-gray-800">
-              <tr>
-                <th scope="col" class="px-6 py-3">Nombre</th>
-                <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Inicio</th>
-                <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Fin</th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-right"
-                  *ngIf="rolUsuario === 'Profesor'"
-                >
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <ng-container *ngFor="let actividad of actividadesActuales">
-                <tr
-                  [ngClass]="{
-                    'bg-gray-700 border-b border-gray-600 hover:bg-gray-600 cursor-pointer': true,
-                    'bg-gray-500':
-                      contenidoActual &&
-                      contenidoActual.actividad.actividadUrl === actividad.actividadUrl
-                  }"
-                  (click)="toggleContenido(actividad)"
-                >
-                  <td class="px-6 py-4">{{ actividad.actividadNombre }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
-                    {{ actividad.fechaInicio | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
-                    {{ actividad.fechaFin | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
-                  </td>
-                  <td
-                    class="px-6 py-4 text-right"
-                    *ngIf="rolUsuario === 'Profesor'"
+        <!-- Introducciones, Materiales y Actividades -->
+        <div *ngIf="actividadSeleccionada !== 'asistencias'">
+          <!-- Mostrar mensaje si no hay contenido -->
+          <div *ngIf="actividadesActuales.length === 0" class="text-center">
+            No hay contenido disponible para esta sesión.
+          </div>
+
+          <!-- Tabla de archivos si hay contenido -->
+          <div *ngIf="actividadesActuales.length > 0" class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-300">
+              <thead class="text-xs text-gray-400 uppercase bg-gray-800">
+                <tr>
+                  <th scope="col" class="px-6 py-3">Nombre</th>
+                  <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Inicio</th>
+                  <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Fin</th>
+                  <th scope="col" class="px-6 py-3 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let actividad of actividadesActuales">
+                  <tr
+                    [ngClass]="{
+                      'bg-gray-700 border-b border-gray-600 hover:bg-gray-600 cursor-pointer': true,
+                      'bg-gray-500':
+                        contenidoActual &&
+                        contenidoActual.actividad.actividadUrl === actividad.actividadUrl
+                    }"
+                    (click)="toggleContenido(actividad)"
                   >
-                    <button
-                      (click)="openEditModal(actividad, $event)"
-                      class="text-blue-400 hover:text-blue-300 mr-4"
-                    >
-                      <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
-                    </button>
-                    <button
-                      *ngIf="actividadSeleccionada === 'actividades'"
-                      (click)="toggleNotas(actividad, $event)"
-                      class="text-yellow-400 hover:text-yellow-300 mr-4"
-                    >
-                      <fa-icon [icon]="['far', 'sticky-note']"></fa-icon>
-                    </button>
-                    <button
-                      (click)="openDeleteDialog(actividad, $event)"
-                      class="text-red-400 hover:text-red-300"
-                    >
-                      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
-                    </button>
-                  </td>
-                </tr>
-                <!-- Panel deslizable para mostrar la lista de alumnos -->
-                <tr *ngIf="actividadConNotasAbierta === actividad.idActividad" class="bg-gray-800">
-                  <td colspan="4" class="px-6 py-4">
-                    <div class="slide-in notas-panel">
-                      <h3 class="text-lg font-medium text-gray-300 mb-4">Asignar Notas</h3>
-                      <table class="w-full text-sm text-left text-gray-300">
-                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
-                          <tr>
-                            <th scope="col" class="px-4 py-2">Nombre del Alumno</th>
-                            <th scope="col" class="px-4 py-2">Fecha de Envío</th>
-                            <th scope="col" class="px-4 py-2">Fecha de Actualización</th>
-                            <th scope="col" class="px-4 py-2">Ver Tarea</th>
-                            <th scope="col" class="px-4 py-2">Comentario</th>
-                            <th scope="col" class="px-4 py-2 text-right">Nota (0-20)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <ng-container *ngFor="let alumno of alumnos">
-                            <tr class="bg-gray-800 border-b border-gray-600">
-                              <td class="px-4 py-2">
-                                {{ alumno.nombre }} {{ alumno.apellidoPaterno }} {{ alumno.apellidoMaterno }}
-                              </td>
-                              <td class="px-4 py-2">
-                                {{ alumno.fechaEnvio || 'No disponible' }}
-                              </td>
-                              <td class="px-4 py-2">
-                                {{ alumno.fechaActualizacion || 'No disponible' }}
-                              </td>
-                              <td class="px-4 py-2">
-                                <a
-                                  [href]="alumno.tareaUrl"
-                                  target="_blank"
-                                  class="text-blue-400 hover:text-blue-300 flex items-center space-x-1"
-                                >
-                                  <fa-icon [icon]="['fas', 'download']"></fa-icon>
-                                  <span>Descargar Tarea</span>
-                                </a>
-                              </td>
-                              <td class="px-4 py-2">
-                                <input
-                                  type="text"
-                                  [(ngModel)]="alumno.comentario"
-                                  class="w-full bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Agregar comentario"
-                                />
-                              </td>
-                              <td class="px-4 py-2 text-right">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="20"
-                                  [(ngModel)]="alumno.nota"
-                                  class="w-16 bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  placeholder="Nota"
-                                />
-                              </td>
+                    <td class="px-6 py-4">{{ actividad.actividadNombre }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
+                      {{ actividad.fechaInicio | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
+                      {{ actividad.fechaFin | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                      <button
+                        (click)="openEditModal(actividad, $event)"
+                        class="text-blue-400 hover:text-blue-300 mr-4"
+                      >
+                        <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
+                      </button>
+                      <button
+                        *ngIf="actividadSeleccionada === 'actividades'"
+                        (click)="toggleNotas(actividad, $event)"
+                        class="text-yellow-400 hover:text-yellow-300 mr-4"
+                      >
+                        <fa-icon [icon]="['far', 'sticky-note']"></fa-icon>
+                      </button>
+                      <button
+                        (click)="openDeleteDialog(actividad, $event)"
+                        class="text-red-400 hover:text-red-300"
+                      >
+                        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+                      </button>
+                    </td>
+                  </tr>
+                  <!-- Panel deslizable para mostrar la lista de alumnos -->
+                  <tr *ngIf="actividadConNotasAbierta === actividad.idActividad" class="bg-gray-800">
+                    <td colspan="4" class="px-6 py-4">
+                      <div class="slide-in notas-panel">
+                        <h3 class="text-lg font-medium text-gray-300 mb-4">Asignar Notas</h3>
+                        <table class="w-full text-sm text-left text-gray-300">
+                          <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                              <th scope="col" class="px-4 py-2">Nombre del Alumno</th>
+                              <th scope="col" class="px-4 py-2">Fecha de Envío</th>
+                              <th scope="col" class="px-4 py-2">Fecha de Actualización</th>
+                              <th scope="col" class="px-4 py-2">Ver Tarea</th>
+                              <th scope="col" class="px-4 py-2">Comentario</th>
+                              <th scope="col" class="px-4 py-2 text-right">Nota (0-20)</th>
                             </tr>
-                          </ng-container>
-                        </tbody>
-                      </table>
-                      <div class="flex justify-end mt-4">
-                        <button
-                          (click)="guardarNotas()"
-                          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                          Guardar
-                        </button>
+                          </thead>
+                          <tbody>
+                            <ng-container *ngFor="let alumno of alumnos">
+                              <tr class="bg-gray-800 border-b border-gray-600">
+                                <td class="px-4 py-2">
+                                  {{ alumno.nombre }} {{ alumno.apellidoPaterno }} {{ alumno.apellidoMaterno }}
+                                </td>
+                                <td class="px-4 py-2">
+                                  {{ alumno.fechaEnvio || 'No disponible' }}
+                                </td>
+                                <td class="px-4 py-2">
+                                  {{ alumno.fechaActualizacion || 'No disponible' }}
+                                </td>
+                                <td class="px-4 py-2">
+                                  <a
+                                    [href]="alumno.tareaUrl"
+                                    target="_blank"
+                                    class="text-blue-400 hover:text-blue-300 flex items-center space-x-1"
+                                  >
+                                    <fa-icon [icon]="['fas', 'download']"></fa-icon>
+                                    <span>Descargar Tarea</span>
+                                  </a>
+                                </td>
+                                <td class="px-4 py-2">
+                                  <input
+                                    type="text"
+                                    [(ngModel)]="alumno.comentario"
+                                    class="w-full bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Agregar comentario"
+                                  />
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="20"
+                                    [(ngModel)]="alumno.nota"
+                                    class="w-16 bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Nota"
+                                  />
+                                </td>
+                              </tr>
+                            </ng-container>
+                          </tbody>
+                        </table>
+                        <div class="flex justify-end mt-4">
+                          <button
+                            (click)="guardarNotas()"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            Guardar
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              </ng-container>
-            </tbody>
-          </table>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-          <!-- Contenido del archivo seleccionado -->
-          <div *ngIf="contenidoActual" class="mt-4">
-            <!-- PDF -->
-            <div *ngIf="contenidoActual.tipo === 'pdf'">
-              <iframe
-                [src]="contenidoActual.url | safeUrl"
-                width="100%"
-                height="800px"
-                style="border: none;"
-                (error)="handleFileError()"
-              ></iframe>
-              <div
-                *ngIf="errorLoadingFile"
-                class="error-message text-red-400"
-              >
-                No se pudo obtener una vista previa del archivo.
-                <a
-                  [href]="contenidoActual.url"
-                  download
-                  class="text-blue-400"
-                >Descargar</a>
-              </div>
-            </div>
-            <!-- Video -->
-            <div *ngIf="contenidoActual.tipo === 'video'">
-              <video
-                controls
-                width="100%"
-                height="auto"
-                (error)="handleFileError()"
-              >
-                <source [src]="contenidoActual.url" type="video/mp4">
-                Tu navegador no soporta la reproducción de videos.
-              </video>
-              <div
-                *ngIf="errorLoadingFile"
-                class="error-message text-red-400"
-              >
-                No se pudo cargar el video.
-                <a
-                  [href]="contenidoActual.url"
-                  download
-                  class="text-blue-400"
-                >Descargar</a>
-              </div>
-            </div>
-            <!-- TXT y DOCX -->
-            <div *ngIf="contenidoActual.tipo === 'text' || contenidoActual.tipo === 'docx'">
-              <div class="text-gray-300">
-                Este archivo no puede visualizarse en el navegador. Por favor, descárgalo para verlo.
-              </div>
-              <a
-                [href]="contenidoActual.url"
-                download
-                class="text-blue-400 hover:text-blue-300 mt-2 inline-block"
-              >Descargar {{ contenidoActual.actividad.actividadNombre }}</a>
-            </div>
-
-            <!-- Apartado para subir tarea (visible solo para Alumnos) -->
-<div *ngIf="rolUsuario === 'Alumno' && actividadSeleccionada === 'actividades'" class="subir-tarea-panel mt-4">
-  <h3 class="text-lg font-medium text-gray-300 mb-4">Tarea de la Actividad</h3>
-  <div class="flex flex-col space-y-4">
-    <!-- Input y botón para subir tarea (ocultar si ya se ha enviado) -->
-    <div *ngIf="!tareaSubidaUrl" class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-      <input
-        #fileInput
-        type="file"
-        class="file-input bg-gray-700 text-gray-300 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
-        accept=".pdf,.mp4,.avi,.mov"
-      />
-      <button
-        (click)="subirTarea()"
-        [disabled]="isUploading"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto mt-2 sm:mt-0"
-      >
-        <span *ngIf="isUploading" class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></span>
-        <span>{{ isUploading ? 'Subiendo...' : 'Confirmar' }}</span>
-      </button>
-    </div>
-    <!-- Barra de progreso -->
-    <div *ngIf="isUploading" class="w-full">
-      <div class="bg-gray-700 rounded-full h-2.5">
-        <div
-          class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-          [style.width]="uploadProgress + '%'"
-        ></div>
+        <!-- Asistencias (visible solo para Profesor) -->
+        <div *ngIf="actividadSeleccionada === 'asistencias'" class="mt-4">
+          <app-asistencia
+            [idSesion]="idSesion"
+            [idProfesorCurso]="idProfesorCurso"
+            [idCurso]="idCurso"
+            [rolUsuario]="rolUsuario"
+          ></app-asistencia>
+        </div>
       </div>
-      <p class="text-gray-400 text-sm mt-1 text-center sm:text-left">Subiendo... {{ uploadProgress }}%</p>
-    </div>
-    <!-- Sección de tarea enviada -->
-<!-- Sección de tarea enviada -->
-                  <div *ngIf="tareaSubidaUrl" class="tarea-enviada-panel p-4 bg-gray-800 rounded-md">
-                    <div class="flex flex-col space-y-2">
-                      <div class="flex items-center space-x-2">
-                        <fa-icon [icon]="['fas', 'check-circle']" class="text-green-400 text-lg"></fa-icon>
-                        <p class="text-green-400 font-medium">
-                          {{ isCalificada ? 'La tarea ha sido calificada' : 'La tarea ya ha sido enviada' }}
-                        </p>
-                      </div>
-                      <table class="w-full text-sm text-gray-300">
-                        <tbody>
-                          <tr>
-                            <td class="px-4 py-2 text-gray-400">Fecha de envío:</td>
-                            <td class="px-4 py-2 text-gray-300">{{ tareaFechaEnvio || 'No disponible' }}</td>
-                          </tr>
-                          <tr>
-                            <td class="px-4 py-2 text-gray-400">Nota:</td>
-                            <td class="px-4 py-2 text-gray-300">
-                              {{ notaActual ?? 0 }} de 20{{ notaActual == null ? ' - Sin calificar' : '' }}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td class="px-4 py-2 text-gray-400">Nombre del archivo:</td>
-                            <td class="px-4 py-2 text-gray-300">
-                              <a [href]="tareaSubidaUrl" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center space-x-2">
-                                <fa-icon [icon]="['fas', 'book']" class="text-lg"></fa-icon>
-                                <span>{{ uploadedFileName || 'Archivo desconocido' }}</span>
-                              </a>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td class="px-4 py-2 text-gray-400">Comentario:</td>
-                            <td class="px-4 py-2 text-gray-300">
-                              <div class="flex items-center space-x-2 cursor-pointer" (click)="toggleComentarioPanel()">
-                                <fa-icon [icon]="['far', 'sticky-note']" class="text-yellow-400 text-lg"></fa-icon>
-                                <span>Comentarios: {{ comentarioCount }}</span>
-                              </div>
-                              <div *ngIf="isComentarioPanelOpen" class="slide-in comentario-panel mt-2 p-4 bg-gray-700 rounded-md">
-                                <div class="flex flex-col space-y-2">
-                                  <span class="text-sm text-gray-400">Comentario del profesor:</span>
-                                  <p class="text-sm text-gray-300">{{ comentarioActual || 'No hay comentario' }}</p>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td class="px-4 py-2 text-gray-400">Estado de calificación:</td>
-                            <td class="px-4 py-2 text-gray-300">{{ isCalificada ? 'Calificado' : 'Sin calificar' }}</td>
-                          </tr>
-                          <tr>
-                            <td class="px-4 py-2 text-gray-400">Fecha de calificación:</td>
-                            <td class="px-4 py-2 text-gray-300">{{ fechaCalificacion }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-              </div>
-            </div>
+
+      <!-- Vista para Alumnos -->
+      <div *ngIf="rolUsuario === 'Alumno'">
+        <!-- Introducciones, Materiales y Actividades -->
+        <div *ngIf="actividadSeleccionada !== 'asistencias'">
+          <!-- Mostrar mensaje si no hay contenido -->
+          <div *ngIf="actividadesActuales.length === 0" class="text-center">
+            No hay contenido disponible para esta sesión.
+          </div>
+
+          <!-- Tabla de archivos si hay contenido -->
+          <div *ngIf="actividadesActuales.length > 0" class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-300">
+              <thead class="text-xs text-gray-400 uppercase bg-gray-800">
+                <tr>
+                  <th scope="col" class="px-6 py-3">Nombre</th>
+                  <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Inicio</th>
+                  <th scope="col" class="px-6 py-3" *ngIf="actividadSeleccionada === 'actividades'">Fecha Fin</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let actividad of actividadesActuales">
+                  <tr
+                    [ngClass]="{
+                      'bg-gray-700 border-b border-gray-600 hover:bg-gray-600 cursor-pointer': true,
+                      'bg-gray-500':
+                        contenidoActual &&
+                        contenidoActual.actividad.actividadUrl === actividad.actividadUrl
+                    }"
+                    (click)="toggleContenido(actividad)"
+                  >
+                    <td class="px-6 py-4">{{ actividad.actividadNombre }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
+                      {{ actividad.fechaInicio | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100" *ngIf="actividadSeleccionada === 'actividades'">
+                      {{ actividad.fechaFin | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <!-- Asistencias (visible solo para Profesor) -->
-      <div *ngIf="actividadSeleccionada === 'asistencias' && rolUsuario === 'Profesor'" class="mt-4">
-        <app-asistencia
-          [idSesion]="idSesion"
-          [idProfesorCurso]="idProfesorCurso"
-          [idCurso]="idCurso"
-          [rolUsuario]="rolUsuario"
-        ></app-asistencia>
+      <!-- Contenido del archivo seleccionado (compartido para ambos roles) -->
+      <div *ngIf="contenidoActual" class="mt-4">
+        <!-- PDF -->
+        <div *ngIf="contenidoActual.tipo === 'pdf'">
+          <iframe
+            [src]="contenidoActual.url | safeUrl"
+            width="100%"
+            height="800px"
+            style="border: none;"
+            (error)="handleFileError()"
+          ></iframe>
+          <div
+            *ngIf="errorLoadingFile"
+            class="error-message text-red-400"
+          >
+            No se pudo obtener una vista previa del archivo.
+            <a
+              [href]="contenidoActual.url"
+              download
+              class="text-blue-400"
+            >Descargar</a>
+          </div>
+        </div>
+        <!-- Video -->
+        <div *ngIf="contenidoActual.tipo === 'video'">
+          <video
+            controls
+            width="100%"
+            height="auto"
+            (error)="handleFileError()"
+          >
+            <source [src]="contenidoActual.url" type="video/mp4">
+            Tu navegador no soporta la reproducción de videos.
+          </video>
+          <div
+            *ngIf="errorLoadingFile"
+            class="error-message text-red-400"
+          >
+            No se pudo cargar el video.
+            <a
+              [href]="contenidoActual.url"
+              download
+              class="text-blue-400"
+            >Descargar</a>
+          </div>
+        </div>
+        <!-- TXT y DOCX -->
+        <div *ngIf="contenidoActual.tipo === 'text' || contenidoActual.tipo === 'docx'">
+          <div class="text-gray-300">
+            Este archivo no puede visualizarse en el navegador. Por favor, descárgalo para verlo.
+          </div>
+          <a
+            [href]="contenidoActual.url"
+            download
+            class="text-blue-400 hover:text-blue-300 mt-2 inline-block"
+          >Descargar {{ contenidoActual.actividad.actividadNombre }}</a>
+        </div>
+
+        <!-- Apartado para subir tarea (visible solo para Alumnos en la sección de actividades) -->
+        <div *ngIf="rolUsuario === 'Alumno' && actividadSeleccionada === 'actividades'" class="subir-tarea-panel mt-4">
+          <h3 class="text-lg font-medium text-gray-300 mb-4">Tarea de la Actividad</h3>
+          <div class="flex flex-col space-y-4">
+            <!-- Si la tarea no ha sido enviada -->
+            <div *ngIf="!tareaSubidaUrl">
+              <!-- Tarea no presencial: Mostrar input para subir archivo -->
+              <div *ngIf="!contenidoActual.actividad.esActividadPresencial" class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                <input
+                  #fileInput
+                  type="file"
+                  class="file-input bg-gray-700 text-gray-300 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+                  accept=".pdf,.mp4,.avi,.mov"
+                />
+                <button
+                  (click)="subirTarea()"
+                  [disabled]="isUploading"
+                  class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto mt-2 sm:mt-0"
+                >
+                  <span *ngIf="isUploading" class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></span>
+                  <span>{{ isUploading ? 'Subiendo...' : 'Confirmar' }}</span>
+                </button>
+              </div>
+              <!-- Tarea presencial: Mostrar botón de Finalizar -->
+              <div *ngIf="contenidoActual.actividad.esActividadPresencial">
+                <button
+                  (click)="finalizarActividadPresencial()"
+                  [disabled]="isUploading"
+                  class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto"
+                >
+                  <span *ngIf="isUploading" class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></span>
+                  <span>{{ isUploading ? 'Registrando...' : 'Finalizar Actividad Presencial' }}</span>
+                </button>
+              </div>
+              <!-- Barra de progreso (visible durante la subida o registro) -->
+              <div *ngIf="isUploading" class="w-full">
+                <div class="bg-gray-700 rounded-full h-2.5">
+                  <div
+                    class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                    [style.width]="uploadProgress + '%'"
+                  ></div>
+                </div>
+                <p class="text-gray-400 text-sm mt-1 text-center sm:text-left">Subiendo... {{ uploadProgress }}%</p>
+              </div>
+            </div>
+            <!-- Sección de tarea enviada -->
+            <div *ngIf="tareaSubidaUrl" class="tarea-enviada-panel p-4 bg-gray-800 rounded-md">
+              <div class="flex flex-col space-y-2">
+                <div class="flex items-center space-x-2">
+                  <fa-icon [icon]="['fas', 'check-circle']" class="text-green-400 text-lg"></fa-icon>
+                  <p class="text-green-400 font-medium">
+                    {{ isCalificada ? 'La tarea ha sido calificada' : 'La tarea ya ha sido enviada' }}
+                  </p>
+                </div>
+                <table class="w-full text-sm text-gray-300">
+                  <tbody>
+                    <tr>
+                      <td class="px-4 py-2 text-gray-400">Fecha de envío:</td>
+                      <td class="px-4 py-2 text-gray-300">{{ tareaFechaEnvio || 'No disponible' }}</td>
+                    </tr>
+                    <tr>
+                      <td class="px-4 py-2 text-gray-400">Nota:</td>
+                      <td class="px-4 py-2 text-gray-300">
+                        {{ notaActual ?? 0 }} de 20{{ notaActual == null ? ' - Sin calificar' : '' }}
+                      </td>
+                    </tr>
+                    <tr *ngIf="!contenidoActual.actividad.esActividadPresencial">
+                      <td class="px-4 py-2 text-gray-400">Nombre del archivo:</td>
+                      <td class="px-4 py-2 text-gray-300">
+                        <a [href]="tareaSubidaUrl" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center space-x-2">
+                          <fa-icon [icon]="['fas', 'book']" class="text-lg"></fa-icon>
+                          <span>{{ uploadedFileName || 'Archivo desconocido' }}</span>
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="px-4 py-2 text-gray-400">Comentario:</td>
+                      <td class="px-4 py-2 text-gray-300">
+                        <div class="flex items-center space-x-2 cursor-pointer" (click)="toggleComentarioPanel()">
+                          <fa-icon [icon]="['far', 'sticky-note']" class="text-yellow-400 text-lg"></fa-icon>
+                          <span>Comentarios: {{ comentarioCount }}</span>
+                        </div>
+                        <div *ngIf="isComentarioPanelOpen" class="slide-in comentario-panel mt-2 p-4 bg-gray-700 rounded-md">
+                          <div class="flex flex-col space-y-2">
+                            <span class="text-sm text-gray-400">Comentario del profesor:</span>
+                            <p class="text-sm text-gray-300">{{ comentarioActual || 'No hay comentario' }}</p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="px-4 py-2 text-gray-400">Estado de calificación:</td>
+                      <td class="px-4 py-2 text-gray-300">{{ isCalificada ? 'Calificado' : 'Sin calificar' }}</td>
+                    </tr>
+                    <tr>
+                      <td class="px-4 py-2 text-gray-400">Fecha de calificación:</td>
+                      <td class="px-4 py-2 text-gray-300">{{ fechaCalificacion }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
