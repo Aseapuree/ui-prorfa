@@ -26,10 +26,8 @@ import { faStickyNote as farStickyNote } from '@fortawesome/free-regular-svg-ico
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
-// Nueva interfaz para agregar esActividadPresencial como opcional
-interface ActividadWithPresencial extends DTOActividad, Actividad {
-  esActividadPresencial?: boolean;
-}
+// Nueva interfaz sin esActividadPresencial
+interface ActividadWithPresencial extends DTOActividad, Actividad {}
 
 interface Alumno {
   idAlumno: string;
@@ -336,12 +334,6 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
         this.nivel = response.data.nivel || this.nivel || undefined;
         console.log('Datos de la sesión desde obtenerActividades:', { grado: this.grado, seccion: this.seccion, nivel: this.nivel });
   
-        // Asignar esActividadPresencial a cada actividad basada en el nombre
-        this.actividadesSesion.data.actividades = this.actividadesSesion.data.actividades.map(actividad => ({
-          ...actividad,
-          esActividadPresencial: (actividad.actividadNombre ?? '').includes('listo') || (actividad.actividadNombre ?? '').includes('listo2')
-        })) as ActividadWithPresencial[];
-  
         this.actividadesSesion.data.actividades.forEach(actividad => {
           if (actividad.fechaInicio) {
             actividad.fechaInicio = this.parseUTCDate(actividad.fechaInicio as string);
@@ -370,11 +362,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
             this.nivel = curso.nivel || this.nivel || undefined;
             console.log('Datos del curso/sesión (alumno):', { grado: this.grado, seccion: this.seccion, nivel: this.nivel });
   
-            // Asignar esActividadPresencial a cada actividad basada en el nombre
-            this.actividadesOriginales = sesion.actividades.map(actividad => ({
-              ...actividad,
-              esActividadPresencial: (actividad.actividadNombre ?? '').includes('prueba') || (actividad.actividadNombre ?? '').includes('Hola')
-            })) as ActividadWithPresencial[];
+            this.actividadesOriginales = sesion.actividades;
   
             this.actividadesOriginales.forEach(actividad => {
               if (actividad.fechaInicio) {
@@ -560,7 +548,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
         return;
       }
       const tipoArchivo = this.getFileType(actividad.actividadUrl);
-      const actividadConPresencial = { ...actividad, esActividadPresencial: actividad.esActividadPresencial ?? true} as ActividadWithPresencial;
+      const actividadConPresencial = { ...actividad, presencial: actividad.presencial ?? false } as ActividadWithPresencial; // Usamos presencial directamente
       this.contenidoActual = {
         tipo: tipoArchivo,
         url: actividad.actividadUrl,
@@ -924,26 +912,26 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       this.notificationService.showNotification('Acción no permitida para este rol', 'error');
       return;
     }
-
-    if (!this.contenidoActual || !this.contenidoActual.actividad.idActividad || !this.contenidoActual.actividad.esActividadPresencial) {
+  
+    if (!this.contenidoActual || !this.contenidoActual.actividad.idActividad || !this.contenidoActual.actividad.presencial) {
       this.notificationService.showNotification('Por favor, selecciona una actividad presencial válida', 'error');
       return;
     }
-
+  
     this.isUploading = true;
     this.cdr.detectChanges();
-
+  
     try {
       if (!this.nombreCompletoUsuario) {
         throw new Error('No se encontró el nombre completo del usuario autenticado');
       }
       const idAlumno = await lastValueFrom(this.notasService.obtenerIdAlumnoPorNombre(this.nombreCompletoUsuario));
       console.log('idAlumno obtenido:', idAlumno);
-
+  
       if (!this.usuarioId) {
         throw new Error('No se encontró el ID del usuario autenticado');
       }
-
+  
       const nota: DTONota = {
         idalumano: idAlumno,
         idactividad: this.contenidoActual.actividad.idActividad,
@@ -952,12 +940,12 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
         nombreArchivo: 'Tarea presencial',
         usuarioCreacion: this.usuarioId
       };
-
+  
       console.log('Payload enviado a /registrar para actividad presencial:', JSON.stringify(nota, null, 2));
-
+  
       const response = await lastValueFrom(this.notasService.registrarNota(nota));
       console.log('Respuesta del servidor al registrar la nota presencial:', response);
-
+  
       await this.validarNotas(this.contenidoActual.actividad.idActividad);
       this.notificationService.showNotification('Tarea registrada con éxito', 'success');
     } catch (error: any) {
