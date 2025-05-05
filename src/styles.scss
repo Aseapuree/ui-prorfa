@@ -10,6 +10,16 @@
     --border-color: #778DA9;
     --text-color: #E0E1DD;
     --accent-color: #415A77;
+    
+    /* Colores específicos para la tabla */
+    --table-header-bg: #1B263B; /* Fondo para <thead> */
+    --table-header-text: #E0E1DD; /* Color de texto para <th> en el encabezado */
+    --table-row-bg: #0D1B2A; /* Fondo para <tr> en <tbody> */
+    --table-row-text: #E0E1DD; /* Color de texto para <td> */
+    --table-row-hover-bg: #415A77; /* Fondo para <tr> al pasar el ratón */
+    --table-action-icon: #778DA9; /* Color predeterminado para íconos de acciones */
+    --table-action-edit-hover: #FBBF24; /* Color hover para ícono de editar */
+    --table-action-delete-hover: #EF4444; /* Color hover para ícono de eliminar */
   }
 
 .mdc-notched-outline__notch{

@@ -212,155 +212,17 @@
     </div>
   </div>
 
-  <!-- Tabla -->
-  <div class="flex flex-col mt-6">
-    <div class="overflow-x-auto shadow-sm">
-      <div class="inline-block min-w-full py-2 align-middle">
-        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-          <table class="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[150px]"
-                  (click)="cambiarOrdenamiento('profesor')"
-                >
-                  <div class="flex items-center">
-                    Profesor
-                    <fa-icon
-                      [icon]="sortBy === 'profesor' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[150px]"
-                  (click)="cambiarOrdenamiento('curso')"
-                >
-                  <div class="flex items-center">
-                    Curso
-                    <fa-icon
-                      [icon]="sortBy === 'curso' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
-                  (click)="cambiarOrdenamiento('grado')"
-                >
-                  <div class="flex items-center">
-                    Grado
-                    <fa-icon
-                      [icon]="sortBy === 'grado' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
-                  (click)="cambiarOrdenamiento('seccion')"
-                >
-                  <div class="flex items-center">
-                    Sección
-                    <fa-icon
-                      [icon]="sortBy === 'seccion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
-                  (click)="cambiarOrdenamiento('nivel')"
-                >
-                  <div class="flex items-center">
-                    Nivel
-                    <fa-icon
-                      [icon]="sortBy === 'nivel' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
-                  (click)="cambiarOrdenamiento('fechaAsignacion')"
-                >
-                  <div class="flex items-center">
-                    Fecha Asignación
-                    <fa-icon
-                      [icon]="sortBy === 'fechaAsignacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
-                  (click)="cambiarOrdenamiento('fechaActualizacion')"
-                >
-                  <div class="flex items-center">
-                    Fecha Actualización
-                    <fa-icon
-                      [icon]="sortBy === 'fechaActualizacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 max-w-[100px]"
-                >
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-              <tr *ngFor="let asignacion of asignaciones">
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate">
-                  {{ asignacion.usuario?.nombre }} {{ asignacion.usuario?.apellidopaterno }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate">
-                  {{ asignacion.curso?.nombre }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
-                  {{ asignacion.grado }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
-                  {{ asignacion.seccion }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
-                  {{ asignacion.nivel }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
-                  {{ asignacion.fechaAsignacion | date: 'yyyy-MM-dd HH:mm' }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
-                  {{ asignacion.fechaActualizacion ? (asignacion.fechaActualizacion | date: 'yyyy-MM-dd HH:mm') : 'Sin actualizar' }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm max-w-[100px]">
-                  <div class="flex items-center gap-x-6 md:gap-x-3">
-                    <app-tooltip tooltipText="Editar asignación">
-                      <button
-                        (click)="openEditModal(asignacion)"
-                        class="text-gray-500 hover:text-yellow-500"
-                      >
-                        <fa-icon [icon]="['fas', 'pencil']" class="h-8 w-8"></fa-icon>
-                      </button>
-                    </app-tooltip>
-                    <app-tooltip tooltipText="Eliminar asignación">
-                      <button
-                        (click)="eliminarAsignacion(asignacion.idProfesorCurso!)"
-                        class="text-gray-500 hover:text-red-500"
-                      >
-                        <fa-icon [icon]="['fas', 'trash']" class="h-8 w-8"></fa-icon>
-                      </button>
-                    </app-tooltip>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Tabla Reutilizable -->
+  <app-table
+    [data]="asignaciones"
+    [columns]="tableColumns"
+    [enableActions]="true"
+    [sortBy]="sortBy"
+    [sortDir]="sortDir"
+    (sortChange)="onSortChange($event)"
+    (editAction)="openEditModal($event)"
+    (delete)="eliminarAsignacion($event)"
+  ></app-table>
 
   <app-pagination
     [page]="page"

@@ -16,20 +16,21 @@ import { NotificationService } from '../../../shared/notificaciones/notification
 import { PaginationComponent } from '../../../../../general/components/pagination/pagination.component';
 import { TooltipComponent } from '../../../../../general/components/tooltip/tooltip.component';
 import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
+import { ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
 
 
 @Component({
   selector: 'app-campus-cursos',
   standalone: true,
-  imports: [RouterModule,GeneralLoadingSpinnerComponent,TooltipComponent,PaginationComponent, HttpClientModule,CommonModule, NgxPaginationModule, FontAwesomeModule, FormsModule,NotificationComponent],
+  imports: [RouterModule,TableComponent,GeneralLoadingSpinnerComponent,TooltipComponent,PaginationComponent, HttpClientModule,CommonModule, NgxPaginationModule, FontAwesomeModule, FormsModule,NotificationComponent],
   providers: [CourseService],
   templateUrl: './campus-cursos.component.html',
   styleUrl: './campus-cursos.component.scss'
 })
 export class CampusCursosComponent {
   public page: number = 1;
-  public itemsPerPage: number = 5; // Valor inicial
-  public pageSizeOptions: number[] = []; // Opciones dinámicas para el selector
+  public itemsPerPage: number = 5;
+  public pageSizeOptions: number[] = [];
   totalPages: number = 1;
   cursos: Curso[] = [];
   keyword: string = '';
@@ -38,7 +39,16 @@ export class CampusCursosComponent {
   sortBy: string = 'fechaCreacion';
   sortDir: string = 'asc';
   isLoading: boolean = false;
-  
+
+  // Configuración de columnas para la tabla: sortable true mostar para habilitar el ordenamiento, type: text para texto, date para fecha
+  // maxWidth: 150 para limitar el ancho de la columna
+  tableColumns: ColumnConfig[] = [
+    { field: 'nombre', header: 'Nombre', maxWidth: 150, sortable: true, type: 'text' },
+    { field: 'descripcion', header: 'Descripción', maxWidth: 200, sortable: true, type: 'text' },
+    { field: 'abreviatura', header: 'Abreviatura', maxWidth: 100, sortable: false, type: 'text' },
+    { field: 'fechaCreacion', header: 'Fecha de Creación', maxWidth: 120, sortable: true, type: 'date' },
+    { field: 'fechaActualizacion', header: 'Fecha Actualización', maxWidth: 120, sortable: true, type: 'date' }
+  ];
 
   constructor(
     private modalService: ModalService,
@@ -51,9 +61,7 @@ export class CampusCursosComponent {
   private readonly _dialog = inject(MatDialog);
   private readonly _courseSVC = inject(CourseService);
 
-
   ngOnInit(): void {
-    // Cargar itemsPerPage desde localStorage si existe
     const savedItemsPerPage = localStorage.getItem('itemsPerPage');
     if (savedItemsPerPage) {
       this.itemsPerPage = parseInt(savedItemsPerPage, 10);
@@ -62,8 +70,6 @@ export class CampusCursosComponent {
     this.cargarCursos();
   }
 
-  // Calcular opciones dinámicas para el selector de itemsPerPage
-  // Calcular opciones dinámicas para el selector de itemsPerPage
   private updatePageSizeOptions(): void {
     const previousItemsPerPage = this.itemsPerPage;
     this.pageSizeOptions = [];
@@ -72,48 +78,41 @@ export class CampusCursosComponent {
       this.pageSizeOptions.push(i);
     }
 
-    // Asegurar que itemsPerPage sea válido sin resetearlo innecesariamente
     if (this.pageSizeOptions.length > 0) {
-      // Mantener itemsPerPage si es válido, de lo contrario usar la opción más cercana
       if (!this.pageSizeOptions.includes(this.itemsPerPage)) {
-        // Buscar la opción más cercana que sea menor o igual a totalCursos
         const validOption = this.pageSizeOptions
           .filter(option => option <= this.totalCursos)
           .reduce((prev, curr) => (Math.abs(curr - this.itemsPerPage) < Math.abs(prev - this.itemsPerPage) ? curr : prev), this.pageSizeOptions[0]);
         this.itemsPerPage = validOption;
         localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-        console.log(`itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage} porque no estaba en pageSizeOptions:`, this.pageSizeOptions);
+        console.log(`itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage}`);
       }
     } else {
-      this.pageSizeOptions = [5]; // Opción por defecto si no hay cursos
+      this.pageSizeOptions = [5];
       this.itemsPerPage = 5;
       localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-      console.log(`itemsPerPage establecido a 5 porque no hay cursos. pageSizeOptions:`, this.pageSizeOptions);
+      console.log(`itemsPerPage establecido a 5 porque no hay cursos`);
     }
   }
 
-  // Actualizar itemsPerPage cuando el usuario selecciona una nueva opción
   onItemsPerPageChange(newSize: number): void {
     console.log(`onItemsPerPageChange: Cambiando itemsPerPage a ${newSize}`);
     this.itemsPerPage = newSize;
     localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-    this.page = 1; // Reiniciar a la primera página
+    this.page = 1;
     this.cargarCursos();
   }
 
-  // Validar si el keyword cumple con el regex (para búsqueda)
   isKeywordValid(): boolean {
-    if (!this.keyword) return true; // Permitir campo vacío
+    if (!this.keyword) return true;
     const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+)*$/;
     return regex.test(this.keyword.trim());
   }
 
-  // Manejar la entrada del usuario
   onInputChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     let newValue = input.value;
 
-    // Bloquear espacios al inicio
     if (newValue.startsWith(' ')) {
       input.value = this.lastValidKeyword;
       this.keyword = this.lastValidKeyword;
@@ -125,10 +124,8 @@ export class CampusCursosComponent {
       return;
     }
 
-    // Normalizar el valor: reemplazar múltiples espacios por un solo espacio
     newValue = newValue.replace(/\s+/g, ' ');
 
-    // Si el valor está vacío, permitirlo
     if (newValue === '') {
       this.keyword = '';
       this.lastValidKeyword = '';
@@ -137,10 +134,8 @@ export class CampusCursosComponent {
       return;
     }
 
-    // Permitir un espacio después de una palabra como estado intermedio
     const intermediateRegex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)*$/;
     if (!intermediateRegex.test(newValue)) {
-      // Restaurar el último valor válido
       input.value = this.lastValidKeyword;
       this.keyword = this.lastValidKeyword;
       this.notificationService.showNotification(
@@ -151,23 +146,16 @@ export class CampusCursosComponent {
       return;
     }
 
-    // Si el valor es válido, actualizar keyword y lastValidKeyword
     this.keyword = newValue;
-    this.lastValidKeyword = newValue.trim(); // Guardar versión sin espacio final
-    input.value = this.keyword; // Asegurar que el input refleja el valor válido
+    this.lastValidKeyword = newValue.trim();
+    input.value = this.keyword;
     this.cdr.detectChanges();
   }
 
-  cambiarOrdenamiento(columna: string): void {
-    if (this.sortBy === columna) {
-      // Cambiar dirección si es la misma columna
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      // Establecer nueva columna y dirección ascendente por defecto
-      this.sortBy = columna;
-      this.sortDir = 'asc';
-    }
-    this.page = 1; // Reiniciar a la primera página
+  onSortChange(event: { sortBy: string, sortDir: string }): void {
+    this.sortBy = event.sortBy;
+    this.sortDir = event.sortDir;
+    this.page = 1;
     this.cargarCursos();
   }
 
@@ -204,7 +192,6 @@ export class CampusCursosComponent {
             this.totalCursos = response.totalElements;
             this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
             this.updatePageSizeOptions();
-            // Asegurar que la página actual sea válida
             if (this.page > this.totalPages) {
               this.page = 1;
               this.cargarCursos();
@@ -324,12 +311,10 @@ export class CampusCursosComponent {
       next: (resultado) => {
         this.totalCursos = resultado.length;
         this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
-        // Paginación manual: tomar los elementos de la página actual
         const startIndex = (this.page - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         this.cursos = resultado.slice(startIndex, endIndex);
         this.updatePageSizeOptions();
-        // Asegurar que la página actual sea válida
         if (this.page > this.totalPages) {
           this.page = 1;
           this.buscarCursos();

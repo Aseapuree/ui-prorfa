@@ -19,6 +19,7 @@ import { Usuario } from '../../../../interface/usuario';
 import { Curso } from '../../../../interface/curso';
 import { CourseService } from '../../../../services/course.service';
 import { UsuarioService } from '../../../../services/usuario.service';
+import { ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
 
 @Component({
   selector: 'app-profesor-curso',
@@ -33,7 +34,8 @@ import { UsuarioService } from '../../../../services/usuario.service';
     NotificationComponent,
     PaginationComponent,
     GeneralLoadingSpinnerComponent,
-    TooltipComponent
+    TooltipComponent,
+    TableComponent
   ],
   providers: [ProfesorCursoService],
   templateUrl: './profesor-curso.component.html',
@@ -42,16 +44,16 @@ import { UsuarioService } from '../../../../services/usuario.service';
 export class ProfesorCursoComponent implements OnInit {
   public page: number = 1;
   public itemsPerPage: number = 6;
-  public pageSizeOptions: number[] = []; // Opciones dinámicas para el selector
+  public pageSizeOptions: number[] = [];
   totalPages: number = 1;
-  asignaciones: ProfesorCurso[] = [];
+  asignaciones: any[] = [];
   keyword: string = '';
   totalAsignaciones: number = 0;
   private lastValidKeyword: string = '';
   sortBy: string = 'fechaAsignacion';
   sortDir: string = 'asc';
   isLoading: boolean = false;
-  appliedFilters: any = null; // Almacena los filtros aplicados
+  appliedFilters: any = null;
 
   // Variables de filtros
   profesores: Usuario[] = [];
@@ -64,7 +66,7 @@ export class ProfesorCursoComponent implements OnInit {
     nivel: '',
     fechaInicio: '' as string | undefined,
     fechaFin: '' as string | undefined,
-    fechaTipo: 'asignacion' // Default to asignacion
+    fechaTipo: 'asignacion'
   };
   niveles = ['primaria', 'secundaria'];
   grados: string[] = [];
@@ -74,6 +76,16 @@ export class ProfesorCursoComponent implements OnInit {
     { value: 'actualizacion', label: 'Fecha Actualización' }
   ];
 
+  // Configuración de columnas para la tabla
+  tableColumns: ColumnConfig[] = [
+    { field: 'profesor', header: 'Profesor', maxWidth: 150, sortable: true, type: 'text' },
+    { field: 'curso', header: 'Curso', maxWidth: 150, sortable: true, type: 'text' },
+    { field: 'grado', header: 'Grado', maxWidth: 100, sortable: true, type: 'text' },
+    { field: 'seccion', header: 'Sección', maxWidth: 100, sortable: true, type: 'text' },
+    { field: 'nivel', header: 'Nivel', maxWidth: 100, sortable: true, type: 'text' },
+    { field: 'fechaAsignacion', header: 'Fecha Asignación', maxWidth: 120, sortable: true, type: 'date' },
+    { field: 'fechaActualizacion', header: 'Fecha Actualización', maxWidth: 120, sortable: true, type: 'date' }
+  ];
 
   constructor(
     private profesorCursoService: ProfesorCursoService,
@@ -81,13 +93,12 @@ export class ProfesorCursoComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private notificationService: NotificationService,
     private courseService: CourseService,
-    private usuarioService: UsuarioService,
+    private usuarioService: UsuarioService
   ) {}
 
   private readonly _dialog = inject(MatDialog);
 
   ngOnInit(): void {
-    // Cargar itemsPerPage desde localStorage si existe
     const savedItemsPerPage = localStorage.getItem('itemsPerPage');
     if (savedItemsPerPage) {
       this.itemsPerPage = parseInt(savedItemsPerPage, 10);
@@ -98,7 +109,6 @@ export class ProfesorCursoComponent implements OnInit {
     this.cargarCursos();
   }
 
-  // Calcular opciones dinámicas para el selector de itemsPerPage
   private updatePageSizeOptions(): void {
     const previousItemsPerPage = this.itemsPerPage;
     this.pageSizeOptions = [];
@@ -107,9 +117,7 @@ export class ProfesorCursoComponent implements OnInit {
       this.pageSizeOptions.push(i);
     }
 
-    // Asegurar que itemsPerPage sea válido sin resetearlo innecesariamente
     if (this.pageSizeOptions.length > 0) {
-      // Mantener itemsPerPage si es válido, de lo contrario usar la opción más cercana
       if (!this.pageSizeOptions.includes(this.itemsPerPage)) {
         const validOption = this.pageSizeOptions
           .filter((option) => option <= this.totalAsignaciones)
@@ -121,27 +129,22 @@ export class ProfesorCursoComponent implements OnInit {
         this.itemsPerPage = validOption;
         localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
         console.log(
-          `itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage} porque no estaba en pageSizeOptions:`,
-          this.pageSizeOptions
+          `itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage}`
         );
       }
     } else {
-      this.pageSizeOptions = [5]; // Opción por defecto si no hay asignaciones
+      this.pageSizeOptions = [5];
       this.itemsPerPage = 5;
       localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-      console.log(
-        `itemsPerPage establecido a 5 porque no hay asignaciones. pageSizeOptions:`,
-        this.pageSizeOptions
-      );
+      console.log(`itemsPerPage establecido a 5 porque no hay asignaciones`);
     }
   }
 
-  // Actualizar itemsPerPage cuando el usuario selecciona una nueva opción
   onItemsPerPageChange(newSize: number): void {
     console.log(`onItemsPerPageChange: Cambiando itemsPerPage a ${newSize}`);
     this.itemsPerPage = newSize;
     localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-    this.page = 1; // Reiniciar a la primera página
+    this.page = 1;
     this.cargarAsignaciones();
   }
 
@@ -177,8 +180,8 @@ export class ProfesorCursoComponent implements OnInit {
     } else {
       this.grados = [];
     }
-    this.filters.grado = ''; // Reset grado
-    this.filters.seccion = ''; // Reset sección
+    this.filters.grado = '';
+    this.filters.seccion = '';
     this.cdr.detectChanges();
   }
 
@@ -194,11 +197,11 @@ export class ProfesorCursoComponent implements OnInit {
         fechaFin: '',
         fechaTipo: 'asignacion'
       };
-      this.appliedFilters = null; // Limpiar filtros aplicados
+      this.appliedFilters = null;
       this.grados = [];
       this.keyword = '';
-      this.page = 1; // Reiniciar página
-      this.cargarAsignaciones(); // Recargar asignaciones después de limpiar filtros
+      this.page = 1;
+      this.cargarAsignaciones();
     } else {
       (this.filters as any)[filter] = filter === 'fechaTipo' ? 'asignacion' : '';
       if (filter === 'nivel') {
@@ -211,65 +214,58 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   isKeywordValid(value: string): boolean {
-    if (!value) return true; // Permitir campo vacío
+    if (!value) return true;
     const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+)*$/;
     return regex.test(value.trim());
   }
 
-  // Agregar una propiedad para almacenar el último valor válido por campo
-private lastValidValues: { [key: string]: string } = {
-  profesorId: '',
-  cursoId: ''
-};
+  private lastValidValues: { [key: string]: string } = {
+    profesorId: '',
+    cursoId: ''
+  };
 
-onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
-  const input = event.target as HTMLInputElement;
-  let newValue = input.value;
+  onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
+    const input = event.target as HTMLInputElement;
+    let newValue = input.value;
 
-  // Bloquear espacios al inicio
-  if (newValue.startsWith(' ')) {
-    input.value = this.lastValidValues[field];
-    this.filters[field] = this.lastValidValues[field];
-    this.notificationService.showNotification(
-      'No se permiten espacios al inicio.',
-      'info'
-    );
+    if (newValue.startsWith(' ')) {
+      input.value = this.lastValidValues[field];
+      this.filters[field] = this.lastValidValues[field];
+      this.notificationService.showNotification(
+        'No se permiten espacios al inicio.',
+        'info'
+      );
+      this.cdr.detectChanges();
+      return;
+    }
+
+    newValue = newValue.replace(/\s+/g, ' ');
+
+    if (newValue === '') {
+      this.filters[field] = '';
+      this.lastValidValues[field] = '';
+      input.value = '';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const intermediateRegex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)*$/;
+    if (!intermediateRegex.test(newValue)) {
+      input.value = this.lastValidValues[field];
+      this.filters[field] = this.lastValidValues[field];
+      this.notificationService.showNotification(
+        'Solo se permiten letras, números, acentos, ñ y un solo espacio entre palabras.',
+        'info'
+      );
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.filters[field] = newValue;
+    this.lastValidValues[field] = newValue.trim();
+    input.value = this.filters[field];
     this.cdr.detectChanges();
-    return;
   }
-
-  // Normalizar el valor: reemplazar múltiples espacios por un solo espacio
-  newValue = newValue.replace(/\s+/g, ' ');
-
-  // Si el valor está vacío, permitirlo
-  if (newValue === '') {
-    this.filters[field] = '';
-    this.lastValidValues[field] = '';
-    input.value = '';
-    this.cdr.detectChanges();
-    return;
-  }
-
-  // Permitir un espacio después de una palabra como estado intermedio
-  const intermediateRegex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)*$/;
-  if (!intermediateRegex.test(newValue)) {
-    // Restaurar el último valor válido
-    input.value = this.lastValidValues[field];
-    this.filters[field] = this.lastValidValues[field];
-    this.notificationService.showNotification(
-      'Solo se permiten letras, números, acentos, ñ y un solo espacio entre palabras.',
-      'info'
-    );
-    this.cdr.detectChanges();
-    return;
-  }
-
-  // Si el valor es válido, actualizar el campo y el último valor válido
-  this.filters[field] = newValue;
-  this.lastValidValues[field] = newValue.trim(); // Guardar versión sin espacio final
-  input.value = this.filters[field]; // Asegurar que el input refleja el valor válido
-  this.cdr.detectChanges();
-}
 
   validateDates(): boolean {
     if (this.filters.fechaInicio && this.filters.fechaFin) {
@@ -283,41 +279,29 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
         return false;
       }
     }
-    return true; // Permitir casos con solo fechaInicio o solo fechaFin
+    return true;
   }
 
   getMinFechaFin(): string {
     return this.filters.fechaInicio || '';
   }
 
-  convertirFechaInicio(fecha: string): void {
-    if (fecha) {
-      // Convertir la fecha a formato ISO completo (agregar hora 00:00:00)
-      this.filters.fechaInicio = `${fecha}T00:00:00`;
-    } else {
-      this.filters.fechaInicio = undefined;
-    }
-  }
-
-  convertirFechaFin(fecha: string): void {
-    if (fecha) {
-      // Convertir la fecha a formato ISO completo (agregar hora 23:59:59 para incluir todo el día)
-      this.filters.fechaFin = `${fecha}T23:59:59`;
-    } else {
-      this.filters.fechaFin = undefined;
-    }
-  }
-
   cambiarOrdenamiento(columna: string): void {
     if (this.sortBy === columna) {
-      // Cambiar dirección si es la misma columna
       this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
     } else {
-      // Establecer nueva columna y dirección ascendente por defecto
       this.sortBy = columna;
       this.sortDir = 'asc';
     }
-    this.page = 1; // Reiniciar a la primera página
+    this.page = 1;
+    this.cargarAsignaciones();
+  }
+
+  // Manejar el evento sortChange del TableComponent
+  onSortChange(event: { sortBy: string, sortDir: string }): void {
+    this.sortBy = event.sortBy;
+    this.sortDir = event.sortDir;
+    this.page = 1;
     this.cargarAsignaciones();
   }
 
@@ -359,7 +343,7 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
         .subscribe({
           next: (response) => {
             console.log('Respuesta de buscarAsignaciones:', response);
-            this.asignaciones = response.content || [];
+            this.asignaciones = this.transformarDatos(response.content || []);
             this.totalAsignaciones = response.totalElements;
             this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
             this.updatePageSizeOptions();
@@ -386,7 +370,7 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
         .subscribe({
           next: (response) => {
             console.log('Respuesta de obtenerCourseList:', response);
-            this.asignaciones = response.content || [];
+            this.asignaciones = this.transformarDatos(response.content || []);
             this.totalAsignaciones = response.totalElements;
             this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
             this.updatePageSizeOptions();
@@ -408,6 +392,16 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
           },
         });
     }
+  }
+
+  // Transformar datos para aplanar propiedades anidadas
+  private transformarDatos(asignaciones: ProfesorCurso[]): any[] {
+    return asignaciones.map(asignacion => ({
+      ...asignacion,
+      profesor: `${asignacion.usuario?.nombre || ''} ${asignacion.usuario?.apellidopaterno || ''}`.trim(),
+      curso: asignacion.curso?.nombre || '',
+      fechaActualizacion: asignacion.fechaActualizacion || null // Permitir null para mostrar 'Sin actualizar'
+    }));
   }
 
   onPageChange(page: number) {
@@ -436,7 +430,7 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
     });
   }
 
-  openEditModal(asignacion: ProfesorCurso): void {
+  openEditModal(asignacion: any): void {
     if (!asignacion.idProfesorCurso) {
       this.notificationService.showNotification(
         'La asignación no tiene un ID válido',
@@ -493,7 +487,6 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
   }
 
   buscarAsignaciones(): void {
-    // Validar profesorId y cursoId
     if (this.filters.profesorId && !this.isKeywordValid(this.filters.profesorId)) {
       this.notificationService.showNotification(
         'El nombre del profesor contiene caracteres no válidos.',
@@ -501,7 +494,7 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
       );
       return;
     }
-  
+
     if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
       this.notificationService.showNotification(
         'El nombre del curso contiene caracteres no válidos.',
@@ -509,11 +502,11 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
       );
       return;
     }
-  
+
     if (!this.validateDates()) {
       return;
     }
-  
+
     this.isLoading = true;
     const filters = {
       profesorId: this.filters.profesorId ? this.filters.profesorId.trim() : undefined,
@@ -525,9 +518,9 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
       fechaFin: this.filters.fechaFin ? new Date(this.filters.fechaFin).toISOString() : undefined,
       fechaTipo: this.filters.fechaTipo || undefined,
     };
-  
+
     this.appliedFilters = filters;
-  
+
     console.log('Enviando solicitud con:', {
       filters,
       page: this.page,
@@ -535,13 +528,13 @@ onInputChange(event: Event, field: 'profesorId' | 'cursoId'): void {
       sortBy: this.sortBy,
       sortDir: this.sortDir,
     });
-  
+
     this.profesorCursoService
       .buscarAsignaciones(filters, this.page, this.itemsPerPage, this.sortBy, this.sortDir)
       .subscribe({
         next: (resultado) => {
           console.log('Resultados recibidos:', resultado);
-          this.asignaciones = resultado.content;
+          this.asignaciones = this.transformarDatos(resultado.content);
           this.totalAsignaciones = resultado.totalElements;
           this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
           this.updatePageSizeOptions();
