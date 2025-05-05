@@ -68,15 +68,14 @@
 
   <!-- Componente de Tabla Reutilizable enableActions true si deseas msotrar editar y eliminar -->
   <app-table
-    [data]="cursos"
-    [columns]="tableColumns"
-    [sortBy]="sortBy"
-    [sortDir]="sortDir"
-    [enableActions]="true"
-    (sortChange)="onSortChange($event)"
-    (edit)="openEditModal($event)"
-    (delete)="eliminarCurso($event.idCurso)"
-  ></app-table>
+  [data]="cursos"
+  [columns]="tableColumns"
+  [sortBy]="sortBy"
+  [sortDir]="sortDir"
+  [enableActions]="true"
+  [actions]="tableActions"
+  (sortChange)="onSortChange($event)"
+></app-table>
 
   <!-- Paginación -->
   <app-pagination

@@ -3,6 +3,11 @@ module.exports = {
   content: [
     "./src/**/*.{html,ts}",
   ],
+  safelist: [
+    'hover:text-table-action-edit-hover',
+    'hover:text-table-action-delete-hover',
+    'hover:text-table-action-print-hover',
+  ],
   theme: {
     extend: {
       colors: {
@@ -20,6 +25,7 @@ module.exports = {
         'table-action-icon': 'var(--table-action-icon)',
         'table-action-edit-hover': 'var(--table-action-edit-hover)',
         'table-action-delete-hover': 'var(--table-action-delete-hover)',
+        'table-action-print-hover': 'var(--table-action-print-hover)',
       },
     },
   },

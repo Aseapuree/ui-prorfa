@@ -1,9 +1,9 @@
 import { HttpClientModule } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CourseService } from '../../../../services/course.service';
 import { Curso } from '../../../../interface/curso';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ModalComponent } from '../../modals/modal/modal.component';
@@ -16,7 +16,7 @@ import { NotificationService } from '../../../shared/notificaciones/notification
 import { PaginationComponent } from '../../../../../general/components/pagination/pagination.component';
 import { TooltipComponent } from '../../../../../general/components/tooltip/tooltip.component';
 import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
-import { ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
+import { ActionConfig, ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
 
 
 @Component({
@@ -42,6 +42,7 @@ export class CampusCursosComponent {
 
   // Configuración de columnas para la tabla: sortable true mostar para habilitar el ordenamiento, type: text para texto, date para fecha
   // maxWidth: 150 para limitar el ancho de la columna
+  // Configuración de columnas para la tabla
   tableColumns: ColumnConfig[] = [
     { field: 'nombre', header: 'Nombre', maxWidth: 150, sortable: true, type: 'text' },
     { field: 'descripcion', header: 'Descripción', maxWidth: 200, sortable: true, type: 'text' },
@@ -50,21 +51,54 @@ export class CampusCursosComponent {
     { field: 'fechaActualizacion', header: 'Fecha Actualización', maxWidth: 120, sortable: true, type: 'date' }
   ];
 
+  // Configuración de acciones para la tabla
+  tableActions: ActionConfig[] = [
+    {
+      name: 'Editar',
+      icon: ['fas', 'pencil'],
+      tooltip: 'Editar',
+      action: (curso: Curso) => this.openEditModal(curso),
+      hoverColor: 'table-action-edit-hover'
+    },
+    {
+      name: 'Eliminar',
+      icon: ['fas', 'trash'],
+      tooltip: 'Eliminar',
+      action: (curso: Curso) => {
+        if (curso.idCurso) {
+          this.eliminarCurso(curso.idCurso);
+        } else {
+          this.notificationService.showNotification(
+            'El curso no tiene un ID válido',
+            'error'
+          );
+        }
+      },
+      hoverColor: 'table-action-delete-hover'
+    }
+  ];
+
   constructor(
     private modalService: ModalService,
     private courseService: CourseService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   private readonly _dialog = inject(MatDialog);
   private readonly _courseSVC = inject(CourseService);
 
   ngOnInit(): void {
-    const savedItemsPerPage = localStorage.getItem('itemsPerPage');
-    if (savedItemsPerPage) {
-      this.itemsPerPage = parseInt(savedItemsPerPage, 10);
+    if (isPlatformBrowser(this.platformId)) {
+      console.log("✅ Plataforma es navegador (browser)");
+      const savedItemsPerPage = localStorage.getItem('itemsPerPage');
+      if (savedItemsPerPage) {
+        this.itemsPerPage = parseInt(savedItemsPerPage, 10);
+      }
+    } else {
+      console.warn("⚠ Plataforma no es navegador, localStorage no está disponible.");
     }
     this.cargarConteoCursos();
     this.cargarCursos();

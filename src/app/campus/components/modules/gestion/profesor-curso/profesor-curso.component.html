@@ -217,11 +217,10 @@
     [data]="asignaciones"
     [columns]="tableColumns"
     [enableActions]="true"
+    [actions]="tableActions"
     [sortBy]="sortBy"
     [sortDir]="sortDir"
     (sortChange)="onSortChange($event)"
-    (editAction)="openEditModal($event)"
-    (delete)="eliminarAsignacion($event)"
   ></app-table>
 
   <app-pagination

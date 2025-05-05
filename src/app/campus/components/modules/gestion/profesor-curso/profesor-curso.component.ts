@@ -19,7 +19,7 @@ import { Usuario } from '../../../../interface/usuario';
 import { Curso } from '../../../../interface/curso';
 import { CourseService } from '../../../../services/course.service';
 import { UsuarioService } from '../../../../services/usuario.service';
-import { ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
+import { ActionConfig, ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
 
 @Component({
   selector: 'app-profesor-curso',
@@ -85,6 +85,43 @@ export class ProfesorCursoComponent implements OnInit {
     { field: 'nivel', header: 'Nivel', maxWidth: 100, sortable: true, type: 'text' },
     { field: 'fechaAsignacion', header: 'Fecha Asignación', maxWidth: 120, sortable: true, type: 'date' },
     { field: 'fechaActualizacion', header: 'Fecha Actualización', maxWidth: 120, sortable: true, type: 'date' }
+  ];
+
+  // Configuración de acciones para la tabla
+  tableActions: ActionConfig[] = [
+    {
+      name: 'Editar',
+      icon: ['fas', 'pencil'],
+      tooltip: 'Editar asignación',
+      action: (asignacion: any) => this.openEditModal(asignacion),
+      hoverColor: 'table-action-edit-hover'
+    },
+    {
+      name: 'Eliminar',
+      icon: ['fas', 'trash'],
+      tooltip: 'Eliminar asignación',
+      action: (asignacion: any) => {
+        if (asignacion.idProfesorCurso) {
+          this.eliminarAsignacion(asignacion.idProfesorCurso);
+        } else {
+          this.notificationService.showNotification(
+            'La asignación no tiene un ID válido',
+            'error'
+          );
+        }
+      },
+      hoverColor: 'table-action-delete-hover'
+    }
+    // Acción de "Imprimir" (comentada)
+    /*
+    {
+      name: 'Imprimir',
+      icon: ['fas', 'print'],
+      tooltip: 'Imprimir asignación',
+      action: (asignacion: any) => this.imprimirAsignacion(asignacion.idProfesorCurso);
+      hoverColor: 'table-action-print-hover'
+    }
+    */
   ];
 
   constructor(
