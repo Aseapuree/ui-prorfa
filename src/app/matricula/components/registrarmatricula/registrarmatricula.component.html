@@ -1,6 +1,8 @@
+<app-general-loading-spinner [visible]="isLoading" [message]="loadingMessage"></app-general-loading-spinner>
+
 <app-general-loading-spinner [visible]="isSubmitting" message="Registrando matrícula..."></app-general-loading-spinner>
 
-<div class="form-container" [class.blurred]="isSubmitting">
+<div class="form-container" [class.blurred]="isSubmitting || isLoading" *ngIf="!isLoading">
   <h2><fa-icon [icon]="faClipboardList"></fa-icon> Formulario de Registro de Matrícula</h2>
 
   <div class="info-container">
@@ -164,6 +166,21 @@
                 Solo se permiten letras y espacios.
               </div>
             </div>
+
+            <div class="mb-3">
+              <label for="apoderado_nacionalidad">Nacionalidad</label>
+              <div class="input-group relative">
+                <span><fa-icon [icon]="faSignature"></fa-icon></span>
+                <input id="apoderado_nacionalidad" formControlName="nacionalidad" type="text" placeholder="Ingrese la nacionalidad" title="Solo letras y espacios"
+                       (keypress)="onKeyPressOnlyLetters($event)"/>
+              </div>
+              <div class="error" *ngIf="formMatricula.get('apoderado.nacionalidad')?.touched && formMatricula.get('apoderado.nacionalidad')?.hasError('required')">
+                * Este campo es obligatorio.
+              </div>
+              <div class="error" *ngIf="formMatricula.get('apoderado.nacionalidad')?.touched && formMatricula.get('apoderado.nacionalidad')?.hasError('soloLetras')">
+                Solo se permiten letras y espacios.
+              </div>
+            </div>
           </div>
 
           <div class="apoderado-column">
@@ -316,22 +333,6 @@
               </div>
             </div>
 
-             <div class="mb-3">
-              <label for="alumno_genero">Género</label>
-              <div class="input-group relative">
-                <span><fa-icon [icon]="faVenusMars"></fa-icon></span>
-                <select id="alumno_genero" formControlName="genero">
-                  <option value="" disabled selected>Selecciona una opción</option>
-                  <option *ngFor="let genero of generos" [value]="genero.valor">{{ genero.nombre }}</option>
-                </select>
-              </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.genero')?.touched && formMatricula.get('alumno.genero')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-            </div>
-          </div>
-
-          <div class="apoderado-column">
             <div class="mb-3">
               <label for="alumno_idtipodoc">Tipo de Documento</label>
               <div class="input-group relative">
@@ -375,19 +376,35 @@
                 </ng-container>
               </div>
             </div>
+          </div>
+
+          <div class="apoderado-column">
+            <div class="mb-3">
+              <label for="alumno_genero">Género</label>
+              <div class="input-group relative">
+                <span><fa-icon [icon]="faVenusMars"></fa-icon></span>
+                <select id="alumno_genero" formControlName="genero">
+                  <option value="" disabled selected>Selecciona una opción</option>
+                  <option *ngFor="let genero of generos" [value]="genero.valor">{{ genero.nombre }}</option>
+                </select>
+              </div>
+              <div class="error" *ngIf="formMatricula.get('alumno.genero')?.touched && formMatricula.get('alumno.genero')?.hasError('required')">
+                * Este campo es obligatorio.
+              </div>
+            </div>
 
             <div class="mb-3">
-              <label for="alumno_fechaNacimiento">Fecha de Nacimiento</label>
+              <label for="alumno_nacionalidad">Nacionalidad</label>
               <div class="input-group relative">
-                 <span><fa-icon [icon]="faCalendarAlt"></fa-icon></span>
-                <input id="alumno_fechaNacimiento" formControlName="fechaNacimiento" type="date"/>
+                 <span><fa-icon [icon]="faSignature"></fa-icon></span>
+                <input id="alumno_nacionalidad" formControlName="nacionalidad" type="text" placeholder="Ingrese la nacionalidad" title="Solo letras y espacios"
+                       (keypress)="onKeyPressOnlyLetters($event)"/>
               </div>
-              <div class="error">
-                <ng-container *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched">
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('required')">* Este campo es obligatorio.</span>
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('minAge')">* No cumple la edad mínima requerida para el grado ({{ formMatricula.get('alumno.fechaNacimiento')?.getError('minAge')?.requiredAge }} años).</span>
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
-                </ng-container>
+              <div class="error" *ngIf="formMatricula.get('alumno.nacionalidad')?.touched && formMatricula.get('alumno.nacionalidad')?.hasError('required')">
+                * Este campo es obligatorio.
+              </div>
+              <div class="error" *ngIf="formMatricula.get('alumno.nacionalidad')?.touched && formMatricula.get('alumno.nacionalidad')?.hasError('soloLetras')">
+                Solo se permiten letras y espacios.
               </div>
             </div>
 
@@ -404,28 +421,81 @@
                 La dirección contiene caracteres no permitidos.
               </div>
             </div>
+
+            <div class="mb-3">
+              <label for="alumno_fechaNacimiento">Fecha de Nacimiento</label>
+              <div class="input-group relative">
+                 <span><fa-icon [icon]="faCalendarAlt"></fa-icon></span>
+                <input id="alumno_fechaNacimiento" formControlName="fechaNacimiento" type="date"/>
+              </div>
+              <div class="error">
+                <ng-container *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched">
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('required')">* Este campo es obligatorio.</span>
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('minAge')">* No cumple la edad mínima requerida para el grado ({{ formMatricula.get('alumno.fechaNacimiento')?.getError('minAge')?.requiredAge }} años).</span>
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
+                </ng-container>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="mb-3">
-            <label for="alumno_tipoObservacion">Tipo de Observación (Opcional)</label>
-            <div class="input-group relative">
-              <span><fa-icon [icon]="faTag"></fa-icon></span>
-              <select id="alumno_tipoObservacion" formControlName="tipoObservacion">
-                <option value="" disabled selected>Selecciona una opción</option>
-                <option *ngFor="let tipo of tiposObservacion" [value]="tipo.valor">{{ tipo.nombre }}</option>
-              </select>
-            </div>
-            </div>
+        <div class="observaciones-section">
+          <h4 class="observaciones-title">Observaciones Adicionales (Opcional)</h4>
 
-        <div class="mb-3 observacion-field" *ngIf="formMatricula.get('alumno.tipoObservacion')?.value">
-            <label for="alumno_observacion"><span><fa-icon [icon]="faComment"></fa-icon></span>Observación (Opcional)</label>
+          <div class="switch-container mb-3">
+            <label for="alumno_tieneIntercambio" class="switch-label">
+              <input type="checkbox" id="alumno_tieneIntercambio" formControlName="tieneIntercambio" class="switch-checkbox">
+              <span class="switch-slider"></span>
+              <span>¿Es Intercambio?</span>
+            </label>
+          </div>
+          <div class="conditional-textarea mb-3" *ngIf="formMatricula.get('alumno.tieneIntercambio')?.value">
+            <label for="alumno_tipoIntercambio">Detalles del Intercambio</label>
             <div class="input-group relative">
-              <textarea id="alumno_observacion" formControlName="observacion" placeholder="Ingrese alguna observación relevante..." rows="3"
-                        [disabled]="!formMatricula.get('alumno.tipoObservacion')?.value"
-                        [class.input-disabled]="!formMatricula.get('alumno.tipoObservacion')?.value"></textarea>
+              <span><fa-icon [icon]="faInfoCircle"></fa-icon></span>
+              <textarea id="alumno_tipoIntercambio" formControlName="tipoIntercambio" placeholder="Ingrese detalles del intercambio..." rows="2"></textarea>
             </div>
-             </div>
+            <div class="error" *ngIf="formMatricula.get('alumno.tipoIntercambio')?.touched && formMatricula.get('alumno.tipoIntercambio')?.hasError('required')">
+              * Este campo es obligatorio si la opción está activada.
+            </div>
+          </div>
+
+          <div class="switch-container mb-3">
+            <label for="alumno_tieneDiscapacidad" class="switch-label">
+              <input type="checkbox" id="alumno_tieneDiscapacidad" formControlName="tieneDiscapacidad" class="switch-checkbox">
+              <span class="switch-slider"></span>
+              <span>¿Presenta alguna Discapacidad?</span>
+            </label>
+          </div>
+          <div class="conditional-textarea mb-3" *ngIf="formMatricula.get('alumno.tieneDiscapacidad')?.value">
+            <label for="alumno_tipoDiscapacidad">Detalles de la Discapacidad</label>
+            <div class="input-group relative">
+              <span><fa-icon [icon]="faInfoCircle"></fa-icon></span>
+              <textarea id="alumno_tipoDiscapacidad" formControlName="tipoDiscapacidad" placeholder="Ingrese detalles de la discapacidad..." rows="2"></textarea>
+            </div>
+            <div class="error" *ngIf="formMatricula.get('alumno.tipoDiscapacidad')?.touched && formMatricula.get('alumno.tipoDiscapacidad')?.hasError('required')">
+              * Este campo es obligatorio si la opción está activada.
+            </div>
+          </div>
+
+          <div class="switch-container mb-3">
+            <label for="alumno_tieneOtros" class="switch-label">
+              <input type="checkbox" id="alumno_tieneOtros" formControlName="tieneOtros" class="switch-checkbox">
+              <span class="switch-slider"></span>
+              <span>¿Alguna otra observación relevante?</span>
+            </label>
+          </div>
+          <div class="conditional-textarea mb-3" *ngIf="formMatricula.get('alumno.tieneOtros')?.value">
+            <label for="alumno_tipoOtros">Otras Observaciones</label>
+            <div class="input-group relative">
+              <span><fa-icon [icon]="faInfoCircle"></fa-icon></span>
+              <textarea id="alumno_tipoOtros" formControlName="tipoOtros" placeholder="Ingrese otras observaciones..." rows="2"></textarea>
+            </div>
+            <div class="error" *ngIf="formMatricula.get('alumno.tipoOtros')?.touched && formMatricula.get('alumno.tipoOtros')?.hasError('required')">
+              * Este campo es obligatorio si la opción está activada.
+            </div>
+          </div>
+        </div>
 
       </fieldset>
 

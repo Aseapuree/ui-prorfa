@@ -1,14 +1,5 @@
 <app-general-loading-spinner [visible]="isLoading || isGeneratingPdf || isNavigating" [message]="getSpinnerMessage()"></app-general-loading-spinner>
 
-<div *ngIf="error && !isLoading && !isGeneratingPdf && !isNavigating" class="flex flex-col items-center justify-center min-h-screen bg-red-100 p-4 rounded-lg shadow-md mx-auto max-w-lg">
-  <fa-icon [icon]="faTriangleExclamation" size="2x" class="text-red-500 mb-3"></fa-icon>
-  <p class="text-red-700 text-lg font-semibold text-center">{{ error }}</p>
-  <p class="mt-2 text-red-600 text-sm text-center">Por favor, verifique el ID de matrícula o intente más tarde.</p>
-  <button (click)="finalizar()" class="mt-4 px-4 py-2 bg-red-600 text-white font-semibold rounded-md shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-    Volver
-  </button>
-</div>
-
 <div *ngIf="comprobante && !isLoading && !error && !isGeneratingPdf && !isNavigating" class="container mx-auto p-6 bg-white rounded-lg shadow-xl my-8">
   <h2 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center">
     <fa-icon [icon]="faReceipt" class="mr-3 text-blue-600"></fa-icon>
@@ -109,13 +100,4 @@
     </div>
 
   </div>
-</div>
-
-<div *ngIf="!comprobante && !isLoading && !error && !isGeneratingPdf && !isNavigating" class="no-data">
-  <fa-icon [icon]="faTriangleExclamation" class="fa-icon"></fa-icon>
-  <p>No se encontró información de comprobante para esta matrícula.</p>
-  <p class="text-gray-600 text-sm text-center">Si acabas de registrar una matrícula, puede que haya habido un problema al generar o recuperar los comprobantes.</p>
-  <button (click)="finalizar()" class="btn-back">
-    Volver a Matrículas
-  </button>
 </div>

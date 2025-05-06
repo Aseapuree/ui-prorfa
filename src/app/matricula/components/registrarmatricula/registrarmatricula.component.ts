@@ -1,7 +1,7 @@
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApoderadoService } from './../../services/apoderado.service';
 import { AlumnoService } from './../../services/alumno.service';
@@ -16,14 +16,12 @@ import {
   faComment,
   faClipboardList,
   faVenusMars,
-  faTag
+  faToggleOn, faToggleOff, faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { Observable, of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap, tap, startWith, finalize } from 'rxjs/operators';
+import { map, catchError, switchMap, startWith, finalize } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
-
-
 
 function emailRegexValidator(): ValidatorFn {
   const regex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
@@ -54,7 +52,6 @@ function documentRegexValidator(): ValidatorFn {
     }
 
     const isValid = regex.test(value);
-
     if (!isValid) {
         return { invalidFormat: true };
     }
@@ -72,7 +69,6 @@ function documentRegexValidator(): ValidatorFn {
 function minAgeValidator(minAge: number): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!control.value) return null;
-
     try {
       const birthDate = new Date(control.value);
       if (isNaN(birthDate.getTime()) || birthDate > new Date()) {
@@ -107,7 +103,7 @@ function soloLetrasValidator(): ValidatorFn {
         control.setErrors(Object.keys(errors).length > 0 ? errors : null);
     }
     return null;
-  };
+    };
 }
 
 @Component({
@@ -148,12 +144,14 @@ export class RegistrarMatriculaComponent implements OnInit {
   faComment = faComment;
   faClipboardList = faClipboardList;
   faVenusMars = faVenusMars;
-  faTag = faTag;
-
+  faToggleOn = faToggleOn;
+  faToggleOff = faToggleOff;
+  faInfoCircle = faInfoCircle;
 
   soloNumerosPattern = /^[0-9]+$/;
   direccionPattern = /^[A-Za-z0-9À-ÿ\s.,#-]+$/;
-  usuario = { idusuario: '0765bb4e-7cc4-4743-9eca-f7ebb3c1f624' };
+  usuario: { idusuario: string } = { idusuario: localStorage.getItem('IDUSER') ?? '' };
+
   tiposDocumento = [
     { id: '29c2c5c3-2fc9-4410-ab24-52a8111f9c05', nombre: 'DNI' },
     { id: 'fa65a599-60fd-43e1-85e2-7a95f3cf072e', nombre: 'CARNET EXTRANJERIA' }
@@ -163,11 +161,7 @@ export class RegistrarMatriculaComponent implements OnInit {
     { valor: 'padre', nombre: 'PADRE' },
     { valor: 'tutor', nombre: 'TUTOR' }
   ];
-  tiposObservacion = [
-    { valor: 'intercambio', nombre: 'Intercambio' },
-    { valor: 'discapacidad', nombre: 'Discapacidad' },
-    { valor: 'otros', nombre: 'Otros' }
-  ];
+
   generos = [
     { valor: 'masculino', nombre: 'Masculino' },
     { valor: 'femenino', nombre: 'Femenino' }
@@ -175,6 +169,8 @@ export class RegistrarMatriculaComponent implements OnInit {
 
   isSubmitting = false;
   isSearching = false;
+  isLoading = true;
+  loadingMessage: string = 'Cargando formulario...';
 
   constructor(
     private fb: FormBuilder,
@@ -188,40 +184,57 @@ export class RegistrarMatriculaComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.isLoading = true;
+    this.loadingMessage = 'Cargando formulario...';
+
     this.route.queryParams.subscribe(params => {
       this.nivel = params['nivel'];
       this.grado = +params['grado'];
 
       if (!this.nivel || !this.grado) {
         this.notificationService.showNotification('Faltan parámetros de nivel o grado.', 'error');
+        this.isLoading = false;
+        this.loadingMessage = 'Error al cargar parámetros.';
         return;
       }
 
       if (this.grado) {
         this.matriculaService.asignarSeccion(this.grado).subscribe({
-          next: (seccionAsignada: string) => {
+           next: (seccionAsignada: string) => {
             this.seccion = seccionAsignada;
             if (this.seccion === 'SIN VACANTE') {
                  this.notificationService.showNotification('No hay vacantes disponibles para este grado y nivel.', 'error');
-            } else if (this.seccion === 'ERROR') {
+                 this.loadingMessage = 'Sin vacantes disponibles.';
+           } else if (this.seccion === 'ERROR') {
                  this.notificationService.showNotification('Error al obtener la sección asignada.', 'error');
-            } else {
+                 this.loadingMessage = 'Error al obtener sección.';
+           } else {
                  this.notificationService.showNotification(`Sección asignada: ${this.seccion}`, 'info');
+                 this.loadingMessage = '';
             }
-          },
+            this.isLoading = false;
+            this.cdRef.detectChanges();
+           },
           error: (err) => {
             console.error("Error al asignar sección:", err);
             this.seccion = 'ERROR';
             this.notificationService.showNotification('Error de comunicación al obtener la sección.', 'error');
-          }
+            this.loadingMessage = 'Error de comunicación.';
+            this.isLoading = false;
+            this.cdRef.detectChanges();
+           }
         });
+      } else {
+          this.isLoading = false;
+          this.loadingMessage = 'Error de parámetros.';
+          this.cdRef.detectChanges();
       }
     });
 
     this.crearFormulario();
     this.setupConditionalValidators();
     this.setupDocumentNumberFieldState();
-    this.setupObservacionFieldState();
+    this.setupConditionalTextFields();
   }
 
   crearFormulario(): void {
@@ -234,6 +247,7 @@ export class RegistrarMatriculaComponent implements OnInit {
         nombre: ['', [Validators.required, soloLetrasValidator()]],
         apellidoPaterno: ['', [Validators.required, soloLetrasValidator()]],
         apellidoMaterno: ['', [Validators.required, soloLetrasValidator()]],
+        nacionalidad: ['', [Validators.required, soloLetrasValidator()]],
         genero: ['', Validators.required],
         telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
         direccion: ['', [Validators.required, Validators.pattern(this.direccionPattern)]],
@@ -244,13 +258,18 @@ export class RegistrarMatriculaComponent implements OnInit {
         nombre: ['', [Validators.required, soloLetrasValidator()]],
         apellidoPaterno: ['', [Validators.required, soloLetrasValidator()]],
         apellidoMaterno: ['', [Validators.required, soloLetrasValidator()]],
+        nacionalidad: ['', [Validators.required, soloLetrasValidator()]],
         genero: ['', Validators.required],
         idtipodoc: ['', Validators.required],
         numeroDocumento: [{ value: '', disabled: true }, [Validators.required, Validators.pattern(this.soloNumerosPattern), documentRegexValidator()]],
         fechaNacimiento: ['', [Validators.required, minAgeValidator(this.getMinAgeForGrade())]],
         direccion: ['', [Validators.required, Validators.pattern(this.direccionPattern)]],
-        tipoObservacion: [''],
-        observacion: [{ value: '', disabled: true }]
+        tieneIntercambio: [false],
+        tipoIntercambio: [{ value: '', disabled: true }],
+        tieneDiscapacidad: [false],
+        tipoDiscapacidad: [{ value: '', disabled: true }],
+        tieneOtros: [false],
+        tipoOtros: [{ value: '', disabled: true }]
       })
     });
   }
@@ -275,7 +294,7 @@ export class RegistrarMatriculaComponent implements OnInit {
           }
       });
 
-       apoderadoTipoDocControl?.valueChanges.pipe(
+      apoderadoTipoDocControl?.valueChanges.pipe(
            startWith(apoderadoTipoDocControl.value)
        ).subscribe(tipoDocValue => {
            if (this.currentView === 'apoderado' && !this.apoderadoEncontrado) {
@@ -301,23 +320,25 @@ export class RegistrarMatriculaComponent implements OnInit {
       });
   }
 
-  setupObservacionFieldState(): void {
-    const tipoObservacionControl = this.formMatricula.get('alumno.tipoObservacion');
-    const observacionControl = this.formMatricula.get('alumno.observacion');
+  setupConditionalTextFields(): void {
+    const fields = ['Intercambio', 'Discapacidad', 'Otros'];
+    fields.forEach(field => {
+        const tieneControl = this.formMatricula.get(`alumno.tiene${field}`);
+        const textControl = this.formMatricula.get(`alumno.tipo${field}`);
 
-    tipoObservacionControl?.valueChanges.pipe(
-        startWith(tipoObservacionControl.value)
-    ).subscribe(tipoObservacionValue => {
-        if (tipoObservacionValue) {
-            observacionControl?.enable({ emitEvent: false });
-        } else {
-            observacionControl?.disable({ emitEvent: false });
-            observacionControl?.reset('');
-        }
-        observacionControl?.updateValueAndValidity();
+        tieneControl?.valueChanges.pipe(startWith(tieneControl.value)).subscribe(isChecked => {
+            if (isChecked) {
+                textControl?.enable({ emitEvent: false });
+                textControl?.setValidators(Validators.required);
+            } else {
+                textControl?.disable({ emitEvent: false });
+                textControl?.reset('', { emitEvent: false });
+                textControl?.clearValidators();
+            }
+            textControl?.updateValueAndValidity({ emitEvent: false });
+        });
     });
   }
-
 
   setupConditionalValidators(): void {
   }
@@ -389,7 +410,6 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     const idtipodoc = idtipodocControl?.value;
     const numeroDocumento = numeroDocumentoControl?.value;
-
     if (!idtipodoc || numeroDocumentoControl?.invalid) {
         this.notificationService.showNotification('Seleccione tipo e ingrese un número de documento válido para buscar.', 'error');
         this.focusFirstInvalidControl('apoderado', ['idtipodoc', 'numeroDocumento']);
@@ -398,7 +418,6 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     this.isSearching = true;
     this.cdRef.detectChanges();
-
     this.apoderadoService.buscarPorNumeroDocumento(idtipodoc, numeroDocumento).pipe(
         finalize(() => {
             this.isSearching = false;
@@ -409,13 +428,14 @@ export class RegistrarMatriculaComponent implements OnInit {
         console.log('Apoderado encontrado:', apoderado);
         if (apoderado.fechaNacimiento) {
           try {
-               const dateObj = new Date(apoderado.fechaNacimiento);
+                const dateObj = new Date(apoderado.fechaNacimiento);
                apoderado.fechaNacimiento = !isNaN(dateObj.getTime()) ? dateObj.toISOString().substring(0, 10) : '';
           } catch(e) {
                console.error("Error al parsear la fecha del apoderado:", e);
                apoderado.fechaNacimiento = '';
           }
         }
+
         this.apoderadoEncontrado = apoderado;
         this.formMatricula.get('apoderado')?.patchValue({
             ...apoderado,
@@ -424,7 +444,6 @@ export class RegistrarMatriculaComponent implements OnInit {
 
         this.formMatricula.get('apoderado.idtipodoc')?.disable({ emitEvent: false });
         this.formMatricula.get('apoderado.numeroDocumento')?.disable({ emitEvent: false });
-
 
         this.mostrarFormularioApoderado = true;
         this.currentView = 'apoderado';
@@ -446,18 +465,15 @@ export class RegistrarMatriculaComponent implements OnInit {
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', genero: '', telefono: '',
             direccion: '', correo: '', fechaNacimiento: ''
         });
-         this.formMatricula.get('apoderado.idtipodoc')?.patchValue(currentValues.idtipodoc, { emitEvent: false });
+        this.formMatricula.get('apoderado.idtipodoc')?.patchValue(currentValues.idtipodoc, { emitEvent: false });
          this.formMatricula.get('apoderado.numeroDocumento')?.patchValue(currentValues.numeroDocumento, { emitEvent: false });
          this.formMatricula.get('apoderado.numeroDocumento')?.updateValueAndValidity();
 
          this.formMatricula.get('apoderado.idtipodoc')?.enable({ emitEvent: false });
 
-
         this.formMatricula.get('relacionEstudiante')?.reset('');
         this.formMatricula.get('relacionEstudiante')?.markAsPristine();
         this.formMatricula.get('relacionEstudiante')?.markAsUntouched();
-
-
         this.mostrarFormularioApoderado = true;
         this.mostrarFormularioAlumno = false;
         this.currentView = 'apoderado';
@@ -538,10 +554,8 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     this.formMatricula.markAllAsTouched();
     this.formMatricula.updateValueAndValidity();
-
     if (this.formMatricula.invalid) {
       console.error('Formulario inválido:', this.collectErrors(this.formMatricula));
-
       if (this.formMatricula.get('alumno')?.invalid) {
           this.currentView = 'alumno';
           setTimeout(() => this.focusFirstInvalidControl('alumno'), 50);
@@ -575,15 +589,25 @@ export class RegistrarMatriculaComponent implements OnInit {
     }
 
     const alumnoData: Alumno = {
-        ...formData.alumno,
-        fechaNacimiento: alumnoFechaNacimiento
+        nombre: formData.alumno.nombre,
+        apellidoPaterno: formData.alumno.apellidoPaterno,
+        apellidoMaterno: formData.alumno.apellidoMaterno,
+        nacionalidad: formData.alumno.nacionalidad,
+        genero: formData.alumno.genero,
+        idtipodoc: formData.alumno.idtipodoc,
+        numeroDocumento: formData.alumno.numeroDocumento,
+        fechaNacimiento: alumnoFechaNacimiento,
+        direccion: formData.alumno.direccion,
+        tipoIntercambio: formData.alumno.tieneIntercambio ? (formData.alumno.tipoIntercambio || null) : null,
+        tipoDiscapacidad: formData.alumno.tieneDiscapacidad ? (formData.alumno.tipoDiscapacidad || null) : null,
+        tipoOtros: formData.alumno.tieneOtros ? (formData.alumno.tipoOtros || null) : null
     };
 
     let apoderadoObservable: Observable<Apoderado>;
 
     if (this.apoderadoEncontrado && this.apoderadoEncontrado.idapoderado) {
         const apoderadoGroup = this.formMatricula.get('apoderado') as FormGroup;
-        const editableFields = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'genero', 'fechaNacimiento', 'telefono', 'direccion', 'correo'];
+        const editableFields = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'genero', 'fechaNacimiento', 'telefono', 'direccion', 'correo', 'nacionalidad'];
         const isApoderadoModified = editableFields.some(field => apoderadoGroup.get(field)?.dirty);
 
         if (isApoderadoModified) {
@@ -653,7 +677,8 @@ export class RegistrarMatriculaComponent implements OnInit {
                 nivel: this.nivel,
                 grado: this.grado,
                 seccion: this.seccion,
-                relacionEstudiante: formData.relacionEstudiante
+                relacionEstudiante: formData.relacionEstudiante,
+                estadoMatricula: 'PENDIENTE'
             };
             console.log('onSubmit: Creando matrícula:', matriculaRequest);
             return this.matriculaService.agregarMatricula(matriculaRequest).pipe(
@@ -757,12 +782,9 @@ export class RegistrarMatriculaComponent implements OnInit {
                            elementId = 'apoderado_genero';
                        } else if (elementId === 'alumno_genero') {
                            elementId = 'alumno_genero';
-                       } else if (elementId === 'alumno_tipoObservacion') {
-                           elementId = 'alumno_tipoObservacion';
-                       } else if (elementId === 'alumno_observacion') {
-                           elementId = 'alumno_observacion';
+                       } else if (elementId.startsWith('alumno_tipo')) {
+                           elementId = elementId.replace('tipo', 'tiene');
                        }
-
 
                        break;
                    }
