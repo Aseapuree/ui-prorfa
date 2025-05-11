@@ -10,6 +10,7 @@ export interface ColumnConfig {
   maxWidth: number;
   sortable?: boolean;
   type?: 'text' | 'date';
+  transform?: (value: any) => string; // Nueva propiedad para transformar el valor
 }
 
 export interface ActionConfig {

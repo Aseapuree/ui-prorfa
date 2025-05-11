@@ -2,7 +2,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ChangeDetectorRef, Component, Inject, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CourseService } from '../../../../services/course.service';
-import { Curso } from '../../../../interface/curso';
+import { Competencia, Curso } from '../../../../interface/curso';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -17,6 +17,7 @@ import { PaginationComponent } from '../../../../../general/components/paginatio
 import { TooltipComponent } from '../../../../../general/components/tooltip/tooltip.component';
 import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 import { ActionConfig, ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
+import { ModalCompetenciasComponent } from '../../modals/modal-competencias/modal-competencias.component';
 
 
 @Component({
@@ -45,14 +46,45 @@ export class CampusCursosComponent {
   // Configuración de columnas para la tabla
   tableColumns: ColumnConfig[] = [
     { field: 'nombre', header: 'Nombre', maxWidth: 150, sortable: true, type: 'text' },
-    { field: 'descripcion', header: 'Descripción', maxWidth: 200, sortable: true, type: 'text' },
     { field: 'abreviatura', header: 'Abreviatura', maxWidth: 100, sortable: false, type: 'text' },
+    { 
+      field: 'descripcion', 
+      header: 'Descripción', 
+      maxWidth: 200, 
+      sortable: true, 
+      type: 'text',
+      transform: (value: string | undefined) => {
+        if (!value) return '';
+        const words = value.split(' ').slice(0, 4).join(' ');
+        return value.split(' ').length > 4 ? `${words}...` : words;
+      }
+    },
+    { 
+      field: 'competencias', 
+      header: 'Competencias', 
+      maxWidth: 250, 
+      sortable: false,
+      type: 'text',
+      transform: (value: Competencia[] | undefined) => {
+        if (!value || value.length === 0) return '';
+        const firstCompetencia = value[0].nombre;
+        const words = firstCompetencia.split(' ').slice(0, 3).join(' ');
+        return value.length > 1 || firstCompetencia.split(' ').length > 3 ? `${words}...` : words;
+      }
+    },
     { field: 'fechaCreacion', header: 'Fecha de Creación', maxWidth: 120, sortable: true, type: 'date' },
     { field: 'fechaActualizacion', header: 'Fecha Actualización', maxWidth: 120, sortable: true, type: 'date' }
   ];
 
   // Configuración de acciones para la tabla
   tableActions: ActionConfig[] = [
+    {
+      name: 'Ver Detalles',
+      icon: ['fas', 'eye'],
+      tooltip: 'Ver Detalles',
+      action: (curso: Curso) => this.openCompetenciasModal(curso),
+      hoverColor: 'table-action-view-hover'
+    },
     {
       name: 'Editar',
       icon: ['fas', 'pencil'],
@@ -296,6 +328,13 @@ export class CampusCursosComponent {
     });
   }
 
+  openCompetenciasModal(curso: Curso): void {
+    this.dialog.open(ModalComponent, {
+      width: '600px',
+      data: { ...curso, isEditing: false, isReadOnly: true }
+    });
+  }
+
   eliminarCurso(idCurso: string): void {
     const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
       width: '1px',
@@ -340,7 +379,6 @@ export class CampusCursosComponent {
       return;
     }
 
-    this.isLoading = true;
     this.courseService.buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir).subscribe({
       next: (resultado) => {
         this.totalCursos = resultado.length;
@@ -355,7 +393,6 @@ export class CampusCursosComponent {
           return;
         }
         this.cdr.detectChanges();
-        this.isLoading = false;
       },
       error: (err) => {
         this.cursos = [];
@@ -363,7 +400,6 @@ export class CampusCursosComponent {
         this.totalPages = 1;
         this.notificationService.showNotification('Error al buscar cursos: ' + err.message, 'error');
         console.error('Error en la búsqueda:', err);
-        this.isLoading = false;
       },
     });
   }

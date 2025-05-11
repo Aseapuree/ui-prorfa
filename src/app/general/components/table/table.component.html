@@ -39,7 +39,12 @@
                   {{ item[column.field] | date: 'yyyy-MM-dd HH:mm' }}
                 </ng-container>
                 <ng-template #defaultContent>
-                  {{ item[column.field] }}
+                  <ng-container *ngIf="column.transform; else simpleText">
+                    {{ column.transform(item[column.field]) }}
+                  </ng-container>
+                  <ng-template #simpleText>
+                    {{ item[column.field] }}
+                  </ng-template>
                 </ng-template>
               </td>
               <!-- Columna de acciones -->

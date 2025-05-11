@@ -9,7 +9,8 @@ import {
   faSort,
   faBroom,
   faSearch,
-  faPrint
+  faPrint,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import { faUser, faNewspaper, faStickyNote } from '@fortawesome/free-regular-svg-icons'
 
@@ -39,5 +40,6 @@ export const fontAwesomeIcons: IconDefinition[] = [
     faArrowDown,  // Añadir icono de flecha hacia abajo
     faBroom, // Añadir icono de escoba
     faSearch, // Añadir icono de búsqueda
-    faPrint // Añadir icono de impresión
+    faPrint, // Añadir icono de impresión
+    faEye
 ];
