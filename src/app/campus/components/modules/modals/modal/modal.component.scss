@@ -1,5 +1,25 @@
-.noBorder{
-    border-color: coral;
-    outline: none;
-    width: 600px;
+.noBorder {
+  border-color: coral;
+  outline: none;
+  width: 600px;
+}
+
+.content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.row {
+  margin-bottom: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.readonly-field {
+  background-color: #f9fafb; /* Fondo claro para campos de solo lectura */
+  color: #1f2937; /* Texto oscuro para buena legibilidad */
+  opacity: 1; /* Evitar opacidad reducida */
+  cursor: default; /* Indicar que no es editable */
 }

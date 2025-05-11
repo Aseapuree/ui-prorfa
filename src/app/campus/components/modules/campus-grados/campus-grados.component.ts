@@ -38,27 +38,31 @@ export class CampusGradosComponent implements OnInit {
     this.nivel = this.route.snapshot.paramMap.get('nivel') || '';
     const usuarioId = localStorage.getItem('usuarioId');
     const storedGrado = localStorage.getItem('grado');
-
+  
     if (usuarioId) {
       try {
         const rawCursos = await lastValueFrom(
           this.profesorCursoService.obtenerCursosPorProfesor(usuarioId)
         );
         console.log('Cursos obtenidos:', rawCursos);
-
+  
         this.profesorcursos = rawCursos.map((item: any) => ({
           idProfesorCurso: item.idProfesorCurso || '',
           usuario: item.usuario || {},
           curso: {
             idCurso: item.curso?.idCurso || '',
-            nombre: item.curso?.nombre || 'Curso sin nombre'
+            nombre: item.curso?.nombre || 'Curso sin nombre',
+            abreviatura: item.curso?.abreviatura || '' // Asegúrate de incluir abreviatura
           },
           grado: item.grado || '',
           seccion: item.seccion || 'Sin sección',
           nivel: item.nivel || this.nivel,
           fechaAsignacion: item.fechaAsignacion ? new Date(item.fechaAsignacion) : undefined
         }));
-
+  
+        // Depurar los cursos mapeados
+        console.log('Cursos mapeados:', this.profesorcursos);
+  
         if (this.profesorcursos.length > 0 && this.profesorcursos[0].usuario) {
           const usuario = this.profesorcursos[0].usuario;
           this.profesorNombre = `${usuario.nombre || ''} ${usuario.apellidopaterno || ''} ${usuario.apellidomaterno || ''}`.trim() || 'Profesor';
@@ -71,7 +75,7 @@ export class CampusGradosComponent implements OnInit {
             .map(curso => curso.grado + '°'))].sort((a, b) => parseInt(a) - parseInt(b));
         }
         console.log('Grados filtrados:', this.grados);
-
+  
         this.isDataLoaded = true;
 
         const fromBreadcrumb = this.route.snapshot.queryParams['fromBreadcrumb'] === 'true';

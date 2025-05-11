@@ -1,0 +1,27 @@
+<div>
+  <div mat-dialog-title>
+    <h1 class="text-xl font-bold">Competencias del curso: {{ data.cursoNombre }}</h1>
+  </div>
+  <div mat-dialog-content class="content">
+    <div class="row">
+      <ul class="list-disc pl-5">
+        <li *ngFor="let competencia of data.competencias" class="text-sm text-gray-700">
+          {{ competencia.nombre }}
+        </li>
+      </ul>
+      <p *ngIf="!data.competencias || data.competencias.length === 0" class="text-sm text-gray-500">
+        No hay competencias asociadas a este curso.
+      </p>
+    </div>
+  </div>
+  <div mat-dialog-actions class="flex justify-end">
+    <button
+      mat-raised-button
+      (click)="closeModal()"
+      type="button"
+      class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+    >
+      Cerrar
+    </button>
+  </div>
+</div>

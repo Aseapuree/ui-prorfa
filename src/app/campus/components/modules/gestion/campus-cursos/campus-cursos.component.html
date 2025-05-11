@@ -15,6 +15,7 @@
         Distribuidos a todo el nivel educativo
       </p>
     </div>
+    <!-- Botón para agregar un nuevo curso -->
     <app-tooltip tooltipText="Agregar un nuevo curso">
       <button
         (click)="openAddModal()"
@@ -25,6 +26,7 @@
       </button>
     </app-tooltip>
 
+    <!-- Buscador de cursos -->
     <div class="relative flex items-center mt-4 md:mt-0">
       <input
         [(ngModel)]="keyword"
@@ -52,135 +54,36 @@
       Mostrar:
     </label>
     <select
-  id="itemsPerPage"
-  [(ngModel)]="itemsPerPage"
-  (ngModelChange)="onItemsPerPageChange($event)"
-  class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
->
-  <option *ngFor="let option of pageSizeOptions" [value]="option">
-    {{ option }}
-  </option>
-</select>
-    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por pagina</span>
+      id="itemsPerPage"
+      [(ngModel)]="itemsPerPage"
+      (ngModelChange)="onItemsPerPageChange($event)"
+      class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
+    >
+      <option *ngFor="let option of pageSizeOptions" [value]="option">
+        {{ option }}
+      </option>
+    </select>
+    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
   </div>
 
-  <!-- Tabla de cursos -->
-  <!-- Tabla de cursos -->
-  <div class="flex flex-col mt-6">
-    <div class="overflow-x-auto shadow-sm">
-      <div class="inline-block min-w-full py-2 align-middle">
-        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-          <table class="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[150px]"
-                  (click)="cambiarOrdenamiento('nombre')"
-                >
-                  <div class="flex items-center">
-                    Nombre
-                    <fa-icon
-                      [icon]="sortBy === 'nombre' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[200px]"
-                  (click)="cambiarOrdenamiento('descripcion')"
-                >
-                  <div class="flex items-center">
-                    Descripción
-                    <fa-icon
-                      [icon]="sortBy === 'descripcion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 max-w-[100px]"
-                >
-                  Abreviatura
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
-                  (click)="cambiarOrdenamiento('fechaCreacion')"
-                >
-                  <div class="flex items-center">
-                    Fecha de Creación
-                    <fa-icon
-                      [icon]="sortBy === 'fechaCreacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[120px]"
-                  (click)="cambiarOrdenamiento('fechaActualizacion')"
-                >
-                  <div class="flex items-center">
-                    Fecha Actualización
-                    <fa-icon
-                      [icon]="sortBy === 'fechaActualizacion' ? (sortDir === 'asc' ? ['fas', 'arrow-up'] : ['fas', 'arrow-down']) : ['fas', 'sort']"
-                      class="ml-2 h-3 w-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300"
-                    ></fa-icon>
-                  </div>
-                </th>
-                <th
-                  class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-gray-500 dark:text-gray-400 cursor-pointer max-w-[100px]"
-                >
-                  <div class="flex items-center">
-                    Acciones
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-              <tr *ngFor="let curso of cursos">
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate">
-                  {{ curso.nombre }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[200px] truncate">
-                  {{ curso.descripcion }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[100px] truncate">
-                  {{ curso.abreviatura }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
-                  {{ curso.fechaCreacion | date: 'yyyy-MM-dd HH:mm' }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[120px] truncate">
-                  {{ curso.fechaActualizacion | date: 'yyyy-MM-dd HH:mm' }}
-                </td>
-                <td class="px-4 md:px-2 py-4 text-sm max-w-[100px]">
-                  <div class="flex items-center gap-x-6 md:gap-x-3">
-                    <app-tooltip tooltipText="Editar curso">
-                      <button (click)="openEditModal(curso)" class="text-gray-500 hover:text-yellow-500">
-                        <fa-icon [icon]="['fas', 'pencil']" class="h-8 w-8"></fa-icon>
-                      </button>
-                    </app-tooltip>
-                    <app-tooltip tooltipText="Eliminar curso">
-                      <button (click)="eliminarCurso(curso.idCurso!)" class="text-gray-500 hover:text-red-500">
-                        <fa-icon [icon]="['fas', 'trash']" class="h-8 w-8"></fa-icon>
-                      </button>
-                    </app-tooltip>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Componente de Tabla Reutilizable enableActions true si deseas msotrar editar y eliminar -->
+  <app-table
+  [data]="cursos"
+  [columns]="tableColumns"
+  [sortBy]="sortBy"
+  [sortDir]="sortDir"
+  [enableActions]="true"
+  [actions]="tableActions"
+  (sortChange)="onSortChange($event)"
+></app-table>
 
   <!-- Paginación -->
   <app-pagination
-  [page]="page"
-  [totalPages]="totalPages"
-  [maxSize]="7"
-  (pageChange)="onPageChange($event)"
-></app-pagination>
+    [page]="page"
+    [totalPages]="totalPages"
+    [maxSize]="7"
+    (pageChange)="onPageChange($event)"
+  ></app-pagination>
   <!-- Componente de notificaciones -->
   <app-notification></app-notification>
 </section>

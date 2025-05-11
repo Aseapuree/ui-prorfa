@@ -1,39 +1,86 @@
 <div>
-    <div mat-dialog-title>
-      <h1 class="text-xl font-bold">{{ getTitle() }}</h1>
-    </div>
-    <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
-      <div mat-dialog-content class="content">
-        <div class="row">
-          <mat-form-field class="w-full" appearance="outline">
-            <mat-label>Nombre</mat-label>
-            <input matInput type="text" formControlName="nombre">
-            <mat-error *ngIf="contactForm.get('nombre')?.hasError('required')">Nombre es requerido</mat-error>
-          </mat-form-field>
-        </div>
-        <div class="row">
-          <mat-form-field class="w-full" appearance="outline">
-            <mat-label>Descripción</mat-label>
-            <input matInput type="text" formControlName="descripcion">
-            <mat-error *ngIf="contactForm.get('descripcion')?.hasError('required')">Descripción es requerida</mat-error>
-          </mat-form-field>
-        </div>
-        <div class="row">
-          <mat-form-field class="w-full" appearance="outline">
-            <mat-label>Abreviatura</mat-label>
-            <input matInput type="text" formControlName="abreviatura">
-            <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('required')">Abreviatura es requerida</mat-error>
-          </mat-form-field>
-        </div>
-        <div mat-dialog-actions class="flex justify-end space-x-2">
-          <button mat-raised-button [mat-dialog-close]="false" type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
-            Cancelar
-          </button>
-          <button [disabled]="!contactForm.valid" mat-raised-button color="primary" type="submit" 
-                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-            {{ getTitle() }}
-          </button>
-        </div>
-      </div>
-    </form>
+  <div mat-dialog-title>
+    <h1 class="text-xl font-bold">{{ getTitle() }}</h1>
   </div>
+  <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+    <div mat-dialog-content class="content">
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput type="text" formControlName="nombre" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
+          <mat-error *ngIf="contactForm.get('nombre')?.hasError('required') && !isReadOnly">Nombre es requerido</mat-error>
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Abreviatura</mat-label>
+          <input matInput type="text" formControlName="abreviatura" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
+          <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('required') && !isReadOnly">Abreviatura es requerida</mat-error>
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Descripción</mat-label>
+          <input matInput type="text" formControlName="descripcion" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
+          <mat-error *ngIf="contactForm.get('descripcion')?.hasError('required') && !isReadOnly">Descripción es requerida</mat-error>
+        </mat-form-field>
+      </div>
+      <!-- Competencias -->
+      <div class="row">
+        <h3 class="text-lg font-medium mb-2">Competencias</h3>
+        <div formArrayName="competencias">
+          <div *ngFor="let competencia of competencias.controls; let i=index" class="flex items-center mb-2" [formGroupName]="i">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Competencia {{i + 1}}</mat-label>
+              <input matInput type="text" formControlName="nombre" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
+              <mat-error *ngIf="competencias.controls[i].get('nombre')?.hasError('required') && !isReadOnly">Competencia es requerida</mat-error>
+            </mat-form-field>
+            <button
+              *ngIf="!isReadOnly"
+              mat-icon-button
+              type="button"
+              (click)="removeCompetencia(i)"
+              class="ml-2 text-red-600 hover:text-red-700"
+            >
+              <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+            </button>
+          </div>
+          <!-- Mostrar error si no hay competencias -->
+          <mat-error *ngIf="contactForm.get('competencias')?.hasError('minCompetencias') && !isReadOnly" class="text-red-600 text-sm">
+            Se requiere al menos una competencia
+          </mat-error>
+        </div>
+        <button
+          *ngIf="!isReadOnly"
+          mat-stroked-button
+          type="button"
+          (click)="addCompetencia()"
+          class="w-full mt-2 bg-blue-100 hover:bg-blue-200 text-blue-700"
+        >
+          <fa-icon [icon]="['fas', 'plus']" class="mr-2"></fa-icon>
+          Agregar Competencia
+        </button>
+      </div>
+    </div>
+    <div mat-dialog-actions class="flex justify-end space-x-2">
+      <button
+        mat-raised-button
+        [mat-dialog-close]="false"
+        type="button"
+        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+      >
+        {{ isReadOnly ? 'Cerrar' : 'Cancelar' }}
+      </button>
+      <button
+        *ngIf="!isReadOnly"
+        [disabled]="!contactForm.valid"
+        mat-raised-button
+        color="primary"
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+      >
+        {{ getTitle() }}
+      </button>
+    </div>
+  </form>
+</div>

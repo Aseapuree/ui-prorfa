@@ -63,7 +63,10 @@ export class MatriculadosComponent implements OnInit {
     const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
     this.pdfMake = pdfMakeModule.default;
     this.pdfMake.vfs = pdfFontsModule.default.vfs;
-    this.matriculados = [];
+    this.matriculados = [{alumnoid:"12",apellidoMaterno:"FG",apellidoPaterno:"GH",grado:4,idusuario:"456",matriculaid:"45",nivel:"P",seccion:"B",fechaCreacion:"45",nombre:"JH"},
+      {alumnoid:"12",apellidoMaterno:"FG",apellidoPaterno:"GH",grado:4,idusuario:"456",matriculaid:"45",nivel:"P",seccion:"B",fechaCreacion:"45",nombre:"JH"},
+      {alumnoid:"12",apellidoMaterno:"FG",apellidoPaterno:"GH",grado:4,idusuario:"456",matriculaid:"45",nivel:"P",seccion:"B",fechaCreacion:"45",nombre:"JH"}
+    ];
   }
 
   toggleFilters(): void {

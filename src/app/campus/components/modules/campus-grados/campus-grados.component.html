@@ -96,6 +96,7 @@
         *ngFor="let curso of filteredCursos | paginate: { itemsPerPage: 4, currentPage: page }"
         [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
         [title]="curso.curso?.nombre || 'Sin nombre'"
+        [abreviatura]="curso.curso?.abreviatura || ''" 
         [teacher]="(curso.usuario?.nombre || '') + ' ' +
                    (curso.usuario?.apellidopaterno || '') + ' ' +
                    (curso.usuario?.apellidomaterno || '')"
