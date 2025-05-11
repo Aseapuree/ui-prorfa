@@ -123,12 +123,6 @@ fieldset {
   box-sizing: border-box;
 }
 
-.apoderado-grid-3-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem 2rem;
-}
-
 .apoderado-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -191,7 +185,8 @@ label {
 }
 
 .input-group input,
-.input-group select {
+.input-group select,
+.input-group textarea {
   width: 100%;
   padding: 0.8rem 1rem 0.8rem 3rem;
   border: 1px solid #ced4da;
@@ -202,6 +197,12 @@ label {
   font-size: 1rem;
   box-sizing: border-box;
   appearance: none;
+}
+
+.input-group textarea {
+  padding: 0.8rem 1rem 0.8rem 3rem;
+  resize: vertical;
+  min-height: 60px;
 }
 
 .input-group select {
@@ -225,7 +226,8 @@ label {
 }
 
 .input-group input:focus:not([readonly]),
-.input-group select:focus:not([disabled]) {
+.input-group select:focus:not([disabled]),
+.input-group textarea:focus:not([disabled]) {
   outline: none;
   border-color: #80bdff;
   box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25);
@@ -233,7 +235,8 @@ label {
 
 .input-group input.input-readonly,
 .input-group input.input-disabled,
-.input-group select.input-disabled {
+.input-group select.input-disabled,
+.input-group textarea.input-disabled {
   background-color: #e9ecef;
   border-color: #ced4da;
   color: #adb5bd;
@@ -242,7 +245,8 @@ label {
 }
 .input-group input.input-readonly:focus,
 .input-group input.input-disabled:focus,
-.input-group select.input-disabled:focus {
+.input-group select.input-disabled:focus,
+.input-group textarea.input-disabled:focus {
   box-shadow: none;
 }
 
@@ -334,33 +338,100 @@ button:disabled {
   opacity: 0.6;
 }
 
-.observacion-field {
-  margin-top: 1.5rem;
+.observaciones-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
 }
 
-.observacion-field label {
+.observaciones-title {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 1.5rem;
 }
 
-.observacion-field textarea {
-  width: 100%;
-  padding: 0.8rem 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: #ffffff;
-  color: #004085;
-  font-size: 1rem;
-  box-sizing: border-box;
-  resize: vertical;
-  min-height: 60px;
+.switch-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
-.observacion-field textarea:focus {
-  outline: none;
-  border-color: #80bdff;
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25);
+.switch-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  margin-bottom: 0;
+  gap: 0.8rem;
+  font-weight: normal;
+  color: #333;
 }
 
+.switch-checkbox {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.switch-slider {
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  background-color: #ccc;
+  border-radius: 20px;
+  position: relative;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+.switch-checkbox:checked + .switch-slider {
+  background-color: #28a745;
+}
+
+.switch-checkbox:checked + .switch-slider::before {
+  transform: translateX(20px);
+}
+
+.switch-label fa-icon {
+  font-size: 1.4em;
+  margin-left: auto;
+  transition: color 0.2s;
+}
+
+.icon-on { color: #28a745; }
+.icon-off { color: #6c757d; }
+
+.conditional-textarea {
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid #e0e0e0;
+  margin-top: 0.8rem;
+}
+
+.conditional-textarea label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.conditional-textarea .input-group textarea {
+  font-size: 0.95rem;
+}
 
 .relative { position: relative; }
 .flex { display: flex; }
@@ -409,7 +480,7 @@ button:disabled {
       font-size: 1.2rem;
       margin-bottom: 1.2rem;
   }
-  .apoderado-grid, .apoderado-grid-3-cols {
+  .apoderado-grid {
       grid-template-columns: 1fr;
       gap: 1rem 0;
   }
@@ -421,7 +492,8 @@ button:disabled {
       gap: 0.4rem;
   }
   .input-group input,
-  .input-group select {
+  .input-group select,
+  .input-group textarea {
       padding: 0.7rem 0.8rem 0.7rem 2.8rem;
       font-size: 0.95rem;
   }
@@ -438,10 +510,6 @@ button:disabled {
        padding-right: 0.8rem;
    }
 
-   .observacion-field textarea {
-       padding: 0.7rem 0.8rem;
-       font-size: 0.95rem;
-   }
    .error, .reminder {
        font-size: 0.8rem;
        padding-left: 0.3rem;
@@ -461,5 +529,36 @@ button:disabled {
       width: 100%;
       padding: 0.8rem 1.5rem;
       font-size: 1rem;
+  }
+
+  .observaciones-title {
+    font-size: 1.1rem;
+  }
+  .switch-label {
+    gap: 0.6rem;
+  }
+  .switch-slider {
+    width: 36px;
+    height: 18px;
+  }
+  .switch-slider::before {
+    width: 14px;
+    height: 14px;
+  }
+  .switch-checkbox:checked + .switch-slider::before {
+    transform: translateX(18px);
+  }
+  .switch-label fa-icon {
+    font-size: 1.3em;
+  }
+  .conditional-textarea {
+    margin-left: 0.5rem;
+    padding-left: 0.8rem;
+  }
+  .conditional-textarea label {
+    font-size: 0.85rem;
+  }
+  .conditional-textarea .input-group textarea {
+    font-size: 0.9rem;
   }
 }

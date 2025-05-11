@@ -6,8 +6,10 @@ export class Alumno{
   genero?: string;
   idtipodoc?: string;
   numeroDocumento?: string;
-  fechaNacimiento?: string;
+  fechaNacimiento?: string | null;
+  nacionalidad?: string;
   direccion?: string;
-  observacion?: string;
-  tipoObservacion?: string;
+  tipoIntercambio?: string | null;
+  tipoDiscapacidad?: string | null;
+  tipoOtros?: string | null;
 }

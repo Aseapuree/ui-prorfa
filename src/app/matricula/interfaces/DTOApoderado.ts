@@ -8,6 +8,7 @@ export class Apoderado{
   numeroDocumento?: string;
   fechaNacimiento?: string;
   direccion?: string;
+  nacionalidad?: string;
   telefono?: string;
   correo?: string;
 }
