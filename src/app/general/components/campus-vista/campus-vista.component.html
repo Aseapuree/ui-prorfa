@@ -1,0 +1,37 @@
+<app-general-loading-spinner [visible]="isLoading" [message]="loadingMessage"></app-general-loading-spinner>
+<div class="campus-container">
+    <!-- Navegación -->
+    <div class="nav">
+      <a href="javascript:void(0)" (click)="navigateToGrados(nivel)" class="nav-item">
+        <i class="fas fa-home mr-2"></i>Cursos
+      </a>      
+      <span class="nav-info">
+        <i class="fas fa-graduation-cap mr-2"></i>{{ grado }} {{ nivel }} - Sección {{ seccion }}
+      </span>
+    </div>
+  
+    <!-- Título -->
+    <div class="header">
+      <h1 class="text-3xl font-bold text-[--text-color] flex items-center justify-center">
+        <i class="fas fa-university mr-3 text-[--accent-color]"></i>{{ nombreCurso}}
+      </h1>
+    </div>
+  
+    <!-- Cartas de Sesiones y Notas -->
+    <div class="cartas-container">
+      <div class="carta" (click)="navegarASesiones()">
+        <div class="icon-container">
+          <i class="fas fa-chalkboard-teacher text-4xl text-[--accent-color]"></i>
+        </div>
+        <h3>Sesiones</h3>
+        <p>Ver detalles de las sesiones</p>
+      </div>
+      <div class="carta" (click)="navegarANotas()">
+        <div class="icon-container">
+          <i class="fas fa-book-open text-4xl text-[--accent-color]"></i>
+        </div>
+        <h3>Notas</h3>
+        <p>Ver resumen de notas</p>
+      </div>
+    </div>
+</div>

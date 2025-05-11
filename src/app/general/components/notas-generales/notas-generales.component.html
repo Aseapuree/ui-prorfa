@@ -1,0 +1,109 @@
+<app-general-loading-spinner [visible]="isLoading" [message]="loadingMessage"></app-general-loading-spinner>
+<div class="notas-container">
+  <!-- Navegación -->
+  <div class="nav">
+    <a href="javascript:void(0)" (click)="regresar()" class="nav-item">
+      <i class="fas fa-chevron-left mr-2"></i>Campus
+    </a>
+    <span class="nav-info">
+      <i class="fas fa-graduation-cap mr-2"></i>{{ grado }} {{ nivel }} - Sección {{ seccion }}
+    </span>
+  </div>
+
+  <!-- Encabezado -->
+  <div class="header">
+    <h1 class="text-3xl font-extrabold text-[--text-color] flex items-center justify-center animate-fade-in">
+      <i class="fas fa-book-open mr-4 text-[--accent-color] text-4xl"></i>Notas Generales
+    </h1>
+    <p class="text-[--text-color] opacity-80 text-center mt-2">Resumen de las notas obtenidas por sesión</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters flex flex-wrap gap-4 justify-center items-center mb-6">
+    <div class="filter-group flex items-center">
+      <label for="activityFilter" class="filter-label mr-2"><i class="fas fa-filter mr-1"></i></label>
+      <select id="activityFilter" [(ngModel)]="filterActivity" (change)="aplicarFiltros()" class="filter-select">
+        <option value="">Todas las actividades</option>
+        <option *ngFor="let activity of availableActivities" [value]="activity">{{ activity }}</option>
+      </select>
+    </div>
+    <div class="filter-group flex items-center">
+      <label for="sessionFilter" class="filter-label mr-2"><i class="fas fa-calendar-alt mr-1"></i></label>
+      <select id="sessionFilter" [(ngModel)]="filterSession" (change)="aplicarFiltros()" class="filter-select">
+        <option value="">Todas las sesiones</option>
+        <option *ngFor="let session of availableSessions" [value]="session">{{ session }}</option>
+      </select>
+    </div>
+    <div class="filter-group flex items-center">
+      <label for="notaMinFilter" class="filter-label mr-2"><i class="fas fa-sort-numeric-up mr-1"></i></label>
+      <input id="notaMinFilter" type="number" [(ngModel)]="filterNotaMin" (input)="aplicarFiltros()" class="filter-input" min="0" max="20" placeholder="Ej. 10" />
+    </div>
+  </div>
+
+  <!-- Mensaje si no hay notas -->
+  <div class="no-data" *ngIf="alumnosNotas.length === 0 && isDataLoaded">
+    <p class="text-[--text-color] opacity-70">No hay notas registradas para mostrar.</p>
+  </div>
+
+  <!-- Tabla de notas -->
+  <div class="table-container" *ngIf="alumnosNotas.length > 0">
+    <table class="notas-table w-full">
+      <thead>
+        <tr>
+          <th class="p-3"><i class="fas fa-bars"></i></th>
+          <th class="p-3">Nombre del Alumno</th>
+          <th class="p-3">Promedio</th>
+          <th class="p-3">Asistencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let alumnoData of alumnosNotas; let idx = index">
+          <tr class="summary-row cursor-pointer hover:bg-[--primary-hover] transition-colors" (click)="toggleRow(alumnoData.alumno + '-' + idx)">
+            <td class="p-3 text-center"><i class="fas" [ngClass]="expandedRows.has(alumnoData.alumno + '-' + idx) ? 'fa-chevron-down' : 'fa-chevron-right'"></i></td>
+            <td class="p-3">{{ alumnoData.alumno }}</td>
+            <td class="p-3 text-center">{{ alumnoData.promedioNotas }}</td>
+            <td class="p-3 text-center">{{ alumnoData.asistencia > 0 ? alumnoData.asistencia : 'N/A' }}</td>
+          </tr>
+          <tr *ngIf="expandedRows.has(alumnoData.alumno + '-' + idx)" class="details-row">
+            <td colspan="4">
+              <div class="details-container">
+                <table class="details-table w-full">
+                  <thead>
+                    <tr>
+                      <th class="p-2"><i class="fas fa-calendar"></i> Sesión</th>
+                      <th class="p-2"><i class="fas fa-tasks"></i> Actividad</th>
+                      <th class="p-2"><i class="fas fa-star"></i> Nota</th>
+                      <th class="p-2"><i class="fas fa-comment"></i> Comentario</th>
+                      <th class="p-2"><i class="fas fa-file"></i> Archivo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let nota of alumnoData.notas" class="hover:bg-[--secondary-hover] transition-colors">
+                      <td class="p-2 text-center">{{ nota.idNota }}</td>
+                      <td class="p-2">{{ nota.nombreActividad }}</td>
+                      <td class="p-2 text-center">{{ nota.nota ?? 'N/A' }}</td>
+                      <td class="p-2">{{ nota.comentario ?? 'Sin comentario' }}</td>
+                      <td class="p-2">
+                        <a *ngIf="nota.notatareaurl" [href]="nota.notatareaurl" target="_blank" class="file-link text-[--accent-color] hover:underline">
+                          <i class="fas fa-download mr-1"></i>{{ nota.nombreArchivo ?? 'Descargar' }}
+                        </a>
+                        <span *ngIf="!nota.notatareaurl">N/A</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Botón de regresar -->
+  <div class="actions mt-6 text-center">
+    <button class="btn-regresar flex items-center justify-center" (click)="regresar()">
+      <i class="fas fa-arrow-left mr-2"></i>Regresar
+    </button>
+  </div>
+</div>

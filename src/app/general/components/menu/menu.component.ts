@@ -20,8 +20,8 @@ export class MenuComponent implements OnInit, OnChanges {
   @Input() nombreUsuario: string = '';
   @Input() apellidoPaterno: string = '';
   @Input() apellidoMaterno: string = '';
-  @Input() nombreRol: string = ''; // Para mostrar en la interfaz
-  @Input() idRol: string = ''; // Para cargar los menús
+  @Input() nombreRol: string = '';
+  @Input() idRol: string = '';
   @Input() perfilUrl: string | null = null;
   faUserCircle = faUserCircle;
   faSignOutAlt = faSignOutAlt;
@@ -31,6 +31,7 @@ export class MenuComponent implements OnInit, OnChanges {
   menuJerarquico: any[] = [];
   subMenuOpen: { [key: string]: boolean } = {};
   menuCerrado = false;
+  activeSubmenuId: string | null = null; // Para controlar qué submenu tooltip está activo
 
   constructor(
     private menuService: DTOmenuService,
@@ -68,10 +69,8 @@ export class MenuComponent implements OnInit, OnChanges {
   obtenerMenus(rol: string) {
     this.menuService.getMenus(rol).subscribe(menuResponse => {
       console.log("🔹 Respuesta del servicio en MenuComponent:", menuResponse);
-
       this.menus = menuResponse?.data || [];
       console.log("✅ Menús cargados en MenuComponent:", this.menus);
-
       this.menuJerarquico = this.menus
         .filter(menu => menu.idmenuparent === null)
         .map(menu => ({
@@ -79,9 +78,7 @@ export class MenuComponent implements OnInit, OnChanges {
           icono: this.getIcon(menu.menu_icono ?? ''),
           submenus: this.menus.filter(sub => sub.idmenuparent === menu.idMenu)
         }));
-
       console.log("📌 Menús estructurados:", this.menuJerarquico);
-
       this.cdr.detectChanges();
     }, error => {
       console.error("❌ Error al obtener menús en MenuComponent:", error);
@@ -91,43 +88,27 @@ export class MenuComponent implements OnInit, OnChanges {
   extraerIdDesdeUrl(url: string): string | null {
     const regexFileD = /\/d\/([a-zA-Z0-9_-]+)/;
     const regexUc = /id=([a-zA-Z0-9_-]+)/;
-
     let match = url.match(regexFileD);
-    if (match) {
-      return match[1];
-    }
-
+    if (match) return match[1];
     match = url.match(regexUc);
-    if (match) {
-      return match[1];
-    }
-
+    if (match) return match[1];
     const regexId = /^[a-zA-Z0-9_-]+$/;
-    if (regexId.test(url)) {
-      return url;
-    }
-
+    if (regexId.test(url)) return url;
     console.warn("⚠ No se pudo extraer ID de la URL:", url);
     return null;
   }
 
   cargarImagenDesdeBackend(urlDrive: string) {
     if (!urlDrive || urlDrive.trim() === '') return;
-
     const fileId = this.extraerIdDesdeUrl(urlDrive);
     if (!fileId) {
       console.error("❌ No se pudo extraer el ID de la URL:", urlDrive);
       this.perfilUrl = null;
       return;
     }
-
     const apiUrl = `http://localhost:8080/api/perfil/imagen/${fileId}`;
     console.log("🚀 Solicitando imagen desde backend:", apiUrl);
-
-    this.http.get(apiUrl, {
-      responseType: 'blob',
-      withCredentials: true
-    }).subscribe(blob => {
+    this.http.get(apiUrl, { responseType: 'blob', withCredentials: true }).subscribe(blob => {
       const imageUrl = URL.createObjectURL(blob);
       this.perfilUrl = imageUrl;
       this.cdr.detectChanges();
@@ -144,37 +125,42 @@ export class MenuComponent implements OnInit, OnChanges {
 
   obtenerIniciales(): string {
     if (!this.nombreUsuario) return '?';
-
     const nombres = this.nombreUsuario.trim().split(' ');
     const apellido = this.apellidoPaterno?.trim().split(' ')[0] || '';
-
     if (nombres.length === 1) {
       const inicialNombre = nombres[0][0] || '';
       const inicialApellido = apellido[0] || '';
       return (inicialNombre + inicialApellido).toUpperCase();
     }
-
     return (nombres[0][0] + nombres[1][0]).toUpperCase();
   }
 
   getIcon(menu_icono: string): IconDefinition | null {
     console.log(`🔍 Buscando icono: "${menu_icono}"`);
-
     const iconoEncontrado = fontAwesomeIcons.find(icon => icon.iconName === menu_icono.toLowerCase());
-
-    if (!iconoEncontrado) {
-      console.warn(`⚠ No se encontró el icono: "${menu_icono}" en fontAwesomeIcons`);
-    }
-
+    if (!iconoEncontrado) console.warn(`⚠ No se encontró el icono: "${menu_icono}" en fontAwesomeIcons`);
     return iconoEncontrado || null;
   }
 
   toggleMenu() {
     this.menuCerrado = !this.menuCerrado;
+    this.activeSubmenuId = null; // Ocultar submenús al cambiar estado
   }
 
   toggleSubMenu(menuId: string) {
     this.subMenuOpen[menuId] = !this.subMenuOpen[menuId];
+  }
+
+  showSubmenuTooltip(menuId: string) {
+    if (this.menuCerrado) {
+      this.activeSubmenuId = menuId;
+    }
+  }
+
+  hideSubmenuTooltip() {
+    if (this.menuCerrado) {
+      this.activeSubmenuId = null;
+    }
   }
 
   trackById(index: number, item: DTOMenu): string {
@@ -182,37 +168,26 @@ export class MenuComponent implements OnInit, OnChanges {
   }
 
   navigate(menu: DTOMenu) {
-    if (menu.menu_ruta) {
-      this.router.navigate([menu.menu_ruta]);
-    }
+    if (menu.menu_ruta) this.router.navigate([menu.menu_ruta]);
+    this.activeSubmenuId = null; // Ocultar submenús tras navegar
   }
 
   irAPerfil() {
     this.router.navigate(['/perfil']);
+    this.activeSubmenuId = null;
   }
 
   logout() {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.clear();
-    } else {
-      console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
-    }
-
+    if (isPlatformBrowser(this.platformId)) localStorage.clear();
+    else console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
     window.location.href = 'http://localhost:4203';
-  }
-
-  getIconColorClass(iconName: string): string {
-    const colorClassMap: { [key: string]: string } = {};
-    return colorClassMap[iconName] || '';
+    this.activeSubmenuId = null;
   }
 
   principal() {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.clear();
-    } else {
-      console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
-    }
-
+    if (isPlatformBrowser(this.platformId)) localStorage.clear();
+    else console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
     window.location.href = 'http://localhost:4200/inicio';
+    this.activeSubmenuId = null;
   }
 }

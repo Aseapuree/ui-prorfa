@@ -1,24 +1,13 @@
-<nav [class.closed]="menuCerrado" class="h-full w-64 text-white p-4 flex flex-col shadow-lg transition-all duration-300">
+<nav [class.closed]="menuCerrado" class="h-full w-64 text-white p-4 flex flex-col shadow-lg transition-all duration-300 bg-[--primary-dark]">
   <!-- Botón para retraer/expandir -->
   <button class="toggle-menu" (click)="toggleMenu()">☰</button>
 
   <div [ngClass]="{ 'hidden': menuCerrado, 'flex': !menuCerrado }" class="flex flex-col items-center justify-center mb-6">
     <!-- Ícono del usuario y nombre -->
-    <!-- Si NO hay imagen, mostrar las iniciales -->
-    <div
-    *ngIf="!imagenValida"
-    class="w-20 h-20 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center text-white text-2xl">
-    {{ obtenerIniciales() }}
+    <div *ngIf="!imagenValida" class="w-20 h-20 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center text-white text-2xl">
+      {{ obtenerIniciales() }}
     </div>
-
-    <!-- Si hay imagen válida, mostrarla -->
-    <img
-    *ngIf="imagenValida"
-    [src]="perfilUrl"
-    alt="Foto de perfil"
-    class="w-20 h-20 rounded-full object-cover border-2 border-white">
-
-    
+    <img *ngIf="imagenValida" [src]="perfilUrl" alt="Foto de perfil" class="w-20 h-20 rounded-full object-cover border-2 border-white">
     <p class="text-lg font-bold text-white mt-2" *ngIf="!menuCerrado">
       {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
     </p>
@@ -27,49 +16,83 @@
 
   <!-- Menús y submenús -->
   <ul class="space-y-2">
-<!-- boton de inicio -->
-    <li>
+    <!-- Botón de Inicio -->
+    <li class="relative">
       <button class="menu-btn flex items-center gap-3 w-full" (click)="principal()">
         <fa-icon [icon]="faHome" class="text-lg"></fa-icon>
         <span *ngIf="!menuCerrado" class="flex-grow text-left">Inicio</span>
       </button>
+      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
+        <fa-icon [icon]="faHome" class="text-lg"></fa-icon>
+        <span class="text-base">Inicio</span>
+      </div>
     </li>
-    <li *ngFor="let menu of menuJerarquico; trackBy: trackById">
+    <li *ngFor="let menu of menuJerarquico; trackBy: trackById" class="relative">
       <button class="menu-btn flex items-center gap-3 w-full" 
-              (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)">
+              (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)"
+              (mouseenter)="showSubmenuTooltip(menu.idMenu)">
         <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg"></fa-icon> 
         <span *ngIf="!menuCerrado" class="flex-grow text-left">{{ menu.menu_descripcion }}</span>
         <span *ngIf="menu.submenus.length && !menuCerrado" class="submenu-icon">
           {{ subMenuOpen[menu.idMenu] ? '▼' : '►' }}
         </span>
       </button>
+      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
+        <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg"></fa-icon>
+        <span class="text-base">{{ menu.menu_descripcion }}</span>
+      </div>
+      <!-- Panel de submenús como tooltip cuando el menú está cerrado -->
+      <div *ngIf="menuCerrado && activeSubmenuId === menu.idMenu && menu.submenus.length" 
+           class="submenu-tooltip" 
+           (mouseleave)="hideSubmenuTooltip()">
+        <ul class="submenu-list">
+          <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="submenu-item">
+            <button class="submenu-btn" (click)="navigate(submenu)">
+              <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-sm"></fa-icon>
+              <span>{{ submenu.menu_descripcion }}</span>
+            </button>
+          </li>
+        </ul>
+      </div>
 
       <!-- Submenús desplegables -->
-      <ul *ngIf="subMenuOpen[menu.idMenu]" class="submenu pl-6">
-        <li *ngFor="let submenu of menu.submenus; trackBy: trackById">
+      <ul *ngIf="menu.submenus.length && subMenuOpen[menu.idMenu] && !menuCerrado" class="submenu pl-6">
+        <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="relative">
           <button class="submenu-btn flex items-center gap-3 w-full" 
                   (click)="navigate(submenu)">
             <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-lg"></fa-icon> 
             <span *ngIf="!menuCerrado" class="flex-grow text-left">{{ submenu.menu_descripcion }}</span>
           </button>
+          <div *ngIf="menuCerrado" class="tooltip">
+            <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-sm"></fa-icon>
+            <span>{{ submenu.menu_descripcion }}</span>
+          </div>
         </li>
       </ul>
     </li>
 
     <!-- Botón de Perfil -->
-    <li>
+    <li class="relative">
       <button class="menu-btn flex items-center gap-3 w-full" (click)="irAPerfil()">
         <fa-icon [icon]="faUserCircle" class="text-lg text-blue-400"></fa-icon>
         <span *ngIf="!menuCerrado" class="flex-grow text-left">Perfil</span>
       </button>
+      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
+        <fa-icon [icon]="faUserCircle" class="text-lg text-blue-400"></fa-icon>
+        <span class="text-base">Perfil</span>
+      </div>
     </li>
 
     <!-- Botón de Cerrar Sesión -->
-    <li>
+    <li class="relative">
       <button class="exit-btn flex items-center gap-3 w-full" (click)="logout()">
         <fa-icon [icon]="faSignOutAlt" class="text-lg text-white drop-shadow-md"></fa-icon>
         <span *ngIf="!menuCerrado" class="flex-grow text-left text-white">Cerrar Sesión</span>
       </button>
+      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
+        <fa-icon [icon]="faSignOutAlt" class="text-lg text-white"></fa-icon>
+        <span class="text-base">Cerrar Sesión</span>
+      </div>
     </li>
   </ul>
 </nav>
