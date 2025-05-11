@@ -16,12 +16,13 @@ import {
   faComment,
   faClipboardList,
   faVenusMars,
-  faToggleOn, faToggleOff, faInfoCircle
+  faToggleOn, faToggleOff, faInfoCircle, faPauseCircle, faPlayCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { Observable, of, forkJoin } from 'rxjs';
 import { map, catchError, switchMap, startWith, finalize } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
+import { NotificationComponent } from "../../../campus/components/shared/notificaciones/notification.component";
 
 function emailRegexValidator(): ValidatorFn {
   const regex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
@@ -46,7 +47,7 @@ function documentRegexValidator(): ValidatorFn {
     if (idtipodoc === DNI_UUID) {
       regex = /^\d{8}$/;
     } else if (idtipodoc === CARNET_EXTRANJERIA_UUID) {
-      regex = /^\d{1,20}$/;
+      regex = /^\d{9}$/;
     } else {
       return null;
     }
@@ -84,7 +85,6 @@ function minAgeValidator(minAge: number): ValidatorFn {
       }
       return age < minAge ? { minAge: { requiredAge: minAge, actualAge: age } } : null;
     } catch (e) {
-      console.error("Error parsing date in minAgeValidator:", e);
       return { invalidDate: true };
     }
   };
@@ -113,8 +113,9 @@ function soloLetrasValidator(): ValidatorFn {
     CommonModule,
     FontAwesomeModule,
     ReactiveFormsModule,
-    GeneralLoadingSpinnerComponent
-  ],
+    GeneralLoadingSpinnerComponent,
+    NotificationComponent
+],
   templateUrl: './registrarmatricula.component.html',
   styleUrls: ['./registrarmatricula.component.scss']
 })
@@ -147,6 +148,8 @@ export class RegistrarMatriculaComponent implements OnInit {
   faToggleOn = faToggleOn;
   faToggleOff = faToggleOff;
   faInfoCircle = faInfoCircle;
+  faPauseCircle = faPauseCircle;
+  faPlayCircle = faPlayCircle;
 
   soloNumerosPattern = /^[0-9]+$/;
   direccionPattern = /^[A-Za-z0-9À-ÿ\s.,#-]+$/;
@@ -216,7 +219,6 @@ export class RegistrarMatriculaComponent implements OnInit {
             this.cdRef.detectChanges();
            },
           error: (err) => {
-            console.error("Error al asignar sección:", err);
             this.seccion = 'ERROR';
             this.notificationService.showNotification('Error de comunicación al obtener la sección.', 'error');
             this.loadingMessage = 'Error de comunicación.';
@@ -288,7 +290,7 @@ export class RegistrarMatriculaComponent implements OnInit {
                   apoderadoNumeroDocControl?.enable({ emitEvent: false });
               } else {
                   apoderadoNumeroDocControl?.disable({ emitEvent: false });
-                  apoderadoNumeroDocControl?.reset('');
+                  apoderadoNumeroDocControl?.reset('', { emitEvent: false });
               }
                apoderadoNumeroDocControl?.updateValueAndValidity();
           }
@@ -314,7 +316,7 @@ export class RegistrarMatriculaComponent implements OnInit {
               alumnoNumeroDocControl?.enable({ emitEvent: false });
           } else {
               alumnoNumeroDocControl?.disable({ emitEvent: false });
-              alumnoNumeroDocControl?.reset('');
+              alumnoNumeroDocControl?.reset('', { emitEvent: false });
           }
           alumnoNumeroDocControl?.updateValueAndValidity();
       });
@@ -359,7 +361,7 @@ export class RegistrarMatriculaComponent implements OnInit {
       const DNI_UUID = '29c2c5c3-2fc9-4410-ab24-52a8111f9c05';
       const CARNET_EXTRANJERIA_UUID = 'fa65a599-60fd-43e1-85e2-7a95f3cf072e';
       if (tipo === DNI_UUID) return 8;
-      if (tipo === CARNET_EXTRANJERIA_UUID) return 20;
+      if (tipo === CARNET_EXTRANJERIA_UUID) return 9;
     }
     return 20;
   }
@@ -425,13 +427,11 @@ export class RegistrarMatriculaComponent implements OnInit {
         })
     ).subscribe({
       next: (apoderado) => {
-        console.log('Apoderado encontrado:', apoderado);
         if (apoderado.fechaNacimiento) {
           try {
                 const dateObj = new Date(apoderado.fechaNacimiento);
                apoderado.fechaNacimiento = !isNaN(dateObj.getTime()) ? dateObj.toISOString().substring(0, 10) : '';
           } catch(e) {
-               console.error("Error al parsear la fecha del apoderado:", e);
                apoderado.fechaNacimiento = '';
           }
         }
@@ -451,7 +451,7 @@ export class RegistrarMatriculaComponent implements OnInit {
 
         this.formMatricula.get('apoderado')?.markAsPristine();
         this.formMatricula.get('apoderado')?.markAsUntouched();
-        this.formMatricula.get('relacionEstudiante')?.reset('');
+        this.formMatricula.get('relacionEstudiante')?.reset('', { emitEvent: false });
         this.formMatricula.get('relacionEstudiante')?.markAsPristine();
         this.formMatricula.get('relacionEstudiante')?.markAsUntouched();
 
@@ -464,14 +464,14 @@ export class RegistrarMatriculaComponent implements OnInit {
             idapoderado: null,
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', genero: '', telefono: '',
             direccion: '', correo: '', fechaNacimiento: ''
-        });
+        }, { emitEvent: false });
         this.formMatricula.get('apoderado.idtipodoc')?.patchValue(currentValues.idtipodoc, { emitEvent: false });
          this.formMatricula.get('apoderado.numeroDocumento')?.patchValue(currentValues.numeroDocumento, { emitEvent: false });
          this.formMatricula.get('apoderado.numeroDocumento')?.updateValueAndValidity();
 
          this.formMatricula.get('apoderado.idtipodoc')?.enable({ emitEvent: false });
 
-        this.formMatricula.get('relacionEstudiante')?.reset('');
+        this.formMatricula.get('relacionEstudiante')?.reset('', { emitEvent: false });
         this.formMatricula.get('relacionEstudiante')?.markAsPristine();
         this.formMatricula.get('relacionEstudiante')?.markAsUntouched();
         this.mostrarFormularioApoderado = true;
@@ -481,7 +481,6 @@ export class RegistrarMatriculaComponent implements OnInit {
         if (err.status === 404) {
             this.notificationService.showNotification('Apoderado no registrado. Complete los datos para crearlo.', 'info');
         } else {
-            console.error('Error al buscar el apoderado:', err);
             this.notificationService.showNotification('Error al buscar apoderado. Intente de nuevo.', 'error');
         }
         setTimeout(() => this.focusFirstInvalidControl('apoderado'), 50);
@@ -505,7 +504,6 @@ export class RegistrarMatriculaComponent implements OnInit {
       setTimeout(() => document.getElementById('alumno-fieldset')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
       setTimeout(() => this.focusFirstInvalidControl('alumno'), 100);
     } else {
-      console.error('Errores en Datos del Apoderado o Relación:', {apoderadoErrors: apoderadoGroup?.errors, relacionErrors: relacionControl?.errors});
       this.mostrarFormularioAlumno = false;
       setTimeout(() => {
          this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante');
@@ -525,8 +523,8 @@ export class RegistrarMatriculaComponent implements OnInit {
       this.mostrarFormularioAlumno = false;
       this.apoderadoEncontrado = null;
 
-      this.formMatricula.get('apoderado.idtipodoc')?.reset('');
-      this.formMatricula.get('apoderado.numeroDocumento')?.reset('');
+      this.formMatricula.get('apoderado.idtipodoc')?.reset('', { emitEvent: false });
+      this.formMatricula.get('apoderado.numeroDocumento')?.reset('', { emitEvent: false });
       this.formMatricula.get('apoderado.idtipodoc')?.setErrors(null);
       this.formMatricula.get('apoderado.numeroDocumento')?.setErrors(null);
       this.formMatricula.get('apoderado.idtipodoc')?.markAsUntouched();
@@ -539,37 +537,36 @@ export class RegistrarMatriculaComponent implements OnInit {
       if (!dateString) return null;
       try {
           if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-              console.warn("Formato de fecha inválido:", dateString);
               return null;
           }
           return `${dateString}T00:00:00`;
       } catch (e) {
-          console.error("Error al convertir fecha:", dateString, e);
           return null;
       }
   }
 
-  onSubmit(): void {
+  private processMatricula(estadoMatricula: 'COMPLETADO' | 'EN PROCESO'): void {
     if (this.isSubmitting) return;
 
-    this.formMatricula.markAllAsTouched();
-    this.formMatricula.updateValueAndValidity();
-    if (this.formMatricula.invalid) {
-      console.error('Formulario inválido:', this.collectErrors(this.formMatricula));
-      if (this.formMatricula.get('alumno')?.invalid) {
-          this.currentView = 'alumno';
-          setTimeout(() => this.focusFirstInvalidControl('alumno'), 50);
-      } else if (this.formMatricula.get('apoderado')?.invalid || this.formMatricula.get('relacionEstudiante')?.invalid) {
-          this.currentView = 'apoderado';
-          setTimeout(() => this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante'), 50);
-      } else {
-          console.warn("Error de formulario no localizado en grupos apoderado/alumno/relación.");
-      }
-      return;
+    if (estadoMatricula === 'COMPLETADO') {
+        this.formMatricula.markAllAsTouched();
+        this.formMatricula.updateValueAndValidity();
+        if (this.formMatricula.invalid) {
+            if (this.formMatricula.get('alumno')?.invalid) {
+                this.currentView = 'alumno';
+                setTimeout(() => this.focusFirstInvalidControl('alumno'), 50);
+            } else if (this.formMatricula.get('apoderado')?.invalid || this.formMatricula.get('relacionEstudiante')?.invalid) {
+                this.currentView = 'apoderado';
+                setTimeout(() => this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante'), 50);
+            }
+            this.notificationService.showNotification('Formulario inválido. Revise los campos marcados.', 'error');
+            return;
+        }
     }
 
+
     if (!this.seccion || this.seccion === 'SIN VACANTE' || this.seccion === 'ERROR') {
-        this.notificationService.showNotification('No se puede registrar: sección inválida o sin vacantes.', 'error');
+        this.notificationService.showNotification(`No se puede ${estadoMatricula === 'COMPLETADO' ? 'registrar' : 'pausar'}: sección inválida o sin vacantes.`, 'error');
         return;
     }
 
@@ -588,16 +585,17 @@ export class RegistrarMatriculaComponent implements OnInit {
         delete apoderadoData.idapoderado;
     }
 
+
     const alumnoData: Alumno = {
-        nombre: formData.alumno.nombre,
-        apellidoPaterno: formData.alumno.apellidoPaterno,
-        apellidoMaterno: formData.alumno.apellidoMaterno,
-        nacionalidad: formData.alumno.nacionalidad,
-        genero: formData.alumno.genero,
-        idtipodoc: formData.alumno.idtipodoc,
-        numeroDocumento: formData.alumno.numeroDocumento,
+        nombre: formData.alumno.nombre || null,
+        apellidoPaterno: formData.alumno.apellidoPaterno || null,
+        apellidoMaterno: formData.alumno.apellidoMaterno || null,
+        nacionalidad: formData.alumno.nacionalidad || null,
+        genero: formData.alumno.genero || null,
+        idtipodoc: formData.alumno.idtipodoc || null,
+        numeroDocumento: formData.alumno.numeroDocumento || null,
         fechaNacimiento: alumnoFechaNacimiento,
-        direccion: formData.alumno.direccion,
+        direccion: formData.alumno.direccion || null,
         tipoIntercambio: formData.alumno.tieneIntercambio ? (formData.alumno.tipoIntercambio || null) : null,
         tipoDiscapacidad: formData.alumno.tieneDiscapacidad ? (formData.alumno.tipoDiscapacidad || null) : null,
         tipoOtros: formData.alumno.tieneOtros ? (formData.alumno.tipoOtros || null) : null
@@ -607,69 +605,62 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     if (this.apoderadoEncontrado && this.apoderadoEncontrado.idapoderado) {
         const apoderadoGroup = this.formMatricula.get('apoderado') as FormGroup;
-        const editableFields = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'genero', 'fechaNacimiento', 'telefono', 'direccion', 'correo', 'nacionalidad'];
-        const isApoderadoModified = editableFields.some(field => apoderadoGroup.get(field)?.dirty);
+        const isApoderadoModified = Object.keys(apoderadoGroup.controls).some(key => apoderadoGroup.get(key)?.dirty);
 
-        if (isApoderadoModified) {
-            console.log('onSubmit: Apoderado encontrado y modificado. Editando...');
-            apoderadoObservable = this.apoderadoService.editarApoderado(this.apoderadoEncontrado.idapoderado, apoderadoData).pipe(
-                map((resp: any) => {
-                     if (resp && resp.idapoderado) {
-                         console.log('onSubmit: Apoderado editado correctamente (direct object):', resp);
-                         return resp;
-                     } else if (resp && resp.code >= 200 && resp.code < 300 && resp.data) {
-                         console.log('onSubmit: Apoderado editado correctamente (DTOResponse):', resp.data);
-                         return resp.data;
-                     }
-                     else {
-                        console.error('onSubmit: Respuesta inesperada al editar apoderado:', resp);
-                        throw new Error('Respuesta inesperada al editar apoderado.');
-                    }
-                })
+        if (isApoderadoModified || estadoMatricula === 'EN PROCESO') {
+             const apoderadoPayload = { ...this.apoderadoEncontrado, ...apoderadoData, idapoderado: this.apoderadoEncontrado.idapoderado };
+            apoderadoObservable = this.apoderadoService.editarApoderado(this.apoderadoEncontrado.idapoderado, apoderadoPayload).pipe(
+                map((resp: any) => (resp && resp.idapoderado) ? resp : (resp && resp.data && resp.data.idapoderado) ? resp.data : (() => { throw new Error('Respuesta inesperada al editar apoderado.'); })())
             );
         } else {
-            console.log('onSubmit: Apoderado encontrado, no modificado. Usando existente.');
             apoderadoObservable = of(this.apoderadoEncontrado);
         }
     } else {
-        console.log('onSubmit: Apoderado no encontrado. Creando nuevo...');
-        apoderadoObservable = this.apoderadoService.agregarApoderado(apoderadoData).pipe(
-            map((apoderadoCreado: Apoderado) => {
-                if (apoderadoCreado && apoderadoCreado.idapoderado) {
-                    console.log('onSubmit: Apoderado creado correctamente:', apoderadoCreado);
-                    return apoderadoCreado;
-                } else {
-                    console.error('onSubmit: Respuesta inesperada al crear apoderado:', apoderadoCreado);
-                    throw new Error('Respuesta inesperada al crear apoderado.');
-                }
-            })
-        );
+        if (Object.values(apoderadoData).some(val => val !== null && val !== '' && val !== undefined) || estadoMatricula === 'EN PROCESO') {
+            apoderadoObservable = this.apoderadoService.agregarApoderado(apoderadoData).pipe(
+                map((apoderadoCreado: Apoderado) => (apoderadoCreado && apoderadoCreado.idapoderado) ? apoderadoCreado : (() => { throw new Error('Respuesta inesperada al crear apoderado.'); })())
+            );
+        } else {
+            apoderadoObservable = of({ idapoderado: undefined } as Apoderado);
+        }
     }
 
     apoderadoObservable.pipe(
         switchMap((apoderadoProcesado: Apoderado) => {
-            console.log('onSubmit: Apoderado procesado:', apoderadoProcesado);
-            if (!apoderadoProcesado || !apoderadoProcesado.idapoderado) {
-                throw new Error('ID de apoderado no válido después de procesar.');
+            if (estadoMatricula === 'EN PROCESO' && !apoderadoProcesado?.idapoderado && Object.values(apoderadoData).some(val => val !== null && val !== '' && val !== undefined)) {
+                 throw new Error('No se pudo procesar el Apoderado con los datos proporcionados para pausar.');
             }
-            const idApoderadoFinal = apoderadoProcesado.idapoderado;
-            console.log('onSubmit: ID Apoderado final:', idApoderadoFinal);
 
-            console.log('onSubmit: Creando alumno...');
-            return this.alumnoService.agregarAlumno(alumnoData).pipe(
-                map((alumnoResp: any) => {
-                    if (alumnoResp && alumnoResp.code >= 200 && alumnoResp.code < 300 && alumnoResp.data && alumnoResp.data.idalumno) {
-                        const idAlumnoCreado = alumnoResp.data.idalumno;
-                        console.log('onSubmit: Alumno creado. ID:', idAlumnoCreado);
-                        return { idApoderado: idApoderadoFinal, idAlumno: idAlumnoCreado };
-                    } else {
-                        console.error('onSubmit: Respuesta inesperada al crear alumno:', alumnoResp);
-                        throw new Error('Respuesta inesperada al crear alumno.');
-                    }
-                })
-            );
+            const idApoderadoFinal = apoderadoProcesado?.idapoderado;
+
+            if (Object.values(alumnoData).some(val => val !== null && val !== '' && val !== undefined) || estadoMatricula === 'EN PROCESO') {
+                return this.alumnoService.agregarAlumno(alumnoData).pipe(
+                    map((alumnoResp: any) => {
+                        if (alumnoResp && alumnoResp.code >= 200 && alumnoResp.code < 300 && alumnoResp.data && alumnoResp.data.idalumno) {
+                            const idAlumnoCreado = alumnoResp.data.idalumno;
+                            return { idApoderado: idApoderadoFinal, idAlumno: idAlumnoCreado };
+                        } else {
+                             if(estadoMatricula === 'COMPLETADO' && (!alumnoResp?.data?.idalumno) ){
+                                throw new Error('Respuesta inesperada al crear alumno.');
+                             }
+                             return { idApoderado: idApoderadoFinal, idAlumno: undefined };
+                        }
+                    })
+                );
+            } else {
+                 return of({ idApoderado: idApoderadoFinal, idAlumno: undefined });
+            }
         }),
         switchMap(({ idApoderado, idAlumno }) => {
+            if (estadoMatricula === 'COMPLETADO' && (!idApoderado || !idAlumno)) {
+                throw new Error('Faltan IDs de apoderado o alumno para completar la matrícula.');
+            }
+             if (estadoMatricula === 'EN PROCESO' && !idApoderado && !idAlumno && !formData.relacionEstudiante && !this.nivel && !this.grado && !this.seccion) {
+                this.notificationService.showNotification('No hay suficientes datos para pausar el trámite.', 'info');
+                return of(null);
+            }
+
+
             const matriculaRequest: Matricula = {
                 idusuario: this.usuario.idusuario,
                 idapoderado: idApoderado,
@@ -677,40 +668,34 @@ export class RegistrarMatriculaComponent implements OnInit {
                 nivel: this.nivel,
                 grado: this.grado,
                 seccion: this.seccion,
-                relacionEstudiante: formData.relacionEstudiante,
-                estadoMatricula: 'PENDIENTE'
+                relacionEstudiante: formData.relacionEstudiante || null,
+                estadoMatricula: estadoMatricula
             };
-            console.log('onSubmit: Creando matrícula:', matriculaRequest);
             return this.matriculaService.agregarMatricula(matriculaRequest).pipe(
-                 map((matriculaResp: any) => {
-                     if (matriculaResp && matriculaResp.code >= 200 && matriculaResp.code < 300 && matriculaResp.data && matriculaResp.data.idmatricula) {
-                         console.log('onSubmit: Matrícula registrada correctamente:', matriculaResp.data);
-                         return matriculaResp.data;
-                     } else {
-                         console.error('onSubmit: Respuesta inesperada al registrar matrícula:', matriculaResp);
-                         throw new Error('Respuesta inesperada al registrar matrícula.');
-                     }
-                 })
-            );
+     map((matriculaDesdeServicio: Matricula) => {
+         if (matriculaDesdeServicio && matriculaDesdeServicio.idmatricula) {
+             return matriculaDesdeServicio;
+         } else {
+             if (estadoMatricula === 'COMPLETADO') {
+                  throw new Error('Respuesta inesperada del servicio de matrícula (falta ID en la matrícula devuelta).');
+             }
+             throw new Error('Respuesta inesperada del servicio de matrícula (objeto matrícula inválido o sin ID).');
+         }
+     })
+);
         }),
         catchError(err => {
-            console.error('onSubmit: Error en el flujo de creación:', err);
             let errorMsg = 'Error desconocido durante el registro.';
             if (err instanceof HttpErrorResponse) {
                  try {
                      const errorBody = err.error;
-                     if (errorBody && errorBody.message) {
-                          errorMsg = errorBody.message;
-                     } else {
-                          errorMsg = `Error del servidor (${err.status}): ${err.statusText || 'Mensaje desconocido'}. Revise la consola para más detalles.`;
-                     }
+                     errorMsg = (errorBody && errorBody.message) ? errorBody.message : `Error del servidor (${err.status}): ${err.statusText || 'Mensaje desconocido'}.`;
                  } catch (e) {
-                     errorMsg = `Error de comunicación con el servidor (${err.status}). Revise la consola para detalles del error de parseo.`;
+                     errorMsg = `Error de comunicación con el servidor (${err.status}).`;
                  }
             } else if (err instanceof Error) {
                  errorMsg = err.message;
             }
-
             this.notificationService.showNotification(`Error: ${errorMsg}`, 'error');
             return of(null);
         }),
@@ -720,28 +705,33 @@ export class RegistrarMatriculaComponent implements OnInit {
         })
     ).subscribe({
         next: (matriculaCreada: any) => {
-            if (matriculaCreada && matriculaCreada.idmatricula) {
-                const idMatriculaCreada = matriculaCreada.idmatricula;
-                console.log('onSubmit: Matrícula registrada. ID:', idMatriculaCreada);
-                this.notificationService.showNotification('¡Matrícula registrada! Generando comprobantes...', 'success');
 
-                console.log('onSubmit: Navegando a /comprobantes con queryParams:', { idMatricula: idMatriculaCreada, nivel: this.nivel });
-                this.router.navigate(['/comprobantes'], {
-                    queryParams: {
-                        idMatricula: idMatriculaCreada,
-                        nivel: this.nivel
-                     }
-                });
+            if (estadoMatricula === 'COMPLETADO') {
+                 if (matriculaCreada && matriculaCreada.idmatricula) {
+                     const idMatriculaCreada = matriculaCreada.idmatricula;
+                     this.notificationService.showNotification('¡Matrícula registrada! Generando comprobantes...', 'success');
+                     this.router.navigate(['/comprobantes'], {
+                         queryParams: { idMatricula: idMatriculaCreada, nivel: this.nivel }
+                     });
+                 } else {
 
-            } else if (matriculaCreada !== null) {
-                 console.error('onSubmit: Respuesta final de matrícula inesperada:', matriculaCreada);
-                 this.notificationService.showNotification('Matrícula registrada, pero hubo un problema al obtener la confirmación.', 'error');
+                     this.notificationService.showNotification('Matrícula procesada, pero hubo un problema al obtener la confirmación para COMPLETADO.', 'error');
+                 }
+            } else if (estadoMatricula === 'EN PROCESO') {
+
+                this.notificationService.showNotification('Matrícula guardada en proceso.', 'info');
+                this.router.navigate(['/matriculas/', this.nivel?.toLowerCase()]);
             }
-        },
-        error: (err) => {
-             console.error("Error final en la suscripción de onSubmit (ya manejado):", err);
         }
     });
+  }
+
+  onSubmit(): void {
+    this.processMatricula('COMPLETADO');
+  }
+
+  onPauseAndSaveProgress(): void {
+    this.processMatricula('EN PROCESO');
   }
 
    focusFirstInvalidControl(
@@ -785,7 +775,6 @@ export class RegistrarMatriculaComponent implements OnInit {
                        } else if (elementId.startsWith('alumno_tipo')) {
                            elementId = elementId.replace('tipo', 'tiene');
                        }
-
                        break;
                    }
                }
@@ -793,36 +782,11 @@ export class RegistrarMatriculaComponent implements OnInit {
        }
 
        if (controlToFocus && elementId) {
-           console.log("focusFirstInvalidControl: Intentando enfocar:", elementId);
            const element = document.getElementById(elementId) as HTMLElement | null;
            if (element) {
                element.focus({ preventScroll: false });
                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-               console.log("focusFirstInvalidControl: Elemento enfocado y/o desplazado.");
-           } else {
-               console.warn("focusFirstInvalidControl: No se pudo encontrar el elemento HTML:", elementId);
            }
-       } else {
-           console.log("focusFirstInvalidControl: No se encontró control inválido y tocado para enfocar.");
        }
    }
-
-   collectErrors(formGroup: FormGroup): any {
-       const errors: any = {};
-       Object.keys(formGroup.controls).forEach(key => {
-           const control = formGroup.get(key);
-           if (control instanceof FormGroup) {
-               errors[key] = this.collectErrors(control);
-           } else if (control?.errors) {
-               errors[key] = control.errors;
-           }
-       });
-       Object.keys(errors).forEach(key => {
-           if (typeof errors[key] === 'object' && Object.keys(errors[key]).length === 0) {
-               delete errors[key];
-           }
-       });
-       return errors;
-   }
-
 }

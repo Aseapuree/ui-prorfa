@@ -1,10 +1,11 @@
+import { ComprobanteService } from './../../services/comprobante.service';
 import { NotificationService } from './../../../campus/components/shared/notificaciones/notification.service';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ComprobanteService } from '../../services/comprobante.service';
 import { Comprobante } from '../../interfaces/DTOComprobante';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NotificationComponent } from "../../../campus/components/shared/notificaciones/notification.component";
 
 import {
   faArrowLeft,
@@ -39,7 +40,8 @@ const TIPO_DOCUMENTO_NOMBRES_MAP: { [key: string]: string } = {
   imports: [
     CommonModule,
     FontAwesomeModule,
-    GeneralLoadingSpinnerComponent
+    GeneralLoadingSpinnerComponent,
+    NotificationComponent
   ],
   templateUrl: './comprobantes.component.html',
   styleUrls: ['./comprobantes.component.scss']
@@ -85,7 +87,7 @@ export class ComprobanteComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private comprobanteService: ComprobanteService,
+    private ComprobanteService: ComprobanteService,
     private NotificationService: NotificationService
   ) { }
 
@@ -93,9 +95,6 @@ export class ComprobanteComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.idMatricula = params['idMatricula'];
       this.nivel = params['nivel'] || null;
-      console.log('ComprobanteComponent: Received idMatricula from route:', this.idMatricula);
-      console.log('ComprobanteComponent: Received nivel from route:', this.nivel);
-
       if (this.idMatricula) {
         this.loadComprobanteDetails(this.idMatricula);
       } else {
@@ -108,9 +107,8 @@ export class ComprobanteComponent implements OnInit {
   loadComprobanteDetails(idMatricula: string): void {
     this.isLoading = true;
     this.error = null;
-    this.comprobanteService.obtenerComprobantePorIdMatricula(idMatricula).subscribe({
+    this.ComprobanteService.obtenerComprobantePorIdMatricula(idMatricula).subscribe({
       next: (comprobante) => {
-        console.log('ComprobanteComponent: Comprobante details loaded:', comprobante);
         this.comprobante = comprobante;
         this.isLoading = false;
         if (!comprobante) {
@@ -119,7 +117,6 @@ export class ComprobanteComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('ComprobanteComponent: Error loading comprobante details:', err);
         if (err && err.error && err.error.message) {
             this.error = 'Error al cargar los detalles del comprobante: ' + err.error.message;
         } else {
@@ -133,7 +130,6 @@ export class ComprobanteComponent implements OnInit {
 
   openPdf(tipo: 'matricula' | 'pago'): void {
     if (!this.idMatricula) {
-        console.warn('ComprobanteComponent: idMatricula no disponible para abrir PDF.');
         this.NotificationService.showNotification('No se pudo generar el PDF: ID de matrícula no disponible.', 'error');
         return;
     }
@@ -157,21 +153,19 @@ export class ComprobanteComponent implements OnInit {
       montoTotal = this.comprobante?.montototal ? parseFloat(this.comprobante.montototal) : undefined;
     }
 
-    console.log(`ComprobanteComponent: Requesting ${tipo} PDF for matricula ID: ${this.idMatricula} with type UUID: ${tipoComprobanteUuid}`);
 
-    this.comprobanteService.generarPdfDirecto(this.idMatricula, tipoComprobanteUuid, montoTotal).subscribe({
+
+    this.ComprobanteService.generarPdfDirecto(this.idMatricula, tipoComprobanteUuid, montoTotal).subscribe({
       next: (blob: Blob) => {
-        console.log(`ComprobanteComponent: Received ${tipo} PDF Blob of size:`, blob.size);
         const blobUrl = URL.createObjectURL(blob);
         this.createdPdfUrls.push(blobUrl);
 
         const newTab = window.open(blobUrl, '_blank');
 
         if (newTab) {
-           setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+           setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
         } else {
-            console.warn('ComprobanteComponent: Pop-up blocked. Could not open PDF in new tab.');
-            this.NotificationService.showNotification('Error: El navegador bloqueó la apertura del PDF. Por favor, permita pop-ups.', 'error');
+             this.NotificationService.showNotification('Error: El navegador bloqueó la apertura del PDF.', 'error');
         }
 
         if (tipo === 'matricula') {
@@ -182,7 +176,7 @@ export class ComprobanteComponent implements OnInit {
         this.isGeneratingPdf = false;
       },
       error: (err) => {
-        console.error(`ComprobanteComponent: Error generating/fetching ${tipo} PDF:`, err);
+        console.error(`ComprobanteComponent: Error ${tipo} PDF:`, err);
         if (err && err.error && err.error.message) {
             this.error = `Error al generar el comprobante de ${tipo}: ` + err.error.message;
             this.NotificationService.showNotification(`Error al generar el comprobante de ${tipo}: ${err.error.message}`, 'error');
@@ -202,21 +196,21 @@ export class ComprobanteComponent implements OnInit {
   }
 
   finalizar(): void {
-    console.log('ComprobanteComponent: Botón Finalizar clickeado.');
     this.isNavigating = true;
 
-    this.createdPdfUrls.forEach(url => URL.revokeObjectURL(url));
-    this.createdPdfUrls = [];
+    setTimeout(() => {
+      this.createdPdfUrls.forEach(url => URL.revokeObjectURL(url));
+      this.createdPdfUrls = [];
 
-    if (this.nivel) {
-      const targetRoute = `/matriculas/${this.nivel.toLowerCase()}`;
-      console.log('ComprobanteComponent: Navegando a:', targetRoute);
-      this.router.navigate([targetRoute]);
-    } else {
-      console.warn('ComprobanteComponent: Nivel no disponible en finalizar(). Navegando a lista general.');
-      this.NotificationService.showNotification('No se pudo determinar el nivel para navegar.', 'error');
-      this.router.navigate(['/matriculas/listar']);
-    }
+      if (this.nivel) {
+        const targetRoute = `/matriculas/${this.nivel.toLowerCase()}`;
+        this.router.navigate([targetRoute]);
+      } else {
+        this.NotificationService.showNotification('No se pudo determinar el nivel para navegar.', 'error');
+        this.router.navigate(['/matriculas/listar']);
+      }
+      this.isNavigating = false;
+    },2000);
   }
 
   getSpinnerMessage(): string {
@@ -225,7 +219,7 @@ export class ComprobanteComponent implements OnInit {
     } else if (this.isGeneratingPdf) {
       return 'Generando comprobante...';
     } else if (this.isNavigating) {
-      return 'Volviendo a matrículas...';
+      return 'Regresando a vacantes...';
     }
     return 'Cargando...';
   }

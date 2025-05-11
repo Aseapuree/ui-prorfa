@@ -5,6 +5,7 @@ import { MatriculaService } from './../../services/matricula.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faGraduationCap, faChair, faSortNumericDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
+import { NotificationComponent } from "../../../campus/components/shared/notificaciones/notification.component";
 
 interface NivelVacantes {
   nombre: string;
@@ -20,7 +21,8 @@ interface NivelVacantes {
     RouterModule,
     FontAwesomeModule,
     GeneralLoadingSpinnerComponent,
-  ],
+    NotificationComponent
+],
   templateUrl: './matriculas.component.html',
   styleUrls: ['./matriculas.component.scss']
 })
@@ -33,9 +35,7 @@ export class MatriculasComponent implements OnInit {
   faSortNumericDown = faSortNumericDown;
   faCheck = faCheck;
 
-  // Propiedad para el mensaje del spinner
-  loadingMessage: string = 'Cargando vacantes...'; // Mensaje por defecto
-
+  loadingMessage: string = 'Cargando vacantes...';
   constructor(
     private matriculaService: MatriculaService,
     private router: Router
@@ -51,8 +51,8 @@ export class MatriculasComponent implements OnInit {
   }
 
   cargarVacantes(): void {
-    this.cargando = true; // Mostrar spinner al iniciar la carga
-    this.loadingMessage = 'Cargando vacantes...'; // Establecer mensaje de carga
+    this.cargando = true;
+    this.loadingMessage = 'Cargando vacantes...';
     this.matriculaService.vacantesPorNivel(this.selectedNivel).subscribe({
       next: (vacantes) => {
         let grados: number[] = [];
@@ -68,7 +68,7 @@ export class MatriculasComponent implements OnInit {
             vacantes: vacantes ? { ...vacantes } : {}
           }
         ];
-        this.cargando = false; // Ocultar spinner al finalizar
+        this.cargando = false;
       },
       error: (error) => {
         console.error('Error al cargar vacantes:', error);

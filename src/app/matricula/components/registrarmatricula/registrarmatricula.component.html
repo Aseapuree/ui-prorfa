@@ -1,6 +1,6 @@
 <app-general-loading-spinner [visible]="isLoading" [message]="loadingMessage"></app-general-loading-spinner>
 
-<app-general-loading-spinner [visible]="isSubmitting" message="Registrando matrícula..."></app-general-loading-spinner>
+<app-general-loading-spinner [visible]="isSubmitting" message="Procesando matrícula..."></app-general-loading-spinner>
 
 <div class="form-container" [class.blurred]="isSubmitting || isLoading" *ngIf="!isLoading">
   <h2><fa-icon [icon]="faClipboardList"></fa-icon> Formulario de Registro de Matrícula</h2>
@@ -62,7 +62,7 @@
             <span *ngIf="formMatricula.get('apoderado.numeroDocumento')?.hasError('invalidFormat')">
               <ng-container [ngSwitch]="formMatricula.get('apoderado.idtipodoc')?.value">
                 <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 20 dígitos.</span>
+                <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
                 <span *ngSwitchDefault>Formato inválido.</span>
               </ng-container>
             </span>
@@ -114,7 +114,7 @@
                    <span *ngIf="formMatricula.get('apoderado.numeroDocumento')?.hasError('invalidFormat')">
                     <ng-container [ngSwitch]="formMatricula.get('apoderado.idtipodoc')?.value">
                       <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 20 dígitos.</span>
+                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
                       <span *ngSwitchDefault>Formato inválido.</span>
                     </ng-container>
                   </span>
@@ -274,9 +274,11 @@
 
       <div class="form-footer">
         <div class="step-navigation button-container">
-          <button type="button" class="button-back" (click)="regresarABusqueda()">Regresar a Búsqueda</button>
+          <button type="button" class="button-back" (click)="regresarABusqueda()">
+            <fa-icon [icon]="faSearch"></fa-icon> Regresar a Búsqueda
+          </button>
           <button type="button" class="button-next" (click)="validarApoderado()">
-            Siguiente (Alumno)
+            Siguiente (Alumno) <fa-icon [icon]="faPlayCircle" transform="grow-2 right-0.2"></fa-icon>
           </button>
         </div>
       </div>
@@ -369,7 +371,7 @@
                   <span *ngIf="formMatricula.get('alumno.numeroDocumento')?.hasError('invalidFormat')">
                     <ng-container [ngSwitch]="formMatricula.get('alumno.idtipodoc')?.value">
                       <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 20 dígitos.</span>
+                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
                       <span *ngSwitchDefault>Formato inválido.</span>
                     </ng-container>
                   </span>
@@ -496,16 +498,15 @@
             </div>
           </div>
         </div>
-
       </fieldset>
 
       <div class="form-footer">
         <div class="step-navigation button-container">
           <button type="button" class="button-back" (click)="regresarAApoderado()" [disabled]="isSubmitting">
-            Regresar (Apoderado)
+            <fa-icon [icon]="faUsers" transform="grow-2 left-0.2"></fa-icon> Regresar (Apoderado)
           </button>
           <button type="submit" class="button-submit" [disabled]="formMatricula.invalid || seccion === 'SIN VACANTE' || seccion === 'ERROR' || isSubmitting">
-             Registrar Matrícula
+             <fa-icon [icon]="faClipboardList"></fa-icon> Registrar Matrícula
           </button>
         </div>
         <div class="mt-2 text-center">
@@ -516,6 +517,12 @@
       </div>
     </div>
 
+    <div class="form-footer-pause button-container-centered" *ngIf="currentView !== 'search'">
+        <button type="button" class="button-pause" (click)="onPauseAndSaveProgress()" [disabled]="isSubmitting || seccion === 'SIN VACANTE' || seccion === 'ERROR'">
+            <fa-icon [icon]="faPauseCircle"></fa-icon> Pausar Trámite (En Proceso)
+        </button>
+    </div>
 
   </form>
+  <app-notification></app-notification>
 </div>

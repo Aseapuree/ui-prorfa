@@ -40,7 +40,6 @@ export const routes: Routes = [
           { path: 'matriculas/secundaria', component: MatriculasComponent, canActivate: [AuthGuard] },
           { path: 'comprobantes', component: ComprobanteComponent, canActivate: [AuthGuard] },
           { path: 'matriculados', component: MatriculadosComponent, canActivate: [AuthGuard] },
-          //{ path: 'comprobante/:type/:idMatricula', component: ComprobanteComponent, canActivate: [AuthGuard] },
         ],
         canActivate: [AuthGuard]
       }

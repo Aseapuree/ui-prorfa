@@ -301,7 +301,7 @@ button[type="submit"] {
 
 .button-next,
 .button-submit {
-  background-color: #007bff;
+  background-color: #007bff; // Azul primario
 }
 .button-next:hover:not(:disabled),
 .button-submit:hover:not(:disabled) {
@@ -317,7 +317,7 @@ button[type="submit"] {
 
 
 .button-back {
-  background-color: #6c757d;
+  background-color: #6c757d; // Gris secundario
 }
 .button-back:hover:not(:disabled) {
   background-color: #5a6268;
@@ -329,6 +329,22 @@ button[type="submit"] {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
+.button-pause {
+  background-color: #ffc107; // Amarillo para pausa/advertencia
+  color: #212529; // Texto oscuro para contraste con amarillo
+}
+
+.button-pause:hover:not(:disabled) {
+  background-color: #e0a800;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+.button-pause:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+
 button:disabled {
   background-color: #e9ecef;
   color: #adb5bd;
@@ -337,6 +353,21 @@ button:disabled {
   transform: none;
   opacity: 0.6;
 }
+
+.form-footer-pause {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed #ced4da; // Borde discontinuo para diferenciar
+    display: flex;
+    justify-content: center; // Centra el botón
+}
+
+.button-container-centered { // Para el contenedor del botón de pausa
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 
 .observaciones-section {
   margin-top: 2rem;
@@ -516,16 +547,17 @@ button:disabled {
        margin-top: 0.3rem;
        min-height: 1.1em;
    }
-  .form-footer {
+  .form-footer, .form-footer-pause {
       margin-top: 1.5rem;
       padding-top: 1rem;
   }
-  .step-navigation, .button-container {
-      flex-direction: column-reverse;
+  .step-navigation, .button-container, .button-container-centered {
+      flex-direction: column; // Pause button will also stack on mobile
       gap: 1rem;
       align-items: stretch;
   }
-  .form-footer .button-container button {
+  .form-footer .button-container button,
+  .form-footer-pause .button-container-centered button { // Apply to pause button as well
       width: 100%;
       padding: 0.8rem 1.5rem;
       font-size: 1rem;
