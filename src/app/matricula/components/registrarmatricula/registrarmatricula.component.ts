@@ -1,28 +1,39 @@
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn, ReactiveFormsModule, FormControl, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApoderadoService } from './../../services/apoderado.service';
 import { AlumnoService } from './../../services/alumno.service';
 import { MatriculaService } from './../../services/matricula.service';
 import { NotificationService } from './../../../campus/components/shared/notificaciones/notification.service';
-import { Matricula } from '../../interfaces/DTOMatricula';
+import { Matricula, Documento } from '../../interfaces/DTOMatricula';
 import { Apoderado } from '../../interfaces/DTOApoderado';
 import { Alumno } from '../../interfaces/DTOAlumno';
+import { EntidadService } from '../../services/entidad.service';
+import { DocumentoEntidad, Necesarios, Adicionales, Intercambio, Discapacidad } from '../../interfaces/DTOEntidad';
 import {
   faCalendarAlt, faEnvelope, faHome, faIdCard, faPhone, faSearch, faUser,
   faHashtag, faSignature, faAddressCard, faUsers, faSpinner,
   faComment,
   faClipboardList,
   faVenusMars,
-  faToggleOn, faToggleOff, faInfoCircle, faPauseCircle, faPlayCircle
+  faToggleOn, faToggleOff, faInfoCircle, faPauseCircle, faPlayCircle, faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { Observable, of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap, startWith, finalize } from 'rxjs/operators';
+import { map, catchError, switchMap, startWith, finalize, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 import { NotificationComponent } from "../../../campus/components/shared/notificaciones/notification.component";
+
+function noLeadingSpacesValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (typeof control.value === 'string' && control.value.startsWith(' ')) {
+      return { noLeadingSpaces: true };
+    }
+    return null;
+  };
+}
 
 function emailRegexValidator(): ValidatorFn {
   const regex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
@@ -126,9 +137,17 @@ export class RegistrarMatriculaComponent implements OnInit {
   seccion!: string;
   apoderadoEncontrado: Apoderado | null = null;
 
-  currentView: 'search' | 'apoderado' | 'alumno' = 'search';
+  currentView: 'search' | 'apoderado' | 'alumno' | 'documents' = 'search';
   mostrarFormularioApoderado: boolean = false;
   mostrarFormularioAlumno: boolean = false;
+  mostrarSeccionDocumentos: boolean = false;
+
+  entidadDocumentos: DocumentoEntidad | null = null;
+  allPotentialDocuments: string[] = [];
+  necesariosMap: { [key: string]: boolean } = {};
+  intercambioMap: { [key: string]: boolean } = {};
+  discapacidadMap: { [key: string]: boolean } = {};
+
 
   faIdCard = faIdCard;
   faHashtag = faHashtag;
@@ -150,6 +169,7 @@ export class RegistrarMatriculaComponent implements OnInit {
   faInfoCircle = faInfoCircle;
   faPauseCircle = faPauseCircle;
   faPlayCircle = faPlayCircle;
+  faFileAlt = faFileAlt;
 
   soloNumerosPattern = /^[0-9]+$/;
   direccionPattern = /^[A-Za-z0-9À-ÿ\s.,#-]+$/;
@@ -182,6 +202,7 @@ export class RegistrarMatriculaComponent implements OnInit {
     private apoderadoService: ApoderadoService,
     private alumnoService: AlumnoService,
     private matriculaService: MatriculaService,
+    private entidadService: EntidadService,
     private notificationService: NotificationService,
     private cdRef: ChangeDetectorRef
   ) { }
@@ -201,43 +222,117 @@ export class RegistrarMatriculaComponent implements OnInit {
         return;
       }
 
-      if (this.grado) {
-        this.matriculaService.asignarSeccion(this.grado).subscribe({
-           next: (seccionAsignada: string) => {
-            this.seccion = seccionAsignada;
-            if (this.seccion === 'SIN VACANTE') {
-                 this.notificationService.showNotification('No hay vacantes disponibles para este grado y nivel.', 'error');
-                 this.loadingMessage = 'Sin vacantes disponibles.';
-           } else if (this.seccion === 'ERROR') {
-                 this.notificationService.showNotification('Error al obtener la sección asignada.', 'error');
-                 this.loadingMessage = 'Error al obtener sección.';
-           } else {
-                 this.notificationService.showNotification(`Sección asignada: ${this.seccion}`, 'info');
-                 this.loadingMessage = '';
-            }
-            this.isLoading = false;
-            this.cdRef.detectChanges();
-           },
-          error: (err) => {
-            this.seccion = 'ERROR';
-            this.notificationService.showNotification('Error de comunicación al obtener la sección.', 'error');
-            this.loadingMessage = 'Error de comunicación.';
-            this.isLoading = false;
-            this.cdRef.detectChanges();
-           }
-        });
-      } else {
-          this.isLoading = false;
-          this.loadingMessage = 'Error de parámetros.';
-          this.cdRef.detectChanges();
-      }
-    });
+      forkJoin({
+          entityDocs: this.loadEntityDocuments(),
+          assignedSection: this.matriculaService.asignarSeccion(this.grado).pipe(
+               catchError(err => {
+                    console.error('Error asignando sección:', err);
+                    this.notificationService.showNotification('Error al obtener la sección asignada.', 'error');
+                    return of('ERROR');
+               })
+          )
+      }).pipe(
+          finalize(() => {
+              this.isLoading = false;
+              this.cdRef.detectChanges();
+          })
+      ).subscribe({
+          next: ({ entityDocs, assignedSection }) => {
+              this.seccion = assignedSection;
 
-    this.crearFormulario();
-    this.setupConditionalValidators();
-    this.setupDocumentNumberFieldState();
-    this.setupConditionalTextFields();
+              if (this.seccion === 'SIN VACANTE') {
+                  this.notificationService.showNotification('No hay vacantes disponibles para este grado y nivel.', 'error');
+                  this.loadingMessage = 'Sin vacantes disponibles.';
+              } else if (this.seccion === 'ERROR') {
+                  this.loadingMessage = 'Error al obtener sección.';
+              } else {
+                  this.notificationService.showNotification(`Sección asignada: ${this.seccion}`, 'info');
+                  this.loadingMessage = '';
+              }
+              this.crearFormulario();
+              this.setupDocumentNumberFieldState();
+              this.setupConditionalTextFields();
+              this.setupDocumentFormControls();
+          },
+          error: (err) => {
+              console.error('Error durante la inicialización del forkJoin:', err);
+              this.notificationService.showNotification('Error general durante la inicialización.', 'error');
+              this.isLoading = false;
+              this.loadingMessage = 'Error de inicialización.';
+          }
+      });
+    });
   }
+
+  loadEntityDocuments(): Observable<void> {
+      return this.entidadService.obtenerEntidadList().pipe(
+          tap(response => {
+              if (response && response.length > 0 && response[0].documentos) {
+                  this.entidadDocumentos = response[0].documentos;
+                  this.allPotentialDocuments = [];
+                  this.necesariosMap = {};
+                  this.intercambioMap = {};
+                  this.discapacidadMap = {};
+
+
+                  if (this.entidadDocumentos.necesarios) {
+                      Object.values(this.entidadDocumentos.necesarios)
+                            .filter(doc => doc !== undefined && doc !== null)
+                            .forEach(doc => {
+                                const docName = doc as string;
+                                this.allPotentialDocuments.push(docName);
+                                this.necesariosMap[docName] = true;
+                            });
+                  }
+
+                  if (this.entidadDocumentos.adicionales?.intercambio) {
+                       Object.values(this.entidadDocumentos.adicionales.intercambio)
+                             .filter(doc => doc !== undefined && doc !== null)
+                             .forEach(doc => {
+                                 const docName = doc as string;
+                                 if (!this.allPotentialDocuments.includes(docName)) {
+                                     this.allPotentialDocuments.push(docName);
+                                 }
+                                 this.intercambioMap[docName] = true;
+                             });
+                   }
+
+                  if (this.entidadDocumentos.adicionales?.discapacidad) {
+                       Object.values(this.entidadDocumentos.adicionales.discapacidad)
+                             .filter(doc => doc !== undefined && doc !== null)
+                             .forEach(doc => {
+                                  const docName = doc as string;
+                                  if (!this.allPotentialDocuments.includes(docName)) {
+                                      this.allPotentialDocuments.push(docName);
+                                  }
+                                  this.discapacidadMap[docName] = true;
+                             });
+                   }
+
+                  console.log('Todos los documentos potenciales:', this.allPotentialDocuments);
+                  console.log('Mapa de necesarios:', this.necesariosMap);
+                  console.log('Mapa de intercambio:', this.intercambioMap);
+                  console.log('Mapa de discapacidad:', this.discapacidadMap);
+
+              } else {
+                  console.warn('No se encontraron documentos de entidad o estructura inesperada.');
+                  this.notificationService.showNotification('No se pudieron cargar los requisitos de documentos de la entidad.', 'error');
+              }
+          }),
+          map(() => void 0),
+          catchError(err => {
+              console.error('Error cargando documentos de entidad:', err);
+              this.notificationService.showNotification('Error al cargar los requisitos de documentos de la entidad.', 'error');
+              this.entidadDocumentos = null;
+              this.allPotentialDocuments = [];
+              this.necesariosMap = {};
+              this.intercambioMap = {};
+              this.discapacidadMap = {};
+              return of(void 0);
+          })
+      );
+  }
+
 
   crearFormulario(): void {
     this.formMatricula = this.fb.group({
@@ -245,36 +340,69 @@ export class RegistrarMatriculaComponent implements OnInit {
       apoderado: this.fb.group({
         idapoderado: [null],
         idtipodoc: ['', Validators.required],
-        numeroDocumento: [{ value: '', disabled: true }, [Validators.required, Validators.pattern(this.soloNumerosPattern), documentRegexValidator()]],
-        nombre: ['', [Validators.required, soloLetrasValidator()]],
-        apellidoPaterno: ['', [Validators.required, soloLetrasValidator()]],
-        apellidoMaterno: ['', [Validators.required, soloLetrasValidator()]],
-        nacionalidad: ['', [Validators.required, soloLetrasValidator()]],
+        numeroDocumento: [{ value: '', disabled: true }, [Validators.required, Validators.pattern(this.soloNumerosPattern), documentRegexValidator(), noLeadingSpacesValidator()]],
+        nombre: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
+        apellidoPaterno: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
+        apellidoMaterno: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
+        nacionalidad: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
         genero: ['', Validators.required],
-        telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
-        direccion: ['', [Validators.required, Validators.pattern(this.direccionPattern)]],
-        correo: ['', [Validators.required, emailRegexValidator()]],
+        telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/), noLeadingSpacesValidator()]],
+        direccion: ['', [Validators.required, Validators.pattern(this.direccionPattern), noLeadingSpacesValidator()]],
+        correo: ['', [Validators.required, emailRegexValidator(), noLeadingSpacesValidator()]],
         fechaNacimiento: ['', [Validators.required, minAgeValidator(18)]]
       }),
       alumno: this.fb.group({
-        nombre: ['', [Validators.required, soloLetrasValidator()]],
-        apellidoPaterno: ['', [Validators.required, soloLetrasValidator()]],
-        apellidoMaterno: ['', [Validators.required, soloLetrasValidator()]],
-        nacionalidad: ['', [Validators.required, soloLetrasValidator()]],
+        nombre: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
+        apellidoPaterno: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
+        apellidoMaterno: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
+        nacionalidad: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
         genero: ['', Validators.required],
         idtipodoc: ['', Validators.required],
-        numeroDocumento: [{ value: '', disabled: true }, [Validators.required, Validators.pattern(this.soloNumerosPattern), documentRegexValidator()]],
+        numeroDocumento: [{ value: '', disabled: true }, [Validators.required, Validators.pattern(this.soloNumerosPattern), documentRegexValidator(), noLeadingSpacesValidator()]],
         fechaNacimiento: ['', [Validators.required, minAgeValidator(this.getMinAgeForGrade())]],
-        direccion: ['', [Validators.required, Validators.pattern(this.direccionPattern)]],
+        direccion: ['', [Validators.required, Validators.pattern(this.direccionPattern), noLeadingSpacesValidator()]],
         tieneIntercambio: [false],
-        tipoIntercambio: [{ value: '', disabled: true }],
+        tipoIntercambio: [{ value: '', disabled: true }, noLeadingSpacesValidator()],
         tieneDiscapacidad: [false],
-        tipoDiscapacidad: [{ value: '', disabled: true }],
+        tipoDiscapacidad: [{ value: '', disabled: true }, noLeadingSpacesValidator()],
         tieneOtros: [false],
-        tipoOtros: [{ value: '', disabled: true }]
-      })
+        tipoOtros: [{ value: '', disabled: true }, noLeadingSpacesValidator()]
+      }),
+      documentsPresented: this.fb.array([])
     });
   }
+
+  setupDocumentFormControls(): void {
+      const documentsArray = this.formMatricula.get('documentsPresented') as FormArray;
+      while (documentsArray.length !== 0) {
+          documentsArray.removeAt(0);
+      }
+      this.allPotentialDocuments.forEach(() => {
+          documentsArray.push(this.fb.control(false));
+      });
+      console.log('Controles de documentos creados:', documentsArray.controls.length);
+  }
+
+  get documentsPresentedControls(): FormArray {
+      return this.formMatricula.get('documentsPresented') as FormArray;
+  }
+
+  shouldShowDocument(documentName: string): boolean {
+      if (this.necesariosMap[documentName]) {
+          return true;
+      }
+
+      if (this.intercambioMap[documentName] && this.formMatricula.get('alumno.tieneIntercambio')?.value) {
+          return true;
+      }
+
+      if (this.discapacidadMap[documentName] && this.formMatricula.get('alumno.tieneDiscapacidad')?.value) {
+          return true;
+      }
+
+      return false;
+  }
+
 
   setupDocumentNumberFieldState(): void {
       const apoderadoTipoDocControl = this.formMatricula.get('apoderado.idtipodoc');
@@ -331,18 +459,16 @@ export class RegistrarMatriculaComponent implements OnInit {
         tieneControl?.valueChanges.pipe(startWith(tieneControl.value)).subscribe(isChecked => {
             if (isChecked) {
                 textControl?.enable({ emitEvent: false });
-                textControl?.setValidators(Validators.required);
+                textControl?.setValidators([Validators.required, noLeadingSpacesValidator()]);
             } else {
                 textControl?.disable({ emitEvent: false });
                 textControl?.reset('', { emitEvent: false });
                 textControl?.clearValidators();
+                textControl?.setValidators([noLeadingSpacesValidator()]);
             }
             textControl?.updateValueAndValidity({ emitEvent: false });
         });
     });
-  }
-
-  setupConditionalValidators(): void {
   }
 
   getMinAgeForGrade(): number {
@@ -476,6 +602,7 @@ export class RegistrarMatriculaComponent implements OnInit {
         this.formMatricula.get('relacionEstudiante')?.markAsUntouched();
         this.mostrarFormularioApoderado = true;
         this.mostrarFormularioAlumno = false;
+        this.mostrarSeccionDocumentos = false;
         this.currentView = 'apoderado';
 
         if (err.status === 404) {
@@ -499,28 +626,55 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     if (apoderadoGroup?.valid && relacionControl?.valid) {
       this.currentView = 'alumno';
+      this.mostrarFormularioApoderado = true;
       this.mostrarFormularioAlumno = true;
+      this.mostrarSeccionDocumentos = false;
       this.notificationService.showNotification('Datos del apoderado correctos. Ingrese datos del alumno.', 'info');
       setTimeout(() => document.getElementById('alumno-fieldset')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
       setTimeout(() => this.focusFirstInvalidControl('alumno'), 100);
     } else {
       this.mostrarFormularioAlumno = false;
+      this.mostrarSeccionDocumentos = false;
       setTimeout(() => {
          this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante');
       }, 50);
     }
   }
 
+  validarAlumno(): void {
+      const alumnoGroup = this.formMatricula.get('alumno');
+      alumnoGroup?.markAllAsTouched();
+      alumnoGroup?.updateValueAndValidity();
+
+      if (alumnoGroup?.valid) {
+          this.currentView = 'documents';
+          this.mostrarSeccionDocumentos = true;
+          this.notificationService.showNotification('Datos del alumno correctos. Seleccione los documentos presentados.', 'info');
+          setTimeout(() => document.getElementById('documents-fieldset')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      } else {
+          this.mostrarSeccionDocumentos = false;
+          setTimeout(() => this.focusFirstInvalidControl('alumno'), 50);
+      }
+  }
+
   regresarAApoderado(): void {
     this.currentView = 'apoderado';
     this.mostrarFormularioAlumno = false;
+    this.mostrarSeccionDocumentos = false;
     setTimeout(() => document.querySelector('.apoderado-form legend')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  regresarAAlumno(): void {
+      this.currentView = 'alumno';
+      this.mostrarSeccionDocumentos = false;
+      setTimeout(() => document.getElementById('alumno-fieldset')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }
 
   regresarABusqueda(): void {
       this.currentView = 'search';
       this.mostrarFormularioApoderado = false;
       this.mostrarFormularioAlumno = false;
+      this.mostrarSeccionDocumentos = false;
       this.apoderadoEncontrado = null;
 
       this.formMatricula.get('apoderado.idtipodoc')?.reset('', { emitEvent: false });
@@ -551,17 +705,53 @@ export class RegistrarMatriculaComponent implements OnInit {
     if (estadoMatricula === 'COMPLETADO') {
         this.formMatricula.markAllAsTouched();
         this.formMatricula.updateValueAndValidity();
+
         if (this.formMatricula.invalid) {
-            if (this.formMatricula.get('alumno')?.invalid) {
+            if (this.formMatricula.get('apoderado')?.invalid || this.formMatricula.get('relacionEstudiante')?.invalid) {
+                 this.currentView = 'apoderado';
+                 this.mostrarFormularioApoderado = true;
+                 this.mostrarFormularioAlumno = false;
+                 this.mostrarSeccionDocumentos = false;
+                 setTimeout(() => this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante'), 50);
+            } else if (this.formMatricula.get('alumno')?.invalid) {
                 this.currentView = 'alumno';
+                this.mostrarFormularioApoderado = true;
+                this.mostrarFormularioAlumno = true;
+                this.mostrarSeccionDocumentos = false;
                 setTimeout(() => this.focusFirstInvalidControl('alumno'), 50);
-            } else if (this.formMatricula.get('apoderado')?.invalid || this.formMatricula.get('relacionEstudiante')?.invalid) {
-                this.currentView = 'apoderado';
-                setTimeout(() => this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante'), 50);
+            } else if (this.formMatricula.get('documentsPresented')?.invalid) {
+                 this.currentView = 'documents';
+                 this.mostrarFormularioApoderado = true;
+                 this.mostrarFormularioAlumno = true;
+                 this.mostrarSeccionDocumentos = true;
             }
             this.notificationService.showNotification('Formulario inválido. Revise los campos marcados.', 'error');
             return;
         }
+    } else {
+         const apoderadoGroup = this.formMatricula.get('apoderado');
+         const alumnoGroup = this.formMatricula.get('alumno');
+         const relacionControl = this.formMatricula.get('relacionEstudiante');
+
+         apoderadoGroup?.markAllAsTouched();
+         alumnoGroup?.markAllAsTouched();
+         relacionControl?.markAsTouched();
+         this.documentsPresentedControls.markAllAsTouched();
+
+         const formData = this.formMatricula.getRawValue();
+         const hasApoderadoData = Object.values(formData.apoderado).some(val => val !== null && val !== '' && val !== undefined);
+         const hasAlumnoData = Object.values(formData.alumno).some(val => val !== null && val !== '' && val !== undefined && typeof val !== 'boolean');
+         const hasRelacionData = formData.relacionEstudiante !== null && formData.relacionEstudiante !== '';
+         const hasDocumentsData = formData.documentsPresented.some((presented: boolean) => presented);
+         const hasAdditionalTextFieldData = (formData.alumno.tieneIntercambio && formData.alumno.tipoIntercambio) ||
+                                       (formData.alumno.tieneDiscapacidad && formData.alumno.tipoDiscapacidad) ||
+                                       (formData.alumno.tieneOtros && formData.alumno.tipoOtros);
+
+
+         if (!hasApoderadoData && !hasAlumnoData && !hasRelacionData && !hasDocumentsData && !hasAdditionalTextFieldData) {
+             this.notificationService.showNotification('No hay suficientes datos ingresados para guardar el trámite en proceso.', 'info');
+             return;
+         }
     }
 
 
@@ -600,6 +790,16 @@ export class RegistrarMatriculaComponent implements OnInit {
         tipoDiscapacidad: formData.alumno.tieneDiscapacidad ? (formData.alumno.tipoDiscapacidad || null) : null,
         tipoOtros: formData.alumno.tieneOtros ? (formData.alumno.tipoOtros || null) : null
     };
+
+    const presentedDocumentsList: Documento[] = [];
+
+    formData.documentsPresented.forEach((isChecked: boolean, index: number) => {
+        const documentName = this.allPotentialDocuments[index];
+        if (isChecked && this.shouldShowDocument(documentName)) {
+            presentedDocumentsList.push({ documento: documentName });
+        }
+    });
+
 
     let apoderadoObservable: Observable<Apoderado>;
 
@@ -655,8 +855,17 @@ export class RegistrarMatriculaComponent implements OnInit {
             if (estadoMatricula === 'COMPLETADO' && (!idApoderado || !idAlumno)) {
                 throw new Error('Faltan IDs de apoderado o alumno para completar la matrícula.');
             }
-             if (estadoMatricula === 'EN PROCESO' && !idApoderado && !idAlumno && !formData.relacionEstudiante && !this.nivel && !this.grado && !this.seccion) {
-                this.notificationService.showNotification('No hay suficientes datos para pausar el trámite.', 'info');
+             const formDataCheck = this.formMatricula.getRawValue();
+             const hasApoderadoDataCheck = Object.values(formDataCheck.apoderado).some(val => val !== null && val !== '' && val !== undefined);
+             const hasAlumnoDataCheck = Object.values(formDataCheck.alumno).some(val => val !== null && val !== '' && val !== undefined && typeof val !== 'boolean');
+             const hasRelacionDataCheck = formDataCheck.relacionEstudiante !== null && formDataCheck.relacionEstudiante !== '';
+             const hasDocumentsDataCheck = formDataCheck.documentsPresented.some((presented: boolean) => presented);
+             const hasAdditionalTextFieldDataCheck = (formDataCheck.alumno.tieneIntercambio && formDataCheck.alumno.tipoIntercambio) ||
+                                                (formDataCheck.alumno.tieneDiscapacidad && formDataCheck.alumno.tipoDiscapacidad) ||
+                                                (formDataCheck.alumno.tieneOtros && formDataCheck.alumno.tipoOtros);
+
+
+             if (estadoMatricula === 'EN PROCESO' && !idApoderado && !idAlumno && !hasRelacionDataCheck && !hasDocumentsDataCheck && !hasAdditionalTextFieldDataCheck) {
                 return of(null);
             }
 
@@ -669,20 +878,18 @@ export class RegistrarMatriculaComponent implements OnInit {
                 grado: this.grado,
                 seccion: this.seccion,
                 relacionEstudiante: formData.relacionEstudiante || null,
-                estadoMatricula: estadoMatricula
+                estadoMatricula: estadoMatricula,
+                documentos: presentedDocumentsList.length > 0 ? presentedDocumentsList : null
             };
             return this.matriculaService.agregarMatricula(matriculaRequest).pipe(
-     map((matriculaDesdeServicio: Matricula) => {
-         if (matriculaDesdeServicio && matriculaDesdeServicio.idmatricula) {
-             return matriculaDesdeServicio;
-         } else {
-             if (estadoMatricula === 'COMPLETADO') {
-                  throw new Error('Respuesta inesperada del servicio de matrícula (falta ID en la matrícula devuelta).');
-             }
-             throw new Error('Respuesta inesperada del servicio de matrícula (objeto matrícula inválido o sin ID).');
-         }
-     })
-);
+                 map((matriculaResp: any) => {
+                     if (estadoMatricula === 'COMPLETADO' && (!matriculaResp || !matriculaResp.idmatricula)) {
+                          console.error('Respuesta exitosa del backend, pero falta idmatricula para COMPLETADO:', matriculaResp);
+                          throw new Error('Respuesta inesperada del servidor al registrar matrícula (falta ID).');
+                     }
+                     return matriculaResp;
+                 })
+            );
         }),
         catchError(err => {
             let errorMsg = 'Error desconocido durante el registro.';
@@ -696,6 +903,7 @@ export class RegistrarMatriculaComponent implements OnInit {
             } else if (err instanceof Error) {
                  errorMsg = err.message;
             }
+            console.error('Error capturado en el observable pipe:', err);
             this.notificationService.showNotification(`Error: ${errorMsg}`, 'error');
             return of(null);
         }),
@@ -705,22 +913,36 @@ export class RegistrarMatriculaComponent implements OnInit {
         })
     ).subscribe({
         next: (matriculaCreada: any) => {
+            try {
+                console.log('Respuesta final procesada antes de la redirección:', matriculaCreada);
 
-            if (estadoMatricula === 'COMPLETADO') {
-                 if (matriculaCreada && matriculaCreada.idmatricula) {
-                     const idMatriculaCreada = matriculaCreada.idmatricula;
-                     this.notificationService.showNotification('¡Matrícula registrada! Generando comprobantes...', 'success');
-                     this.router.navigate(['/comprobantes'], {
-                         queryParams: { idMatricula: idMatriculaCreada, nivel: this.nivel }
-                     });
-                 } else {
+                if (matriculaCreada === null) {
+                     console.log('matriculaCreada es null, no se redirige.');
+                     return;
+                }
 
-                     this.notificationService.showNotification('Matrícula procesada, pero hubo un problema al obtener la confirmación para COMPLETADO.', 'error');
-                 }
-            } else if (estadoMatricula === 'EN PROCESO') {
-
-                this.notificationService.showNotification('Matrícula guardada en proceso.', 'info');
-                this.router.navigate(['/matriculas/', this.nivel?.toLowerCase()]);
+                if (estadoMatricula === 'COMPLETADO') {
+                     console.log('Estado de matrícula es COMPLETADO.');
+                     if (matriculaCreada && matriculaCreada.idmatricula) {
+                         console.log('Matrícula creada con ID:', matriculaCreada.idmatricula);
+                         const idMatriculaCreada = matriculaCreada.idmatricula;
+                         this.notificationService.showNotification('¡Matrícula registrada! Generando comprobantes...', 'success');
+                         console.log('Intentando navegar a /comprobantes con ID:', idMatriculaCreada, 'y nivel:', this.nivel);
+                         this.router.navigate(['/comprobantes'], {
+                             queryParams: { idMatricula: idMatriculaCreada, nivel: this.nivel }
+                         });
+                     } else {
+                         console.warn('Matrícula procesada, pero falta idmatricula en la respuesta para COMPLETADO (fallback check).', matriculaCreada);
+                         this.notificationService.showNotification('Matrícula procesada, pero hubo un problema al obtener la confirmación para COMPLETADO.', 'error');
+                     }
+                } else if (estadoMatricula === 'EN PROCESO') {
+                    console.log('Estado de matrícula es EN PROCESO. Navegando a lista de matrículas.');
+                    this.notificationService.showNotification('Trámite de matrícula guardado en proceso.', 'info');
+                    this.router.navigate(['/matriculas/', this.nivel?.toLowerCase()]);
+                }
+            } catch (e) {
+                console.error('Error inesperado dentro del bloque next del subscribe:', e);
+                this.notificationService.showNotification('Ocurrió un error inesperado después de registrar la matrícula.', 'error');
             }
         }
     });

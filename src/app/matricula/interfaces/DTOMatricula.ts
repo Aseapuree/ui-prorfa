@@ -5,8 +5,12 @@ export class Matricula {
   idalumno?: string;
   grado?: number | null;
   nivel?: string | null;
-  documentos?: Record<string, unknown> | null;
+  documentos?: Documento[] | null;
   estadoMatricula?: string | null;
   seccion?: string | null;
   relacionEstudiante?: string | null;
+}
+
+export interface Documento {
+    documento: string;
 }

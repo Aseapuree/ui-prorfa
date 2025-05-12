@@ -163,7 +163,7 @@ export class ComprobanteComponent implements OnInit {
         const newTab = window.open(blobUrl, '_blank');
 
         if (newTab) {
-           setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+           setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
         } else {
              this.NotificationService.showNotification('Error: El navegador bloqueó la apertura del PDF.', 'error');
         }
@@ -210,7 +210,7 @@ export class ComprobanteComponent implements OnInit {
         this.router.navigate(['/matriculas/listar']);
       }
       this.isNavigating = false;
-    },2000);
+    },1000);
   }
 
   getSpinnerMessage(): string {
