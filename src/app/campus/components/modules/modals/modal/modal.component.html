@@ -7,22 +7,58 @@
       <div class="row">
         <mat-form-field class="w-full" appearance="outline">
           <mat-label>Nombre</mat-label>
-          <input matInput type="text" formControlName="nombre" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
-          <mat-error *ngIf="contactForm.get('nombre')?.hasError('required') && !isReadOnly">Nombre es requerido</mat-error>
+          <input
+            matInput
+            type="text"
+            formControlName="nombre"
+            [readonly]="isReadOnly"
+            [ngClass]="{'readonly-field': isReadOnly}"
+            (input)="onInputChange($event, 'nombre')"
+          >
+          <mat-error *ngIf="contactForm.get('nombre')?.hasError('required') && !isReadOnly">
+            Nombre es requerido
+          </mat-error>
+          <mat-error *ngIf="contactForm.get('nombre')?.hasError('invalidFormat') && !isReadOnly">
+            Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
+          </mat-error>
         </mat-form-field>
       </div>
       <div class="row">
         <mat-form-field class="w-full" appearance="outline">
           <mat-label>Abreviatura</mat-label>
-          <input matInput type="text" formControlName="abreviatura" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
-          <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('required') && !isReadOnly">Abreviatura es requerida</mat-error>
+          <input
+            matInput
+            type="text"
+            formControlName="abreviatura"
+            [readonly]="isReadOnly"
+            [ngClass]="{'readonly-field': isReadOnly}"
+            (input)="onInputChange($event, 'abreviatura')"
+          >
+          <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('required') && !isReadOnly">
+            Abreviatura es requerida
+          </mat-error>
+          <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('invalidFormat') && !isReadOnly">
+            Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
+          </mat-error>
         </mat-form-field>
       </div>
       <div class="row">
         <mat-form-field class="w-full" appearance="outline">
           <mat-label>Descripción</mat-label>
-          <input matInput type="text" formControlName="descripcion" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
-          <mat-error *ngIf="contactForm.get('descripcion')?.hasError('required') && !isReadOnly">Descripción es requerida</mat-error>
+          <input
+            matInput
+            type="text"
+            formControlName="descripcion"
+            [readonly]="isReadOnly"
+            [ngClass]="{'readonly-field': isReadOnly}"
+            (input)="onInputChange($event, 'descripcion')"
+          >
+          <mat-error *ngIf="contactForm.get('descripcion')?.hasError('required') && !isReadOnly">
+            Descripción es requerida
+          </mat-error>
+          <mat-error *ngIf="contactForm.get('descripcion')?.hasError('invalidFormat') && !isReadOnly">
+            Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
+          </mat-error>
         </mat-form-field>
       </div>
       <!-- Competencias -->
@@ -32,8 +68,20 @@
           <div *ngFor="let competencia of competencias.controls; let i=index" class="flex items-center mb-2" [formGroupName]="i">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Competencia {{i + 1}}</mat-label>
-              <input matInput type="text" formControlName="nombre" [readonly]="isReadOnly" [ngClass]="{'readonly-field': isReadOnly}">
-              <mat-error *ngIf="competencias.controls[i].get('nombre')?.hasError('required') && !isReadOnly">Competencia es requerida</mat-error>
+              <input
+                matInput
+                type="text"
+                formControlName="nombre"
+                [readonly]="isReadOnly"
+                [ngClass]="{'readonly-field': isReadOnly}"
+                (input)="onInputChange($event, 'competencias', i)"
+              >
+              <mat-error *ngIf="competencias.controls[i].get('nombre')?.hasError('required') && !isReadOnly">
+                Competencia es requerida
+              </mat-error>
+              <mat-error *ngIf="competencias.controls[i].get('nombre')?.hasError('invalidFormat') && !isReadOnly">
+                Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
+              </mat-error>
             </mat-form-field>
             <button
               *ngIf="!isReadOnly"

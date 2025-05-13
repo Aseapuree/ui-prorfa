@@ -12,12 +12,5 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrl: './modal-competencias.component.scss'
 })
 export class ModalCompetenciasComponent {
-constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { competencias: Competencia[], cursoNombre: string },
-    private dialogRef: MatDialogRef<ModalCompetenciasComponent>
-  ) {}
-
-  closeModal(): void {
-    this.dialogRef.close();
-  }
+constructor(@Inject(MAT_DIALOG_DATA) public data: { competencias: Competencia[]; isReadOnly: boolean }) {}
 }
