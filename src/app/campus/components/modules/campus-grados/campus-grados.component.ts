@@ -6,15 +6,13 @@ import { lastValueFrom } from 'rxjs';
 import { ProfesorCursoService } from '../../../services/profesor-curso.service';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { CommonModule } from '@angular/common';
-import { UserData, ValidateService } from '../../../../services/validateAuth.service';
-import { AfterViewInit, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { GeneralLoadingSpinnerComponent } from '../../../../general/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-campus-grados',
   standalone: true,
-  imports: [RouterModule, CardComponent, NgxPaginationModule, CommonModule,PaginationComponent,GeneralLoadingSpinnerComponent],
+  imports: [RouterModule, CardComponent, NgxPaginationModule, CommonModule, PaginationComponent, GeneralLoadingSpinnerComponent],
   templateUrl: './campus-grados.component.html',
   styleUrl: './campus-grados.component.scss',
 })
@@ -70,14 +68,16 @@ export class CampusGradosComponent implements OnInit {
           this.profesorNombre = `${usuario.nombre || ''} ${usuario.apellidopaterno || ''} ${usuario.apellidomaterno || ''}`.trim() || 'Profesor';
         }
         console.log('Nombre del profesor:', this.profesorNombre);
-  
-        this.grados = [...new Set(this.profesorcursos
-          .filter(curso => curso.grado && curso.nivel?.toLowerCase() === this.nivel.toLowerCase())
-          .map(curso => curso.grado + '°'))].sort((a, b) => parseInt(a) - parseInt(b));
+
+        if (this.nivel) {
+          this.grados = [...new Set(this.profesorcursos
+            .filter(curso => curso.grado && curso.nivel?.toLowerCase() === this.nivel.toLowerCase())
+            .map(curso => curso.grado + '°'))].sort((a, b) => parseInt(a) - parseInt(b));
+        }
         console.log('Grados filtrados:', this.grados);
   
         this.isDataLoaded = true;
-  
+
         const fromBreadcrumb = this.route.snapshot.queryParams['fromBreadcrumb'] === 'true';
         console.log('fromBreadcrumb:', fromBreadcrumb, 'storedGrado:', storedGrado, 'grados:', this.grados);
         if (fromBreadcrumb && storedGrado && this.grados.includes(storedGrado)) {
@@ -128,23 +128,29 @@ export class CampusGradosComponent implements OnInit {
   }
 
   seleccionarCurso(curso: ProfesorCurso): void {
-    const grado = curso.grado ? curso.grado + '°' : ''; // Asegurar formato con °
+    const grado = curso.grado ? curso.grado + '°' : '';
     const seccion = curso.seccion ?? 'Sin sección';
     const nivel = curso.nivel ?? this.nivel;
     const idCurso = curso.curso?.idCurso ?? '';
     const idProfesorCurso = curso.idProfesorCurso ?? '';
+    const nombreCurso = curso.curso?.nombre ?? 'Curso sin nombre';
+    const idProfesor = localStorage.getItem('usuarioId') || ''; // Obtener usuarioId como idProfesor
 
-    if (idCurso && idProfesorCurso && grado && seccion && nivel) {
-      console.log('Guardando en localStorage:', { grado, seccion, nivel, idCurso, idProfesorCurso });
-      localStorage.setItem('grado', grado); // Guardar con °
+    if (idCurso && idProfesorCurso && grado && seccion && nivel && nombreCurso && idProfesor) {
+      console.log('Guardando en localStorage:', { grado, seccion, nivel, idCurso, idProfesorCurso, nombreCurso, idProfesor });
+      localStorage.setItem('grado', grado);
       localStorage.setItem('seccion', seccion);
       localStorage.setItem('nivel', nivel);
       localStorage.setItem('idCurso', idCurso);
       localStorage.setItem('idProfesorCurso', idProfesorCurso);
-
-      this.router.navigate(['/sesiones/profesor', idProfesorCurso]);
+      localStorage.setItem('nombreCurso', nombreCurso);
+      localStorage.setItem('idProfesor', idProfesor); // Guardar idProfesor
+      // Navegar a campus-vista con los datos como query params
+      this.router.navigate(['/campus-vista'], {
+        queryParams: { idProfesorCurso, grado, seccion, nivel }
+      });
     } else {
-      console.error('Datos incompletos para el curso:', { idCurso, idProfesorCurso, grado, seccion, nivel });
+      console.error('Datos incompletos para el curso:', { idCurso, idProfesorCurso, grado, seccion, nivel, idProfesor });
     }
   }
 }

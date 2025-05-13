@@ -1,35 +1,44 @@
-.ce {
+/* Estilo base del menú */
+nav {
   background-color: var(--primary-dark);
-  transition: width 0.3s ease-in-out;
+  transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
-// 🔹 Menú retraído
+/* Menú retraído */
 .closed {
   width: 60px;
-  overflow: hidden;
-  transition: width 0.3s ease-in-out;
+  transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
 
   ul {
     li {
-      .menu-btn, .exit-btn {
+      .menu-btn,
+      .exit-btn {
         justify-content: center;
+        padding: 10px;
       }
 
       .menu-btn span,
       .exit-btn span,
       .submenu span {
-        display: none; // Oculta el texto de los botones
+        display: none;
+      }
+
+      .submenu {
+        display: none;
       }
     }
   }
 }
 
-// 🔹 Ajuste para que el contenido se expanda cuando el menú está cerrado
+/* Ajuste para el contenido principal */
 .closed + .content {
   margin-left: 60px;
   transition: margin-left 0.3s ease-in-out;
 }
 
+/* Botón de toggle */
 .toggle-menu {
   background: none;
   border: none;
@@ -37,27 +46,37 @@
   font-size: 1.5rem;
   cursor: pointer;
   align-self: flex-end;
+  padding: 5px;
+  transition: transform 0.3s;
 }
 
-// 🔹 Botones principales del menú
-.menu-btn, .exit-btn {
+.toggle-menu:hover {
+  transform: rotate(90deg);
+}
+
+/* Botones principales del menú */
+.menu-btn,
+.exit-btn {
   width: 100%;
   background-color: var(--secondary-dark);
   color: var(--text-color);
-  padding: 12px;
+  padding: 12px 15px;
   font-weight: bold;
   text-align: left;
-  border-radius: 5px;
+  border-radius: 8px;
   transition: background 0.3s, transform 0.2s;
   border: 1px solid var(--border-color);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  position: relative;
 }
 
-.menu-btn:hover, .exit-btn:hover {
+.menu-btn:hover,
+.exit-btn:hover {
   background-color: var(--primary-hover);
   transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .exit-btn {
@@ -68,30 +87,124 @@
   background-color: #d62828;
 }
 
-// 🔹 Icono de submenú dentro del botón
+/* Icono de submenú */
 .submenu-icon {
   font-size: 1.2rem;
   color: white;
+  transition: transform 0.3s;
 }
 
-// 🔹 Submenús desplegables
+.submenu-icon:hover {
+  transform: scale(1.2);
+}
+
+/* Submenús desplegables */
 .submenu {
   margin-left: 10px;
   padding-left: 10px;
   border-left: 2px solid var(--border-color);
   transition: max-height 0.3s ease-in-out;
   max-height: 500px;
+  overflow: hidden;
 }
 
 .submenu-btn {
   width: 100%;
   text-align: left;
-  padding: 8px;
+  padding: 8px 15px;
   background: var(--secondary-dark);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--text-color);
   transition: background 0.3s, transform 0.2s;
   border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+
+  &:hover {
+    background: var(--primary-hover);
+    transform: scale(1.03);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Tooltip personalizado */
+.relative {
+  position: relative;
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #1a2a44, #0d1b2a);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 1rem;
+  white-space: nowrap;
+  z-index: 1000;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.relative:hover .tooltip {
+  display: flex;
+  opacity: 1;
+}
+
+/* Panel de submenús como tooltip */
+.submenu-tooltip {
+  display: none;
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #1a2a44, #0d1b2a);
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.submenu-tooltip.active {
+  display: block;
+  opacity: 1;
+}
+
+.submenu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.submenu-item {
+  margin-bottom: 5px;
+}
+
+.submenu-item:last-child {
+  margin-bottom: 0;
+}
+
+.submenu-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--secondary-dark);
+  border-radius: 6px;
+  color: var(--text-color);
+  transition: background 0.3s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
 
   &:hover {
@@ -100,15 +213,15 @@
   }
 }
 
-// 🔹 Clases de colores para los iconos
-.text-green { color: #4CAF50; }  // Verde
-.text-yellow { color: #FFD700; } // Dorado
-.text-blue { color: #00BFFF; }   // Azul claro
-.text-lightgreen { color: #32CD32; } // Verde claro
-.text-orange { color: #FF4500; } // Naranja
-.text-red { color: #DC143C; }    // Rojo oscuro
-.text-purple { color: #8A2BE2; } // Púrpura
-.text-pink { color: #FF69B4; }   // Rosa fuerte
-.text-darkred { color: #B22222; }// Rojo ladrillo
-.text-darkgreen { color: #008000; } // Verde oscuro
-.text-steelblue { color: #4682B4; } // Azul acero
+/* Clases de colores para los iconos (sin cambios) */
+.text-green { color: #4CAF50; }
+.text-yellow { color: #FFD700; }
+.text-blue { color: #00BFFF; }
+.text-lightgreen { color: #32CD32; }
+.text-orange { color: #FF4500; }
+.text-red { color: #DC143C; }
+.text-purple { color: #8A2BE2; }
+.text-pink { color: #FF69B4; }
+.text-darkred { color: #B22222; }
+.text-darkgreen { color: #008000; }
+.text-steelblue { color: #4682B4; }
