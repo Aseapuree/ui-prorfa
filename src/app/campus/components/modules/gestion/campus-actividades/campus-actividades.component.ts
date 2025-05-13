@@ -654,40 +654,42 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
   }
 
   openAddModal(tipo: TipoActividad): void {
-    if (this.rolUsuario !== 'Profesor' || tipo === 'asistencias') return;
-    const dialogRef = this.dialog.open(ModalActividadComponent, {
-      width: '500px',
-      data: {
-        tipo: tipo,
-        sesionId: this.idSesion
-      }
-    });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.obtenerActividades();
-        this.notificationService.showNotification('Actividad agregada con éxito', 'success');
-      }
-    });
-  }
+  if (this.rolUsuario !== 'Profesor' || tipo === 'asistencias') return;
+  const dialogRef = this.dialog.open(ModalActividadComponent, {
+    width: '500px',
+    data: {
+      tipo: tipo,
+      sesionId: this.idSesion,
+      idCurso: this.idCurso // Pasar idCurso
+    }
+  });
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      this.obtenerActividades();
+      this.notificationService.showNotification('Actividad agregada con éxito', 'success');
+    }
+  });
+}
 
   openEditModal(actividad: ActividadWithPresencial, event: Event): void {
-    if (this.rolUsuario !== 'Profesor') return;
-    event.stopPropagation();
-    const dialogRef = this.dialog.open(ModalActividadComponent, {
-      width: '500px',
-      data: {
-        tipo: this.actividadSeleccionada,
-        sesionId: this.idSesion,
-        actividad: actividad
-      }
-    });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.obtenerActividades();
-        this.notificationService.showNotification('Actividad editada con éxito', 'success');
-      }
-    });
-  }
+  if (this.rolUsuario !== 'Profesor') return;
+  event.stopPropagation();
+  const dialogRef = this.dialog.open(ModalActividadComponent, {
+    width: '500px',
+    data: {
+      tipo: this.actividadSeleccionada,
+      sesionId: this.idSesion,
+      actividad: actividad,
+      idCurso: this.idCurso // Pasar idCurso
+    }
+  });
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      this.obtenerActividades();
+      this.notificationService.showNotification('Actividad editada con éxito', 'success');
+    }
+  });
+}
 
   openDeleteDialog(actividad: ActividadWithPresencial, event: Event): void {
     if (this.rolUsuario !== 'Profesor' || !actividad.idActividad) return;

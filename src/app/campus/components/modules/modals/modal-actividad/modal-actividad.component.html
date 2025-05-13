@@ -82,6 +82,19 @@
     </mat-form-field>
   </div>
 
+  <!-- Campo de competencia (solo para actividades) -->
+    <div *ngIf="tipoContenido === 'actividades'">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label class="text-gray-400 dark:text-gray-400">Competencia</mat-label>
+        <mat-select formControlName="competencia" placeholder="Seleccione una competencia">
+  <mat-option *ngFor="let competencia of competencias" [value]="competencia.nombre">
+    {{ competencia.nombre }}
+  </mat-option>
+</mat-select>
+        <mat-error *ngIf="formulario.get('competencia')?.hasError('required')">La competencia es obligatoria</mat-error>
+      </mat-form-field>
+    </div>
+
 
     <!-- Campo de archivo personalizado -->
 <div class="w-full">

@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { Curso } from '../interface/curso';
+import { Competencia, Curso } from '../interface/curso';
 import { response } from 'express';
 import { DTOResponse } from '../interface/DTOResponse';
 
@@ -81,4 +81,17 @@ export class CourseService {
       .pipe(map(response => response.data));
   }
   
+
+  // Nuevo método para obtener competencias de un curso
+  obtenerCompetenciasPorCurso(idCurso: string): Observable<Competencia[]> {
+    return this.clienteHttp
+      .get<{ data: Competencia[] }>(`${this.urlBase}/${idCurso}/competencias`, { withCredentials: true })
+      .pipe(
+        map(response => response.data),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error al obtener competencias:', error);
+          return throwError(() => new Error(error.message || 'Error al obtener competencias'));
+        })
+      );
+  }
 }
