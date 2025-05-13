@@ -1,6 +1,8 @@
-<app-general-loading-spinner [visible]="isSubmitting" message="Registrando matrícula..."></app-general-loading-spinner>
+<app-general-loading-spinner [visible]="isLoading" [message]="loadingMessage"></app-general-loading-spinner>
 
-<div class="form-container" [class.blurred]="isSubmitting">
+<app-general-loading-spinner [visible]="isSubmitting" message="Procesando matrícula..."></app-general-loading-spinner>
+
+<div class="form-container" [class.blurred]="isSubmitting || isLoading" *ngIf="!isLoading">
   <h2><fa-icon [icon]="faClipboardList"></fa-icon> Formulario de Registro de Matrícula</h2>
 
   <div class="info-container">
@@ -27,7 +29,7 @@
           <span><fa-icon [icon]="faIdCard"></fa-icon></span>
           <select id="apoderado_idtipodoc_search" formControlName="idtipodoc" name="idtipodoc_search" [attr.aria-describedby]="'tipodoc-search-error'">
             <option value="" disabled selected>Selecciona una opción</option>
-            <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre }}</option>
+            <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre | uppercase }}</option>
           </select>
         </div>
         <div id="tipodoc-search-error" class="error" *ngIf="formMatricula.get('apoderado.idtipodoc')?.touched && formMatricula.get('apoderado.idtipodoc')?.hasError('required')">
@@ -60,10 +62,11 @@
             <span *ngIf="formMatricula.get('apoderado.numeroDocumento')?.hasError('invalidFormat')">
               <ng-container [ngSwitch]="formMatricula.get('apoderado.idtipodoc')?.value">
                 <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 20 dígitos.</span>
+                <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
                 <span *ngSwitchDefault>Formato inválido.</span>
               </ng-container>
             </span>
+             <span *ngIf="formMatricula.get('apoderado.numeroDocumento')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
           </ng-container>
         </div>
       </div>
@@ -81,7 +84,7 @@
                 <span><fa-icon [icon]="faIdCard"></fa-icon></span>
                 <select id="apoderado_idtipodoc_confirm" formControlName="idtipodoc" [attr.disabled]="apoderadoEncontrado ? true : null" [class.input-disabled]="apoderadoEncontrado">
                   <option value="" disabled selected>Selecciona una opción</option>
-                  <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre }}</option>
+                  <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre | uppercase }}</option>
                 </select>
               </div>
               <div class="error" *ngIf="formMatricula.get('apoderado.idtipodoc')?.touched && formMatricula.get('apoderado.idtipodoc')?.hasError('required')">
@@ -112,10 +115,11 @@
                    <span *ngIf="formMatricula.get('apoderado.numeroDocumento')?.hasError('invalidFormat')">
                     <ng-container [ngSwitch]="formMatricula.get('apoderado.idtipodoc')?.value">
                       <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 20 dígitos.</span>
+                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
                       <span *ngSwitchDefault>Formato inválido.</span>
                     </ng-container>
                   </span>
+                   <span *ngIf="formMatricula.get('apoderado.numeroDocumento')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
                 </ng-container>
               </div>
             </div>
@@ -127,11 +131,12 @@
                 <input id="apoderado_nombre" formControlName="nombre" type="text" placeholder="Ingrese nombre" title="Solo letras y espacios"
                        (keypress)="onKeyPressOnlyLetters($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.nombre')?.touched && formMatricula.get('apoderado.nombre')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.nombre')?.touched && formMatricula.get('apoderado.nombre')?.hasError('soloLetras')">
-                Solo se permiten letras y espacios.
+              <div class="error">
+                 <ng-container *ngIf="formMatricula.get('apoderado.nombre')?.touched">
+                    <span *ngIf="formMatricula.get('apoderado.nombre')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('apoderado.nombre')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('apoderado.nombre')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
@@ -142,11 +147,12 @@
                 <input id="apoderado_apellidoPaterno" formControlName="apellidoPaterno" type="text" placeholder="Ingrese apellido paterno" title="Solo letras y espacios"
                        (keypress)="onKeyPressOnlyLetters($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.apellidoPaterno')?.touched && formMatricula.get('apoderado.apellidoPaterno')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.apellidoPaterno')?.touched && formMatricula.get('apoderado.apellidoPaterno')?.hasError('soloLetras')">
-                Solo se permiten letras y espacios.
+               <div class="error">
+                 <ng-container *ngIf="formMatricula.get('apoderado.apellidoPaterno')?.touched">
+                    <span *ngIf="formMatricula.get('apoderado.apellidoPaterno')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('apoderado.apellidoPaterno')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('apoderado.apellidoPaterno')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
@@ -157,11 +163,28 @@
                 <input id="apoderado_apellidoMaterno" formControlName="apellidoMaterno" type="text" placeholder="Ingrese apellido materno" title="Solo letras y espacios"
                        (keypress)="onKeyPressOnlyLetters($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.apellidoMaterno')?.touched && formMatricula.get('apoderado.apellidoMaterno')?.hasError('required')">
-                * Este campo es obligatorio.
+               <div class="error">
+                 <ng-container *ngIf="formMatricula.get('apoderado.apellidoMaterno')?.touched">
+                    <span *ngIf="formMatricula.get('apoderado.apellidoMaterno')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('apoderado.apellidoMaterno')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('apoderado.apellidoMaterno')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.apellidoMaterno')?.touched && formMatricula.get('apoderado.apellidoMaterno')?.hasError('soloLetras')">
-                Solo se permiten letras y espacios.
+            </div>
+
+            <div class="mb-3">
+              <label for="apoderado_nacionalidad">Nacionalidad</label>
+              <div class="input-group relative">
+                <span><fa-icon [icon]="faSignature"></fa-icon></span>
+                <input id="apoderado_nacionalidad" formControlName="nacionalidad" type="text" placeholder="Ingrese la nacionalidad" title="Solo letras y espacios"
+                       (keypress)="onKeyPressOnlyLetters($event)"/>
+              </div>
+               <div class="error">
+                 <ng-container *ngIf="formMatricula.get('apoderado.nacionalidad')?.touched">
+                    <span *ngIf="formMatricula.get('apoderado.nacionalidad')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('apoderado.nacionalidad')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('apoderado.nacionalidad')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
           </div>
@@ -173,7 +196,7 @@
                  <span><fa-icon [icon]="faVenusMars"></fa-icon></span>
                  <select id="apoderado_genero" formControlName="genero">
                    <option value="" disabled selected>Selecciona una opción</option>
-                   <option *ngFor="let genero of generos" [value]="genero.valor">{{ genero.nombre }}</option>
+                   <option *ngFor="let genero of generos" [value]="genero.valor">{{ genero.nombre | titlecase }}</option>
                  </select>
                </div>
                <div class="error" *ngIf="formMatricula.get('apoderado.genero')?.touched && formMatricula.get('apoderado.genero')?.hasError('required')">
@@ -190,8 +213,8 @@
               <div class="error">
                 <ng-container *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.touched">
                   <span *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.hasError('required')">* Este campo es obligatorio.</span>
-                  <span *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.hasError('minAge')">* Debe tener al menos 18 años.</span>
-                  <span *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
+                  <span *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.touched && formMatricula.get('apoderado.fechaNacimiento')?.hasError('minAge')">* Debe tener al menos 18 años.</span>
+                  <span *ngIf="formMatricula.get('apoderado.fechaNacimiento')?.touched && formMatricula.get('apoderado.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
                 </ng-container>
               </div>
             </div>
@@ -203,11 +226,12 @@
                 <input id="apoderado_telefono" formControlName="telefono" type="text" inputmode="numeric" maxlength="9" placeholder="Ingrese teléfono (9 dígitos)"
                        title="Solo 9 números" (keypress)="onKeyPressOnlyNumbers($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.telefono')?.touched && formMatricula.get('apoderado.telefono')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.telefono')?.touched && formMatricula.get('apoderado.telefono')?.hasError('pattern')">
-                * El teléfono debe tener 9 dígitos.
+              <div class="error">
+                 <ng-container *ngIf="formMatricula.get('apoderado.telefono')?.touched">
+                    <span *ngIf="formMatricula.get('apoderado.telefono')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('apoderado.telefono')?.hasError('pattern')">* El teléfono debe tener 9 dígitos.</span>
+                     <span *ngIf="formMatricula.get('apoderado.telefono')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
@@ -217,11 +241,12 @@
                 <span><fa-icon [icon]="faHome"></fa-icon></span>
                 <input id="apoderado_direccion" formControlName="direccion" type="text" placeholder="Ingrese dirección" [attr.pattern]="direccionPattern.source"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.direccion')?.touched && formMatricula.get('apoderado.direccion')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.direccion')?.touched && formMatricula.get('apoderado.direccion')?.hasError('pattern')">
-                La dirección contiene caracteres no permitidos.
+              <div class="error">
+                 <ng-container *ngIf="formMatricula.get('apoderado.direccion')?.touched">
+                    <span *ngIf="formMatricula.get('apoderado.direccion')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('apoderado.direccion')?.hasError('pattern')">La dirección contiene caracteres no permitidos.</span>
+                    <span *ngIf="formMatricula.get('apoderado.direccion')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
@@ -231,11 +256,13 @@
                 <span><fa-icon [icon]="faEnvelope"></fa-icon></span>
                 <input id="apoderado_correo" formControlName="correo" type="email" placeholder="ejemplo@correo.com" (keypress)="onKeyPressNoSpaces($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.correo')?.touched && formMatricula.get('apoderado.correo')?.hasError('required')">
-                * Este campo es obligatorio.
+              <div class="error">
+                 <ng-container *ngIf="formMatricula.get('apoderado.correo')?.touched">
+                    <span *ngIf="formMatricula.get('apoderado.correo')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('apoderado.correo')?.hasError('invalidEmail')">* Ingrese un correo válido (ej: usuario&#64;dominio.com). </span>
+                    <span *ngIf="formMatricula.get('apoderado.correo')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
-              <div class="error" *ngIf="formMatricula.get('apoderado.correo')?.touched && formMatricula.get('apoderado.correo')?.hasError('invalidEmail')">
-                * Ingrese un correo válido (ej: usuario&#64;dominio.com). </div>
             </div>
           </div>
         </div>
@@ -247,7 +274,7 @@
           <span><fa-icon [icon]="faUsers"></fa-icon></span>
           <select id="relacionEstudiante" formControlName="relacionEstudiante">
             <option value="" disabled selected>Selecciona una opción</option>
-            <option *ngFor="let relacion of relacionesEstudiante" [value]="relacion.valor">{{ relacion.nombre | titlecase }}</option>
+            <option *ngFor="let relacion of relacionesEstudiante" [value]="relacion.valor">{{ relacion.nombre | uppercase }}</option>
           </select>
         </div>
         <div class="error" *ngIf="formMatricula.get('relacionEstudiante')?.touched && formMatricula.get('relacionEstudiante')?.hasError('required')">
@@ -257,9 +284,11 @@
 
       <div class="form-footer">
         <div class="step-navigation button-container">
-          <button type="button" class="button-back" (click)="regresarABusqueda()">Regresar a Búsqueda</button>
+          <button type="button" class="button-back" (click)="regresarABusqueda()">
+            <fa-icon [icon]="faSearch"></fa-icon> Regresar a Búsqueda
+          </button>
           <button type="button" class="button-next" (click)="validarApoderado()">
-            Siguiente (Alumno)
+            Siguiente (Alumno) <fa-icon [icon]="faPlayCircle" transform="grow-2 right-0.2"></fa-icon>
           </button>
         </div>
       </div>
@@ -278,11 +307,12 @@
                 <input id="alumno_nombre" formControlName="nombre" type="text" placeholder="Ingrese nombre" title="Solo letras y espacios"
                        (keypress)="onKeyPressOnlyLetters($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.nombre')?.touched && formMatricula.get('alumno.nombre')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.nombre')?.touched && formMatricula.get('alumno.nombre')?.hasError('soloLetras')">
-                Solo se permiten letras y espacios.
+              <div class="error">
+                 <ng-container *ngIf="formMatricula.get('alumno.nombre')?.touched">
+                    <span *ngIf="formMatricula.get('alumno.nombre')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('alumno.nombre')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('alumno.nombre')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
@@ -293,11 +323,12 @@
                 <input id="alumno_apellidoPaterno" formControlName="apellidoPaterno" type="text" placeholder="Ingrese apellido paterno" title="Solo letras y espacios"
                        (keypress)="onKeyPressOnlyLetters($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.apellidoPaterno')?.touched && formMatricula.get('alumno.apellidoPaterno')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.apellidoPaterno')?.touched && formMatricula.get('alumno.apellidoPaterno')?.hasError('soloLetras')">
-                Solo se permiten letras y espacios.
+               <div class="error">
+                 <ng-container *ngIf="formMatricula.get('alumno.apellidoPaterno')?.touched">
+                    <span *ngIf="formMatricula.get('alumno.apellidoPaterno')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('alumno.apellidoPaterno')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('alumno.apellidoPaterno')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
@@ -308,37 +339,22 @@
                 <input id="alumno_apellidoMaterno" formControlName="apellidoMaterno" type="text" placeholder="Ingrese apellido materno" title="Solo letras y espacios"
                        (keypress)="onKeyPressOnlyLetters($event)"/>
               </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.apellidoMaterno')?.touched && formMatricula.get('alumno.apellidoMaterno')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.apellidoMaterno')?.touched && formMatricula.get('alumno.apellidoMaterno')?.hasError('soloLetras')">
-                Solo se permiten letras y espacios.
+               <div class="error">
+                 <ng-container *ngIf="formMatricula.get('alumno.apellidoMaterno')?.touched">
+                    <span *ngIf="formMatricula.get('alumno.apellidoMaterno')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('alumno.apellidoMaterno')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('alumno.apellidoMaterno')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
-             <div class="mb-3">
-              <label for="alumno_genero">Género</label>
-              <div class="input-group relative">
-                <span><fa-icon [icon]="faVenusMars"></fa-icon></span>
-                <select id="alumno_genero" formControlName="genero">
-                  <option value="" disabled selected>Selecciona una opción</option>
-                  <option *ngFor="let genero of generos" [value]="genero.valor">{{ genero.nombre }}</option>
-                </select>
-              </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.genero')?.touched && formMatricula.get('alumno.genero')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-            </div>
-          </div>
-
-          <div class="apoderado-column">
             <div class="mb-3">
               <label for="alumno_idtipodoc">Tipo de Documento</label>
               <div class="input-group relative">
                  <span><fa-icon [icon]="faIdCard"></fa-icon></span>
                 <select id="alumno_idtipodoc" formControlName="idtipodoc" [attr.aria-describedby]="'tipodoc-alumno-error'">
                   <option value="" disabled selected>Selecciona una opción</option>
-                  <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre }}</option>
+                  <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre | uppercase }}</option>
                 </select>
               </div>
               <div id="tipodoc-alumno-error" class="error" *ngIf="formMatricula.get('alumno.idtipodoc')?.touched && formMatricula.get('alumno.idtipodoc')?.hasError('required')">
@@ -368,11 +384,59 @@
                   <span *ngIf="formMatricula.get('alumno.numeroDocumento')?.hasError('invalidFormat')">
                     <ng-container [ngSwitch]="formMatricula.get('alumno.idtipodoc')?.value">
                       <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 20 dígitos.</span>
+                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
                       <span *ngSwitchDefault>Formato inválido.</span>
                     </ng-container>
                   </span>
+                   <span *ngIf="formMatricula.get('alumno.numeroDocumento')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
                 </ng-container>
+              </div>
+            </div>
+          </div>
+
+          <div class="apoderado-column">
+            <div class="mb-3">
+              <label for="alumno_genero">Género</label>
+              <div class="input-group relative">
+                <span><fa-icon [icon]="faVenusMars"></fa-icon></span>
+                <select id="alumno_genero" formControlName="genero">
+                  <option value="" disabled selected>Selecciona una opción</option>
+                  <option *ngFor="let genero of generos" [value]="genero.valor">{{ genero.nombre | titlecase }}</option>
+                </select>
+              </div>
+              <div class="error" *ngIf="formMatricula.get('alumno.genero')?.touched && formMatricula.get('alumno.genero')?.hasError('required')">
+                * Este campo es obligatorio.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="alumno_nacionalidad">Nacionalidad</label>
+              <div class="input-group relative">
+                 <span><fa-icon [icon]="faSignature"></fa-icon></span>
+                <input id="alumno_nacionalidad" formControlName="nacionalidad" type="text" placeholder="Ingrese la nacionalidad" title="Solo letras y espacios"
+                       (keypress)="onKeyPressOnlyLetters($event)"/>
+              </div>
+               <div class="error">
+                 <ng-container *ngIf="formMatricula.get('alumno.nacionalidad')?.touched">
+                    <span *ngIf="formMatricula.get('alumno.nacionalidad')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('alumno.nacionalidad')?.hasError('soloLetras')">Solo se permiten letras y espacios.</span>
+                    <span *ngIf="formMatricula.get('alumno.nacionalidad')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="alumno_direccion">Dirección</label>
+              <div class="input-group relative">
+                 <span><fa-icon [icon]="faHome"></fa-icon></span>
+                <input id="alumno_direccion" formControlName="direccion" type="text" placeholder="Ingrese dirección" [attr.pattern]="direccionPattern.source"/>
+              </div>
+               <div class="error">
+                 <ng-container *ngIf="formMatricula.get('alumno.direccion')?.touched">
+                    <span *ngIf="formMatricula.get('alumno.direccion')?.hasError('required')">* Este campo es obligatorio.</span>
+                    <span *ngIf="formMatricula.get('alumno.direccion')?.hasError('pattern')">La dirección contiene caracteres no permitidos.</span>
+                    <span *ngIf="formMatricula.get('alumno.direccion')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+                 </ng-container>
               </div>
             </div>
 
@@ -385,67 +449,162 @@
               <div class="error">
                 <ng-container *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched">
                   <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('required')">* Este campo es obligatorio.</span>
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('minAge')">* No cumple la edad mínima requerida para el grado ({{ formMatricula.get('alumno.fechaNacimiento')?.getError('minAge')?.requiredAge }} años).</span>
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('minAge')">* No cumple la edad mínima requerida para el grado ({{ formMatricula.get('alumno.fechaNacimiento')?.getError('minAge')?.requiredAge }} años).</span>
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
                 </ng-container>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="alumno_direccion">Dirección</label>
-              <div class="input-group relative">
-                 <span><fa-icon [icon]="faHome"></fa-icon></span>
-                <input id="alumno_direccion" formControlName="direccion" type="text" placeholder="Ingrese dirección" [attr.pattern]="direccionPattern.source"/>
-              </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.direccion')?.touched && formMatricula.get('alumno.direccion')?.hasError('required')">
-                * Este campo es obligatorio.
-              </div>
-              <div class="error" *ngIf="formMatricula.get('alumno.direccion')?.touched && formMatricula.get('alumno.direccion')?.hasError('pattern')">
-                La dirección contiene caracteres no permitidos.
               </div>
             </div>
           </div>
         </div>
 
-        <div class="mb-3">
-            <label for="alumno_tipoObservacion">Tipo de Observación (Opcional)</label>
-            <div class="input-group relative">
-              <span><fa-icon [icon]="faTag"></fa-icon></span>
-              <select id="alumno_tipoObservacion" formControlName="tipoObservacion">
-                <option value="" disabled selected>Selecciona una opción</option>
-                <option value="">Ninguna</option> <option *ngFor="let tipo of tiposObservacion" [value]="tipo.valor">{{ tipo.nombre }}</option>
-              </select>
-            </div>
-            </div>
+        <div class="observaciones-section">
+          <h4 class="observaciones-title">Observaciones Adicionales (Opcional)</h4>
 
-        <div class="mb-3 observacion-field" *ngIf="formMatricula.get('alumno.tipoObservacion')?.value">
-            <label for="alumno_observacion"><span><fa-icon [icon]="faComment"></fa-icon></span>Observación (Opcional)</label>
+          <div class="switch-container mb-3">
+            <label for="alumno_tieneIntercambio" class="switch-label">
+              <input type="checkbox" id="alumno_tieneIntercambio" formControlName="tieneIntercambio" class="switch-checkbox">
+              <span class="switch-slider"></span>
+              <span>¿Es Intercambio?</span>
+            </label>
+          </div>
+          <div class="conditional-textarea mb-3" *ngIf="formMatricula.get('alumno.tieneIntercambio')?.value">
+            <label for="alumno_tipoIntercambio">Detalles del Intercambio</label>
             <div class="input-group relative">
-              <textarea id="alumno_observacion" formControlName="observacion" placeholder="Ingrese alguna observación relevante..." rows="3"
-                        [disabled]="!formMatricula.get('alumno.tipoObservacion')?.value"
-                        [class.input-disabled]="!formMatricula.get('alumno.tipoObservacion')?.value"></textarea>
+              <span><fa-icon [icon]="faInfoCircle"></fa-icon></span>
+              <textarea id="alumno_tipoIntercambio" formControlName="tipoIntercambio" placeholder="Ingrese detalles del intercambio..." rows="2"></textarea>
             </div>
-             </div>
+            <div class="error">
+               <ng-container *ngIf="formMatricula.get('alumno.tipoIntercambio')?.touched">
+                  <span *ngIf="formMatricula.get('alumno.tipoIntercambio')?.hasError('required')">* Este campo es obligatorio si la opción está activada.</span>
+                  <span *ngIf="formMatricula.get('alumno.tipoIntercambio')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+               </ng-container>
+            </div>
+          </div>
 
+          <div class="switch-container mb-3">
+            <label for="alumno_tieneDiscapacidad" class="switch-label">
+              <input type="checkbox" id="alumno_tieneDiscapacidad" formControlName="tieneDiscapacidad" class="switch-checkbox">
+              <span class="switch-slider"></span>
+              <span>¿Presenta alguna Discapacidad?</span>
+            </label>
+          </div>
+          <div class="conditional-textarea mb-3" *ngIf="formMatricula.get('alumno.tieneDiscapacidad')?.value">
+            <label for="alumno_tipoDiscapacidad">Detalles de la Discapacidad</label>
+            <div class="input-group relative">
+              <span><fa-icon [icon]="faInfoCircle"></fa-icon></span>
+              <textarea id="alumno_tipoDiscapacidad" formControlName="tipoDiscapacidad" placeholder="Ingrese detalles de la discapacidad..." rows="2"></textarea>
+            </div>
+             <div class="error">
+               <ng-container *ngIf="formMatricula.get('alumno.tipoDiscapacidad')?.touched">
+                  <span *ngIf="formMatricula.get('alumno.tipoDiscapacidad')?.hasError('required')">* Este campo es obligatorio si la opción está activada.</span>
+                  <span *ngIf="formMatricula.get('alumno.tipoDiscapacidad')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+               </ng-container>
+            </div>
+          </div>
+
+          <div class="switch-container mb-3">
+            <label for="alumno_tieneOtros" class="switch-label">
+              <input type="checkbox" id="alumno_tieneOtros" formControlName="tieneOtros" class="switch-checkbox">
+              <span class="switch-slider"></span>
+              <span>¿Alguna otra observación relevante?</span>
+            </label>
+          </div>
+          <div class="conditional-textarea mb-3" *ngIf="formMatricula.get('alumno.tieneOtros')?.value">
+            <label for="alumno_tipoOtros">Otras Observaciones</label>
+            <div class="input-group relative">
+              <span><fa-icon [icon]="faInfoCircle"></fa-icon></span>
+              <textarea id="alumno_tipoOtros" formControlName="tipoOtros" placeholder="Ingrese otras observaciones..." rows="2"></textarea>
+            </div>
+             <div class="error">
+               <ng-container *ngIf="formMatricula.get('alumno.tipoOtros')?.touched">
+                  <span *ngIf="formMatricula.get('alumno.tipoOtros')?.hasError('required')">* Este campo es obligatorio si la opción está activada.</span>
+                  <span *ngIf="formMatricula.get('alumno.tipoOtros')?.hasError('noLeadingSpaces')">No se permiten espacios al principio.</span>
+               </ng-container>
+            </div>
+          </div>
+        </div>
       </fieldset>
 
       <div class="form-footer">
         <div class="step-navigation button-container">
           <button type="button" class="button-back" (click)="regresarAApoderado()" [disabled]="isSubmitting">
-            Regresar (Apoderado)
+            <fa-icon [icon]="faUsers" transform="grow-2 left-0.2"></fa-icon> Regresar (Apoderado)
           </button>
-          <button type="submit" class="button-submit" [disabled]="formMatricula.invalid || seccion === 'SIN VACANTE' || seccion === 'ERROR' || isSubmitting">
-             Registrar Matrícula
+          <button type="button" class="button-next" (click)="validarAlumno()">
+            Siguiente (Documentos) <fa-icon [icon]="faPlayCircle" transform="grow-2 right-0.2"></fa-icon>
           </button>
-        </div>
-        <div class="mt-2 text-center">
-          <p *ngIf="(seccion === 'SIN VACANTE' || seccion === 'ERROR') && !isSubmitting" class="text-red-600 text-sm">
-            No se puede registrar sin una sección válida asignada.
-          </p>
         </div>
       </div>
     </div>
 
+    <div class="documents-section" *ngIf="currentView === 'documents' && allPotentialDocuments.length > 0">
+        <fieldset id="documents-fieldset">
+            <legend><fa-icon [icon]="faFileAlt"></fa-icon> Documentos Presentados</legend>
+
+            <div class="document-list">
+                <h4>Seleccione los documentos que ha presentado:</h4>
+                 <div [formGroup]="formMatricula">
+                    <div formArrayName="documentsPresented">
+                        <div class="document-item" *ngFor="let docControl of documentsPresentedControls.controls; let i = index">
+                            <div class="switch-container" *ngIf="shouldShowDocument(allPotentialDocuments[i])">
+                                <label class="switch-label">
+                                    <input type="checkbox" [formControlName]="i" class="switch-checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span class="document-name">{{ allPotentialDocuments[i] }}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </fieldset>
+
+        <div class="form-footer">
+             <div class="step-navigation button-container">
+               <button type="button" class="button-back" (click)="regresarAAlumno()" [disabled]="isSubmitting">
+                 <fa-icon [icon]="faUser" transform="grow-2 left-0.2"></fa-icon> Regresar (Alumno)
+               </button>
+               <button type="submit" class="button-submit" [disabled]="formMatricula.invalid || seccion === 'SIN VACANTE' || seccion === 'ERROR' || isSubmitting">
+                  <fa-icon [icon]="faClipboardList"></fa-icon> Registrar Matrícula
+               </button>
+             </div>
+             <div class="mt-2 text-center">
+               <p *ngIf="(seccion === 'SIN VACANTE' || seccion === 'ERROR') && !isSubmitting" class="text-red-600 text-sm">
+                 No se puede registrar sin una sección válida asignada.
+               </p>
+             </div>
+           </div>
+    </div>
+     <div class="documents-section" *ngIf="currentView === 'documents' && allPotentialDocuments.length === 0">
+         <fieldset>
+             <legend><fa-icon [icon]="faFileAlt"></fa-icon> Documentos Presentados</legend>
+             <p class="text-center text-gray-600">No se encontraron requisitos de documentos configurados para esta entidad.</p>
+         </fieldset>
+          <div class="form-footer">
+              <div class="step-navigation button-container">
+                <button type="button" class="button-back" (click)="regresarAAlumno()" [disabled]="isSubmitting">
+                  <fa-icon [icon]="faUser" transform="grow-2 left-0.2"></fa-icon> Regresar (Alumno)
+                </button>
+                <button type="submit" class="button-submit" [disabled]="formMatricula.invalid || seccion === 'SIN VACANTE' || seccion === 'ERROR' || isSubmitting">
+                   <fa-icon [icon]="faClipboardList"></fa-icon> Registrar Matrícula
+                </button>
+              </div>
+              <div class="mt-2 text-center">
+                <p *ngIf="(seccion === 'SIN VACANTE' || seccion === 'ERROR') && !isSubmitting" class="text-red-600 text-sm">
+                  No se puede registrar sin una sección válida asignada.
+                </p>
+            </div>
+          </div>
+     </div>
+
+
+    <div class="form-footer-pause button-container-centered" *ngIf="currentView !== 'search'">
+        <button type="button" class="button-pause" (click)="onPauseAndSaveProgress()" [disabled]="isSubmitting || seccion === 'SIN VACANTE' || seccion === 'ERROR'">
+            <fa-icon [icon]="faPauseCircle"></fa-icon> Pausar Trámite (En Proceso)
+        </button>
+    </div>
 
   </form>
+  <app-notification></app-notification>
 </div>

@@ -17,13 +17,13 @@ import { MatNativeDateModule } from '@angular/material/core';
     RouterOutlet,
     FontAwesomeModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  
+
   private faIconLibrary = inject(FaIconLibrary);
   private faConfig = inject(FaConfig);
 

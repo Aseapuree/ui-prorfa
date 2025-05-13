@@ -12,6 +12,9 @@ import { AlertComponent } from '../../../shared/alert/alert.component';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { DateAdapter, MAT_DATE_FORMATS, MatNativeDateModule, NativeDateAdapter } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
+import { Competencia } from '../../../../interface/curso';
+import { CourseService } from '../../../../services/course.service';
+import { lastValueFrom } from 'rxjs';
 
 const MATERIAL_MODULES = [
   MatFormFieldModule,
@@ -39,6 +42,8 @@ export class ModalActividadComponent implements OnInit {
   esEdicion: boolean = false;
   alertMessage: string | null = null;
   alertType: 'error' | 'warning' = 'error';
+  competencias: Competencia[] = []; // Lista de competencias
+  idCurso: string | null = null; // ID del curso
 
   constructor(
     public dialogRef: MatDialogRef<ModalActividadComponent>,
@@ -47,12 +52,15 @@ export class ModalActividadComponent implements OnInit {
       tipo: 'introducciones' | 'materiales' | 'actividades';
       sesionId: string;
       actividad?: DTOActividad;
+      idCurso?: string; // Añadir idCurso a los datos del modal
     },
     private fb: FormBuilder,
-    private sesionService: SesionService
+    private sesionService: SesionService,
+    private courseService: CourseService // Inyectar CourseService
   ) {
     this.tipoContenido = data.tipo;
     this.esEdicion = !!data.actividad;
+    this.idCurso = data.idCurso || localStorage.getItem('idCurso'); // Obtener idCurso de los datos o localStorage
     this.formulario = this.fb.group(
       {
         nombre: ['', Validators.required],
@@ -72,15 +80,22 @@ export class ModalActividadComponent implements OnInit {
           null,
           this.tipoContenido === 'actividades' ? Validators.required : null,
         ],
+        presencial: [
+          { value: this.tipoContenido === 'actividades' ? null : false, disabled: this.esEdicion },
+          this.tipoContenido === 'actividades' ? Validators.required : null,
+        ],
+        competencia: [
+          null,
+          this.tipoContenido === 'actividades' ? Validators.required : null, // Competencia obligatoria para actividades
+        ],
       },
       {
-        validators:
-          this.tipoContenido === 'actividades' ? this.dateValidators() : null,
+        validators: this.tipoContenido === 'actividades' ? this.dateValidators() : null,
       }
     );
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     console.log(
       'Modal abierto en modo:',
       this.esEdicion ? 'Edición' : 'Agregar',
@@ -89,27 +104,56 @@ export class ModalActividadComponent implements OnInit {
       'Datos:',
       this.data
     );
-    if (this.esEdicion && this.data.actividad) {
-      const fechaInicio = this.data.actividad.fechaInicio
-        ? new Date(this.data.actividad.fechaInicio)
-        : null;
-      const fechaFin = this.data.actividad.fechaFin
-        ? new Date(this.data.actividad.fechaFin)
-        : null;
-      this.formulario.patchValue({
-        nombre: this.data.actividad.actividadNombre,
-        fechaInicio: fechaInicio,
-        horaInicio: fechaInicio
-          ? `${String(fechaInicio.getUTCHours()).padStart(2, '0')}:${String(fechaInicio.getUTCMinutes()).padStart(2, '0')}`
-          : null,
-        fechaFin: fechaFin,
-        horaFin: fechaFin
-          ? `${String(fechaFin.getUTCHours()).padStart(2, '0')}:${String(fechaFin.getUTCMinutes()).padStart(2, '0')}`
-          : null,
-      });
-      console.log('Formulario inicializado con:', this.formulario.value);
+
+    // Cargar competencias si es una actividad
+    if (this.tipoContenido === 'actividades' && this.idCurso) {
+      await this.cargarCompetencias();
     }
+
+    // Inicializar formulario en modo edición
+    if (this.esEdicion && this.data.actividad) {
+  const fechaInicio = this.data.actividad.fechaInicio
+    ? new Date(this.data.actividad.fechaInicio)
+    : null;
+  const fechaFin = this.data.actividad.fechaFin
+    ? new Date(this.data.actividad.fechaFin)
+    : null;
+  this.formulario.patchValue({
+    nombre: this.data.actividad.actividadNombre,
+    fechaInicio: fechaInicio,
+    horaInicio: fechaInicio
+      ? `${String(fechaInicio.getUTCHours()).padStart(2, '0')}:${String(fechaInicio.getUTCMinutes()).padStart(2, '0')}`
+      : null,
+    fechaFin: fechaFin,
+    horaFin: fechaFin
+      ? `${String(fechaFin.getUTCHours()).padStart(2, '0')}:${String(fechaFin.getUTCMinutes()).padStart(2, '0')}`
+      : null,
+    presencial: this.data.actividad.presencial,
+    competencia: this.data.actividad.competencia ? this.data.actividad.competencia.nombre : null, // Extraer el nombre
+  });
+  console.log('Formulario inicializado con:', this.formulario.value);
+}
   }
+
+  // Método para cargar competencias
+  async cargarCompetencias(): Promise<void> {
+  try {
+    if (!this.idCurso) {
+      throw new Error('No se proporcionó el ID del curso');
+    }
+    this.competencias = await lastValueFrom(this.courseService.obtenerCompetenciasPorCurso(this.idCurso));
+    console.log('Competencias cargadas:', this.competencias);
+    if (this.competencias.length === 0) {
+      this.alertMessage = 'No se encontraron competencias para este curso.';
+      this.alertType = 'warning';
+    }
+  } catch (error) {
+    console.error('Error al cargar competencias:', error);
+    this.alertMessage = 'Error al cargar las competencias. Por favor, intenta de nuevo o contacta al administrador.';
+    this.alertType = 'error';
+    this.competencias = []; // Set to empty array to avoid form breakage
+  }
+}
 
   dateValidators() {
     return (formGroup: FormGroup) => {
@@ -186,6 +230,8 @@ export class ModalActividadComponent implements OnInit {
     return parts[parts.length - 2] || 'Archivo desconocido';
   }
 
+  
+
   agregarContenido(): void {
     console.log(
       'Intentando guardar. Formulario válido:',
@@ -193,54 +239,62 @@ export class ModalActividadComponent implements OnInit {
       'Valores:',
       this.formulario.value
     );
+  
+    // Si no es una actividad, ignorar el control presencial para la validación
+    if (this.tipoContenido !== 'actividades') {
+      this.formulario.get('presencial')?.clearValidators();
+      this.formulario.get('presencial')?.updateValueAndValidity();
+    }
+  
     if (this.formulario.invalid) {
       this.alertMessage = 'Por favor, completa todos los campos requeridos.';
       this.alertType = 'error';
       console.error('Formulario inválido:', this.formulario.errors);
       return;
     }
-
+  
     if (!this.archivoSeleccionado && !this.esEdicion) {
       this.alertMessage = 'Por favor, selecciona un archivo válido.';
       this.alertType = 'error';
       console.error('No se seleccionó archivo en modo agregar');
       return;
     }
-
+  
     this.cargando = true;
     this.alertMessage = null;
     const formData = new FormData();
     const actividad: DTOActividad = {
-      actividadNombre: this.formulario.get('nombre')?.value,
-      infoMaestra: {
-        descripcion:
-          this.tipoContenido === 'introducciones'
-            ? 'Introducción'
-            : this.tipoContenido === 'materiales'
-            ? 'Material'
-            : 'Actividad',
-      },
-      fechaInicio: null,
-      fechaFin: null,
-    };
-
+    actividadNombre: this.formulario.get('nombre')?.value,
+    infoMaestra: {
+      descripcion: this.tipoContenido === 'introducciones'
+        ? 'Introducción'
+        : this.tipoContenido === 'materiales'
+        ? 'Material'
+        : 'Actividad',
+    },
+    fechaInicio: this.tipoContenido === 'actividades' ? this.formulario.get('fechaInicio')?.value : null,
+    fechaFin: this.tipoContenido === 'actividades' ? this.formulario.get('fechaFin')?.value : null,
+    presencial: this.tipoContenido === 'actividades' ? this.formulario.get('presencial')?.value : null,
+    competencia: this.tipoContenido === 'actividades' ? { nombre: this.formulario.get('competencia')?.value } : null,
+  };
+  
     if (this.tipoContenido === 'actividades') {
       const fechaInicio = this.formulario.get('fechaInicio')?.value;
       const horaInicio = this.formulario.get('horaInicio')?.value;
       const fechaFin = this.formulario.get('fechaFin')?.value;
       const horaFin = this.formulario.get('horaFin')?.value;
-
+  
       if (fechaInicio && horaInicio) {
         const fechaInicioDate = this.combineDateAndTime(fechaInicio, horaInicio);
         actividad.fechaInicio = fechaInicioDate.toISOString();
       }
-
+  
       if (fechaFin && horaFin) {
         const fechaFinDate = this.combineDateAndTime(fechaFin, horaFin);
         actividad.fechaFin = fechaFinDate.toISOString();
       }
     }
-
+  
     console.log('Datos de actividad a enviar:', actividad);
     formData.append(
       'actividad',
@@ -253,7 +307,7 @@ export class ModalActividadComponent implements OnInit {
         this.archivoSeleccionado.name
       );
     }
-
+  
     const request = this.esEdicion
       ? this.sesionService.editarActividad(
           this.data.sesionId,
@@ -261,7 +315,7 @@ export class ModalActividadComponent implements OnInit {
           formData
         )
       : this.sesionService.agregarActividad(this.data.sesionId, formData);
-
+  
     request.subscribe({
       next: () => {
         this.cargando = false;

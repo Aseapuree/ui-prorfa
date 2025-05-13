@@ -70,6 +70,32 @@
     </mat-form-field>
   </div>
 
+  <!-- Campo presencial (siempre presente, pero oculto o deshabilitado cuando no aplica) -->
+  <div [hidden]="tipoContenido !== 'actividades'">
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label class="text-gray-400 dark:text-gray-400">Modalidad</mat-label>
+      <mat-select formControlName="presencial" [disabled]="esEdicion || tipoContenido !== 'actividades'" [required]="tipoContenido === 'actividades'">
+        <mat-option [value]="true">Presencial</mat-option>
+        <mat-option [value]="false">Virtual (Subir tarea)</mat-option>
+      </mat-select>
+      <mat-error *ngIf="formulario.get('presencial')?.hasError('required')">La modalidad es obligatoria</mat-error>
+    </mat-form-field>
+  </div>
+
+  <!-- Campo de competencia (solo para actividades) -->
+    <div *ngIf="tipoContenido === 'actividades'">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label class="text-gray-400 dark:text-gray-400">Competencia</mat-label>
+        <mat-select formControlName="competencia" placeholder="Seleccione una competencia">
+  <mat-option *ngFor="let competencia of competencias" [value]="competencia.nombre">
+    {{ competencia.nombre }}
+  </mat-option>
+</mat-select>
+        <mat-error *ngIf="formulario.get('competencia')?.hasError('required')">La competencia es obligatoria</mat-error>
+      </mat-form-field>
+    </div>
+
+
     <!-- Campo de archivo personalizado -->
 <div class="w-full">
   <label for="archivo" class="block text-gray-400 dark:text-gray-400 mb-2">Archivo* (Formatos válidos: PDF, MP4, AVI, MOV, TXT, DOCX)</label>

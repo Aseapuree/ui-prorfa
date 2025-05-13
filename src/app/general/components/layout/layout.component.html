@@ -1,10 +1,12 @@
 <div class="h-screen flex">
   <!-- Menú lateral -->
   <app-menu 
+    *ngIf="datosListos"
     [nombreUsuario]="usuarioMostrar.nombre || 'undefined'"
     [apellidoPaterno]="usuarioMostrar.apellidopaterno || 'undefined'"
     [apellidoMaterno]="usuarioMostrar.apellidomaterno || 'undefined'"
     [nombreRol]="usuarioMostrar.rol?.nombreRol || 'undefined'"
+    [idRol]="usuarioMostrar.rol?.idRol || 'undefined'"
     [perfilUrl]="usuarioMostrar.perfilurl || 'undefined'"
     (menuToggle)="toggleMenu()">
   </app-menu>
@@ -12,7 +14,7 @@
   <!-- Contenedor principal en columna -->
   <div [ngClass]="menuAbierto ? 'w-[calc(100%-16rem)]' : 'w-full'"
        class="flex flex-col bg-gray-700 transition-all duration-300 h-screen flex-1">
-   <app-navbar></app-navbar>
+  
     <!-- Contenido principal -->
     <div class="flex-1 overflow-y-auto p-6">
       <router-outlet></router-outlet>

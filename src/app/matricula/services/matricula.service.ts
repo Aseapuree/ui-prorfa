@@ -1,8 +1,7 @@
-// --- FRONTEND: MatriculaService (Angular) ---
-import { HttpClient, HttpErrorResponse } from '@angular/common/http'; // Importar HttpErrorResponse
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
-import { Matricula } from '../interfaces/DTOMatricula'; // Asegúrate de importar Matricula
+import { Matricula } from '../interfaces/DTOMatricula';
 
 @Injectable({
   providedIn: 'root'
@@ -45,17 +44,27 @@ export class MatriculaService {
   }
 
   agregarMatricula(matricula: Matricula): Observable<Matricula> {
-    return this.http.post<Matricula>(`${this.urlBase}/agregar`, matricula, { withCredentials: true }).pipe(
+    return this.http.post<any>(`${this.urlBase}/agregar`, matricula, { withCredentials: true }).pipe(
+        map(response => {
+            if (response && response.code >= 200 && response.code < 300 && response.data) {
+                return response.data;
+            } else {
+                throw new Error(response?.message || 'Error al agregar matrícula');
+            }
+        }),
+        catchError(this.handleError)
     );
   }
 
   editarMatricula(id: string, matricula: Matricula): Observable<Matricula> {
     return this.http.put<Matricula>(`${this.urlBase}/editar/${id}`, matricula, { withCredentials: true }).pipe(
+        catchError(this.handleError)
     );
   }
 
   eliminarMatricula(id: string): Observable<void> {
     return this.http.delete<void>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true }).pipe(
+        catchError(this.handleError)
     );
   }
 
@@ -64,11 +73,13 @@ export class MatriculaService {
       withCredentials: true,
       responseType: 'text'
     }).pipe(
-    );
+        catchError(this.handleError)
+    );
   }
 
   vacantesPorNivel(nivel: string): Observable<{ [grado: number]: { [seccion: string]: number } }> {
     return this.http.get<{ [grado: number]: { [seccion: string]: number } }>(`${this.urlBase}/vacantes/${nivel}`, { withCredentials: true }).pipe(
+        catchError(this.handleError)
     );
   }
 
