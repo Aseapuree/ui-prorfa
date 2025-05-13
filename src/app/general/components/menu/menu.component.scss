@@ -4,10 +4,12 @@ nav {
   transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
+  overflow: visible;
+  z-index: 10;
 }
 
 /* Menú retraído */
-.closed {
+nav.closed {
   width: 60px;
   transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
 
@@ -17,6 +19,12 @@ nav {
       .exit-btn {
         justify-content: center;
         padding: 10px;
+        overflow: visible;
+      }
+
+      .menu-btn:hover,
+      .exit-btn:hover {
+        background-color: var(--primary-hover);
       }
 
       .menu-btn span,
@@ -64,12 +72,42 @@ nav {
   font-weight: bold;
   text-align: left;
   border-radius: 8px;
-  transition: background 0.3s, transform 0.2s;
+  transition: width 0.3s ease-in-out, background 0.3s, transform 0.2s;
   border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   gap: 10px;
   position: relative;
+  overflow: visible;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+nav.closed .menu-btn.expanded,
+nav.closed .exit-btn.expanded {
+  width: 200px;
+  padding: 12px 15px;
+  justify-content: flex-start;
+  background-color: var(--primary-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  span {
+    display: inline-block !important;
+  }
+
+  .submenu-container {
+    display: block !important; /* Asegurar que se muestre */
+    position: absolute;
+    left: 70px;
+    top: 0;
+    width: 200px;
+    background: linear-gradient(90deg, #1a2a44, #0d1b2a);
+    padding: 8px;
+    border-radius: 0 8px 8px 0;
+    z-index: 30;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    overflow: visible;
+  }
 }
 
 .menu-btn:hover,
@@ -129,91 +167,50 @@ nav {
   }
 }
 
-/* Tooltip personalizado */
-.relative {
-  position: relative;
+/* Contenedor de submenús en modo expandido */
+.submenu-container {
+  padding-left: 20px; /* Espaciado interno */
+  margin-top: 5px; /* Espacio entre el menú principal y el submenú */
+  position: absolute; /* Posicionamos el submenú dentro del contenedor principal */
+  left: 100%; /* Lo posicionamos a la derecha del elemento principal */
+  top: 0;
+  width: 200px; /* Ancho del submenú */
+  background: linear-gradient(90deg, #1a2a44, #0d1b2a); /* Fondo del submenú */
+  padding: 8px;
+  border-radius: 0 8px 8px 0; /* Bordes redondeados */
+  z-index: 20; /* Aseguramos que esté sobre otros elementos */
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2); /* Sombra para darle profundidad */
 }
 
-.tooltip {
-  display: none;
-  position: absolute;
-  left: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: linear-gradient(90deg, #1a2a44, #0d1b2a);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  font-size: 1rem;
-  white-space: nowrap;
-  z-index: 1000;
+/* Estilos para el contenedor de submenús */
+.menu-label {
+  display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.relative:hover .tooltip {
-  display: flex;
-  opacity: 1;
-}
-
-/* Panel de submenús como tooltip */
-.submenu-tooltip {
-  display: none;
-  position: absolute;
-  left: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: linear-gradient(90deg, #1a2a44, #0d1b2a);
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.submenu-tooltip.active {
-  display: block;
-  opacity: 1;
+  padding: 4px 8px;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4px;
+  color: var(--text-color);
 }
 
 .submenu-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  background-color: var(--secondary-dark);
+  border-radius: 4px;
 }
 
 .submenu-item {
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 .submenu-item:last-child {
   margin-bottom: 0;
 }
 
-.submenu-btn {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--secondary-dark);
-  border-radius: 6px;
-  color: var(--text-color);
-  transition: background 0.3s, transform 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--primary-hover);
-    transform: scale(1.03);
-  }
-}
-
-/* Clases de colores para los iconos (sin cambios) */
+/* Clases de colores para los iconos */
 .text-green { color: #4CAF50; }
 .text-yellow { color: #FFD700; }
 .text-blue { color: #00BFFF; }

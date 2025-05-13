@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, Input, Inject, PLATFORM_ID, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Input, Inject, PLATFORM_ID, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { DTOmenuService } from '../../Services/dtomenu.service';
@@ -23,6 +23,8 @@ export class MenuComponent implements OnInit, OnChanges {
   @Input() nombreRol: string = '';
   @Input() idRol: string = '';
   @Input() perfilUrl: string | null = null;
+  @Output() menuToggle = new EventEmitter<void>(); // Para notificar al layout
+
   faUserCircle = faUserCircle;
   faSignOutAlt = faSignOutAlt;
   faHome = faHome;
@@ -31,7 +33,7 @@ export class MenuComponent implements OnInit, OnChanges {
   menuJerarquico: any[] = [];
   subMenuOpen: { [key: string]: boolean } = {};
   menuCerrado = false;
-  activeSubmenuId: string | null = null; // Para controlar qué submenu tooltip está activo
+  activeTooltipId: string | null = null; // Para controlar qué tooltip está activo
 
   constructor(
     private menuService: DTOmenuService,
@@ -78,7 +80,11 @@ export class MenuComponent implements OnInit, OnChanges {
           icono: this.getIcon(menu.menu_icono ?? ''),
           submenus: this.menus.filter(sub => sub.idmenuparent === menu.idMenu)
         }));
-      console.log("📌 Menús estructurados:", this.menuJerarquico);
+      console.log("📌 Menús estructurados con submenús:", this.menuJerarquico.map(m => ({
+        id: m.idMenu,
+        descripcion: m.menu_descripcion,
+        submenus: m.submenus ? m.submenus.map((s: DTOMenu) => s.menu_descripcion) : []
+      })));
       this.cdr.detectChanges();
     }, error => {
       console.error("❌ Error al obtener menús en MenuComponent:", error);
@@ -86,7 +92,7 @@ export class MenuComponent implements OnInit, OnChanges {
   }
 
   extraerIdDesdeUrl(url: string): string | null {
-    const regexFileD = /\/d\/([a-zA-Z0-9_-]+)/;
+    const regexFileD = /\/d\/([a-zAZ0-9_-]+)/;
     const regexUc = /id=([a-zA-Z0-9_-]+)/;
     let match = url.match(regexFileD);
     if (match) return match[1];
@@ -144,23 +150,34 @@ export class MenuComponent implements OnInit, OnChanges {
 
   toggleMenu() {
     this.menuCerrado = !this.menuCerrado;
-    this.activeSubmenuId = null; // Ocultar submenús al cambiar estado
+    this.activeTooltipId = null; // Ocultar tooltips al cambiar estado
+    this.menuToggle.emit(); // Notificar al layout
   }
 
   toggleSubMenu(menuId: string) {
-    this.subMenuOpen[menuId] = !this.subMenuOpen[menuId];
+    this.subMenuOpen[menuId || ''] = !this.subMenuOpen[menuId || ''];
   }
 
-  showSubmenuTooltip(menuId: string) {
-    if (this.menuCerrado) {
-      this.activeSubmenuId = menuId;
+  showExpanded(id: string) {
+    if (this.menuCerrado && id) {
+      console.log(`🖱️ Mouseenter - Mostrando expansión para ID: ${id}, menuCerrado: ${this.menuCerrado}`);
+      this.activeTooltipId = id;
+      this.cdr.detectChanges(); // Forzar detección de cambios
     }
   }
 
-  hideSubmenuTooltip() {
+  hideExpanded() {
     if (this.menuCerrado) {
-      this.activeSubmenuId = null;
+      console.log(`🖱️ Mouseleave - Ocultando expansión, menuCerrado: ${this.menuCerrado}`);
+      this.activeTooltipId = null;
+      this.cdr.detectChanges(); // Forzar detección de cambios
     }
+  }
+
+  logSubmenuRender(menuId: string, submenusLength: number | undefined): string {
+    const menu = this.menuJerarquico.find(m => m.idMenu === menuId);
+    console.log(`📋 Submenu renderizado - ID: ${menuId}, Submenús: ${submenusLength}, Contenido: ${JSON.stringify(menu?.submenus)}`);
+    return '';
   }
 
   trackById(index: number, item: DTOMenu): string {
@@ -168,26 +185,30 @@ export class MenuComponent implements OnInit, OnChanges {
   }
 
   navigate(menu: DTOMenu) {
+    console.log(`🚀 Navegando a ruta: ${menu.menu_ruta}`);
     if (menu.menu_ruta) this.router.navigate([menu.menu_ruta]);
-    this.activeSubmenuId = null; // Ocultar submenús tras navegar
+    this.activeTooltipId = null; // Ocultar tooltips tras navegar
   }
 
   irAPerfil() {
+    console.log("🚀 Navegando a /perfil");
     this.router.navigate(['/perfil']);
-    this.activeSubmenuId = null;
+    this.activeTooltipId = null;
   }
 
   logout() {
+    console.log("🚪 Cerrando sesión");
     if (isPlatformBrowser(this.platformId)) localStorage.clear();
     else console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
     window.location.href = 'http://localhost:4203';
-    this.activeSubmenuId = null;
+    this.activeTooltipId = null;
   }
 
   principal() {
+    console.log("🏠 Navegando a /inicio");
     if (isPlatformBrowser(this.platformId)) localStorage.clear();
     else console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
     window.location.href = 'http://localhost:4200/inicio';
-    this.activeSubmenuId = null;
+    this.activeTooltipId = null;
   }
 }
