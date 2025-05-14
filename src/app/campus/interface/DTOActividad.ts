@@ -10,6 +10,7 @@ export interface DTOActividad {
   infoMaestra?: {
     descripcion?: string;
   };
+  competencia?: { nombre: string } | null; // Nuevo campo para competencia
 }
 
 export interface DTOActividadesSesion {

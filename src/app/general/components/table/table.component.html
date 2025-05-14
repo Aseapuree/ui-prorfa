@@ -32,21 +32,31 @@
           <tbody class="bg-table-row-bg divide-y divide-gray-200 dark:divide-gray-700 dark:bg-table-row-bg">
             <tr *ngFor="let item of data">
               <!-- Datos de cada fila -->
-              <td *ngFor="let column of columns"
-                class="px-4 md:px-2 py-4 text-sm text-table-row-text max-w-[{{column.maxWidth}}px] truncate"
-              >
-                <ng-container *ngIf="column.type === 'date'; else defaultContent">
-                  {{ item[column.field] | date: 'yyyy-MM-dd HH:mm' }}
-                </ng-container>
-                <ng-template #defaultContent>
-                  <ng-container *ngIf="column.transform; else simpleText">
-                    {{ column.transform(item[column.field]) }}
-                  </ng-container>
-                  <ng-template #simpleText>
-                    {{ item[column.field] }}
-                  </ng-template>
-                </ng-template>
-              </td>
+              <td
+  *ngFor="let column of columns"
+  class="px-4 md:px-2 py-4 text-sm text-table-row-text max-w-[{{ column.maxWidth }}px] truncate"
+>
+  <ng-container *ngIf="column.type === 'date'; else defaultContent">
+    {{ item[column.field] | date: 'yyyy-MM-dd HH:mm' }}
+  </ng-container>
+  <ng-template #defaultContent>
+    <ng-container *ngIf="column.transform; else simpleText">
+      <ng-container *ngIf="column.field === 'competencias'; else transformedText">
+        <span
+          class="cursor-pointer hover:text-blue-600"
+          (click)="showCompetenciasModal(item)"
+          [innerHTML]="column.transform(item[column.field]) | safeHtml"
+        ></span>
+      </ng-container>
+      <ng-template #transformedText>
+        {{ column.transform(item[column.field]) }}
+      </ng-template>
+    </ng-container>
+    <ng-template #simpleText>
+      {{ item[column.field] }}
+    </ng-template>
+  </ng-template>
+</td>
               <!-- Columna de acciones -->
               <td *ngIf="enableActions && actions.length > 0" class="px-4 md:px-2 py-4 text-sm max-w-[100px]">
                 <div class="flex items-center gap-x-6 md:gap-x-3">
