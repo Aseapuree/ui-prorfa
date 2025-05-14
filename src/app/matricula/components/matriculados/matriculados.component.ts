@@ -1,181 +1,302 @@
+import { NotificationComponent } from './../../../campus/components/shared/notificaciones/notification.component';
+import { NotificationService } from './../../../campus/components/shared/notificaciones/notification.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { TableComponent, ColumnConfig } from './../../../general/components/table/table.component';
+import { MatriculaService } from './../../services/matricula.service';
+import { Matricula } from './../../interfaces/DTOMatricula';
+import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { GeneralLoadingSpinnerComponent } from './../../../general/components/spinner/spinner.component';
+import { Alumno } from './../../interfaces/DTOAlumno';
+import { ComprobanteService } from './../../services/comprobante.service';
+import { ApoderadoService } from './../../services/apoderado.service';
+import { AlumnoService } from './../../services/alumno.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { Comprobante } from '../../interfaces/DTOComprobante';
+import { Apoderado } from '../../interfaces/DTOApoderado';
+import { PaginationComponent } from './../../../general/components/pagination/pagination.component';
+import { FormsModule } from '@angular/forms';
+import { TooltipComponent } from './../../../general/components/tooltip/tooltip.component';
 
+export interface ActionConfig {
+  name: string;
+  icon: any;
+  tooltip: string;
+  action: (item: any) => void;
+  hoverColor?: string;
+  visible?: (item: any) => boolean;
+}
 
-export interface Matriculado {
-  matriculaid: string;
-  idusuario: string;
-  alumnoid: string;
-  grado: number;
-  seccion: string;
-  nivel: string;
-  nombre: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  fechaCreacion?: string;
+export interface MatriculadoDisplay extends Matricula {
+  nombre?: string | null;
+  apellidoPaterno?: string | null;
+  apellidoMaterno?: string | null;
+  alumno?: Alumno;
+  codigomatricula?: string | null;
+  codigopago?: string | null;
+  fechaCreacionComprobante?: string | null;
+  numeroDocumentoApoderado?: string | null;
+  numeroDocumentoAlumno?: string | null;
 }
 
 @Component({
   selector: 'app-matriculados',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [
+    CommonModule,
+    TableComponent,
+    FontAwesomeModule,
+    GeneralLoadingSpinnerComponent,
+    PaginationComponent,
+    FormsModule,
+    NotificationComponent,
+    TooltipComponent
+  ],
   templateUrl: './matriculados.component.html',
   styleUrls: ['./matriculados.component.scss']
 })
 export class MatriculadosComponent implements OnInit {
-  filterForm!: FormGroup;
-  showFilters: boolean = false;
   loading = false;
-  matriculados: Matriculado[] = [];
-  quickSearch: string = '';
-  filterFecha: string = '';
-  filterOptions = {
-    grado: false,
-    seccion: false,
-    fecha: false,
-    nombre: false,
-    apellidoPaterno: false,
-    apellidoMaterno: false
+  matriculados: MatriculadoDisplay[] = [];
+  allMatriculados: MatriculadoDisplay[] = [];
+  columns: ColumnConfig[] = [];
+  actions: ActionConfig[] = [];
+  currentPage: number = 1;
+  totalPages: number = 1;
+  pageSize: number = 10;
+  maxPaginationSize: number = 7;
+
+  filters = {
+    codigomatricula: '',
+    codigopago: '',
+    grado: '',
+    seccion: '',
+    nivel: '',
+    fechaCreacionComprobante: ''
   };
 
-  pdfMake: any;
-  private baseUrl = 'http://localhost:8080/v1/matriculas';
-
   constructor(
-    private fb: FormBuilder,
-    private http: HttpClient,
-    private router: Router
-  ) {}
+    private router: Router,
+    private matriculaService: MatriculaService,
+    private comprobanteService: ComprobanteService,
+    private apoderadoService: ApoderadoService,
+    private alumnoService: AlumnoService,
+    private library: FaIconLibrary,
+    private notificationService: NotificationService
+  ) {
+    this.library.addIcons(faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle);
+  }
 
   async ngOnInit() {
-    this.filterForm = this.fb.group({
-      grado: [''],
-      seccion: [''],
-      fechaEspecifica: [''],
-      nombre: [''],
-      apellidoPaterno: [''],
-      apellidoMaterno: ['']
-    });
-    const pdfMakeModule = await import('pdfmake/build/pdfmake');
-    const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
-    this.pdfMake = pdfMakeModule.default;
-    this.pdfMake.vfs = pdfFontsModule.default.vfs;
-    this.matriculados = [{alumnoid:"12",apellidoMaterno:"FG",apellidoPaterno:"GH",grado:4,idusuario:"456",matriculaid:"45",nivel:"P",seccion:"B",fechaCreacion:"45",nombre:"JH"},
-      {alumnoid:"12",apellidoMaterno:"FG",apellidoPaterno:"GH",grado:4,idusuario:"456",matriculaid:"45",nivel:"P",seccion:"B",fechaCreacion:"45",nombre:"JH"},
-      {alumnoid:"12",apellidoMaterno:"FG",apellidoPaterno:"GH",grado:4,idusuario:"456",matriculaid:"45",nivel:"P",seccion:"B",fechaCreacion:"45",nombre:"JH"}
+    this.columns = [
+      { field: 'codigomatricula', header: 'CODIGO MATRICULA', maxWidth: 150, sortable: true },
+      { field: 'codigopago', header: 'CODIGO PAGO', maxWidth: 150, sortable: true },
+      { field: 'grado', header: 'GRADO', maxWidth: 100, sortable: true },
+      { field: 'seccion', header: 'SECCION', maxWidth: 100, sortable: true },
+      { field: 'nivel', header: 'NIVEL', maxWidth: 100, sortable: true },
+      { field: 'numeroDocumentoApoderado', header: 'DOCUMENTO APODERADO', maxWidth: 110, sortable: true },
+      { field: 'numeroDocumentoAlumno', header: 'DOCUMENTO ALUMNO', maxWidth: 110, sortable: true },
+      { field: 'estadoMatricula', header: 'ESTADO', maxWidth: 150, sortable: true },
+      { field: 'fechaCreacionComprobante', header: 'FECHA CREACION', maxWidth: 150, sortable: true, type: 'date' },
     ];
+
+    this.actions = [
+      {
+        name: 'continue',
+        icon: ['fas', 'arrow-right'],
+        tooltip: 'CONTINUAR',
+        action: (item: MatriculadoDisplay) => this.continueMatricula(item),
+        hoverColor: 'green',
+        visible: (item: MatriculadoDisplay) => item.estadoMatricula === 'EN PROCESO'
+      },
+      {
+        name: 'print-payment',
+        icon: ['fas', 'dollar-sign'],
+        tooltip: 'COMPROBANTE DE PAGO',
+        action: (item: MatriculadoDisplay) => this.imprimirComprobantePago(item),
+        hoverColor: 'blue',
+        visible: (item: MatriculadoDisplay) => item.estadoMatricula === 'COMPLETADA'
+      },
+      {
+        name: 'print-enrollment',
+        icon: ['fas', 'file-alt'],
+        tooltip: 'COMPROBANTE DE MATRICULA',
+        action: (item: MatriculadoDisplay) => this.imprimirComprobanteMatricula(item),
+        hoverColor: 'purple',
+        visible: (item: MatriculadoDisplay) => item.estadoMatricula === 'COMPLETADA'
+      }
+    ];
+
+    this.loadMatriculas();
   }
 
-  toggleFilters(): void {
-    this.showFilters = !this.showFilters;
-  }
+  loadMatriculas(): void {
+     this.loading = true;
+     this.matriculaService.obtenerMatriculas()
+       .pipe(
+         switchMap(matriculas => {
+           if (matriculas.length === 0) {
+             return of([]);
+           }
+           const observables = matriculas.map(matricula => {
+             const apoderado$ = matricula.idapoderado ? this.apoderadoService.obtenerApoderado(matricula.idapoderado).pipe(
+               catchError(() => of(null))
+             ) : of(null);
+             const alumno$ = matricula.idalumno ? this.alumnoService.obtenerAlumno(matricula.idalumno).pipe(
+               catchError(() => of(null))
+             ) : of(null);
+             const comprobante$ = matricula.idmatricula ? this.comprobanteService.obtenerComprobantePorIdMatricula(matricula.idmatricula).pipe(
+               catchError(() => of(null))
+             ) : of(null);
 
-  private isValidDate(value: string): boolean {
-    return /^\d{4}-\d{2}-\d{2}$/.test(value);
+             return forkJoin([of(matricula), apoderado$, alumno$, comprobante$]);
+           });
+           return forkJoin(observables);
+         }),
+         map(results => {
+           return results.map(([matricula, apoderado, alumno, comprobante]) => ({
+             ...matricula,
+             nombre: alumno?.nombre || null,
+             apellidoPaterno: alumno?.apellidoPaterno || null,
+             apellidoMaterno: alumno?.apellidoMaterno || null,
+             estadoMatricula: matricula.estadoMatricula || null,
+             codigomatricula: comprobante?.codigomatricula || null,
+             codigopago: comprobante?.codigopago || null,
+             fechaCreacionComprobante: comprobante?.fechaCreacion || null,
+             numeroDocumentoApoderado: apoderado?.numeroDocumento || null,
+             numeroDocumentoAlumno: alumno?.numeroDocumento || null,
+           }));
+         })
+       )
+       .subscribe({
+         next: data => {
+           this.allMatriculados = data;
+           this.applyFiltersAndPagination();
+           this.loading = false;
+         },
+         error: err => {
+           this.notificationService.showNotification('Error al cargar matrículas: ' + err.message, 'error');
+           this.loading = false;
+         }
+       });
+   }
+
+  applyFiltersAndPagination(): void {
+    let filteredMatriculados = this.allMatriculados.filter(matricula => {
+      let isMatch = true;
+
+      if (this.filters.codigomatricula && !matricula.codigomatricula?.includes(this.filters.codigomatricula)) {
+        isMatch = false;
+      }
+      if (this.filters.codigopago && !matricula.codigopago?.includes(this.filters.codigopago)) {
+        isMatch = false;
+      }
+      if (this.filters.grado && matricula.grado?.toString() !== this.filters.grado) {
+        isMatch = false;
+      }
+      if (this.filters.seccion && matricula.seccion?.toLowerCase() !== this.filters.seccion.toLowerCase()) {
+        isMatch = false;
+      }
+      if (this.filters.nivel && matricula.nivel?.toLowerCase() !== this.filters.nivel.toLowerCase()) {
+        isMatch = false;
+      }
+      if (this.filters.fechaCreacionComprobante && matricula.fechaCreacionComprobante) {
+        const matriculaDate = new Date(matricula.fechaCreacionComprobante).toISOString().split('T')[0];
+        if (matriculaDate !== this.filters.fechaCreacionComprobante) {
+          isMatch = false;
+        }
+      } else if (this.filters.fechaCreacionComprobante && !matricula.fechaCreacionComprobante) {
+         isMatch = false;
+      }
+
+      return isMatch;
+    });
+
+    this.totalPages = Math.ceil(filteredMatriculados.length / this.pageSize);
+    if (this.currentPage > this.totalPages && this.totalPages > 0) {
+        this.currentPage = this.totalPages;
+    } else if (this.totalPages === 0) {
+        this.currentPage = 1;
+    }
+
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.matriculados = filteredMatriculados.slice(startIndex, endIndex);
   }
 
   onSearch(): void {
-    this.loading = true;
-    this.filterForm.reset();
+    this.currentPage = 1;
+    this.applyFiltersAndPagination();
+  }
 
-    if (!this.showFilters) {
-      if (this.quickSearch) {
-        if (!isNaN(Number(this.quickSearch))) {
-          this.filterForm.patchValue({ grado: this.quickSearch });
-        } else if (this.isValidDate(this.quickSearch)) {
-          this.filterForm.patchValue({ fechaEspecifica: this.quickSearch });
-        } else {
-          this.filterForm.patchValue({ nombre: this.quickSearch });
-        }
-      }
-    } else {
-      const update: any = {};
-      if (this.filterOptions.grado && !isNaN(Number(this.quickSearch))) {
-        update.grado = this.quickSearch;
-      }
-      if (this.filterOptions.seccion) {
-        update.seccion = this.quickSearch;
-      }
-      if (this.filterOptions.fecha && this.filterFecha) {
-        update.fechaEspecifica = this.filterFecha;
-      }
-      if (this.filterOptions.nombre) {
-        update.nombre = this.quickSearch;
-      }
-      if (this.filterOptions.apellidoPaterno) {
-        update.apellidoPaterno = this.quickSearch;
-      }
-      if (this.filterOptions.apellidoMaterno) {
-        update.apellidoMaterno = this.quickSearch;
-      }
-      this.filterForm.patchValue(update);
-    }
+  onPageChange(newPage: number): void {
+    this.currentPage = newPage;
+    this.applyFiltersAndPagination();
+  }
 
-    let params = new HttpParams();
-    const formValues = this.filterForm.value;
-    if (formValues.grado) {
-      params = params.set('grado', formValues.grado);
-    }
-    if (formValues.seccion) {
-      params = params.set('seccion', formValues.seccion);
-    }
-    if (formValues.fechaEspecifica) {
-      params = params.set('fecha', formValues.fechaEspecifica);
-    }
-    if (formValues.nombre) {
-      params = params.set('nombre', formValues.nombre);
-    }
-    if (formValues.apellidoPaterno) {
-      params = params.set('apellidoPaterno', formValues.apellidoPaterno);
-    }
-    if (formValues.apellidoMaterno) {
-      params = params.set('apellidoMaterno', formValues.apellidoMaterno);
-    }
-
-    this.http.get<Matriculado[]>(`${this.baseUrl}/listar`, { params, withCredentials: true })
-      .subscribe({
-        next: data => {
-          this.matriculados = data;
-          this.loading = false;
-        },
-        error: err => {
-          console.error('Error al cargar matrículas:', err);
-          this.loading = false;
-        }
+  continueMatricula(matricula: MatriculadoDisplay): void {
+    if (matricula.estadoMatricula === 'EN PROCESO') {
+      this.router.navigate(['/registrar-matricula'], {
+        queryParams: { idMatricula: matricula.idmatricula }
       });
+    } else {
+      this.notificationService.showNotification(`Solo se puede continuar una matrícula que esté en estado "EN PROCESO". Estado actual: ${matricula.estadoMatricula}`, 'info');
+    }
   }
 
-  imprimirRegistro(registro: Matriculado): void {
-    if (!this.pdfMake) return;
-
-    const docDefinition = {
-      content: [
-        { text: 'Reporte de Matrícula', style: 'header' },
-        { text: `Grado: ${registro.grado} - Sección: ${registro.seccion}`, style: 'subheader' },
-        { text: `Nivel: ${registro.nivel}`, style: 'subheader' },
-        { text: 'Alumno:', style: 'seccion' },
-        { text: `Nombre: ${registro.nombre} ${registro.apellidoPaterno} ${registro.apellidoMaterno}`, style: 'contenido' },
-        { text: `ID de Matrícula: ${registro.matriculaid}`, style: 'contenido' },
-        { text: `Fecha Creación: ${registro.fechaCreacion || 'N/A'}`, style: 'contenido' },
-        { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1 }] },
-        { text: 'Firma Digital/Sello del Colegio', style: 'firma' }
-      ],
-      styles: this.getPDFStyles()
-    };
-
-    this.pdfMake.createPdf(docDefinition).open();
+  imprimirComprobantePago(matricula: MatriculadoDisplay): void {
+    if (matricula.estadoMatricula === 'COMPLETADA' && matricula.idmatricula) {
+      this.loading = true;
+      this.comprobanteService.generarPdfDirecto(matricula.idmatricula, 'PAGO')
+        .subscribe({
+          next: blob => {
+            const url = window.URL.createObjectURL(blob);
+            window.open(url);
+            this.loading = false;
+          },
+          error: err => {
+            this.notificationService.showNotification('Error al generar comprobante de pago: ' + err.message, 'error');
+            this.loading = false;
+          }
+        });
+    } else if (!matricula.idmatricula) {
+      this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para generar el comprobante de pago.', 'error');
+    }
   }
 
-  private getPDFStyles() {
-    return {
-      header: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 10] },
-      subheader: { fontSize: 12, alignment: 'center', margin: [0, 0, 0, 5] },
-      seccion: { fontSize: 14, bold: true, margin: [0, 10, 0, 5] },
-      contenido: { fontSize: 11, margin: [0, 0, 0, 3] },
-      firma: { fontSize: 12, bold: true, alignment: 'center', margin: [0, 20, 0, 0] }
+  imprimirComprobanteMatricula(matricula: MatriculadoDisplay): void {
+    if (matricula.estadoMatricula === 'COMPLETADA' && matricula.idmatricula) {
+      this.loading = true;
+      this.comprobanteService.generarPdfDirecto(matricula.idmatricula, 'MATRICULA')
+        .subscribe({
+          next: blob => {
+            const url = window.URL.createObjectURL(blob);
+            window.open(url);
+            this.loading = false;
+          },
+          error: err => {
+             this.notificationService.showNotification('Error al generar comprobante de matrícula: ' + err.message, 'error');
+            this.loading = false;
+          }
+        });
+    } else if (!matricula.idmatricula) {
+       this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para generar el comprobante de matrícula.', 'error');
+    }
+  }
+
+  resetFilter(): void {
+    this.filters = {
+      codigomatricula: '',
+      codigopago: '',
+      grado: '',
+      seccion: '',
+      nivel: '',
+      fechaCreacionComprobante: ''
     };
+    this.currentPage = 1;
+    this.applyFiltersAndPagination();
   }
 }

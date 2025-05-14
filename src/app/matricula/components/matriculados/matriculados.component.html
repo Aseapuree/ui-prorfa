@@ -1,82 +1,126 @@
-<div class="search-container">
-  <input
-    type="text"
-    [(ngModel)]="quickSearch"
-    placeholder="Escribe para filtrar..."
-    class="search-input"
-    (keyup.enter)="onSearch()"
-    (input)="onSearch()"
+<div class="container mx-auto p-4">
+  <h2 class="text-2xl font-bold mb-4">Matrículas Registradas</h2>
+
+  <div class="mt-4 flex flex-col gap-4 w-full">
+    <div class="flex flex-wrap gap-4 sm:gap-6">
+      <div class="w-60 space-y-3">
+        <label for="codigomatricula" class="block text-sm font-medium text-gray-700 dark:text-white">Código Matrícula</label>
+        <input
+          type="text"
+          id="codigomatricula"
+          [(ngModel)]="filters.codigomatricula"
+          placeholder="Código Matrícula"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <div class="w-60 space-y-3">
+        <label for="codigopago" class="block text-sm font-medium text-gray-700 dark:text-white">Código Pago</label>
+        <input
+          type="text"
+          id="codigopago"
+          [(ngModel)]="filters.codigopago"
+          placeholder="Código Pago"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <div class="w-60 space-y-3">
+        <label for="grado" class="block text-sm font-medium text-gray-700 dark:text-white">Grado</label>
+        <input
+          type="text"
+          id="grado"
+          [(ngModel)]="filters.grado"
+          placeholder="Grado"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <div class="w-60 space-y-3">
+        <label for="seccion" class="block text-sm font-medium text-gray-700 dark:text-white">Sección</label>
+        <input
+          type="text"
+          id="seccion"
+          [(ngModel)]="filters.seccion"
+          placeholder="Sección"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <div class="w-60 space-y-3">
+        <label for="nivel" class="block text-sm font-medium text-gray-700 dark:text-white">Nivel</label>
+        <input
+          type="text"
+          id="nivel"
+          [(ngModel)]="filters.nivel"
+          placeholder="Nivel"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <div class="w-60 space-y-3">
+        <label for="fechaCreacionComprobante" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Creación</label>
+        <input
+          type="date"
+          id="fechaCreacionComprobante"
+          [(ngModel)]="filters.fechaCreacionComprobante"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center">
+        <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">Mostrar:</label>
+        <select
+          id="itemsPerPage"
+          [(ngModel)]="pageSize"
+          (ngModelChange)="onSearch()"
+          class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
+        >
+          <option *ngFor="let option of [5, 10, 15, 20]" [value]="option">{{ option }}</option>
+        </select>
+        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <app-tooltip tooltipText="Buscar matrículas">
+          <button
+            (click)="onSearch()"
+            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          >
+            <fa-icon [icon]="['fas', 'search']"></fa-icon>
+            <span>Buscar</span>
+          </button>
+        </app-tooltip>
+        <app-tooltip tooltipText="Limpiar todos los filtros">
+          <button
+            (click)="resetFilter()"
+            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          >
+            <fa-icon [icon]="['fas', 'broom']"></fa-icon>
+            <span>Limpiar</span>
+          </button>
+        </app-tooltip>
+      </div>
+    </div>
+  </div>
+
+  <app-table
+    [data]="matriculados"
+    [columns]="columns"
+    [actions]="actions"
+    [enableActions]="true"
+    (sortChange)="onSearch()"
   />
-  <button class="filter-toggle" (click)="toggleFilters()">
-    <i class="filter-icon">⚙️</i>
-  </button>
-</div>
 
-<div class="filter-panel" *ngIf="showFilters">
-  <div class="advanced-filters">
-    <label>
-      <input type="checkbox" [(ngModel)]="filterOptions.grado" />
-      Filtrar por Grado
-    </label>
-    <label>
-      <input type="checkbox" [(ngModel)]="filterOptions.seccion" />
-      Filtrar por Sección
-    </label>
-    <label>
-      <input type="checkbox" [(ngModel)]="filterOptions.fecha" />
-      Filtrar por Fecha
-      <input
-        *ngIf="filterOptions.fecha"
-        type="date"
-        [(ngModel)]="filterFecha"
-        class="advanced-date-input"
-      />
-    </label>
-    <label>
-      <input type="checkbox" [(ngModel)]="filterOptions.nombre" />
-      Filtrar por Nombre
-    </label>
-    <label>
-      <input type="checkbox" [(ngModel)]="filterOptions.apellidoPaterno" />
-      Filtrar por Apellido Paterno
-    </label>
-    <label>
-      <input type="checkbox" [(ngModel)]="filterOptions.apellidoMaterno" />
-      Filtrar por Apellido Materno
-    </label>
-  </div>
-</div>
+  <app-pagination
+    [page]="currentPage"
+    [totalPages]="totalPages"
+    [maxSize]="maxPaginationSize"
+    (pageChange)="onPageChange($event)"
+  ></app-pagination>
 
-<div class="table-container">
-  <table class="matriculas-table">
-    <thead>
-      <tr>
-        <th>🎓 Grado</th>
-        <th>🏫 Sección</th>
-        <th>📚 Nivel</th>
-        <th>👤 Alumno</th>
-        <th>📅 Fecha Creación</th>
-        <th>🔧 Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let m of matriculados">
-        <td>{{ m.grado }}</td>
-        <td>{{ m.seccion }}</td>
-        <td>{{ m.nivel }}</td>
-        <td>{{ m.nombre }} {{ m.apellidoPaterno }} {{ m.apellidoMaterno }}</td>
-        <td>{{ m.fechaCreacion }}</td>
-        <td>
-          <button class="btn-print" (click)="imprimirRegistro(m)">🖨️ Imprimir</button>
-        </td>
-      </tr>
-      <tr *ngIf="!loading && matriculados.length === 0">
-        <td colspan="6">⚠️ No se encontraron registros.</td>
-      </tr>
-    </tbody>
-  </table>
-  <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-    <p>⏳ Cargando...</p>
-  </div>
+  <app-general-loading-spinner [visible]="loading" message="Cargando matrículas..."></app-general-loading-spinner>
+  <app-notification></app-notification>
 </div>
