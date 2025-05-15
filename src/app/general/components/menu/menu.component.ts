@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, Input, Inject, PLATFORM_ID, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd, RouterEvent } from '@angular/router';
 import { DTOmenuService } from '../../Services/dtomenu.service';
 import { DTOMenu } from '../../Interface/DTOMenu';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -8,6 +8,7 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { fontAwesomeIcons } from '../../../campus/components/shared/font-awesome-icons';
 import { faUserCircle, faSignOutAlt, faHome } from '@fortawesome/free-solid-svg-icons';
 import { HttpClient } from '@angular/common/http';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-menu',
@@ -23,7 +24,7 @@ export class MenuComponent implements OnInit, OnChanges {
   @Input() nombreRol: string = '';
   @Input() idRol: string = '';
   @Input() perfilUrl: string | null = null;
-  @Output() menuToggle = new EventEmitter<void>(); // Para notificar al layout
+  @Output() menuToggle = new EventEmitter<void>();
 
   faUserCircle = faUserCircle;
   faSignOutAlt = faSignOutAlt;
@@ -33,7 +34,10 @@ export class MenuComponent implements OnInit, OnChanges {
   menuJerarquico: any[] = [];
   subMenuOpen: { [key: string]: boolean } = {};
   menuCerrado = false;
-  activeTooltipId: string | null = null; // Para controlar qué tooltip está activo
+  activeTooltipId: string | null = null;
+
+  activeMenuId: string | null = null;
+  activeSubMenuId: string | null = null;
 
   constructor(
     private menuService: DTOmenuService,
@@ -45,50 +49,129 @@ export class MenuComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.cargarImagenDesdeLocalStorage();
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.router.events.pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+      ).subscribe((event: NavigationEnd) => {
+        console.log('Evento de enrutador NavigationEnd:', event.urlAfterRedirects);
+        this.updateActiveMenu(event.urlAfterRedirects);
+      });
+      this.updateActiveMenu(this.router.url);
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['idRol'] && this.idRol && this.idRol !== 'undefined') {
+      console.log('ngOnChanges: Cambió idRol, obteniendo menús para rol:', this.idRol);
       this.obtenerMenus(this.idRol);
+    } else if (changes['menuJerarquico'] && isPlatformBrowser(this.platformId)) {
+      console.log('ngOnChanges: Cambió menuJerarquico, actualizando menú activo.');
+      this.updateActiveMenu(this.router.url);
     }
   }
 
   cargarImagenDesdeLocalStorage() {
     if (isPlatformBrowser(this.platformId)) {
-      console.log("✅ Plataforma es navegador (browser)");
       const urlImagen = localStorage.getItem("perfilUrl");
-      console.log("📸 URL obtenida de localStorage:", urlImagen);
       if (urlImagen && urlImagen.trim() !== '') {
         this.cargarImagenDesdeBackend(urlImagen);
-      } else {
-        console.warn("❌ No se encontró una URL válida en localStorage.");
       }
-    } else {
-      console.warn("⚠ Plataforma no es navegador, localStorage no está disponible.");
     }
   }
 
   obtenerMenus(rol: string) {
     this.menuService.getMenus(rol).subscribe(menuResponse => {
-      console.log("🔹 Respuesta del servicio en MenuComponent:", menuResponse);
       this.menus = menuResponse?.data || [];
-      console.log("✅ Menús cargados en MenuComponent:", this.menus);
       this.menuJerarquico = this.menus
         .filter(menu => menu.idmenuparent === null)
         .map(menu => ({
           ...menu,
           icono: this.getIcon(menu.menu_icono ?? ''),
           submenus: this.menus.filter(sub => sub.idmenuparent === menu.idMenu)
+                           .map(sub => ({...sub, icono: this.getIcon(sub.menu_icono ?? '')}))
         }));
-      console.log("📌 Menús estructurados con submenús:", this.menuJerarquico.map(m => ({
-        id: m.idMenu,
-        descripcion: m.menu_descripcion,
-        submenus: m.submenus ? m.submenus.map((s: DTOMenu) => s.menu_descripcion) : []
-      })));
+
+      console.log('Menús cargados, menuJerarquico:', JSON.parse(JSON.stringify(this.menuJerarquico.map(m => ({id: m.idMenu, ruta: m.menu_ruta, sub: m.submenus?.length})))));
+
+      if (isPlatformBrowser(this.platformId)) {
+        this.updateActiveMenu(this.router.url);
+      }
       this.cdr.detectChanges();
     }, error => {
       console.error("❌ Error al obtener menús en MenuComponent:", error);
     });
+  }
+
+  updateActiveMenu(currentUrl: string) {
+    const normalizedUrl = currentUrl === '/' ? '/inicio' : currentUrl;
+    console.log(`Actualizando menú activo. URL actual: '${normalizedUrl}' (original: '${currentUrl}')`);
+
+    let bestMatch = { menuId: null as string | null, subMenuId: null as string | null, specificity: -1 };
+
+    const staticItems = [
+        { id: 'inicio', route: '/inicio' },
+        { id: 'perfil', route: '/perfil' }
+    ];
+
+    for (const staticItem of staticItems) {
+        if (staticItem.route && normalizedUrl.startsWith(staticItem.route)) {
+            let currentSpecificity = staticItem.route.length;
+            if (normalizedUrl === staticItem.route) currentSpecificity += 1;
+            console.log(`Verificación estática: Elemento ${staticItem.id}, Ruta ${staticItem.route}, Especificidad ${currentSpecificity}`);
+            if (currentSpecificity > bestMatch.specificity) {
+                bestMatch = { menuId: staticItem.id, subMenuId: null, specificity: currentSpecificity };
+            }
+        }
+    }
+
+    for (const menuItem of this.menuJerarquico) {
+        if (menuItem.menu_ruta) {
+            console.log(`Verificación de menú: Elemento ${menuItem.idMenu}, Ruta ${menuItem.menu_ruta}`);
+            if (normalizedUrl.startsWith(menuItem.menu_ruta)) {
+                let currentSpecificity = menuItem.menu_ruta.length;
+                if (normalizedUrl === menuItem.menu_ruta) currentSpecificity += 1;
+                console.log(`  Coincidencia encontrada para ${menuItem.idMenu}. Especificidad: ${currentSpecificity}`);
+                if (currentSpecificity > bestMatch.specificity) {
+                    bestMatch = { menuId: menuItem.idMenu, subMenuId: null, specificity: currentSpecificity };
+                }
+            }
+        }
+
+        if (menuItem.submenus && menuItem.submenus.length > 0) {
+            for (const subMenuItem of menuItem.submenus) {
+                if (subMenuItem.menu_ruta) {
+                    console.log(`  Verificación de submenú: Elemento ${subMenuItem.idMenu} (padre ${menuItem.idMenu}), Ruta ${subMenuItem.menu_ruta}`);
+                    if (normalizedUrl.startsWith(subMenuItem.menu_ruta)) {
+                        let currentSpecificity = subMenuItem.menu_ruta.length;
+                        if (normalizedUrl === subMenuItem.menu_ruta) currentSpecificity += 1;
+                        console.log(`    Coincidencia encontrada para submenú ${subMenuItem.idMenu}. Especificidad: ${currentSpecificity}`);
+                        if (currentSpecificity > bestMatch.specificity) {
+                            bestMatch = { menuId: menuItem.idMenu, subMenuId: subMenuItem.idMenu, specificity: currentSpecificity };
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    console.log('Mejor coincidencia encontrada:', bestMatch);
+
+    if (this.activeMenuId !== bestMatch.menuId || this.activeSubMenuId !== bestMatch.subMenuId) {
+      this.activeMenuId = bestMatch.menuId;
+      this.activeSubMenuId = bestMatch.subMenuId;
+      console.log('IDs activos establecidos: activeMenuId =', this.activeMenuId, ', activeSubMenuId =', this.activeSubMenuId);
+
+      if (this.activeMenuId && this.activeSubMenuId && !this.menuCerrado) {
+        if (!this.subMenuOpen[this.activeMenuId]) {
+          console.log('Abriendo submenú padre para elemento activo:', this.activeMenuId);
+          this.subMenuOpen[this.activeMenuId] = true;
+        }
+      }
+      this.cdr.detectChanges();
+    } else {
+      console.log('Los IDs activos no cambiaron.');
+    }
   }
 
   extraerIdDesdeUrl(url: string): string | null {
@@ -100,7 +183,6 @@ export class MenuComponent implements OnInit, OnChanges {
     if (match) return match[1];
     const regexId = /^[a-zA-Z0-9_-]+$/;
     if (regexId.test(url)) return url;
-    console.warn("⚠ No se pudo extraer ID de la URL:", url);
     return null;
   }
 
@@ -108,19 +190,15 @@ export class MenuComponent implements OnInit, OnChanges {
     if (!urlDrive || urlDrive.trim() === '') return;
     const fileId = this.extraerIdDesdeUrl(urlDrive);
     if (!fileId) {
-      console.error("❌ No se pudo extraer el ID de la URL:", urlDrive);
       this.perfilUrl = null;
       return;
     }
     const apiUrl = `http://localhost:8080/api/perfil/imagen/${fileId}`;
-    console.log("🚀 Solicitando imagen desde backend:", apiUrl);
     this.http.get(apiUrl, { responseType: 'blob', withCredentials: true }).subscribe(blob => {
       const imageUrl = URL.createObjectURL(blob);
       this.perfilUrl = imageUrl;
       this.cdr.detectChanges();
-      console.log("✅ Imagen cargada y asignada a perfilUrl:", this.perfilUrl);
     }, error => {
-      console.error("❌ Error al cargar imagen desde backend:", error);
       this.perfilUrl = null;
     });
   }
@@ -133,51 +211,59 @@ export class MenuComponent implements OnInit, OnChanges {
     if (!this.nombreUsuario) return '?';
     const nombres = this.nombreUsuario.trim().split(' ');
     const apellido = this.apellidoPaterno?.trim().split(' ')[0] || '';
-    if (nombres.length === 1) {
+    if (nombres.length === 1 && apellido) {
       const inicialNombre = nombres[0][0] || '';
       const inicialApellido = apellido[0] || '';
       return (inicialNombre + inicialApellido).toUpperCase();
     }
-    return (nombres[0][0] + nombres[1][0]).toUpperCase();
+    if (nombres.length >= 2) {
+      return (nombres[0][0] + (nombres[1]?.[0] || '')).toUpperCase();
+    }
+    if (nombres.length === 1) {
+      return (nombres[0][0] + (nombres[0].length > 1 ? nombres[0][1] : '')).toUpperCase();
+    }
+    return (nombres[0]?.[0] || '?').toUpperCase();
   }
 
   getIcon(menu_icono: string): IconDefinition | null {
-    console.log(`🔍 Buscando icono: "${menu_icono}"`);
-    const iconoEncontrado = fontAwesomeIcons.find(icon => icon.iconName === menu_icono.toLowerCase());
-    if (!iconoEncontrado) console.warn(`⚠ No se encontró el icono: "${menu_icono}" en fontAwesomeIcons`);
+    const iconoEncontrado = fontAwesomeIcons.find(icon => icon.iconName === menu_icono?.toLowerCase());
+    if (!iconoEncontrado && menu_icono) console.warn(`⚠ No se encontró el icono: "${menu_icono}" en fontAwesomeIcons`);
     return iconoEncontrado || null;
   }
 
   toggleMenu() {
     this.menuCerrado = !this.menuCerrado;
-    this.activeTooltipId = null; // Ocultar tooltips al cambiar estado
-    this.menuToggle.emit(); // Notificar al layout
+    this.activeTooltipId = null;
+    this.menuToggle.emit();
   }
 
   toggleSubMenu(menuId: string) {
-    this.subMenuOpen[menuId || ''] = !this.subMenuOpen[menuId || ''];
+    if (this.menuCerrado) {
+      // En modo cerrado, al hacer clic, mantener el submenú visible
+      if (this.activeTooltipId === menuId) {
+        this.activeTooltipId = null; // Si ya está activo, lo cerramos
+      } else {
+        this.activeTooltipId = menuId; // Si no está activo, lo abrimos
+      }
+    } else {
+      // En modo abierto, toggle normal del submenú
+      this.subMenuOpen[menuId || ''] = !this.subMenuOpen[menuId || ''];
+    }
+    this.cdr.detectChanges();
   }
 
   showExpanded(id: string) {
     if (this.menuCerrado && id) {
-      console.log(`🖱️ Mouseenter - Mostrando expansión para ID: ${id}, menuCerrado: ${this.menuCerrado}`);
       this.activeTooltipId = id;
-      this.cdr.detectChanges(); // Forzar detección de cambios
+      this.cdr.detectChanges();
     }
   }
 
   hideExpanded() {
     if (this.menuCerrado) {
-      console.log(`🖱️ Mouseleave - Ocultando expansión, menuCerrado: ${this.menuCerrado}`);
       this.activeTooltipId = null;
-      this.cdr.detectChanges(); // Forzar detección de cambios
+      this.cdr.detectChanges();
     }
-  }
-
-  logSubmenuRender(menuId: string, submenusLength: number | undefined): string {
-    const menu = this.menuJerarquico.find(m => m.idMenu === menuId);
-    console.log(`📋 Submenu renderizado - ID: ${menuId}, Submenús: ${submenusLength}, Contenido: ${JSON.stringify(menu?.submenus)}`);
-    return '';
   }
 
   trackById(index: number, item: DTOMenu): string {
@@ -185,30 +271,27 @@ export class MenuComponent implements OnInit, OnChanges {
   }
 
   navigate(menu: DTOMenu) {
-    console.log(`🚀 Navegando a ruta: ${menu.menu_ruta}`);
-    if (menu.menu_ruta) this.router.navigate([menu.menu_ruta]);
-    this.activeTooltipId = null; // Ocultar tooltips tras navegar
+    this.activeTooltipId = null;
+    if (menu.menu_ruta) {
+      this.router.navigate([menu.menu_ruta]);
+    } else {
+      console.warn(`⚠ No se puede navegar: el menú "${menu.menu_descripcion}" no tiene una ruta definida.`);
+    }
   }
 
   irAPerfil() {
-    console.log("🚀 Navegando a /perfil");
+    this.activeTooltipId = null;
     this.router.navigate(['/perfil']);
-    this.activeTooltipId = null;
-  }
-
-  logout() {
-    console.log("🚪 Cerrando sesión");
-    if (isPlatformBrowser(this.platformId)) localStorage.clear();
-    else console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
-    window.location.href = 'http://localhost:4203';
-    this.activeTooltipId = null;
   }
 
   principal() {
-    console.log("🏠 Navegando a /inicio");
-    if (isPlatformBrowser(this.platformId)) localStorage.clear();
-    else console.warn("⚠ No se pudo limpiar localStorage porque no está disponible.");
-    window.location.href = 'http://localhost:4200/inicio';
     this.activeTooltipId = null;
+    this.router.navigate(['/inicio']);
+  }
+
+  logout() {
+    this.activeTooltipId = null;
+    if (isPlatformBrowser(this.platformId)) localStorage.clear();
+    window.location.href = 'http://localhost:4203';
   }
 }

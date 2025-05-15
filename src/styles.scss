@@ -10,7 +10,8 @@
     --border-color: #778DA9;
     --text-color: #E0E1DD;
     --accent-color: #415A77;
-    
+    --active-bg-color: #89b0e2; // Nuevo: Color de fondo para el estado activo
+    --active-text-color: #4837c7; // Nuevo: Color de texto para el estado activo
     /* Colores específicos para la tabla */
     --table-header-bg: #1B263B; /* Fondo para <thead> */
     --table-header-text: #E0E1DD; /* Color de texto para <th> en el encabezado */
@@ -21,7 +22,9 @@
     --table-action-edit-hover: #FBBF24; /* Color hover para ícono de editar */
     --table-action-delete-hover: #EF4444; /* Color hover para ícono de eliminar */
     --table-action-print-hover: #10B981; /* Color hover para ícono de imprimir */
+    
   }
+  
 
 .mdc-notched-outline__notch{
     border-right: none;
