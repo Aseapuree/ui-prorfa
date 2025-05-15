@@ -45,15 +45,16 @@
   <ng-container *ngIf="rolUsuario === 'Alumno'">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       <app-card
-        *ngFor="let curso of alumnocursos | paginate: { itemsPerPage: 4, currentPage: page }"
-        [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
-        [title]="curso.nombreCurso || 'Sin nombre'"
-        [teacher]="curso.nombreProfesor || 'Sin profesor'"
-        [grado]="curso.grado?.toString() || ''"
-        [session]="curso.seccion || 'Sin sección'"
-        (click)="seleccionarCurso(curso)"
-        class="cursor-pointer"
-      ></app-card>
+      *ngFor="let curso of alumnocursos | paginate: { itemsPerPage: 4, currentPage: page }"
+      [image]="'https://img.freepik.com/vector-gratis/ilustracion-concepto-educacion_114360-851.jpg'"
+      [title]="curso.nombreCurso || 'Sin nombre'"
+      [abreviatura]="curso.abreviatura || ''"
+      [teacher]="curso.nombreProfesor || 'Sin profesor'"
+      [grado]="curso.grado?.toString() || ''"
+      [session]="curso.seccion || 'Sin sección'"
+      (cardClicked)="seleccionarCurso(curso)"
+      class="cursor-pointer"
+    ></app-card>
     </div>
     <app-pagination
       [currentPage]="page"

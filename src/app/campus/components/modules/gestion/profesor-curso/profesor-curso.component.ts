@@ -20,6 +20,8 @@ import { Curso } from '../../../../interface/curso';
 import { CourseService } from '../../../../services/course.service';
 import { UsuarioService } from '../../../../services/usuario.service';
 import { ActionConfig, ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
+import { EntidadService } from '../../../../../matricula/services/entidad.service';
+import { DatosNGS } from '../../../../../matricula/interfaces/DTOEntidad';
 
 @Component({
   selector: 'app-profesor-curso',
@@ -35,9 +37,9 @@ import { ActionConfig, ColumnConfig, TableComponent } from '../../../../../gener
     PaginationComponent,
     GeneralLoadingSpinnerComponent,
     TooltipComponent,
-    TableComponent
+    TableComponent,
   ],
-  providers: [ProfesorCursoService],
+  providers: [ProfesorCursoService,EntidadService],
   templateUrl: './profesor-curso.component.html',
   styleUrl: './profesor-curso.component.scss'
 })
@@ -54,8 +56,11 @@ export class ProfesorCursoComponent implements OnInit {
   sortDir: string = 'asc';
   isLoading: boolean = false;
   appliedFilters: any = null;
+  isValidFechaInicio: boolean = true;
+  isValidFechaFin: boolean = true;
+  currentYear: number = new Date().getFullYear(); // Año actual para validaciones
 
-  // Variables de filtros
+// Variables de filtros
   profesores: Usuario[] = [];
   cursos: Curso[] = [];
   filters = {
@@ -64,17 +69,21 @@ export class ProfesorCursoComponent implements OnInit {
     grado: '',
     seccion: '',
     nivel: '',
-    fechaInicio: '' as string | undefined,
-    fechaFin: '' as string | undefined,
+    fechaInicio: '',
+    fechaFin: '',
     fechaTipo: 'asignacion'
   };
-  niveles = ['primaria', 'secundaria'];
+  niveles: string[] = [];
   grados: string[] = [];
-  secciones = ['A', 'B', 'C', 'D'];
+  secciones: string[] = [];
+  datosNGS: DatosNGS | null = null;
   fechaTipos = [
     { value: 'asignacion', label: 'Fecha Asignación' },
     { value: 'actualizacion', label: 'Fecha Actualización' }
   ];
+
+  // Fecha máxima
+  maxDate!: string;
 
   // Configuración de columnas para la tabla
   tableColumns: ColumnConfig[] = [
@@ -112,16 +121,6 @@ export class ProfesorCursoComponent implements OnInit {
       },
       hoverColor: 'table-action-delete-hover'
     }
-    // Acción de "Imprimir" (comentada)
-    /*
-    {
-      name: 'Imprimir',
-      icon: ['fas', 'print'],
-      tooltip: 'Imprimir asignación',
-      action: (asignacion: any) => this.imprimirAsignacion(asignacion.idProfesorCurso);
-      hoverColor: 'table-action-print-hover'
-    }
-    */
   ];
 
   constructor(
@@ -130,8 +129,11 @@ export class ProfesorCursoComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private notificationService: NotificationService,
     private courseService: CourseService,
-    private usuarioService: UsuarioService
-  ) {}
+    private usuarioService: UsuarioService,
+    private entidadService: EntidadService
+  ) {
+    this.updateMaxDate();
+  }
 
   private readonly _dialog = inject(MatDialog);
 
@@ -144,6 +146,302 @@ export class ProfesorCursoComponent implements OnInit {
     this.cargarAsignaciones();
     this.cargarProfesores();
     this.cargarCursos();
+    this.cargarEntidadData();
+    this.updateMaxDate(); // Asegurar que se actualice al iniciar
+  }
+
+  // Función para actualizar maxDate a la fecha actual
+  private updateMaxDate(): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalizar a medianoche
+    this.maxDate = today.toISOString().split('T')[0]; // Formato YYYY-MM-DD (2025-05-15)
+    this.currentYear = today.getFullYear(); // Asegurar que sea 2025
+    console.log(`maxDate actualizado: ${this.maxDate}, currentYear: ${this.currentYear}`);
+  }
+
+isValidDateFormat(dateStr: string): boolean {
+    console.log(`Validando fecha: ${dateStr}`);
+    
+    if (!dateStr || dateStr.length !== 10) {
+      console.log(`Fecha inválida: longitud incorrecta (${dateStr?.length || 0})`);
+      return false;
+    }
+
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(dateStr)) {
+      console.log(`Fecha inválida: no coincide con el formato YYYY-MM-DD`);
+      return false;
+    }
+
+    const date = new Date(dateStr + 'T00:00:00');
+    if (isNaN(date.getTime())) {
+      console.log(`Fecha inválida: no se puede parsear a Date`);
+      return false;
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const isValid =
+      year >= 1900 &&
+      year <= this.currentYear && // Rechazar años mayores a 2025
+      month >= 1 &&
+      month <= 12 &&
+      day >= 1 &&
+      day <= new Date(year, month, 0).getDate() &&
+      date.getFullYear() === year &&
+      date.getMonth() + 1 === month &&
+      date.getDate() === day;
+
+    if (!isValid) {
+      if (year > this.currentYear) {
+        this.notificationService.showNotification(
+          `El año (${year}) no puede ser mayor al año actual (${this.currentYear}).`,
+          'error'
+        );
+      } else if (month < 1 || month > 12) {
+        this.notificationService.showNotification(
+          `El mes (${month}) debe estar entre 1 y 12.`,
+          'error'
+        );
+      } else if (day < 1 || day > new Date(year, month, 0).getDate()) {
+        this.notificationService.showNotification(
+          `El día (${day}) no es válido para el mes y año seleccionados.`,
+          'error'
+        );
+      }
+    }
+
+    console.log(`Resultado de validación: ${isValid}`);
+    return isValid;
+  }
+
+  onDateInput(event: Event, field: 'fechaInicio' | 'fechaFin'): void {
+  const input = event.target as HTMLInputElement;
+  let value = input.value;
+  console.log(`onDateInput: ${field} = ${value}`);
+
+  // Normalizar y validar mientras se escribe
+  const parts = value.split('-');
+  if (parts.length > 0 && parts[0].length === 4) { // Validar año inmediatamente
+    const year = parseInt(parts[0], 10);
+    if (!isNaN(year) && year > this.currentYear) {
+      this.notificationService.showNotification(
+        `El año (${year}) no puede ser mayor al año actual (${this.currentYear}).`,
+        'error'
+      );
+      input.value = ''; // Limpiar inmediatamente
+      this.filters[field] = '';
+      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+      this.cdr.detectChanges();
+      return;
+    }
+  }
+
+  // Validar fecha completa si se ingresó
+  if (value.length === 10 && !this.isValidDateFormat(value)) {
+    this.notificationService.showNotification(
+      `Fecha inválida. El año no puede ser mayor a ${this.currentYear}. Use formato yyyy-mm-dd.`,
+      'error'
+    );
+    input.value = ''; // Limpiar si es inválida
+    this.filters[field] = '';
+    this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+    this.cdr.detectChanges();
+  }
+}
+
+// Nueva función para manejar el evento blur (sin cambios, solo la mantengo)
+onBlurDate(event: FocusEvent, field: 'fechaInicio' | 'fechaFin'): void {
+    const input = event.target as HTMLInputElement;
+    const value = input?.value || '';
+    console.log(`onBlurDate: ${field} = ${value}`);
+    this.onDateChange(value, field);
+  }
+  
+
+onDateChange(value: string, field: 'fechaInicio' | 'fechaFin'): void {
+    console.log(`onDateChange: ${field} = ${value}`);
+
+    if (!value) {
+      console.log(`${field} vacía, reseteando`);
+      this.filters[field] = '';
+      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = true;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!this.isValidDateFormat(value)) {
+      console.log(`Fecha inválida en ${field}: ${value}, limpiando campo`);
+      this.filters[field] = '';
+      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const inputDate = new Date(value + 'T00:00:00');
+    const maxDate = new Date(this.maxDate + 'T00:00:00');
+    if (inputDate > maxDate) {
+      this.notificationService.showNotification(
+        `La fecha de ${field === 'fechaInicio' ? 'inicio' : 'fin'} no puede ser posterior a ${this.maxDate}.`,
+        'error'
+      );
+      console.log(`Fecha futura en ${field}: ${value}, limpiando campo`);
+      this.filters[field] = '';
+      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (field === 'fechaFin' && this.filters.fechaInicio && this.isValidDateFormat(this.filters.fechaInicio)) {
+      const startDate = new Date(this.filters.fechaInicio + 'T00:00:00');
+      const endDate = new Date(value + 'T00:00:00');
+      if (endDate < startDate) {
+        this.notificationService.showNotification(
+          'La fecha de fin no puede ser menor que la fecha de inicio.',
+          'error'
+        );
+        console.log(`fechaFin < fechaInicio, limpiando fechaFin`);
+        this.filters[field] = '';
+        this.isValidFechaFin = false;
+        this.cdr.detectChanges();
+        return;
+      }
+    }
+
+    console.log(`Fecha válida en ${field}: ${value}`);
+    this.filters[field] = value;
+    this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = true;
+    this.cdr.detectChanges();
+  }
+
+  
+
+validateDates(): boolean {
+  console.log('Validando fechas antes de buscar:', {
+    fechaInicio: this.filters.fechaInicio,
+    fechaFin: this.filters.fechaFin
+  });
+  this.updateMaxDate();
+  let isValid = true;
+
+  // Validar fechaInicio
+  if (this.filters.fechaInicio) {
+    if (!this.isValidDateFormat(this.filters.fechaInicio)) {
+      this.notificationService.showNotification(
+        'Por favor, ingrese una fecha de inicio completa (día, mes y año).',
+        'error'
+      );
+      console.log(`Fecha de inicio inválida: ${this.filters.fechaInicio}, limpiando`);
+      this.filters.fechaInicio = '';
+      this.isValidFechaInicio = false;
+      isValid = false;
+    } else if (new Date(this.filters.fechaInicio) > new Date(this.maxDate)) {
+      this.notificationService.showNotification(
+        'La fecha de inicio no puede ser futura.',
+        'error'
+      );
+      console.log(`Fecha de inicio futura: ${this.filters.fechaInicio}, limpiando`);
+      this.filters.fechaInicio = '';
+      this.isValidFechaInicio = false;
+      isValid = false;
+    }
+  }
+
+  // Validar fechaFin
+  if (this.filters.fechaFin) {
+    if (!this.isValidDateFormat(this.filters.fechaFin)) {
+      this.notificationService.showNotification(
+        'Por favor, ingrese una fecha de fin completa (día, mes y año).',
+        'error'
+      );
+      console.log(`Fecha de fin inválida: ${this.filters.fechaFin}, limpiando`);
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+      isValid = false;
+    } else if (new Date(this.filters.fechaFin) > new Date(this.maxDate)) {
+      this.notificationService.showNotification(
+        'La fecha de fin no puede ser futura.',
+        'error'
+      );
+      console.log(`Fecha de fin futura: ${this.filters.fechaFin}, limpiando`);
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+      isValid = false;
+    }
+  }
+
+  // Validar que fechaFin no sea anterior a fechaInicio
+  if (this.filters.fechaInicio && this.filters.fechaFin && isValid) {
+    const startDate = new Date(this.filters.fechaInicio);
+    const endDate = new Date(this.filters.fechaFin);
+    if (endDate < startDate) {
+      this.notificationService.showNotification(
+        'La fecha de fin no puede ser menor que la fecha de inicio.',
+        'error'
+      );
+      console.log(`fechaFin < fechaInicio, limpiando fechaFin`);
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+      isValid = false;
+    }
+  }
+
+  if (!isValid) {
+    console.log('Fechas inválidas detectadas, actualizando UI');
+    this.cdr.detectChanges();
+  }
+
+  console.log(`Resultado de validateDates: ${isValid}`);
+  return isValid;
+}
+
+isFormValid(): boolean {
+  const fechaInicioValid = !this.filters.fechaInicio || this.isValidDateFormat(this.filters.fechaInicio);
+  const fechaFinValid = !this.filters.fechaFin || this.isValidDateFormat(this.filters.fechaFin);
+  const isValid = fechaInicioValid && fechaFinValid;
+
+  console.log(`isFormValid: ${isValid}`, {
+    fechaInicio: this.filters.fechaInicio,
+    fechaFin: this.filters.fechaFin,
+    fechaInicioValid,
+    fechaFinValid,
+    isValidFechaInicio: this.isValidFechaInicio,
+    isValidFechaFin: this.isValidFechaFin
+  });
+
+  return isValid;
+}
+
+  private cargarEntidadData(): void {
+    this.entidadService.obtenerEntidadList().subscribe({
+      next: (entidades) => {
+        if (entidades.length > 0) {
+          const entidad = entidades[0];
+          if (entidad.datosngs) {
+            this.datosNGS = entidad.datosngs;
+            this.niveles = this.datosNGS.niveles?.map(nivel => nivel.nombre) || [];
+            this.onNivelChange();
+          } else {
+            this.notificationService.showNotification(
+              'No se encontraron datos de niveles, grados y secciones',
+              'info'
+            );
+          }
+        } else {
+          this.notificationService.showNotification(
+            'No se encontraron entidades',
+            'info'
+          );
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.notificationService.showNotification(
+          'Error al cargar datos de entidad',
+          'error'
+        );
+        console.error('Error al cargar entidad:', err);
+      }
+    });
   }
 
   private updatePageSizeOptions(): void {
@@ -193,7 +491,7 @@ export class ProfesorCursoComponent implements OnInit {
       },
       error: (err) => {
         this.notificationService.showNotification('Error al cargar profesores', 'error');
-      },
+      }
     });
   }
 
@@ -210,15 +508,29 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   onNivelChange(): void {
-    if (this.filters.nivel === 'primaria') {
-      this.grados = ['1', '2', '3', '4', '5', '6'];
-    } else if (this.filters.nivel === 'secundaria') {
-      this.grados = ['1', '2', '3', '4', '5'];
-    } else {
-      this.grados = [];
-    }
+    this.grados = [];
+    this.secciones = [];
     this.filters.grado = '';
     this.filters.seccion = '';
+
+    if (this.filters.nivel && this.datosNGS) {
+      const selectedNivel = this.datosNGS.niveles?.find(n => n.nombre === this.filters.nivel);
+      this.grados = selectedNivel?.grados?.map(grado => grado.nombre) || [];
+    }
+    this.cdr.detectChanges();
+  }
+
+  onGradoChange(): void {
+    this.secciones = [];
+    this.filters.seccion = '';
+
+    if (this.filters.nivel && this.filters.grado && this.datosNGS) {
+      const selectedNivel = this.datosNGS.niveles?.find(n => n.nombre === this.filters.nivel);
+      if (selectedNivel) {
+        const selectedGrado = selectedNivel.grados?.find(g => g.nombre === this.filters.grado);
+        this.secciones = selectedGrado?.secciones || [];
+      }
+    }
     this.cdr.detectChanges();
   }
 
@@ -236,6 +548,7 @@ export class ProfesorCursoComponent implements OnInit {
       };
       this.appliedFilters = null;
       this.grados = [];
+      this.secciones = [];
       this.keyword = '';
       this.page = 1;
       this.cargarAsignaciones();
@@ -243,7 +556,11 @@ export class ProfesorCursoComponent implements OnInit {
       (this.filters as any)[filter] = filter === 'fechaTipo' ? 'asignacion' : '';
       if (filter === 'nivel') {
         this.grados = [];
+        this.secciones = [];
         this.filters.grado = '';
+        this.filters.seccion = '';
+      } else if (filter === 'grado') {
+        this.secciones = [];
         this.filters.seccion = '';
       }
     }
@@ -304,37 +621,10 @@ export class ProfesorCursoComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  validateDates(): boolean {
-    if (this.filters.fechaInicio && this.filters.fechaFin) {
-      const startDate = new Date(this.filters.fechaInicio);
-      const endDate = new Date(this.filters.fechaFin);
-      if (endDate < startDate) {
-        this.notificationService.showNotification(
-          'La fecha de fin no puede ser menor que la fecha de inicio.',
-          'error'
-        );
-        return false;
-      }
-    }
-    return true;
-  }
-
   getMinFechaFin(): string {
-    return this.filters.fechaInicio || '';
+    return this.filters.fechaInicio && this.isValidDateFormat(this.filters.fechaInicio) ? this.filters.fechaInicio : '';
   }
 
-  cambiarOrdenamiento(columna: string): void {
-    if (this.sortBy === columna) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = columna;
-      this.sortDir = 'asc';
-    }
-    this.page = 1;
-    this.cargarAsignaciones();
-  }
-
-  // Manejar el evento sortChange del TableComponent
   onSortChange(event: { sortBy: string, sortDir: string }): void {
     this.sortBy = event.sortBy;
     this.sortDir = event.sortDir;
@@ -360,7 +650,7 @@ export class ProfesorCursoComponent implements OnInit {
           'error'
         );
         console.error('Error al cargar conteo:', err);
-      },
+      }
     });
   }
 
@@ -371,7 +661,7 @@ export class ProfesorCursoComponent implements OnInit {
       itemsPerPage: this.itemsPerPage,
       sortBy: this.sortBy,
       sortDir: this.sortDir,
-      filters: this.appliedFilters,
+      filters: this.appliedFilters
     });
 
     if (this.appliedFilters) {
@@ -399,7 +689,7 @@ export class ProfesorCursoComponent implements OnInit {
             this.notificationService.showNotification('Error al cargar asignaciones: ' + err.message, 'error');
             this.cdr.detectChanges();
             this.isLoading = false;
-          },
+          }
         });
     } else {
       this.profesorCursoService
@@ -426,18 +716,22 @@ export class ProfesorCursoComponent implements OnInit {
             this.notificationService.showNotification('Error al cargar asignaciones: ' + err.message, 'error');
             this.cdr.detectChanges();
             this.isLoading = false;
-          },
+          }
         });
     }
   }
 
-  // Transformar datos para aplanar propiedades anidadas
   private transformarDatos(asignaciones: ProfesorCurso[]): any[] {
     return asignaciones.map(asignacion => ({
       ...asignacion,
       profesor: `${asignacion.usuario?.nombre || ''} ${asignacion.usuario?.apellidopaterno || ''}`.trim(),
       curso: asignacion.curso?.nombre || '',
-      fechaActualizacion: asignacion.fechaActualizacion || null // Permitir null para mostrar 'Sin actualizar'
+      usuario: asignacion.usuario,
+      cursoObj: asignacion.curso,
+      nivel: asignacion.nivel || '',
+      grado: asignacion.grado || '',
+      seccion: asignacion.seccion || '',
+      fechaActualizacion: asignacion.fechaActualizacion || null
     }));
   }
 
@@ -476,9 +770,27 @@ export class ProfesorCursoComponent implements OnInit {
       return;
     }
 
+    console.log('Datos enviados al modal:', {
+      isEditing: true,
+      idProfesorCurso: asignacion.idProfesorCurso,
+      usuario: asignacion.usuario,
+      curso: asignacion.cursoObj,
+      nivel: asignacion.nivel,
+      grado: asignacion.grado,
+      seccion: asignacion.seccion
+    });
+
     const dialogRef = this.dialog.open(ModalProfesorCursoComponent, {
       width: '600px',
-      data: { ...asignacion, isEditing: true }
+      data: {
+        isEditing: true,
+        idProfesorCurso: asignacion.idProfesorCurso,
+        usuario: asignacion.usuario,
+        curso: asignacion.cursoObj,
+        nivel: asignacion.nivel,
+        grado: asignacion.grado,
+        seccion: asignacion.seccion
+      }
     });
 
     dialogRef.afterClosed().subscribe((asignacionActualizada: ProfesorCurso) => {
@@ -523,78 +835,83 @@ export class ProfesorCursoComponent implements OnInit {
     });
   }
 
-  buscarAsignaciones(): void {
-    if (this.filters.profesorId && !this.isKeywordValid(this.filters.profesorId)) {
-      this.notificationService.showNotification(
-        'El nombre del profesor contiene caracteres no válidos.',
-        'info'
-      );
-      return;
-    }
+// Actualización de buscarAsignaciones
+buscarAsignaciones(): void {
+  console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
 
-    if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
-      this.notificationService.showNotification(
-        'El nombre del curso contiene caracteres no válidos.',
-        'info'
-      );
-      return;
-    }
-
-    if (!this.validateDates()) {
-      return;
-    }
-
-    this.isLoading = true;
-    const filters = {
-      profesorId: this.filters.profesorId ? this.filters.profesorId.trim() : undefined,
-      cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
-      grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
-      seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
-      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
-      fechaInicio: this.filters.fechaInicio ? new Date(this.filters.fechaInicio).toISOString() : undefined,
-      fechaFin: this.filters.fechaFin ? new Date(this.filters.fechaFin).toISOString() : undefined,
-      fechaTipo: this.filters.fechaTipo || undefined,
-    };
-
-    this.appliedFilters = filters;
-
-    console.log('Enviando solicitud con:', {
-      filters,
-      page: this.page,
-      itemsPerPage: this.itemsPerPage,
-      sortBy: this.sortBy,
-      sortDir: this.sortDir,
-    });
-
-    this.profesorCursoService
-      .buscarAsignaciones(filters, this.page, this.itemsPerPage, this.sortBy, this.sortDir)
-      .subscribe({
-        next: (resultado) => {
-          console.log('Resultados recibidos:', resultado);
-          this.asignaciones = this.transformarDatos(resultado.content);
-          this.totalAsignaciones = resultado.totalElements;
-          this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
-          this.updatePageSizeOptions();
-          if (this.page > this.totalPages) {
-            this.page = 1;
-            this.buscarAsignaciones();
-            return;
-          }
-          this.cdr.detectChanges();
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Error en la búsqueda:', err);
-          this.notificationService.showNotification(
-            'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
-            'error'
-          );
-          this.asignaciones = [];
-          this.totalAsignaciones = 0;
-          this.totalPages = 1;
-          this.updatePageSizeOptions();
-          this.isLoading = false;
-        },
-      });
+  // Validar entradas de texto
+  if (this.filters.profesorId && !this.isKeywordValid(this.filters.profesorId)) {
+    this.notificationService.showNotification(
+      'El nombre del profesor contiene caracteres no válidos.',
+      'error'
+    );
+    console.log('Nombre de profesor inválido');
+    return;
   }
+
+  if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
+    this.notificationService.showNotification(
+      'El nombre del curso contiene caracteres no válidos.',
+      'error'
+    );
+    console.log('Nombre de curso inválido');
+    return;
+  }
+
+  // Validar fechas y detener la búsqueda si son inválidas
+  if (!this.validateDates()) {
+    console.log('validateDates falló, deteniendo búsqueda');
+    return;
+  }
+
+  this.isLoading = true;
+  const filters = {
+    profesorId: this.filters.profesorId ? this.filters.profesorId.trim() : undefined,
+    cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
+    grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
+    seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
+    nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+    fechaInicio: this.filters.fechaInicio && this.isValidDateFormat(this.filters.fechaInicio)
+      ? new Date(this.filters.fechaInicio + 'T00:00:00').toISOString()
+      : undefined,
+    fechaFin: this.filters.fechaFin && this.isValidDateFormat(this.filters.fechaFin)
+      ? new Date(this.filters.fechaFin + 'T00:00:00').toISOString()
+      : undefined,
+    fechaTipo: this.filters.fechaTipo || undefined
+  };
+
+  console.log('Filtros aplicados:', filters);
+  this.appliedFilters = filters;
+
+  this.profesorCursoService
+    .buscarAsignaciones(filters, this.page, this.itemsPerPage, this.sortBy, this.sortDir)
+    .subscribe({
+      next: (resultado) => {
+        console.log('Resultados recibidos:', resultado);
+        this.asignaciones = this.transformarDatos(resultado.content);
+        this.totalAsignaciones = resultado.totalElements;
+        this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+        this.updatePageSizeOptions();
+        if (this.page > this.totalPages) {
+          this.page = 1;
+          this.buscarAsignaciones();
+          return;
+        }
+        this.cdr.detectChanges();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda:', err);
+        this.notificationService.showNotification(
+          'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
+          'error'
+        );
+        this.asignaciones = [];
+        this.totalAsignaciones = 0;
+        this.totalPages = 1;
+        this.updatePageSizeOptions();
+        this.isLoading = false;
+      }
+    });
 }
+  }
