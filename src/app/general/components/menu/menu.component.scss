@@ -5,45 +5,143 @@ nav {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: visible;
-  z-index: 10;
+  z-index: 50;
 }
 
 /* Menú retraído */
 nav.closed {
   width: 60px;
-  transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
 
-  ul {
-    li {
-      .menu-btn,
-      .exit-btn {
-        justify-content: center;
-        padding: 10px;
-        overflow: visible;
-      }
-
-      .menu-btn:hover,
-      .exit-btn:hover {
-        background-color: var(--primary-hover);
-      }
-
-      .menu-btn span,
-      .exit-btn span,
-      .submenu span {
-        display: none;
-      }
-
-      .submenu {
-        display: none;
-      }
+  .profile-section {
+    .user-name, .user-role {
+      display: none;
+    }
+    .initials-circle, .profile-image {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
     }
   }
-}
 
-/* Ajuste para el contenido principal */
-.closed + .content {
-  margin-left: 60px;
-  transition: margin-left 0.3s ease-in-out;
+  .menu-list {
+    .menu-item-list-element {
+      position: relative;
+    }
+
+    .menu-btn,
+    .exit-btn {
+      justify-content: center;
+      padding: 10px;
+      span.menu-btn-text,
+      span.submenu-toggle-icon {
+        display: none;
+      }
+
+      &.expanded {
+        width: 200px;
+        justify-content: flex-start;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 55;
+
+        span.menu-btn-text {
+          display: inline-block !important;
+        }
+        // Si el botón expandido (hover en modo cerrado) está activo también
+        &.active {
+            background-color: var(--active-bg-color) !important;
+            color: var(--active-text-color) !important;
+            // Podrías añadir el borde aquí también si lo deseas para consistencia
+            // border-left: 3px solid var(--active-text-color);
+            // padding-left: 12px; // Si añades borde de 3px (original 15px - 3px)
+        }
+      }
+       // Cuando el menú está cerrado, el botón principal (solo ícono) también debe mostrar estado activo
+      &.active:not(.expanded) {
+        background-color: var(--active-bg-color);
+        // color: var(--active-text-color); // El color del icono ya podría ser blanco
+         border-left: 3px solid var(--active-text-color);
+         padding-left: 7px; // Ajuste para el borde (10px original padding - 3px border)
+      }
+    }
+    .submenu-open-list { // La lista de submenús desplegables
+      display: none; // En modo cerrado, estos no se usan
+    }
+  }
+
+  // Panel de submenús que aparece al hacer hover en modo cerrado
+  .expanded-submenu-panel {
+    position: absolute;
+    left: 200px;  // Debe coincidir con el width de .menu-btn.expanded
+    top: 0;
+    min-width: 220px;
+    background-color: var(--primary-dark);
+    border-left: 1px solid var(--border-color);
+    border-radius: 0 8px 8px 0;
+    box-shadow: 4px 0px 10px rgba(0, 0, 0, 0.25);
+    z-index: 60;
+    padding: 10px;
+    opacity: 0;
+    transform: translateX(-15px);
+    animation: fadeInSlideRight 0.25s forwards ease-out;
+    animation-delay: 0.05s;
+  }
+
+  @keyframes fadeInSlideRight {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .expanded-submenu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .expanded-submenu-item {
+    margin-bottom: 5px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .expanded-submenu-btn {
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    background-color: var(--secondary-dark);
+    color: var(--text-color);
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, transform 0.2s, border-color 0.2s, padding-left 0.2s;
+    font-size: 0.9em;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .submenu-icon {
+      font-size: 0.95em;
+      opacity: 0.8;
+    }
+
+    &:hover {
+      background-color: var(--primary-hover);
+      border-color: var(--border-color);
+      transform: translateX(4px);
+      color: #fff;
+    }
+    // Estilo activo para submenú en el panel expandido (modo cerrado)
+    &.active {
+      background-color: var(--active-bg-color);
+      color: var(--active-text-color);
+      font-weight: 600;
+      transform: translateX(4px);
+      border-left: 3px solid var(--active-text-color);
+      padding-left: 9px; // Ajustar padding por el borde (12px original - 3px)
+    }
+  }
 }
 
 /* Botón de toggle */
@@ -55,159 +153,133 @@ nav.closed {
   cursor: pointer;
   align-self: flex-end;
   padding: 5px;
-  transition: transform 0.3s;
+  margin-bottom: 10px;
+  transition: transform 0.3s, color 0.3s;
+  line-height: 1;
+
+  &:hover {
+    color: var(--primary-hover);
+  }
 }
 
-.toggle-menu:hover {
-  transform: rotate(90deg);
-}
-
-/* Botones principales del menú */
+/* Botones principales del menú (cuando el menú está ABIERTO) */
 .menu-btn,
 .exit-btn {
   width: 100%;
-  background-color: var(--secondary-dark);
+  background-color: transparent;
   color: var(--text-color);
   padding: 12px 15px;
-  font-weight: bold;
+  font-weight: 500;
   text-align: left;
   border-radius: 8px;
-  transition: width 0.3s ease-in-out, background 0.3s, transform 0.2s;
-  border: 1px solid var(--border-color);
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s, border-color 0.2s, padding-left 0.2s;
+  border: 1px solid transparent;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   position: relative;
   overflow: visible;
   white-space: nowrap;
-  z-index: 10;
-}
 
-nav.closed .menu-btn.expanded,
-nav.closed .exit-btn.expanded {
-  width: 200px;
-  padding: 12px 15px;
-  justify-content: flex-start;
-  background-color: var(--primary-dark);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-
-  span {
-    display: inline-block !important;
-  }
-
-  .submenu-container {
-    display: block !important; /* Asegurar que se muestre */
-    position: absolute;
-    left: 70px;
-    top: 0;
-    width: 200px;
-    background: linear-gradient(90deg, #1a2a44, #0d1b2a);
-    padding: 8px;
-    border-radius: 0 8px 8px 0;
-    z-index: 30;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-    overflow: visible;
+  .menu-icon {
+    font-size: 1.1em;
+    opacity: 0.9;
+    min-width: 20px;
   }
 }
 
 .menu-btn:hover,
 .exit-btn:hover {
   background-color: var(--primary-hover);
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  color: #fff;
+  border-color: var(--border-color);
 }
+
+// Estilo activo para botones de menú principales (cuando el menú está ABIERTO)
+.menu-btn.active {
+  background-color: var(--active-bg-color);
+  color: var(--active-text-color);
+  font-weight: 600;
+  border-left: 3px solid var(--active-text-color);
+  padding-left: 12px; // Ajustar padding por el borde (15px original - 3px borde)
+}
+// No se suele tener un estado "activo" persistente para logout, pero si lo necesitas:
+.exit-btn.active {
+    background-color: var(--active-bg-color);
+    color: var(--active-text-color);
+    border-left: 3px solid var(--active-text-color);
+    padding-left: 12px;
+}
+
 
 .exit-btn {
-  background-color: #e63946;
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 8px 8px;
 }
 
-.exit-btn:hover {
-  background-color: #d62828;
-}
-
-/* Icono de submenú */
-.submenu-icon {
-  font-size: 1.2rem;
-  color: white;
+/* Icono de submenú (flechita) cuando el menú está ABIERTO */
+.submenu-toggle-icon {
+  font-size: 0.8rem;
+  color: var(--text-color);
+  margin-left: auto;
   transition: transform 0.3s;
 }
 
-.submenu-icon:hover {
-  transform: scale(1.2);
-}
-
-/* Submenús desplegables */
-.submenu {
-  margin-left: 10px;
-  padding-left: 10px;
-  border-left: 2px solid var(--border-color);
-  transition: max-height 0.3s ease-in-out;
-  max-height: 500px;
+/* Submenús desplegables (cuando el menú está ABIERTO) */
+.submenu-open-list {
+  margin-left: 20px;
+  padding-left: 15px;
+  border-left: 1px solid var(--border-color);
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  max-height: 0; // Inicia cerrado para animación
+  opacity: 0;    // Inicia invisible para animación
   overflow: hidden;
-}
+  list-style: none;
 
-.submenu-btn {
-  width: 100%;
-  text-align: left;
-  padding: 8px 15px;
-  background: var(--secondary-dark);
-  border-radius: 6px;
-  color: var(--text-color);
-  transition: background 0.3s, transform 0.2s;
-  border: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  position: relative;
-
-  &:hover {
-    background: var(--primary-hover);
-    transform: scale(1.03);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  // Clase 'open' para activar la animación de despliegue
+  &.open {
+    max-height: 500px; // Altura suficiente para los submenús
+    opacity: 1;
   }
 }
 
-/* Contenedor de submenús en modo expandido */
-.submenu-container {
-  padding-left: 20px; /* Espaciado interno */
-  margin-top: 5px; /* Espacio entre el menú principal y el submenú */
-  position: absolute; /* Posicionamos el submenú dentro del contenedor principal */
-  left: 100%; /* Lo posicionamos a la derecha del elemento principal */
-  top: 0;
-  width: 200px; /* Ancho del submenú */
-  background: linear-gradient(90deg, #1a2a44, #0d1b2a); /* Fondo del submenú */
-  padding: 8px;
-  border-radius: 0 8px 8px 0; /* Bordes redondeados */
-  z-index: 20; /* Aseguramos que esté sobre otros elementos */
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2); /* Sombra para darle profundidad */
-}
 
-/* Estilos para el contenedor de submenús */
-.menu-label {
+.submenu-open-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 15px;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-color);
+  transition: background-color 0.2s, transform 0.2s, padding-left 0.2s, border-color 0.2s;
+  border: 1px solid transparent;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  font-weight: bold;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 4px;
-  color: var(--text-color);
-}
+  gap: 10px;
+  font-size: 0.95em;
 
-.submenu-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  background-color: var(--secondary-dark);
-  border-radius: 4px;
-}
+  .submenu-open-icon {
+    font-size: 1em;
+    opacity: 0.8;
+  }
 
-.submenu-item {
-  margin-bottom: 2px;
-}
-
-.submenu-item:last-child {
-  margin-bottom: 0;
+  &:hover {
+    background: var(--primary-hover);
+    padding-left: 20px;
+    color: #fff;
+    border-color: var(--border-color);
+  }
+  // Estilo activo para submenú en la lista desplegable (modo abierto)
+  &.active {
+    background-color: var(--active-bg-color);
+    color: var(--active-text-color);
+    font-weight: 600;
+    padding-left: 17px; // Ajustar por el borde (20px hover - 3px borde)
+    border-left: 3px solid var(--active-text-color);
+  }
 }
 
 /* Clases de colores para los iconos */

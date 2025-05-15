@@ -26,44 +26,88 @@
       </div>
 
       <div class="w-60 space-y-3">
-        <label for="grado" class="block text-sm font-medium text-gray-700 dark:text-white">Grado</label>
-        <input
-          type="text"
-          id="grado"
-          [(ngModel)]="filters.grado"
-          placeholder="Grado"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-        />
-      </div>
-
-      <div class="w-60 space-y-3">
-        <label for="seccion" class="block text-sm font-medium text-gray-700 dark:text-white">Sección</label>
-        <input
-          type="text"
-          id="seccion"
-          [(ngModel)]="filters.seccion"
-          placeholder="Sección"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-        />
-      </div>
-
-      <div class="w-60 space-y-3">
         <label for="nivel" class="block text-sm font-medium text-gray-700 dark:text-white">Nivel</label>
-        <input
-          type="text"
-          id="nivel"
-          [(ngModel)]="filters.nivel"
-          placeholder="Nivel"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-        />
+        <div class="relative">
+          <select
+            id="nivel"
+            [(ngModel)]="filters.nivel"
+            (change)="onNivelChange()"
+            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+            [ngClass]="{'border-teal-500': filters.nivel, 'border-gray-200': !filters.nivel}"
+          >
+            <option value="">Seleccionar nivel</option>
+            <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
+          </select>
+           <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.nivel">
+            <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
       </div>
 
       <div class="w-60 space-y-3">
-        <label for="fechaCreacionComprobante" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Creación</label>
+        <label for="grado" class="block text-sm font-medium text-gray-700 dark:text-white">Grado</label>
+        <div class="relative">
+          <select
+            id="grado"
+            [(ngModel)]="filters.grado"
+            [disabled]="!filters.nivel"
+            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+            [ngClass]="{'border-teal-500': filters.grado, 'border-gray-200': !filters.grado, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+          >
+            <option value="">Seleccionar grado</option>
+            <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
+          </select>
+           <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.grado">
+            <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+       <div class="w-60 space-y-3">
+        <label for="seccion" class="block text-sm font-medium text-gray-700 dark:text-white">Sección</label>
+        <div class="relative">
+          <select
+            id="seccion"
+            [(ngModel)]="filters.seccion"
+            [disabled]="!filters.nivel"
+            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+            [ngClass]="{'border-teal-500': filters.seccion, 'border-gray-200': !filters.seccion, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+          >
+            <option value="">Seleccionar sección</option>
+            <option *ngFor="let seccion of secciones" [value]="seccion">{{ seccion }}</option>
+          </select>
+           <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.seccion">
+            <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-60 space-y-3">
+        <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Inicio</label>
         <input
           type="date"
-          id="fechaCreacionComprobante"
-          [(ngModel)]="filters.fechaCreacionComprobante"
+          id="fechaInicio"
+          [(ngModel)]="filters.fechaInicio"
+          [max]="currentDate"
+          (change)="onDateChange('fechaInicio')"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+       <div class="w-60 space-y-3">
+        <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Fin</label>
+        <input
+          type="date"
+          id="fechaFin"
+          [(ngModel)]="filters.fechaFin"
+          [max]="currentDate"
+          (change)="onDateChange('fechaFin')"
           class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
         />
       </div>
@@ -78,7 +122,7 @@
           (ngModelChange)="onSearch()"
           class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
         >
-          <option *ngFor="let option of [5, 10, 15, 20]" [value]="option">{{ option }}</option>
+          <option *ngFor="let option of [5, 10, 15]" [value]="option">{{ option }}</option>
         </select>
         <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
       </div>
@@ -114,6 +158,10 @@
     (sortChange)="onSearch()"
   />
 
+  <div *ngIf="!loading && matriculados.length === 0" class="text-center text-gray-500 dark:text-gray-400 mt-4">
+    No se encontraron datos.
+  </div>
+
   <app-pagination
     [page]="currentPage"
     [totalPages]="totalPages"
@@ -122,5 +170,6 @@
   ></app-pagination>
 
   <app-general-loading-spinner [visible]="loading" message="Cargando matrículas..."></app-general-loading-spinner>
+
   <app-notification></app-notification>
 </div>
