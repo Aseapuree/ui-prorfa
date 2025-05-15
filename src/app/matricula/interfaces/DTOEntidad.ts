@@ -8,6 +8,22 @@ export class Entidad {
   correoColegio?: string;
   logoColegio?: string;
   documentos?: DocumentoEntidad;
+  datosngs?: DatosNGS;
+}
+
+
+export interface DatosNGS {
+  niveles?: Nivel[];
+}
+
+export interface Nivel {
+  nombre: string; // Hacer obligatorio
+  grados?: Grado[];
+}
+
+export interface Grado {
+  nombre: string; // Hacer obligatorio
+  secciones?: string[];
 }
 
 export class DocumentoEntidad {

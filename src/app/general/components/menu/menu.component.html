@@ -30,51 +30,54 @@
       </div>
     </li>
 
-    <li *ngFor="let menu of menuJerarquico; trackBy: trackById" class="relative menu-item-list-element">
-      <div class="menu-item-wrapper"
-           (mouseenter)="menuCerrado && showExpanded(menu.idMenu!)"
-           (mouseleave)="menuCerrado && hideExpanded()">
+    <!-- Dentro del <li> que itera sobre menuJerarquico -->
+<li *ngFor="let menu of menuJerarquico; trackBy: trackById" class="relative menu-item-list-element">
+  <div class="menu-item-wrapper"
+       (mouseenter)="menuCerrado && showExpanded(menu.idMenu!)"
+       (mouseleave)="menuCerrado && hideExpanded()">
 
-        <button class="menu-btn flex items-center gap-3 w-full"
-                [class.expanded]="menuCerrado && activeTooltipId === menu.idMenu"
-                [ngClass]="{'active': menu.idMenu === activeMenuId && !activeSubMenuId}"
-                (click)="menu.submenus?.length && !menuCerrado ? toggleSubMenu(menu.idMenu!) : navigate(menu)">
-          <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg menu-icon"></fa-icon>
-          <span class="menu-btn-text flex-grow text-left">{{ menu.menu_descripcion }}</span>
-          <span *ngIf="menu.submenus?.length && !menuCerrado" class="submenu-toggle-icon">
-            {{ subMenuOpen[menu.idMenu!] ? '▼' : '►' }}
-          </span>
-        </button>
+    <button class="menu-btn flex items-center gap-3 w-full"
+            [class.expanded]="menuCerrado && activeTooltipId === menu.idMenu"
+            [ngClass]="{'active': menu.idMenu === activeMenuId && !activeSubMenuId}"
+            (click)="menu.submenus?.length ? toggleSubMenu(menu.idMenu!) : navigate(menu)">
+      <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg menu-icon"></fa-icon>
+      <span class="menu-btn-text flex-grow text-left">{{ menu.menu_descripcion }}</span>
+      <span *ngIf="menu.submenus?.length && !menuCerrado" class="submenu-toggle-icon">
+        {{ subMenuOpen[menu.idMenu!] ? '▼' : '►' }}
+      </span>
+    </button>
 
-        <div *ngIf="menuCerrado && activeTooltipId === menu.idMenu && menu.submenus && menu.submenus.length > 0"
-             class="expanded-submenu-panel"
-             (click)="$event.stopPropagation()">
-          <ul class="expanded-submenu-list">
-            <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="expanded-submenu-item">
-              <button class="expanded-submenu-btn"
-                      [ngClass]="{'active': submenu.idMenu === activeSubMenuId}"
-                      (click)="navigate(submenu)">
-                <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-sm submenu-icon"></fa-icon>
-                <span class="submenu-text">{{ submenu.menu_descripcion }}</span>
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <ul *ngIf="menu.submenus?.length && !menuCerrado"
-          class="submenu-open-list pl-6"
-          [class.open]="subMenuOpen[menu.idMenu!]">
-        <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="relative">
-          <button class="submenu-open-btn flex items-center gap-3 w-full"
+    <div *ngIf="menuCerrado && activeTooltipId === menu.idMenu && menu.submenus && menu.submenus.length > 0"
+         class="expanded-submenu-panel"
+         (click)="$event.stopPropagation()"
+         (mouseenter)="menuCerrado && showExpanded(menu.idMenu!)"
+         (mouseleave)="menuCerrado && hideExpanded()">
+      <ul class="expanded-submenu-list">
+        <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="expanded-submenu-item">
+          <button class="expanded-submenu-btn"
                   [ngClass]="{'active': submenu.idMenu === activeSubMenuId}"
                   (click)="navigate(submenu)">
-            <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-lg submenu-open-icon"></fa-icon>
-            <span class="flex-grow text-left submenu-open-text">{{ submenu.menu_descripcion }}</span>
+            <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-sm submenu-icon"></fa-icon>
+            <span class="submenu-text">{{ submenu.menu_descripcion }}</span>
           </button>
         </li>
       </ul>
+    </div>
+  </div>
+
+  <ul *ngIf="menu.submenus?.length && !menuCerrado"
+      class="submenu-open-list pl-6"
+      [class.open]="subMenuOpen[menu.idMenu!]">
+    <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="relative">
+      <button class="submenu-open-btn flex items-center gap-3 w-full"
+              [ngClass]="{'active': submenu.idMenu === activeSubMenuId}"
+              (click)="navigate(submenu)">
+        <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-lg submenu-open-icon"></fa-icon>
+        <span class="flex-grow text-left submenu-open-text">{{ submenu.menu_descripcion }}</span>
+      </button>
     </li>
+  </ul>
+</li>
 
     <li class="relative menu-item-list-element"
         (mouseenter)="menuCerrado && showExpanded('perfil')"
@@ -104,3 +107,4 @@
     </li>
   </ul>
 </nav>
+

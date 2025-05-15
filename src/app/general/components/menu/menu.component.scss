@@ -40,38 +40,36 @@ nav.closed {
       &.expanded {
         width: 200px;
         justify-content: flex-start;
+        background-color: var(--secondary-dark); /* Fondo cuando está expandido */
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         z-index: 55;
 
         span.menu-btn-text {
           display: inline-block !important;
         }
-        // Si el botón expandido (hover en modo cerrado) está activo también
+
         &.active {
-            background-color: var(--active-bg-color) !important;
-            color: var(--active-text-color) !important;
-            // Podrías añadir el borde aquí también si lo deseas para consistencia
-            // border-left: 3px solid var(--active-text-color);
-            // padding-left: 12px; // Si añades borde de 3px (original 15px - 3px)
+          background-color: var(--active-bg-color) !important;
+          color: var(--active-text-color) !important;
         }
       }
-       // Cuando el menú está cerrado, el botón principal (solo ícono) también debe mostrar estado activo
+
       &.active:not(.expanded) {
         background-color: var(--active-bg-color);
-        // color: var(--active-text-color); // El color del icono ya podría ser blanco
-         border-left: 3px solid var(--active-text-color);
-         padding-left: 7px; // Ajuste para el borde (10px original padding - 3px border)
+        border-left: 3px solid var(--active-text-color);
+        padding-left: 7px; /* Ajuste para el borde (10px original padding - 3px border) */
       }
     }
-    .submenu-open-list { // La lista de submenús desplegables
-      display: none; // En modo cerrado, estos no se usan
+
+    .submenu-open-list {
+      display: none; /* En modo cerrado, estos no se usan */
     }
   }
 
-  // Panel de submenús que aparece al hacer hover en modo cerrado
+  /* Panel de submenús que aparece al hacer hover o clic en modo cerrado */
   .expanded-submenu-panel {
     position: absolute;
-    left: 200px;  // Debe coincidir con el width de .menu-btn.expanded
+    left: 200px; /* Debe coincidir con el width de .menu-btn.expanded */
     top: 0;
     min-width: 220px;
     background-color: var(--primary-dark);
@@ -132,14 +130,14 @@ nav.closed {
       transform: translateX(4px);
       color: #fff;
     }
-    // Estilo activo para submenú en el panel expandido (modo cerrado)
+
     &.active {
       background-color: var(--active-bg-color);
       color: var(--active-text-color);
       font-weight: 600;
       transform: translateX(4px);
       border-left: 3px solid var(--active-text-color);
-      padding-left: 9px; // Ajustar padding por el borde (12px original - 3px)
+      padding-left: 9px; /* Ajustar padding por el borde (12px original - 3px) */
     }
   }
 }
@@ -197,6 +195,22 @@ nav.closed {
   border-color: var(--border-color);
 }
 
+/* Estilo activo para botones de menú principales (cuando el menú está ABIERTO) */
+.menu-btn.active {
+  background-color: var(--active-bg-color);
+  color: var(--active-text-color);
+  font-weight: 600;
+  border-left: 3px solid var(--active-text-color);
+  padding-left: 12px; /* Ajustar padding por el borde (15px original - 3px borde) */
+}
+
+.exit-btn.active {
+  background-color: var(--active-bg-color);
+  color: var(--active-text-color);
+  border-left: 3px solid var(--active-text-color);
+  padding-left: 12px;
+}
+
 // Estilo activo para botones de menú principales (cuando el menú está ABIERTO)
 .menu-btn.active {
   background-color: var(--active-bg-color);
@@ -234,18 +248,16 @@ nav.closed {
   padding-left: 15px;
   border-left: 1px solid var(--border-color);
   transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  max-height: 0; // Inicia cerrado para animación
-  opacity: 0;    // Inicia invisible para animación
+  max-height: 0; /* Inicia cerrado para animación */
+  opacity: 0;    /* Inicia invisible para animación */
   overflow: hidden;
   list-style: none;
 
-  // Clase 'open' para activar la animación de despliegue
   &.open {
-    max-height: 500px; // Altura suficiente para los submenús
+    max-height: 500px; /* Altura suficiente para los submenús */
     opacity: 1;
   }
 }
-
 
 .submenu-open-btn {
   width: 100%;
@@ -272,12 +284,12 @@ nav.closed {
     color: #fff;
     border-color: var(--border-color);
   }
-  // Estilo activo para submenú en la lista desplegable (modo abierto)
+
   &.active {
     background-color: var(--active-bg-color);
     color: var(--active-text-color);
     font-weight: 600;
-    padding-left: 17px; // Ajustar por el borde (20px hover - 3px borde)
+    padding-left: 17px; /* Ajustar por el borde (20px hover - 3px borde) */
     border-left: 3px solid var(--active-text-color);
   }
 }
