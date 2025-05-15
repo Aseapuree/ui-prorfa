@@ -1,5 +1,23 @@
 .noBorder {
-    border-color: coral;
-    outline: none;
-    width: 600px;
-  }
+  border-color: coral;
+  outline: none;
+  width: 600px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-select {
+  width: 100%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  width: 100%;
+}
