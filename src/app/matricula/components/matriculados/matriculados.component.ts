@@ -7,7 +7,7 @@ import { TableComponent, ColumnConfig } from './../../../general/components/tabl
 import { MatriculaService } from './../../services/matricula.service';
 import { Matricula } from './../../interfaces/DTOMatricula';
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle, faSearch, faBroom } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle, faSearch, faBroom, faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import { GeneralLoadingSpinnerComponent } from './../../../general/components/spinner/spinner.component';
 import { Alumno } from './../../interfaces/DTOAlumno';
 import { ComprobanteService } from './../../services/comprobante.service';
@@ -21,14 +21,17 @@ import { PaginationComponent } from './../../../general/components/pagination/pa
 import { FormsModule } from '@angular/forms';
 import { TooltipComponent } from './../../../general/components/tooltip/tooltip.component';
 
+// Importaciones para Exportar a Excel (librería xlsx)
+import * as XLSX from 'xlsx';
+
 // Interfaz para la configuración de acciones en la tabla
 export interface ActionConfig {
   name: string;
   icon: any;
   tooltip: string;
-  action: (item: any) => void;
+  action: (item: MatriculadoDisplay) => void;
   hoverColor?: string;
-  visible?: (item: any) => boolean;
+  visible?: (item: MatriculadoDisplay) => boolean;
 }
 
 // Interfaz para mostrar los datos de matrícula con información adicional
@@ -39,7 +42,7 @@ export interface MatriculadoDisplay extends Matricula {
   alumno?: Alumno;
   codigomatricula?: string | null;
   codigopago?: string | null;
-  fechaCreacionComprobante?: string | null; // Fecha de creación del comprobante
+  fechaCreacionMatricula?: string | null;
   numeroDocumentoApoderado?: string | null;
   numeroDocumentoAlumno?: string | null;
 }
@@ -61,21 +64,20 @@ export interface MatriculadoDisplay extends Matricula {
   styleUrls: ['./matriculados.component.scss']
 })
 export class MatriculadosComponent implements OnInit {
-  loading = false; // Indicador de carga
-  matriculados: MatriculadoDisplay[] = []; // Matrículas a mostrar en la tabla
+  loading = false; // Indica si se está cargando información
+  matriculados: MatriculadoDisplay[] = []; // Matrículas mostradas en la tabla (después de filtros y paginación)
   allMatriculados: MatriculadoDisplay[] = []; // Todas las matrículas cargadas
-  columns: ColumnConfig[] = []; // Configuración de columnas de la tabla
-  actions: ActionConfig[] = []; // Configuración de acciones de la tabla
+  columns: ColumnConfig[] = []; // Configuración de las columnas de la tabla
+  actions: ActionConfig[] = []; // Configuración de las acciones por fila
   currentPage: number = 1; // Página actual de la paginación
   totalPages: number = 1; // Total de páginas para la paginación
-  pageSize: number = 5; // Cantidad de elementos por página
+  pageSize: number = 5; // Cantidad de registros por página
   maxPaginationSize: number = 7; // Tamaño máximo de los controles de paginación
-  currentDate: string; // Fecha actual en formatoYYYY-MM-DD
+  currentDate: string; // Fecha actual en formatoYYYY-MM-DD para validación de fechas
 
-  // Propiedades para filtros de Nivel, Grado, Sección y Fechas
-  niveles = ['Primaria', 'Secundaria']; // Opciones de niveles
-  grados: string[] = []; // Opciones de grados (depende del nivel)
-  secciones = ['A', 'B', 'C', 'D']; // Opciones de secciones
+  niveles = ['Primaria', 'Secundaria']; // Opciones para el filtro de nivel
+  grados: string[] = []; // Opciones para el filtro de grado (depende del nivel)
+  secciones = ['A', 'B', 'C', 'D']; // Opciones para el filtro de sección
 
   // Objeto para almacenar los valores de los filtros
   filters = {
@@ -84,8 +86,8 @@ export class MatriculadosComponent implements OnInit {
     grado: '',
     seccion: '',
     nivel: '',
-    fechaInicio: '' as string, // Campo para el filtro de rango - Fecha Inicio
-    fechaFin: '' as string // Campo para el filtro de rango - Fecha Fin
+    fechaInicio: '' as string,
+    fechaFin: '' as string
   };
 
   constructor(
@@ -94,17 +96,23 @@ export class MatriculadosComponent implements OnInit {
     private comprobanteService: ComprobanteService,
     private apoderadoService: ApoderadoService,
     private alumnoService: AlumnoService,
-    private library: FaIconLibrary,
-    private notificationService: NotificationService // Servicio de notificaciones
+    private library: FaIconLibrary, // Para usar iconos de Font Awesome
+    private notificationService: NotificationService // Servicio para mostrar notificaciones
   ) {
-    // Agregar iconos de Font Awesome a la biblioteca
-    this.library.addIcons(faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle, faSearch, faBroom);
-    // Obtener la fecha actual en formatoYYYY-MM-DD para el atributo max y validación
-    this.currentDate = new Date().toISOString().split('T')[0];
+    // Añadir iconos a la librería de Font Awesome
+    this.library.addIcons(
+        faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle,
+        faSearch, faBroom, faFileExcel
+    );
+    // Obtener la fecha actual y formatearla aYYYY-MM-DD
+    const today = new Date();
+    const offset = today.getTimezoneOffset();
+    const todayLocal = new Date(today.getTime() - (offset*60*1000));
+    this.currentDate = todayLocal.toISOString().split('T')[0];
   }
 
-  async ngOnInit() {
-    // Configuración de las columnas de la tabla
+  ngOnInit() {
+    // Configuración inicial de las columnas de la tabla
     this.columns = [
       { field: 'codigomatricula', header: 'CODIGO MATRICULA', maxWidth: 150, sortable: true },
       { field: 'codigopago', header: 'CODIGO PAGO', maxWidth: 150, sortable: true },
@@ -114,10 +122,10 @@ export class MatriculadosComponent implements OnInit {
       { field: 'numeroDocumentoApoderado', header: 'DOCUMENTO APODERADO', maxWidth: 110, sortable: true },
       { field: 'numeroDocumentoAlumno', header: 'DOCUMENTO ALUMNO', maxWidth: 110, sortable: true },
       { field: 'estadoMatricula', header: 'ESTADO', maxWidth: 150, sortable: true },
-      { field: 'fechaCreacionComprobante', header: 'FECHA CREACION', maxWidth: 150, sortable: true, type: 'date' },
+      { field: 'fechaCreacionMatricula', header: 'FECHA CREACION', maxWidth: 150, sortable: true, type: 'date' },
     ];
 
-    // Configuración de las acciones de la tabla
+    // Configuración de las acciones disponibles en cada fila de la tabla
     this.actions = [
       {
         name: 'continue',
@@ -125,74 +133,59 @@ export class MatriculadosComponent implements OnInit {
         tooltip: 'CONTINUAR',
         action: (item: MatriculadoDisplay) => this.continueMatricula(item),
         hoverColor: 'green',
-        // Mostrar solo si el estado es "EN PROCESO" (robusto a espacios y mayúsculas/minúsculas)
         visible: (item: MatriculadoDisplay) => {
-           // Usar trim() y toUpperCase() para una comparación más robusta
            const estado = item.estadoMatricula?.trim().toUpperCase();
-           return estado === 'EN PROCESO';
+           return estado === 'EN ESPERA'; // Visible solo si el estado es EN ESPERA
         }
       },
       {
         name: 'print-payment',
         icon: ['fas', 'dollar-sign'],
-        tooltip: 'COMPROBANTE DE PAGO',
-        action: (item: MatriculadoDisplay) => this.imprimirComprobantePago(item),
+        tooltip: 'COMPROBANTE PAGO',
+        action: (item: MatriculadoDisplay) => this.viewComprobante(item, 'pago'),
         hoverColor: 'blue',
-        // Mostrar solo si el estado es "COMPLETADA" (robusto a espacios y mayúsculas/minúsculas)
         visible: (item: MatriculadoDisplay) => {
-           // Usar trim() y toUpperCase() para una comparación más robusta
            const estado = item.estadoMatricula?.trim().toUpperCase();
-           return estado === 'COMPLETADA';
+           return estado === 'COMPLETADO'; // Visible solo si el estado es COMPLETADO
         }
       },
       {
         name: 'print-enrollment',
         icon: ['fas', 'file-alt'],
-        tooltip: 'COMPROBANTE DE MATRICULA',
-        action: (item: MatriculadoDisplay) => this.imprimirComprobanteMatricula(item),
+        tooltip: 'COMPROBANTE MATRICULA',
+        action: (item: MatriculadoDisplay) => this.viewComprobante(item, 'matricula'),
         hoverColor: 'purple',
-        // Mostrar solo si el estado es "COMPLETADA" (robusto a espacios y mayúsculas/minúsculas)
         visible: (item: MatriculadoDisplay) => {
-           // Usar trim() y toUpperCase() para una comparación más robusta
            const estado = item.estadoMatricula?.trim().toUpperCase();
-           return estado === 'COMPLETADA';
+           return estado === 'COMPLETADO'; // Visible solo si el estado es COMPLETADO
         }
       }
     ];
-
     // Cargar las matrículas al inicializar el componente
     this.loadMatriculas();
   }
 
-  // Método para cargar las matrículas desde el servicio
+  // Carga las matrículas desde el servicio y obtiene información adicional (apoderado, alumno, comprobante)
   loadMatriculas(): void {
-     this.loading = true; // Activar indicador de carga
+     this.loading = true; // Activar spinner de carga
      this.matriculaService.obtenerMatriculas()
        .pipe(
          switchMap(matriculas => {
-           if (matriculas.length === 0) {
-             return of([]); // Si no hay matrículas, retornar un observable vacío
+           if (!matriculas || matriculas.length === 0) { // Si no hay matrículas
+             this.notificationService.showNotification('No hay matrículas registradas en el sistema.', 'info');
+             return of([]); // Retorna un observable vacío
            }
-           // Para cada matrícula, obtener información adicional (apoderado, alumno, comprobante)
+           // Para cada matrícula, obtener información adicional en paralelo
            const observables = matriculas.map(matricula => {
-             const apoderado$ = matricula.idapoderado ? this.apoderadoService.obtenerApoderado(matricula.idapoderado).pipe(
-               catchError(() => of(null)) // Manejar error si no se encuentra apoderado
-             ) : of(null);
-             const alumno$ = matricula.idalumno ? this.alumnoService.obtenerAlumno(matricula.idalumno).pipe(
-               catchError(() => of(null)) // Manejar error si no se encuentra alumno
-             ) : of(null);
-             const comprobante$ = matricula.idmatricula ? this.comprobanteService.obtenerComprobantePorIdMatricula(matricula.idmatricula).pipe(
-               catchError(() => of(null)) // Manejar error si no se encuentra comprobante
-             ) : of(null);
-
-             // Combinar los resultados en un solo observable
+             const apoderado$ = matricula.idapoderado ? this.apoderadoService.obtenerApoderado(matricula.idapoderado).pipe(catchError(() => of(null))) : of(null);
+             const alumno$ = matricula.idalumno ? this.alumnoService.obtenerAlumno(matricula.idalumno).pipe(catchError(() => of(null))) : of(null);
+             const comprobante$ = matricula.idmatricula ? this.comprobanteService.obtenerComprobantePorIdMatricula(matricula.idmatricula).pipe(catchError(() => of(null))) : of(null);
              return forkJoin([of(matricula), apoderado$, alumno$, comprobante$]);
            });
-           // Esperar a que todos los observables se completen
-           return forkJoin(observables);
+           return forkJoin(observables); // Esperar a que todas las llamadas se completen
          }),
-         // Mapear los resultados combinados a la estructura MatriculadoDisplay
          map(results => {
+           // Mapear los resultados para crear el objeto MatriculadoDisplay
            return results.map(([matricula, apoderado, alumno, comprobante]) => ({
              ...matricula,
              nombre: alumno?.nombre || null,
@@ -201,7 +194,7 @@ export class MatriculadosComponent implements OnInit {
              estadoMatricula: matricula.estadoMatricula || null,
              codigomatricula: comprobante?.codigomatricula || null,
              codigopago: comprobante?.codigopago || null,
-             fechaCreacionComprobante: comprobante?.fechaCreacion || null,
+             fechaCreacionMatricula: matricula?.fechaCreacion || null,
              numeroDocumentoApoderado: apoderado?.numeroDocumento || null,
              numeroDocumentoAlumno: alumno?.numeroDocumento || null,
            }));
@@ -209,70 +202,72 @@ export class MatriculadosComponent implements OnInit {
        )
        .subscribe({
          next: data => {
-           this.allMatriculados = data; // Almacenar todas las matrículas
-           this.applyFiltersAndPagination(); // Aplicar filtros y paginación inicial
-           this.loading = false; // Desactivar indicador de carga
+           this.allMatriculados = data; // Almacenar todas las matrículas con información adicional
+           // Aplicar filtros y paginación inicial
+           this.applyFiltersAndPagination(this.filters.fechaInicio || undefined, this.filters.fechaFin || undefined);
+           this.loading = false; // Desactivar spinner
          },
          error: err => {
            this.notificationService.showNotification('Error al cargar matrículas: ' + err.message, 'error');
-           this.loading = false; // Desactivar indicador de carga en caso de error
+           this.loading = false; // Desactivar spinner en caso de error
          }
        });
    }
 
-  // Método para aplicar filtros y paginación a las matrículas
-  applyFiltersAndPagination(): void {
+  // Aplica los filtros y la paginación a la lista de matrículas
+  applyFiltersAndPagination(fechaInicioBusqueda?: string, fechaFinBusqueda?: string): void {
     let filteredMatriculados = this.allMatriculados.filter(matricula => {
-      let isMatch = true;
+      let isMatch = true; // Bandera para verificar si la matrícula coincide con los filtros
 
-      // Filtrar por Código Matrícula
-      if (this.filters.codigomatricula && !matricula.codigomatricula?.includes(this.filters.codigomatricula)) {
-        isMatch = false;
+      // Filtrar por código de matrícula (búsqueda parcial insensible a mayúsculas/minúsculas)
+      if (this.filters.codigomatricula && !matricula.codigomatricula?.toLowerCase().includes(this.filters.codigomatricula.toLowerCase())) isMatch = false;
+      // Filtrar por código de pago (búsqueda parcial insensible a mayúsculas/minúsculas)
+      if (this.filters.codigopago && !matricula.codigopago?.toLowerCase().includes(this.filters.codigopago.toLowerCase())) isMatch = false;
+      // Filtrar por nivel (comparación exacta insensible a mayúsculas/minúsculas)
+      if (this.filters.nivel && matricula.nivel?.toLowerCase() !== this.filters.nivel.toLowerCase()) isMatch = false;
+      // Filtrar por grado (comparación exacta)
+      if (this.filters.grado && matricula.grado?.toString() !== this.filters.grado) isMatch = false;
+      // Filtrar por sección (comparación exacta insensible a mayúsculas/minúsculas)
+      if (this.filters.seccion && matricula.seccion?.toLowerCase() !== this.filters.seccion.toLowerCase()) isMatch = false;
+
+      // Validar y aplicar filtro por rango de fechas
+      const fechaInicioValida = fechaInicioBusqueda && this.isValidDateFormat(fechaInicioBusqueda);
+      const fechaFinValida = fechaFinBusqueda && this.isValidDateFormat(fechaFinBusqueda);
+
+      if (fechaInicioValida && fechaFinValida) {
+        const fechaCreacionStr = matricula.fechaCreacionMatricula?.split('T')[0];
+        // Convertir fechas a objetos Date en UTC para comparación consistente
+        const fechaCreacion = fechaCreacionStr ? new Date(fechaCreacionStr + "T00:00:00Z") : null;
+        const fechaInicioFilter = new Date(fechaInicioBusqueda + "T00:00:00Z");
+        const fechaFinFilter = new Date(fechaFinBusqueda + "T00:00:00Z");
+
+        if (fechaCreacion) {
+            // Comparar las fechas (año, mes, día)
+            if (fechaCreacion.getUTCFullYear() < fechaInicioFilter.getUTCFullYear() ||
+                (fechaCreacion.getUTCFullYear() === fechaInicioFilter.getUTCFullYear() && fechaCreacion.getUTCMonth() < fechaInicioFilter.getUTCMonth()) ||
+                (fechaCreacion.getUTCFullYear() === fechaInicioFilter.getUTCFullYear() && fechaCreacion.getUTCMonth() === fechaInicioFilter.getUTCMonth() && fechaCreacion.getUTCDate() < fechaInicioFilter.getUTCDate())
+            ) {
+                isMatch = false; // La fecha de creación es anterior al inicio del rango
+            }
+
+            if (fechaCreacion.getUTCFullYear() > fechaFinFilter.getUTCFullYear() ||
+                (fechaCreacion.getUTCFullYear() === fechaFinFilter.getUTCFullYear() && fechaCreacion.getUTCMonth() > fechaFinFilter.getUTCMonth()) ||
+                (fechaCreacion.getUTCFullYear() === fechaFinFilter.getUTCFullYear() && fechaCreacion.getUTCMonth() === fechaFinFilter.getUTCMonth() && fechaCreacion.getUTCDate() > fechaFinFilter.getUTCDate())
+            ) {
+                 isMatch = false; // La fecha de creación es posterior al fin del rango
+            }
+        } else {
+          isMatch = false; // Si no hay fecha de creación, no coincide con el filtro de fecha
+        }
       }
 
-      // Filtrar por Código Pago
-      if (this.filters.codigopago && !matricula.codigopago?.includes(this.filters.codigopago)) {
-        isMatch = false;
-      }
-
-      // Filtrar por Nivel, Grado y Sección
-      if (this.filters.nivel && matricula.nivel?.toLowerCase() !== this.filters.nivel.toLowerCase()) {
-        isMatch = false;
-      }
-      if (this.filters.grado && matricula.grado?.toString() !== this.filters.grado) {
-        isMatch = false;
-      }
-      if (this.filters.seccion && matricula.seccion?.toLowerCase() !== this.filters.seccion.toLowerCase()) {
-        isMatch = false;
-      }
-
-      // Filtrar por rango de fecha de creación SOLO si ambos campos de fecha están llenos y son válidos
-      if (this.filters.fechaInicio && this.filters.fechaFin && this.isValidDateFormat(this.filters.fechaInicio) && this.isValidDateFormat(this.filters.fechaFin)) {
-          const fechaCreacion = matricula.fechaCreacionComprobante ? new Date(matricula.fechaCreacionComprobante) : null;
-          const fechaInicioFilter = new Date(this.filters.fechaInicio);
-          const fechaFinFilter = new Date(this.filters.fechaFin);
-
-          if (fechaCreacion) {
-              if (fechaCreacion < fechaInicioFilter) {
-                  isMatch = false;
-              }
-              const fechaFinAdjusted = new Date(fechaFinFilter);
-              fechaFinAdjusted.setDate(fechaFinAdjusted.getDate() + 1); // Incluir la fecha de fin en el rango
-              if (fechaCreacion >= fechaFinAdjusted) {
-                  isMatch = false;
-              }
-          } else {
-              // Si no hay fecha de creación en la matrícula, no coincide si se ha aplicado un filtro de fecha
-              isMatch = false;
-          }
-      } else {
-          // Si uno o ambos campos de fecha están vacíos o el formato es inválido, no se aplica el filtro de rango de fecha.
-          // La condición isMatch se mantiene según los otros filtros.
-      }
-
-
-      return isMatch;
+      return isMatch; // Retorna true si la matrícula pasa todos los filtros
     });
+
+    // Mostrar notificación si no se encontraron resultados con los filtros aplicados
+    if (filteredMatriculados.length === 0 && (this.filters.codigomatricula || this.filters.codigopago || this.filters.nivel || this.filters.grado || this.filters.seccion || (fechaInicioBusqueda && fechaFinBusqueda) )) {
+        this.notificationService.showNotification('No se encontraron matrículas con los criterios de búsqueda aplicados.', 'info');
+    }
 
     // Calcular total de páginas y ajustar la página actual si es necesario
     this.totalPages = Math.ceil(filteredMatriculados.length / this.pageSize);
@@ -288,104 +283,129 @@ export class MatriculadosComponent implements OnInit {
     this.matriculados = filteredMatriculados.slice(startIndex, endIndex);
   }
 
-  // Método para validar si una cadena de fecha tiene el formatoYYYY-MM-DD
+  // Valida que una cadena de fecha tenga el formatoYYYY-MM-DD
   isValidDateFormat(dateString: string | null): boolean {
-      if (!dateString) {
-          return false; // Cadena vacía no es formato válido
-      }
-      // Expresión regular para verificar el formatoYYYY-MM-DD
+      if (!dateString) return false;
       const regex = /^\d{4}-\d{2}-\d{2}$/;
-      return regex.test(dateString);
+      if(!regex.test(dateString)) return false;
+      // Crear fecha en UTC para evitar problemas de zona horaria al validar
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day)); // Mes es 0-indexado en Date
+      // Validar que los componentes de la fecha parseada coincidan con los originales
+      return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
   }
 
+  // Valida que una fecha no sea futura
+  validateDateIsNotFuture(dateString: string | null): boolean {
+      if (!dateString || !this.isValidDateFormat(dateString)) return true;
+      // Crear fechas en UTC para comparación consistente
+      const [year, month, day] = dateString.split('-').map(Number);
+      const inputDateUTC = Date.UTC(year, month - 1, day);
 
-  // Método para validar si una cadena de fecha no es futura
-  validateDate(dateString: string | null): boolean {
-      if (!dateString) {
-          return true; // No se ingresó fecha, se considera válido (esta validación se hace después del formato)
-      }
-      const inputDate = new Date(dateString);
-      const today = new Date(this.currentDate);
-      // Establecer la hora a 00:00:00 para una comparación de fechas precisa
-      inputDate.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
+      const today = new Date();
+      const todayUTC = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
 
-      return inputDate <= today;
+      return inputDateUTC <= todayUTC;
   }
 
-  // Manejador para el evento change de los inputs de fecha
+  // Maneja el evento de cambio en los campos de fecha
   onDateChange(field: 'fechaInicio' | 'fechaFin'): void {
       const dateValue = this.filters[field];
-
-      // Primero, validar el formato completo (YYYY-MM-DD) si hay algo ingresado
       if (dateValue && !this.isValidDateFormat(dateValue)) {
-          this.notificationService.showNotification(`Por favor, ingrese una fecha completa en formato Año-Mes-Día.`, 'error');
-          this.filters[field] = ''; // Limpiar fecha inválida
-          return; // Detener la validación si el formato es incorrecto
+          this.notificationService.showNotification(`Formato de ${field === 'fechaInicio' ? 'Fecha Inicio' : 'Fecha Fin'} inválido. UseYYYY-MM-DD.`, 'error');
+          this.filters[field] = ''; // Limpiar si el formato es incorrecto
+          return;
       }
-
-      // Luego, validar que la fecha no sea futura si el formato es válido
-      if (dateValue && !this.validateDate(dateValue)) {
+      if (dateValue && !this.validateDateIsNotFuture(dateValue)) {
           this.notificationService.showNotification(`La ${field === 'fechaInicio' ? 'Fecha Inicio' : 'Fecha Fin'} no puede ser mayor a la fecha actual.`, 'error');
-          this.filters[field] = ''; // Limpiar fecha inválida
+          this.filters[field] = ''; // Limpiar si la fecha es futura
       }
-      // No se llama a applyFiltersAndPagination aquí.
-      // El filtrado se realiza al hacer clic en el botón Buscar.
   }
 
-
-  // Método llamado al hacer clic en el botón Buscar
+  // Aplica los filtros al hacer clic en el botón de búsqueda
   onSearch(): void {
-    // Validar que ambos campos de fecha estén llenos si se intenta filtrar por rango
-    if ((this.filters.fechaInicio && !this.filters.fechaFin) || (!this.filters.fechaInicio && this.filters.fechaFin)) {
-        this.notificationService.showNotification('Por favor, ingrese tanto la Fecha Inicio como la Fecha Fin para filtrar por rango de fechas.', 'error');
-        return; // No aplicar filtros si solo un campo de fecha está lleno
-    }
+    this.loading = true; // Activar spinner
+    this.currentPage = 1; // Reiniciar a la primera página
 
-    // Validar rangos de fecha antes de aplicar filtros (redundante si se usa onDateChange, pero útil por seguridad)
-    if (this.filters.fechaInicio && !this.validateDate(this.filters.fechaInicio)) {
-        this.notificationService.showNotification('La Fecha Inicio no puede ser mayor a la fecha actual.', 'error');
-        this.filters.fechaInicio = ''; // Limpiar fecha inválida
+    let fechaInicioBusqueda = this.filters.fechaInicio;
+    let fechaFinBusqueda = this.filters.fechaFin;
+
+    // 1. Validar formato de Fecha Inicio si existe
+    if (fechaInicioBusqueda && !this.isValidDateFormat(fechaInicioBusqueda)) {
+        this.notificationService.showNotification('Formato de Fecha Inicio inválido. UseYYYY-MM-DD.', 'error');
+        this.loading = false;
         return;
     }
-     if (this.filters.fechaFin && !this.validateDate(this.filters.fechaFin)) {
-        this.notificationService.showNotification('La Fecha Fin no puede ser mayor a la fecha actual.', 'error');
-        this.filters.fechaFin = ''; // Limpiar fecha inválida
+    // 2. Validar formato de Fecha Fin si existe
+    if (fechaFinBusqueda && !this.isValidDateFormat(fechaFinBusqueda)) {
+        this.notificationService.showNotification('Formato de Fecha Fin inválido. UseYYYY-MM-DD.', 'error');
+        this.loading = false;
         return;
     }
 
-    // Validar que la fecha de fin no sea anterior a la fecha de inicio SOLO si ambos campos están llenos
-    if (this.filters.fechaInicio && this.filters.fechaFin) {
-        const fechaInicio = new Date(this.filters.fechaInicio);
-        const fechaFin = new Date(this.filters.fechaFin);
-        if (fechaFin < fechaInicio) {
-            this.notificationService.showNotification('La fecha fin no puede ser menor que la fecha inicio.', 'error');
-            return; // No aplicar filtros si la validación falla
+    // 3. Validar que Fecha Inicio no sea futura si existe y es válida
+    if (fechaInicioBusqueda && !this.validateDateIsNotFuture(fechaInicioBusqueda)) {
+        this.notificationService.showNotification('La Fecha Inicio no puede ser futura.', 'error');
+        this.loading = false;
+        return;
+    }
+    // 4. Validar que Fecha Fin no sea futura si existe y es válida
+    if (fechaFinBusqueda && !this.validateDateIsNotFuture(fechaFinBusqueda)) {
+        this.notificationService.showNotification('La Fecha Fin no puede ser futura.', 'error');
+        this.loading = false;
+        return;
+    }
+
+    // 5. Lógica de rangos
+    if (fechaInicioBusqueda && !fechaFinBusqueda) {
+        // Si solo hay fecha de inicio válida, buscar hasta la fecha actual
+        fechaFinBusqueda = this.currentDate; // currentDate ya está enYYYY-MM-DD
+        this.notificationService.showNotification(`Buscando desde ${fechaInicioBusqueda} hasta la fecha actual (${fechaFinBusqueda}).`, 'info');
+    } else if (!fechaInicioBusqueda && fechaFinBusqueda) {
+        // Si solo hay fecha de fin válida, es un error, se necesita fecha de inicio
+        this.notificationService.showNotification('Por favor, ingrese también la Fecha Inicio para filtrar por rango.', 'error');
+        this.loading = false;
+        return;
+    }
+
+    // 6. Validar que fecha fin no sea menor que fecha inicio (solo si ambas son válidas)
+    if (fechaInicioBusqueda && fechaFinBusqueda) {
+        const inicio = new Date(fechaInicioBusqueda + "T00:00:00Z"); // Usar UTC para evitar problemas de zona horaria en la comparación
+        const fin = new Date(fechaFinBusqueda + "T00:00:00Z");
+        // Comparar las marcas de tiempo. Si fin es estrictamente menor que inicio, mostrar error.
+        if (fin.getTime() < inicio.getTime()) {
+            this.notificationService.showNotification('La Fecha Fin no puede ser menor que la Fecha Inicio.', 'error');
+            this.loading = false;
+            return;
         }
     }
 
-
-    // Activar spinner y aplicar filtros/paginación con un retardo de 1 segundo
-    this.loading = true;
-    this.currentPage = 1; // Reiniciar a la primera página al buscar
-
-    // Usar setTimeout para permitir que la UI actualice el estado del spinner
+    // Si todas las validaciones pasan, proceder con el filtrado
     setTimeout(() => {
-      this.applyFiltersAndPagination(); // Aplicar filtros y paginación
-      this.loading = false; // Desactivar spinner después de aplicar filtros
-    }, 1000); // Retardo de 1000ms (1 segundo)
+      this.applyFiltersAndPagination(fechaInicioBusqueda || undefined, fechaFinBusqueda || undefined);
+      this.loading = false; // Desactivar spinner
+    }, 300); // Pequeño retraso para permitir que el spinner se muestre
   }
 
-  // Método llamado al cambiar de página en la paginación
+  // Maneja el cambio de página en la paginación
   onPageChange(newPage: number): void {
     this.currentPage = newPage;
-    this.applyFiltersAndPagination(); // Aplicar paginación
+    let fechaInicioActiva = this.filters.fechaInicio;
+    let fechaFinActiva = this.filters.fechaFin;
+
+    // Si solo hay fecha de inicio, usar la fecha actual como fin para la paginación
+    if (this.filters.fechaInicio && this.isValidDateFormat(this.filters.fechaInicio) &&
+        (!this.filters.fechaFin || !this.isValidDateFormat(this.filters.fechaFin))) {
+        fechaFinActiva = this.currentDate;
+    }
+    // Aplicar filtros y paginación con las fechas activas
+    this.applyFiltersAndPagination(fechaInicioActiva || undefined, fechaFinActiva || undefined);
   }
 
-  // Lógica para poblar grados según el nivel seleccionado
+  // Maneja el cambio en el filtro de nivel para actualizar las opciones de grado
   onNivelChange(): void {
-    this.filters.grado = ''; // Reiniciar grado cuando cambia el nivel
-    this.filters.seccion = ''; // Reiniciar sección cuando cambia el nivel
+    this.filters.grado = ''; // Limpiar el grado al cambiar el nivel
+    this.filters.seccion = ''; // Limpiar la sección al cambiar el nivel
     if (this.filters.nivel === 'Primaria') {
       this.grados = ['1', '2', '3', '4', '5', '6'];
     } else if (this.filters.nivel === 'Secundaria') {
@@ -393,64 +413,41 @@ export class MatriculadosComponent implements OnInit {
     } else {
       this.grados = []; // Vaciar grados si no se selecciona nivel
     }
-    // No es necesario llamar a applyFiltersAndPagination aquí, se llamará al hacer clic en el botón Buscar
   }
 
-  // Método para continuar una matrícula en estado "EN PROCESO"
+  // Acción para continuar un trámite de matrícula en estado "EN ESPERA"
   continueMatricula(matricula: MatriculadoDisplay): void {
-    // Permite continuar matrículas en estado "EN PROCESO"
-    if (matricula.estadoMatricula === 'EN PROCESO') {
+    const estadoActual = matricula.estadoMatricula?.trim().toUpperCase();
+    if (estadoActual === 'EN ESPERA' && matricula.idmatricula) {
+      this.notificationService.showNotification(`Continuando trámite para matrícula ID: ${matricula.idmatricula}`, 'info'); // Notificación de acción
+      // Navegar a la página de registro de matrícula con los parámetros necesarios
       this.router.navigate(['/registrar-matricula'], {
-        queryParams: { idMatricula: matricula.idmatricula }
+        queryParams: {
+            idMatricula: matricula.idmatricula,
+            nivel: matricula.nivel,
+            grado: matricula.grado
+        }
       });
-    } else {
-      this.notificationService.showNotification(`Solo se puede continuar una matrícula que esté en estado "EN PROCESO". Estado actual: ${matricula.estadoMatricula}`, 'info');
-    }
-  }
-
-  // Método para imprimir el comprobante de pago
-  imprimirComprobantePago(matricula: MatriculadoDisplay): void {
-    if (matricula.estadoMatricula === 'COMPLETADA' && matricula.idmatricula) {
-      this.loading = true; // Activar indicador de carga
-      this.comprobanteService.generarPdfDirecto(matricula.idmatricula, 'PAGO')
-        .subscribe({
-          next: blob => {
-            const url = window.URL.createObjectURL(blob);
-            window.open(url); // Abrir el PDF en una nueva pestaña
-            this.loading = false; // Desactivar indicador de carga
-          },
-          error: err => {
-            this.notificationService.showNotification('Error al generar comprobante de pago: ' + err.message, 'error');
-            this.loading = false; // Desactivar indicador de carga en caso de error
-          }
-        });
     } else if (!matricula.idmatricula) {
-      this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para generar el comprobante de pago.', 'error');
+       this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para continuar.', 'error');
     }
   }
 
-  // Método para imprimir el comprobante de matrícula
-  imprimirComprobanteMatricula(matricula: MatriculadoDisplay): void {
-    if (matricula.estadoMatricula === 'COMPLETADA' && matricula.idmatricula) {
-      this.loading = true; // Activar indicador de carga
-      this.comprobanteService.generarPdfDirecto(matricula.idmatricula, 'MATRICULA')
-        .subscribe({
-          next: blob => {
-            const url = window.URL.createObjectURL(blob);
-            window.open(url); // Abrir el PDF en una nueva pestaña
-            this.loading = false; // Desactivar indicador de carga
-          },
-          error: err => {
-             this.notificationService.showNotification('Error al generar comprobante de matrícula: ' + err.message, 'error');
-            this.loading = false; // Desactivar indicador de carga en caso de error
-          }
-        });
-    } else if (!matricula.idmatricula) {
-       this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para generar el comprobante de matrícula.', 'error');
-    }
+  // Acción para ver un comprobante (de pago o matrícula)
+  viewComprobante(matricula: MatriculadoDisplay, tipo: 'pago' | 'matricula'): void {
+     const estadoActual = matricula.estadoMatricula?.trim().toUpperCase();
+     if (estadoActual === 'COMPLETADA' && matricula.idmatricula) {
+       this.notificationService.showNotification(`Viendo comprobante de ${tipo} para matrícula ID: ${matricula.idmatricula}`, 'info'); // Notificación de acción
+       // Navegar a la página de comprobantes con los parámetros necesarios
+       this.router.navigate(['/comprobantes'], {
+         queryParams: { idMatricula: matricula.idmatricula, nivel: matricula.nivel, tipoComprobante: tipo } // Añadido tipoComprobante para el destino
+       });
+     } else if (!matricula.idmatricula) {
+        this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para ver el comprobante.', 'error');
+     }
   }
 
-  // Método para reiniciar todos los filtros
+  // Restablece todos los filtros a sus valores iniciales
   resetFilter(): void {
     this.filters = {
       codigomatricula: '',
@@ -461,8 +458,110 @@ export class MatriculadosComponent implements OnInit {
       fechaInicio: '',
       fechaFin: ''
     };
-    this.grados = []; // Reiniciar grados
-    this.currentPage = 1; // Volver a la primera página
-    this.applyFiltersAndPagination(); // Aplicar filtros reiniciados
+    this.grados = []; // Vaciar grados
+    this.currentPage = 1; // Reiniciar a la primera página
+    this.applyFiltersAndPagination(); // Aplicar filtros (sin ninguno, muestra todos)
+    this.notificationService.showNotification('Filtros limpiados.', 'info'); // Notificación de acción
+  }
+
+  // Exporta los datos filtrados actualmente a un archivo Excel con mejor diseño
+  exportToExcel(): void {
+    this.loading = true; // Activar spinner
+
+    // Determinar el rango de fechas para la exportación si se aplicaron filtros de fecha
+    let fechaInicioBusqueda = this.filters.fechaInicio;
+    let fechaFinBusqueda = this.filters.fechaFin;
+    if (fechaInicioBusqueda && this.isValidDateFormat(fechaInicioBusqueda) && (!fechaFinBusqueda || !this.isValidDateFormat(fechaFinBusqueda))) {
+        fechaFinBusqueda = this.currentDate; // Si solo hay fecha de inicio, usar la fecha actual como fin
+    }
+
+    // Filtrar todos los datos cargados según los filtros actuales
+    let datosFiltradosCompletos = this.allMatriculados.filter(matricula => {
+      let isMatch = true; // Bandera para verificar si la matrícula coincide con los filtros
+
+      // Aplicar filtros de texto, nivel, grado y sección
+      if (this.filters.codigomatricula && !matricula.codigomatricula?.toLowerCase().includes(this.filters.codigomatricula.toLowerCase())) isMatch = false;
+      if (this.filters.codigopago && !matricula.codigopago?.toLowerCase().includes(this.filters.codigopago.toLowerCase())) isMatch = false;
+      if (this.filters.nivel && matricula.nivel?.toLowerCase() !== this.filters.nivel.toLowerCase()) isMatch = false;
+      if (this.filters.grado && matricula.grado?.toString() !== this.filters.grado) isMatch = false;
+      if (this.filters.seccion && matricula.seccion?.toLowerCase() !== this.filters.seccion.toLowerCase()) isMatch = false;
+
+      // Aplicar filtro de rango de fechas si ambas fechas son válidas
+      const fechaInicioValida = fechaInicioBusqueda && this.isValidDateFormat(fechaInicioBusqueda);
+      const fechaFinValida = fechaFinBusqueda && this.isValidDateFormat(fechaFinBusqueda);
+
+      if (fechaInicioValida && fechaFinValida) {
+        const fechaCreacionStr = matricula.fechaCreacionMatricula?.split('T')[0];
+        const fechaCreacion = fechaCreacionStr ? new Date(fechaCreacionStr + "T00:00:00Z") : null;
+        const fechaInicioFilter = new Date(fechaInicioBusqueda + "T00:00:00Z");
+        const fechaFinFilter = new Date(fechaFinBusqueda + "T00:00:00Z");
+
+        if (fechaCreacion) {
+            // Comparar las marcas de tiempo para incluir las fechas de inicio y fin
+            if (fechaCreacion.getTime() < fechaInicioFilter.getTime() || fechaCreacion.getTime() > fechaFinFilter.getTime()) {
+                 isMatch = false;
+            }
+        } else {
+          isMatch = false; // Si no hay fecha de creación, no coincide con el filtro de fecha
+        }
+      }
+      return isMatch; // Retorna true si la matrícula pasa todos los filtros
+    });
+
+    // Mostrar notificación si no hay datos para exportar
+    if (datosFiltradosCompletos.length === 0) {
+        this.notificationService.showNotification('No hay datos para exportar según los filtros actuales.', 'info');
+        this.loading = false; // Desactivar spinner
+        return;
+    }
+
+    // Preparar los datos para la exportación con encabezados más amigables y formato de fecha
+    const dataToExport = datosFiltradosCompletos.map(m => {
+        let fechaFormateada = '-';
+        if (m.fechaCreacionMatricula) {
+            const dateParts = m.fechaCreacionMatricula.split('T')[0].split('-'); // FormatoYYYY-MM-DD
+            if (dateParts.length === 3) {
+                fechaFormateada = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // Formato DD/MM/YYYY
+            }
+        }
+        return {
+          'Código Matrícula': m.codigomatricula || '-',
+          'Código Pago': m.codigopago || '-',
+          'Grado': m.grado || '-',
+          'Sección': m.seccion || '-',
+          'Nivel': m.nivel || '-',
+          'Documento Apoderado': m.numeroDocumentoApoderado || '-',
+          'Documento Alumno': m.numeroDocumentoAlumno || '-',
+          'Estado de Matrícula': m.estadoMatricula || '-',
+          'Fecha de Creación': fechaFormateada
+        };
+    });
+
+    // Crear la hoja de cálculo
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataToExport);
+
+    // Opcional: Ajustar el ancho de las columnas para un mejor diseño en Excel
+    const columnWidths = [
+      { wch: 18 }, // Código Matrícula (aumentado)
+      { wch: 15 }, // Código Pago
+      { wch: 10 }, // Grado
+      { wch: 10 }, // Sección
+      { wch: 10 }, // Nivel
+      { wch: 22 }, // Documento Apoderado (aumentado)
+      { wch: 22 }, // Documento Alumno (aumentado)
+      { wch: 20 }, // Estado de Matrícula
+      { wch: 18 }  // Fecha de Creación
+    ];
+    ws['!cols'] = columnWidths;
+
+    // Crear el libro de Excel y añadir la hoja
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Matriculados'); // Añadir la hoja al libro
+
+    // Escribir y descargar el archivo Excel
+    XLSX.writeFile(wb, 'matriculados_export_' + new Date().toISOString().split('T')[0] + '.xlsx');
+
+    this.loading = false; // Desactivar spinner
+    this.notificationService.showNotification('Datos exportados a Excel exitosamente.', 'success'); // Notificación de éxito
   }
 }

@@ -132,3 +132,18 @@ input[type="file"] {
     color: #ffffff !important; /* Blanco puro */
   }
 }
+
+/* Forzar el color blanco para el icono del calendario */
+::ng-deep mat-datepicker-toggle {
+  color: #ffffff !important; /* Blanco */
+}
+
+/* Asegurar que el SVG dentro del toggle también sea blanco */
+::ng-deep mat-datepicker-toggle .mat-mdc-icon-button {
+  color: #ffffff !important; /* Blanco */
+}
+
+/* Cambiar el color del SVG específicamente */
+::ng-deep mat-datepicker-toggle .mat-mdc-icon-button svg {
+  fill: #ffffff !important; /* Blanco para el icono SVG */
+}
