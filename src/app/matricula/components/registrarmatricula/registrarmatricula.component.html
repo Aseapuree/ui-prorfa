@@ -395,6 +395,22 @@
           </div>
 
           <div class="apoderado-column">
+
+            <div class="mb-3">
+              <label for="alumno_fechaNacimiento">Fecha de Nacimiento</label>
+              <div class="input-group relative">
+                 <span><fa-icon [icon]="faCalendarAlt"></fa-icon></span>
+                <input id="alumno_fechaNacimiento" formControlName="fechaNacimiento" type="date"/>
+              </div>
+              <div class="error">
+                <ng-container *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched">
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('required')">* Este campo es obligatorio.</span>
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('minAge')">* No cumple la edad mínima requerida para el grado ({{ formMatricula.get('alumno.fechaNacimiento')?.getError('minAge')?.requiredAge }} años).</span>
+                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
+                </ng-container>
+              </div>
+            </div>
+
             <div class="mb-3">
               <label for="alumno_genero">Género</label>
               <div class="input-group relative">
@@ -408,6 +424,7 @@
                 * Este campo es obligatorio.
               </div>
             </div>
+
 
             <div class="mb-3">
               <label for="alumno_nacionalidad">Nacionalidad</label>
@@ -440,20 +457,7 @@
               </div>
             </div>
 
-            <div class="mb-3">
-              <label for="alumno_fechaNacimiento">Fecha de Nacimiento</label>
-              <div class="input-group relative">
-                 <span><fa-icon [icon]="faCalendarAlt"></fa-icon></span>
-                <input id="alumno_fechaNacimiento" formControlName="fechaNacimiento" type="date"/>
-              </div>
-              <div class="error">
-                <ng-container *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched">
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.hasError('required')">* Este campo es obligatorio.</span>
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('minAge')">* No cumple la edad mínima requerida para el grado ({{ formMatricula.get('alumno.fechaNacimiento')?.getError('minAge')?.requiredAge }} años).</span>
-                  <span *ngIf="formMatricula.get('alumno.fechaNacimiento')?.touched && formMatricula.get('alumno.fechaNacimiento')?.hasError('invalidDate')">Fecha inválida.</span>
-                </ng-container>
-              </div>
-            </div>
+
           </div>
         </div>
 
