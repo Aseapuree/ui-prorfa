@@ -1,146 +1,131 @@
 <div class="container mx-auto p-4">
-  <h2 class="text-2xl font-bold mb-4">Matrículas Registradas</h2>
+  <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Matrículas Registradas</h2>
 
-  <div class="mt-4 flex flex-col gap-4 w-full">
-    <div class="flex flex-wrap gap-4 sm:gap-6">
-      <div class="w-60 space-y-3">
-        <label for="codigomatricula" class="block text-sm font-medium text-gray-700 dark:text-white">Código Matrícula</label>
+  <div class="mt-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 items-end">
+      <div class="space-y-1">
+        <label for="codigomatricula" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Código Matrícula</label>
         <input
           type="text"
           id="codigomatricula"
           [(ngModel)]="filters.codigomatricula"
-          placeholder="Código Matrícula"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          placeholder="Ej: M001"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
         />
       </div>
 
-      <div class="w-60 space-y-3">
-        <label for="codigopago" class="block text-sm font-medium text-gray-700 dark:text-white">Código Pago</label>
+      <div class="space-y-1">
+        <label for="codigopago" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Código Pago</label>
         <input
           type="text"
           id="codigopago"
           [(ngModel)]="filters.codigopago"
-          placeholder="Código Pago"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          placeholder="Ej: P001"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
         />
       </div>
 
-      <div class="w-60 space-y-3">
-        <label for="nivel" class="block text-sm font-medium text-gray-700 dark:text-white">Nivel</label>
+      <div class="space-y-1">
+        <label for="nivel" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nivel</label>
         <div class="relative">
           <select
             id="nivel"
             [(ngModel)]="filters.nivel"
             (change)="onNivelChange()"
-            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-            [ngClass]="{'border-teal-500': filters.nivel, 'border-gray-200': !filters.nivel}"
+            class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+            [ngClass]="{'border-blue-500': filters.nivel}"
           >
-            <option value="">Seleccionar nivel</option>
+            <option value="">Seleccionar</option>
             <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
           </select>
-           <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.nivel">
-            <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
         </div>
       </div>
 
-      <div class="w-60 space-y-3">
-        <label for="grado" class="block text-sm font-medium text-gray-700 dark:text-white">Grado</label>
+      <div class="space-y-1">
+        <label for="grado" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Grado</label>
         <div class="relative">
           <select
             id="grado"
             [(ngModel)]="filters.grado"
             [disabled]="!filters.nivel"
-            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-            [ngClass]="{'border-teal-500': filters.grado, 'border-gray-200': !filters.grado, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+            class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            [ngClass]="{'border-blue-500': filters.grado}"
           >
-            <option value="">Seleccionar grado</option>
+            <option value="">Seleccionar</option>
             <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
           </select>
-           <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.grado">
-            <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
         </div>
       </div>
 
-       <div class="w-60 space-y-3">
-        <label for="seccion" class="block text-sm font-medium text-gray-700 dark:text-white">Sección</label>
+      <div class="space-y-1">
+        <label for="seccion" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sección</label>
         <div class="relative">
           <select
             id="seccion"
             [(ngModel)]="filters.seccion"
             [disabled]="!filters.nivel"
-            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-            [ngClass]="{'border-teal-500': filters.seccion, 'border-gray-200': !filters.seccion, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+            class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            [ngClass]="{'border-blue-500': filters.seccion}"
           >
-            <option value="">Seleccionar sección</option>
-            <option *ngFor="let seccion of secciones" [value]="seccion">{{ seccion }}</option>
+            <option value="">Seleccionar</option>
+            <option *ngFor="let seccionItem of secciones" [value]="seccionItem">{{ seccionItem }}</option>
           </select>
-           <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.seccion">
-            <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
         </div>
       </div>
 
-      <div class="w-60 space-y-3">
-        <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Inicio</label>
+      <div class="space-y-1">
+        <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha Inicio</label>
         <input
           type="date"
           id="fechaInicio"
           [(ngModel)]="filters.fechaInicio"
           [max]="currentDate"
           (change)="onDateChange('fechaInicio')"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
         />
       </div>
 
-       <div class="w-60 space-y-3">
-        <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Fin</label>
+      <div class="space-y-1">
+        <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha Fin</label>
         <input
           type="date"
           id="fechaFin"
           [(ngModel)]="filters.fechaFin"
           [max]="currentDate"
-          (change)="onDateChange('fechaFin')"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+          [min]="filters.fechaInicio"  (change)="onDateChange('fechaFin')"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
         />
       </div>
     </div>
 
     <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center">
-        <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">Mostrar:</label>
+        <label for="itemsPerPage" class="text-sm font-medium text-gray-900 dark:text-gray-300 mr-2">Mostrar:</label>
         <select
           id="itemsPerPage"
           [(ngModel)]="pageSize"
           (ngModelChange)="onSearch()"
-          class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
+          class="py-1.5 px-2 text-sm text-gray-700 dark:text-dark-300 bg-white text-gray-900 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option *ngFor="let option of [5, 10, 15]" [value]="option">{{ option }}</option>
         </select>
-        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
+        <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">registros por página</span>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
         <app-tooltip tooltipText="Buscar matrículas">
           <button
             (click)="onSearch()"
-            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+            class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white dark:text-gray-900 bg-blue-600 dark:bg-blue-400 border border-transparent rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 gap-x-2"
           >
             <fa-icon [icon]="['fas', 'search']"></fa-icon>
             <span>Buscar</span>
           </button>
         </app-tooltip>
-        <app-tooltip tooltipText="Limpiar todos los filtros">
+        <app-tooltip tooltipText="Limpiar filtros">
           <button
             (click)="resetFilter()"
-            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+            class="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 gap-x-2"
           >
             <fa-icon [icon]="['fas', 'broom']"></fa-icon>
             <span>Limpiar</span>
@@ -158,16 +143,37 @@
     (sortChange)="onSearch()"
   />
 
-  <div *ngIf="!loading && matriculados.length === 0" class="text-center text-gray-500 dark:text-gray-400 mt-4">
-    No se encontraron datos.
+  <div *ngIf="!loading && matriculados.length === 0 && allMatriculados.length > 0" class="text-center text-gray-500 dark:text-gray-400 mt-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md">
+    No se encontraron datos con los filtros aplicados.
+  </div>
+   <div *ngIf="!loading && allMatriculados.length === 0" class="text-center text-gray-500 dark:text-gray-400 mt-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md">
+    No hay matrículas registradas para mostrar.
   </div>
 
-  <app-pagination
-    [page]="currentPage"
-    [totalPages]="totalPages"
-    [maxSize]="maxPaginationSize"
-    (pageChange)="onPageChange($event)"
-  ></app-pagination>
+  <div class="mt-6 flex items-center justify-between">
+    <span *ngIf="!loading && totalPages > 0" class="text-sm text-gray-600 dark:text-gray-400">Página {{ currentPage }} de {{ totalPages }}</span>
+    <app-pagination
+      *ngIf="!loading && totalPages > 1"
+      [page]="currentPage"
+      [totalPages]="totalPages"
+      [maxSize]="maxPaginationSize"
+      (pageChange)="onPageChange($event)"
+    ></app-pagination>
+  </div>
+
+
+  <div class="mt-6 flex justify-center">
+    <app-tooltip tooltipText="Exportar datos filtrados actualmente a Excel">
+      <button
+        (click)="exportToExcel()"
+        [disabled]="allMatriculados.length === 0 || loading"
+        class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white dark:text-gray-900 bg-green-600 dark:bg-green-400 border border-transparent rounded-md shadow-sm hover:bg-green-700 dark:hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-x-2"
+      >
+        <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
+        <span>Exportar a Excel</span>
+      </button>
+    </app-tooltip>
+  </div>
 
   <app-general-loading-spinner [visible]="loading" message="Cargando matrículas..."></app-general-loading-spinner>
 
