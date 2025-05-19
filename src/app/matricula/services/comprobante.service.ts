@@ -7,6 +7,10 @@ import { Observable, throwError, forkJoin, of } from 'rxjs';
 import { catchError, map, retry, tap, switchMap } from 'rxjs/operators';
 import { Comprobante } from '../interfaces/DTOComprobante';
 
+const TIPO_COMPROBANTE_MATRICULA_UUID = 'df61cd5c-5609-45d7-a2ad-1d285cabc958';
+const TIPO_COMPROBANTE_PAGO_UUID = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,6 +24,7 @@ export class ComprobanteService {
   obtenerComprobantes(): Observable<Comprobante[]> {
     return this.http.get<any>(this.urlBase + "/listar").pipe(
         map(response => response.data.content),
+        catchError(this.handleError)
     );
   }
 
@@ -28,6 +33,7 @@ export class ComprobanteService {
       .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -36,6 +42,7 @@ export class ComprobanteService {
      .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -44,6 +51,7 @@ export class ComprobanteService {
      .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -51,6 +59,7 @@ export class ComprobanteService {
     return this.http.delete<any>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true })
       .pipe(map(response => {
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -59,6 +68,7 @@ export class ComprobanteService {
       .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -67,6 +77,7 @@ export class ComprobanteService {
       .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -76,6 +87,7 @@ export class ComprobanteService {
       .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -84,14 +96,21 @@ export class ComprobanteService {
       .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
 
   generarYGuardarComprobanteBackend(idMatricula: string, tipoComprobante: string, montoTotal?: number): Observable<Comprobante> {
+    const tipoComprobanteUuid = this.getTipoComprobanteUuid(tipoComprobante);
+
+    if (!tipoComprobanteUuid) {
+        return throwError(() => new Error(`Tipo de comprobante desconocido para generar y guardar: ${tipoComprobante}`));
+    }
+
     let params = new HttpParams()
       .set('idMatricula', idMatricula)
-      .set('tipoComprobante', tipoComprobante);
+      .set('tipoComprobante', tipoComprobanteUuid);
 
     if (montoTotal !== undefined && montoTotal !== null) {
       params = params.set('montoTotal', montoTotal.toString());
@@ -101,6 +120,7 @@ export class ComprobanteService {
       .pipe(map(response => {
         return response.data;
       }),
+      catchError(this.handleError)
     );
   }
 
@@ -117,7 +137,7 @@ export class ComprobanteService {
              return null;
           }
           else {
-            throw new Error(response?.message);
+            throw new Error(response?.message || 'Error desconocido al obtener comprobante por matrícula.');
           }
         }),
         catchError(error => {
@@ -129,11 +149,28 @@ export class ComprobanteService {
       );
   }
 
-  generarPdfDirecto(idMatricula: string, tipoComprobante: string, montoTotal?: number): Observable<Blob> {
-      console.log(`ComprobanteService: Calling backend endpoint: ${this.urlBase}/generar-pdf-directo for type ${tipoComprobante}`);
+  private getTipoComprobanteUuid(tipoComprobante: string): string | null {
+      switch (tipoComprobante.toLowerCase()) {
+          case 'pago':
+              return TIPO_COMPROBANTE_PAGO_UUID;
+          case 'matricula':
+              return TIPO_COMPROBANTE_MATRICULA_UUID;
+          default:
+              return null;
+      }
+  }
+
+  generarPdfDirecto(idMatricula: string, tipoComprobanteString: string, montoTotal?: number): Observable<Blob> {
+      const tipoComprobanteUuid = this.getTipoComprobanteUuid(tipoComprobanteString);
+
+      if (!tipoComprobanteUuid) {
+          return throwError(() => new Error(`Tipo de comprobante desconocido: ${tipoComprobanteString}`));
+      }
+
+      console.log(`ComprobanteService: Calling backend endpoint: ${this.urlBase}/generar-pdf-directo for type ${tipoComprobanteString} with UUID ${tipoComprobanteUuid}`);
       let params = new HttpParams()
           .set('idMatricula', idMatricula)
-          .set('tipoComprobante', tipoComprobante);
+          .set('tipoComprobante', tipoComprobanteUuid);
 
       if (montoTotal !== undefined && montoTotal !== null) {
           params = params.set('montoTotal', montoTotal.toString());
@@ -144,32 +181,56 @@ export class ComprobanteService {
           responseType: 'blob',
           withCredentials: true
       }).pipe(
+           catchError(this.handleError)
       );
   }
 
 
   public handleError = (error: HttpErrorResponse | any): Observable<never> => {
     let errorMessage = 'Error desconocido al comunicar con el backend.';
+    let backendMessage = '';
 
     if (error instanceof HttpErrorResponse) {
+        if (error.error instanceof Blob) {
+            return new Observable<never>(observer => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    try {
+                        const errorBody = JSON.parse(reader.result as string);
+                        if (errorBody && errorBody.message) {
+                            backendMessage = errorBody.message;
+                            errorMessage = `Error del servidor (${error.status}): ${backendMessage}`;
+                        } else {
+                            errorMessage = `Error del servidor (${error.status}): El servidor devolvió un archivo binario inesperado en la respuesta de error.`;
+                        }
+                    } catch (e) {
+                        console.error('ComprobanteService: No se pudo parsear el cuerpo del error como JSON. Contenido:', reader.result);
+                        errorMessage = `Error del servidor (${error.status}): ${error.statusText || 'Mensaje desconocido'}. El servidor no devolvió un mensaje de error estándar.`;
+                    }
+                    console.error('ComprobanteService: Error completo:', error);
+                    observer.error(new Error(errorMessage));
+                };
+                reader.onerror = () => {
+                    console.error('ComprobanteService: Falló la lectura del blob de error.', error);
+                    errorMessage = `Error del servidor (${error.status}): Falló la lectura del mensaje de error del backend.`;
+                    observer.error(new Error(errorMessage));
+                };
+                reader.readAsText(error.error);
+            });
+
+        } else if (error.error && typeof error.error === 'object' && error.error.message) {
+            backendMessage = error.error.message;
+            errorMessage = `Error del servidor (${error.status}): ${backendMessage}`;
+        } else if (error.statusText) {
+             errorMessage = `Error del servidor (${error.status}): ${error.statusText}`;
+        } else {
+            errorMessage = `Error del servidor (${error.status}): Mensaje desconocido del servidor.`;
+        }
 
         if (error.status === 0) {
             errorMessage = 'Error de conexión con el backend. Asegúrate de que el servidor esté corriendo y accesible.';
-        } else {
-            if (error.error instanceof Blob) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                };
-                reader.readAsText(error.error);
-                errorMessage = `Error del servidor (${error.status}): El servidor devolvió un archivo binario en la respuesta de error.`;
-            } else {
-                if (error.error && error.error.message) {
-                    errorMessage = `Error del servidor (${error.status}): ${error.error.message}`;
-                } else {
-                    errorMessage = `Error del servidor (${error.status}): ${error.statusText || 'Mensaje desconocido'}`;
-                }
-            }
         }
+
     } else if (error instanceof Error) {
         console.error('ComprobanteService: Error del lado del cliente o de red:', error.message);
         errorMessage = `Error en la aplicación: ${error.message}`;
