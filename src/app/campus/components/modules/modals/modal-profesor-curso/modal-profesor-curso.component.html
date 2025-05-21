@@ -65,8 +65,8 @@
           <mat-label>Sección</mat-label>
           <mat-select formControlName="seccion" required [disabled]="!contactForm.get('grado')?.value">
             <mat-option value="">Seleccionar sección</mat-option>
-            <mat-option *ngFor="let seccion of secciones" [value]="seccion">
-              {{ seccion }}
+            <mat-option *ngFor="let seccion of secciones" [value]="seccion.nombre">
+              {{ seccion.nombre }}<!-- Se agrego .nombre para manejar la nueva estructura de entidad-->
             </mat-option>
           </mat-select>
           <mat-error *ngIf="contactForm.get('seccion')?.hasError('required')">

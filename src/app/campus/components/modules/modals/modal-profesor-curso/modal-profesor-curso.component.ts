@@ -11,7 +11,7 @@ import { Usuario, ProfesorCurso } from '../../../../interface/ProfesorCurso';
 import { CourseService } from '../../../../services/course.service';
 import { ProfesorCursoService } from '../../../../services/profesor-curso.service';
 import { UsuarioService } from '../../../../services/usuario.service';
-import { DatosNGS, Entidad } from '../../../../../matricula/interfaces/DTOEntidad';
+import { DatosNGS, Entidad, SeccionVacantes } from '../../../../../matricula/interfaces/DTOEntidad';
 import { EntidadService } from '../../../../../matricula/services/entidad.service';
 import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
@@ -40,7 +40,7 @@ export class ModalProfesorCursoComponent implements OnInit {
   cursos: Curso[] = [];
   niveles: string[] = [];
   grados: string[] = [];
-  secciones: string[] = [];
+  secciones: SeccionVacantes[] = [];
   datosNGS: DatosNGS | null = null;
 
   private readonly _fb = inject(FormBuilder);

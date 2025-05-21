@@ -10,7 +10,7 @@
           id="codigomatricula"
           [(ngModel)]="filters.codigomatricula"
           placeholder="Ej: M001"
-          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
         />
       </div>
 
@@ -21,7 +21,7 @@
           id="codigopago"
           [(ngModel)]="filters.codigopago"
           placeholder="Ej: P001"
-          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
         />
       </div>
 
@@ -32,12 +32,12 @@
             id="nivel"
             [(ngModel)]="filters.nivel"
             (change)="onNivelChange()"
-            class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-            [ngClass]="{'border-blue-500': filters.nivel}"
+            class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            [ngClass]="{'border-blue-500 dark:border-blue-400': filters.nivel}"
           >
-            <option value="">Seleccionar</option>
-            <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
-          </select>
+            <option value="">Seleccionar Nivel</option>
+            <option *ngFor="let nivel of nivelesParaFiltro" [value]="nivel">{{ nivel }}</option>
+            </select>
         </div>
       </div>
 
@@ -47,13 +47,12 @@
           <select
             id="grado"
             [(ngModel)]="filters.grado"
-            [disabled]="!filters.nivel"
-            class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-            [ngClass]="{'border-blue-500': filters.grado}"
+            (change)="onGradoChange()" [disabled]="!filters.nivel || gradosParaFiltro.length === 0" class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            [ngClass]="{'border-blue-500 dark:border-blue-400': filters.grado}"
           >
-            <option value="">Seleccionar</option>
-            <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
-          </select>
+            <option value="">Seleccionar Grado</option>
+            <option *ngFor="let grado of gradosParaFiltro" [value]="grado">{{ grado }}</option>
+            </select>
         </div>
       </div>
 
@@ -63,13 +62,12 @@
           <select
             id="seccion"
             [(ngModel)]="filters.seccion"
-            [disabled]="!filters.nivel"
-            class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-            [ngClass]="{'border-blue-500': filters.seccion}"
+            [disabled]="!filters.grado || seccionesParaFiltro.length === 0" class="py-2 pl-3 pr-10 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            [ngClass]="{'border-blue-500 dark:border-blue-400': filters.seccion}"
           >
-            <option value="">Seleccionar</option>
-            <option *ngFor="let seccionItem of secciones" [value]="seccionItem">{{ seccionItem }}</option>
-          </select>
+            <option value="">Seleccionar Sección</option>
+            <option *ngFor="let seccionItem of seccionesParaFiltro" [value]="seccionItem.nombre">{{ seccionItem.nombre }}</option>
+            </select>
         </div>
       </div>
 
@@ -81,7 +79,7 @@
           [(ngModel)]="filters.fechaInicio"
           [max]="currentDate"
           (change)="onDateChange('fechaInicio')"
-          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
         />
       </div>
 
@@ -92,8 +90,8 @@
           id="fechaFin"
           [(ngModel)]="filters.fechaFin"
           [max]="currentDate"
-          [min]="filters.fechaInicio"  (change)="onDateChange('fechaFin')"
-          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          [min]="filters.fechaInicio || ''" (change)="onDateChange('fechaFin')"
+          class="py-2 px-3 block w-full border-gray-300 dark:border-gray-600 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
         />
       </div>
     </div>
@@ -104,8 +102,7 @@
         <select
           id="itemsPerPage"
           [(ngModel)]="pageSize"
-          (ngModelChange)="onSearch()"
-          class="py-1.5 px-2 text-sm text-gray-700 dark:text-dark-300 bg-white text-gray-900 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          (ngModelChange)="onSearch()" class="py-1.5 px-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option *ngFor="let option of [5, 10, 15]" [value]="option">{{ option }}</option>
         </select>
@@ -140,8 +137,7 @@
     [columns]="columns"
     [actions]="actions"
     [enableActions]="true"
-    (sortChange)="onSearch()"
-  />
+    (sortChange)="onSearch()" />
 
   <div *ngIf="!loading && matriculados.length === 0 && allMatriculados.length > 0" class="text-center text-gray-500 dark:text-gray-400 mt-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md">
     No se encontraron datos con los filtros aplicados.

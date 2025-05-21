@@ -25,7 +25,7 @@ import {
   TableComponent,
 } from '../../../../../general/components/table/table.component';
 import { EntidadService } from '../../../../../matricula/services/entidad.service';
-import { DatosNGS } from '../../../../../matricula/interfaces/DTOEntidad';
+import { DatosNGS, SeccionVacantes } from '../../../../../matricula/interfaces/DTOEntidad';
 import {
   DATE_REGEX,
   DATE_VALIDATION_MESSAGES,
@@ -86,7 +86,7 @@ export class ProfesorCursoComponent implements OnInit {
   };
   niveles: string[] = [];
   grados: string[] = [];
-  secciones: string[] = [];
+  secciones: SeccionVacantes[] = [];
   datosNGS: DatosNGS | null = null;
   fechaTipos = [
     { value: 'asignacion', label: 'Fecha Asignación' },
