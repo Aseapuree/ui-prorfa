@@ -6,11 +6,13 @@ import { GeneralLoadingSpinnerComponent } from '../spinner/spinner.component';
 import { DTONotaResponse, AlumnoNotas } from '../../../campus/interface/DTONota';
 import { NotasService } from '../../../campus/services/notas.service';
 import { catchError, map, throwError } from 'rxjs';
+import { PaginationComponent } from '../pagination/pagination.component';
+
 
 @Component({
   selector: 'app-notas-generales',
   standalone: true,
-  imports: [RouterModule, CommonModule, FormsModule, GeneralLoadingSpinnerComponent],
+  imports: [RouterModule, CommonModule, FormsModule, GeneralLoadingSpinnerComponent, PaginationComponent],
   templateUrl: './notas-generales.component.html',
   styleUrls: ['./notas-generales.component.scss']
 })
@@ -62,12 +64,12 @@ export class NotasGeneralesComponent implements OnInit {
           const notas: DTONotaResponse[] = [];
           const sesiones = response.data.sesiones || [];
           sesiones.forEach(sesion => {
-            const idSesion = sesion.sesion?.idSesion || '';
+            const titulo = sesion.sesion?.titulo || ''; // Obtenemos el título de la sesión
             const infoCurso = sesion.sesion?.infoCurso || {};
             const notasSesion = sesion.notas || [];
             notasSesion.forEach(nota => {
               notas.push({
-                idNota: idSesion,
+                idNota: titulo, // Cambiamos idNota por el título de la sesión
                 idAlumno: nota.idAlumno || '',
                 nombre: nota.nombre || '',
                 apellidos: nota.apellidos || '',
@@ -101,7 +103,7 @@ export class NotasGeneralesComponent implements OnInit {
     ).subscribe(notas => {
       this.notas = notas;
       this.availableActivities = [...new Set(this.notas.map(nota => nota.nombreActividad))];
-      this.availableSessions = [...new Set(this.notas.map(nota => nota.idNota))];
+      this.availableSessions = [...new Set(this.notas.map(nota => nota.idNota))]; // Esto ahora usará los títulos
       this.agruparNotasPorAlumno();
       this.isLoading = false;
       this.isDataLoaded = true;
@@ -174,7 +176,7 @@ export class NotasGeneralesComponent implements OnInit {
   }
 }
 
-interface LocalAlumnoNotas { // Renombrado a LocalAlumnoNotas
+interface LocalAlumnoNotas {
   alumno: string;
   notas: DTONotaResponse[];
   promedioNotas: number;
