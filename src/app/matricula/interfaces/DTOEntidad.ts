@@ -17,14 +17,20 @@ export interface DatosNGS {
 }
 
 export interface Nivel {
-  nombre: string; // Hacer obligatorio
+  nombre: string;
   grados?: Grado[];
 }
 
 export interface Grado {
-  nombre: string; // Hacer obligatorio
-  secciones?: string[];
+  nombre: string;
+  secciones?: SeccionVacantes[];
 }
+
+export interface SeccionVacantes {
+  nombre: string;
+  vacantes: number;
+}
+
 
 export class DocumentoEntidad {
   necesarios?: Necesarios;
@@ -49,4 +55,3 @@ export class Intercambio {
 export class Discapacidad {
   documento1?: string; // CERTIFICADO DE DISCAPACIDAD
 }
-

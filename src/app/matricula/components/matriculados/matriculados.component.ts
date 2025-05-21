@@ -24,9 +24,8 @@ import { TooltipComponent } from './../../../general/components/tooltip/tooltip.
 // Importaciones para Exportar a Excel
 import * as XLSX from 'xlsx';
 
-// Importaciones de interfaces y servicios relacionados con la entidad (datos del colegio)
 import { EntidadService } from './../../services/entidad.service';
-import { DatosNGS, Nivel as EntidadNivel, Grado as EntidadGrado } from './../../interfaces/DTOEntidad';
+import { DatosNGS, Nivel as EntidadNivel, Grado as EntidadGrado, SeccionVacantes } from './../../interfaces/DTOEntidad';
 
 // Interfaz para la configuración de acciones en cada fila de la tabla
 export interface ActionConfig {
@@ -94,7 +93,7 @@ export class MatriculadosComponent implements OnInit {
   datosNGS: DatosNGS | null = null;
   nivelesParaFiltro: string[] = [];
   gradosParaFiltro: string[] = [];
-  seccionesParaFiltro: string[] = [];
+  seccionesParaFiltro: SeccionVacantes[] = [];
 
   // Propiedades para almacenar el estado de ordenación de la tabla
   currentSortField: string | null = null;
