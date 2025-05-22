@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ProfesorCurso } from '../interface/ProfesorCurso'; 
 import { DTOResponse } from '../interface/DTOResponse';
+import saveAs from 'file-saver';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,22 @@ export class ProfesorCursoService {
   private urlBase = "http://localhost:8080/v1/profesor-curso";
 
   constructor(private clienteHttp: HttpClient) { }
+
+  // Nuevo método para descargar el archivo Excel
+  descargarExcel(): Observable<void> {
+    return this.clienteHttp
+      .get(`${this.urlBase}/exportar-excel`, { responseType: 'blob', withCredentials: true })
+      .pipe(
+        map((response: Blob) => {
+          saveAs(response, 'asignaciones_profesor_curso.xlsx');
+          return undefined;
+        }),
+        catchError(error => {
+          console.error('Error al descargar el archivo Excel:', error);
+          return throwError(() => new Error('Error al descargar el archivo Excel'));
+        })
+      );
+  }
 
   // Listar asignaciones con paginación
   obtenerListaAsignaciones(page: number, size: number): Observable<{ content: ProfesorCurso[], totalElements: number }> {

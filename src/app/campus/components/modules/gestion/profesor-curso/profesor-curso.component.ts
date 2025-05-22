@@ -203,6 +203,23 @@ export class ProfesorCursoComponent implements OnInit {
     this.updateMaxDate(); // Asegurar que se actualice al iniciar
   }
 
+  // Nuevo método para descargar el Excel
+  descargarExcel(): void {
+    this.isLoading = true;
+    this.profesorCursoService.descargarExcel().subscribe({
+      next: () => {
+        this.notificationService.showNotification('Archivo Excel descargado con éxito', 'success');
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.notificationService.showNotification('Error al descargar el archivo Excel: ' + err.message, 'error');
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   // Función para actualizar maxDate a la fecha actual
   private updateMaxDate(): void {
     const today = new Date();
