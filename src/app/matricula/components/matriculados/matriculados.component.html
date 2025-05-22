@@ -66,7 +66,7 @@
             [ngClass]="{'border-blue-500 dark:border-blue-400': filters.seccion}"
           >
             <option value="">Seleccionar Sección</option>
-            <option *ngFor="let seccionItem of seccionesParaFiltro" [value]="seccionItem">{{ seccionItem }}</option>
+            <option *ngFor="let seccionItem of seccionesParaFiltro" [value]="seccionItem.nombre">{{ seccionItem.nombre }}</option>
             </select>
         </div>
       </div>
