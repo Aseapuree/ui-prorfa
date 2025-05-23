@@ -994,98 +994,129 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   // Actualización de buscarAsignaciones
-  buscarAsignaciones(): void {
-    console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
+buscarAsignaciones(): void {
+  console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
 
-    if (
-      this.filters.profesorId &&
-      !this.isKeywordValid(this.filters.profesorId)
-    ) {
-      this.notificationService.showNotification(
-        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      console.log('Nombre de profesor inválido');
-      return;
-    }
-
-    if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
-      this.notificationService.showNotification(
-        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      console.log('Nombre de curso inválido');
-      return;
-    }
-
-    if (!this.validateDates()) {
-      console.log('validateDates falló, deteniendo búsqueda');
-      return;
-    }
-
-    this.isLoading = true;
-    const filters = {
-      profesorId: this.filters.profesorId
-        ? this.filters.profesorId.trim()
-        : undefined,
-      cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
-      grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
-      seccion: this.filters.seccion
-        ? this.filters.seccion.toLowerCase()
-        : undefined,
-      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
-      fechaInicio:
-        this.filters.fechaInicio &&
-        this.isValidDateFormat(this.filters.fechaInicio)
-          ? new Date(this.filters.fechaInicio + 'T00:00:00').toISOString()
-          : undefined,
-      fechaFin:
-        this.filters.fechaFin && this.isValidDateFormat(this.filters.fechaFin)
-          ? new Date(this.filters.fechaFin + 'T00:00:00').toISOString()
-          : undefined,
-      fechaTipo: this.filters.fechaTipo || undefined,
-    };
-
-    console.log('Filtros aplicados:', filters);
-    this.appliedFilters = filters;
-
-    this.profesorCursoService
-      .buscarAsignaciones(
-        filters,
-        this.page,
-        this.itemsPerPage,
-        this.sortBy,
-        this.sortDir
-      )
-      .subscribe({
-        next: (resultado) => {
-          console.log('Resultados recibidos:', resultado);
-          this.asignaciones = this.transformarDatos(resultado.content);
-          this.totalAsignaciones = resultado.totalElements;
-          this.totalPages = Math.ceil(
-            this.totalAsignaciones / this.itemsPerPage
-          );
-          this.updatePageSizeOptions();
-          if (this.page > this.totalPages) {
-            this.page = 1;
-            this.buscarAsignaciones();
-            return;
-          }
-          this.cdr.detectChanges();
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Error en la búsqueda:', err);
-          this.notificationService.showNotification(
-            'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
-            'error'
-          );
-          this.asignaciones = [];
-          this.totalAsignaciones = 0;
-          this.totalPages = 1;
-          this.updatePageSizeOptions();
-          this.isLoading = false;
-        },
-      });
+  // Validar filtros de profesorId y cursoId
+  if (
+    this.filters.profesorId &&
+    !this.isKeywordValid(this.filters.profesorId)
+  ) {
+    this.notificationService.showNotification(
+      SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+      'error'
+    );
+    console.log('Nombre de profesor inválido');
+    return;
   }
+
+  if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
+    this.notificationService.showNotification(
+      SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+      'error'
+    );
+    console.log('Nombre de curso inválido');
+    return;
+  }
+
+  // Validar fechas
+  if (!this.validateDates()) {
+    console.log('validateDates falló, deteniendo búsqueda');
+    return;
+  }
+
+  // Activar el spinner
+  this.isLoading = true;
+
+  // Preparar los filtros para enviar al backend
+  const filters: {
+    profesorId?: string;
+    cursoId?: string;
+    grado?: string;
+    seccion?: string;
+    nivel?: string;
+    fechaInicio?: string;
+    fechaFin?: string;
+    fechaTipo?: string;
+  } = {
+    profesorId: this.filters.profesorId
+      ? this.filters.profesorId.trim()
+      : undefined,
+    cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
+    grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
+    seccion: this.filters.seccion
+      ? this.filters.seccion.toLowerCase()
+      : undefined,
+    nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+    fechaInicio:
+      this.filters.fechaInicio &&
+      this.isValidDateFormat(this.filters.fechaInicio)
+        ? new Date(this.filters.fechaInicio + 'T00:00:00').toISOString()
+        : undefined,
+    fechaFin:
+      this.filters.fechaFin && this.isValidDateFormat(this.filters.fechaFin)
+        ? new Date(this.filters.fechaFin + 'T00:00:00').toISOString()
+        : undefined, // Corregido: Usar 'undefined' en lugar de 'filters'
+    fechaTipo: this.filters.fechaTipo || undefined,
+  };
+
+  console.log('Filtros aplicados:', filters);
+  this.appliedFilters = filters;
+
+  // Realizar la solicitud al backend
+  this.profesorCursoService
+    .buscarAsignaciones(
+      filters,
+      this.page,
+      this.itemsPerPage,
+      this.sortBy,
+      this.sortDir
+    )
+    .subscribe({
+      next: (resultado) => {
+        console.log('Resultados recibidos:', resultado);
+        this.asignaciones = this.transformarDatos(resultado.content || []);
+        this.totalAsignaciones = resultado.totalElements;
+        this.totalPages = Math.ceil(
+          this.totalAsignaciones / this.itemsPerPage
+        );
+
+        // Mostrar notificación si no se encontraron resultados
+        if (this.totalAsignaciones === 0) {
+          this.notificationService.showNotification(
+            'No se encontraron asignaciones con los filtros aplicados.',
+            'info'
+          );
+        }
+
+        this.updatePageSizeOptions();
+        if (this.page > this.totalPages && this.totalPages > 0) {
+          this.page = 1;
+          this.buscarAsignaciones();
+          return;
+        }
+
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda:', err);
+        this.notificationService.showNotification(
+          'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
+          'error'
+        );
+        this.asignaciones = [];
+        this.totalAsignaciones = 0;
+        this.totalPages = 1;
+        this.updatePageSizeOptions();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      complete: () => {
+        // Asegurarse de que el spinner se desactive cuando la solicitud se complete
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+}
 }

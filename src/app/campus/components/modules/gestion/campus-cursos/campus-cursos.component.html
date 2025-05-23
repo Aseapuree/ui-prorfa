@@ -66,17 +66,29 @@
     <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
   </div>
 
-  <!-- Componente de Tabla Reutilizable enableActions true si deseas msotrar editar y eliminar -->
-  <app-table
-  [data]="cursos"
-  [columns]="tableColumns"
-  [sortBy]="sortBy"
-  [sortDir]="sortDir"
-  [enableActions]="true"
-  [actions]="tableActions"
-  (sortChange)="onSortChange($event)"
-  (competenciasClick)="openCompetenciasModal($event)"
-></app-table>
+  <!-- Tabla Reutilizable y Mensaje Condicional -->
+  <div class="mt-6">
+    <app-table
+      *ngIf="cursos.length > 0 || isLoading"
+      [data]="cursos"
+      [columns]="tableColumns"
+      [sortBy]="sortBy"
+      [sortDir]="sortDir"
+      [enableActions]="true"
+      [actions]="tableActions"
+      (sortChange)="onSortChange($event)"
+      (competenciasClick)="openCompetenciasModal($event)"
+    ></app-table>
+
+    <!-- Mensaje cuando no hay resultados -->
+    <div
+      *ngIf="cursos.length === 0 && !isLoading"
+      class="text-center py-6 text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+    >
+      <fa-icon [icon]="['fas', 'info-circle']" class="text-gray-400 text-xl mr-2"></fa-icon>
+      No se encontraron cursos con el criterio de búsqueda.
+    </div>
+  </div>
 
   <!-- Paginación -->
   <app-pagination

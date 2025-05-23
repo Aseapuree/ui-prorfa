@@ -247,16 +247,27 @@
   </div>
 </div>
 
-  <!-- Tabla Reutilizable -->
-  <app-table
-    [data]="asignaciones"
-    [columns]="tableColumns"
-    [enableActions]="true"
-    [actions]="tableActions"
-    [sortBy]="sortBy"
-    [sortDir]="sortDir"
-    (sortChange)="onSortChange($event)"
-  ></app-table>
+  <!-- Tabla Reutilizable y Mensaje Condicional -->
+  <div class="mt-6">
+    <app-table
+      *ngIf="asignaciones.length > 0 || isLoading"
+      [data]="asignaciones"
+      [columns]="tableColumns"
+      [enableActions]="true"
+      [actions]="tableActions"
+      [sortBy]="sortBy"
+      [sortDir]="sortDir"
+      (sortChange)="onSortChange($event)"
+    ></app-table>
+
+    <!-- Mensaje cuando no hay resultados -->
+    <div
+      *ngIf="asignaciones.length === 0 && !isLoading"
+      class="text-center py-4 text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+    >
+      No se encontraron asignaciones con los filtros aplicados.
+    </div>
+  </div>
 
   <app-pagination
     [page]="page"
