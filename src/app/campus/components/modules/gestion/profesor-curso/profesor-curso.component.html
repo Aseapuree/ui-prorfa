@@ -162,19 +162,17 @@
 <div class="w-60 space-y-3">
   <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Fin</label>
   <input
-  type="date"
-  id="fechaFin"
-  [(ngModel)]="filters.fechaFin"
-  (ngModelChange)="onDateChange($event, 'fechaFin')"
-  (input)="onDateInput($event, 'fechaFin')"
-  (blur)="onBlurDate($event, 'fechaFin')"
-  [max]="maxDate"
-  [min]="getMinFechaFin()"
-  [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
-  class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
-  placeholder="yyyy-mm-dd"
-  (ngModelChange)="filters.fechaFin = $event || ''"
-/>
+    type="date"
+    id="fechaFin"
+    [(ngModel)]="filters.fechaFin"
+    (ngModelChange)="onDateChange($event, 'fechaFin')"
+    (input)="onDateInput($event, 'fechaFin')"
+    (blur)="onBlurDate($event, 'fechaFin')"
+    [max]="maxDate"
+    [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
+    class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
+    placeholder="yyyy-mm-dd"
+  />
   <p *ngIf="!isValidFechaFin && filters.fechaFin" class="text-xs text-red-500 mt-1">
     Fecha inválida. El año no puede ser mayor a {{ currentYear }}. Use formato yyyy-mm-dd.
   </p>
@@ -232,17 +230,18 @@
           <span>Limpiar</span>
         </button>
       </app-tooltip>
-      <app-tooltip tooltipText="Exportar asignaciones">
         <!-- Botón para exportar a Excel -->
-      <button
-        (click)="descargarExcel()"
-        [disabled]="isLoading"
-        class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span *ngIf="!isLoading">Exportar a Excel</span>
-        <span *ngIf="isLoading">Descargando...</span>
-      </button>
-      </app-tooltip>
+      <app-tooltip tooltipText="Exportar asignaciones">
+  <button
+    (click)="descargarExcel()"
+    [disabled]="isLoading"
+    class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed gap-x-2"
+  >
+    <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
+    <span *ngIf="!isLoading">Exportar</span>
+    <span *ngIf="isLoading">Descargando...</span>
+  </button>
+</app-tooltip>
     </div>
   </div>
 </div>
