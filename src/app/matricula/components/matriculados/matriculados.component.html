@@ -128,6 +128,17 @@
             <span>Limpiar</span>
           </button>
         </app-tooltip>
+
+    <app-tooltip tooltipText="Exportar datos filtrados actualmente a Excel">
+      <button
+        (click)="exportToExcel()"
+        [disabled]="allMatriculados.length === 0 || loading"
+        class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white dark:text-gray-900 bg-green-600 dark:bg-green-400 border border-transparent rounded-md shadow-sm hover:bg-green-700 dark:hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-x-2"
+      >
+        <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
+        <span>Exportar a Excel</span>
+      </button>
+    </app-tooltip>
       </div>
     </div>
   </div>
@@ -137,13 +148,10 @@
     [columns]="columns"
     [actions]="actions"
     [enableActions]="true"
-    (sortChange)="onSearch()" />
+    (sortChange)="onSearch($event)" />
 
   <div *ngIf="!loading && matriculados.length === 0 && allMatriculados.length > 0" class="text-center text-gray-500 dark:text-gray-400 mt-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md">
     No se encontraron datos con los filtros aplicados.
-  </div>
-   <div *ngIf="!loading && allMatriculados.length === 0" class="text-center text-gray-500 dark:text-gray-400 mt-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md">
-    No hay matrículas registradas para mostrar.
   </div>
 
   <div class="mt-6 flex items-center justify-between">
@@ -157,21 +165,7 @@
     ></app-pagination>
   </div>
 
-
-  <div class="mt-6 flex justify-center">
-    <app-tooltip tooltipText="Exportar datos filtrados actualmente a Excel">
-      <button
-        (click)="exportToExcel()"
-        [disabled]="allMatriculados.length === 0 || loading"
-        class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white dark:text-gray-900 bg-green-600 dark:bg-green-400 border border-transparent rounded-md shadow-sm hover:bg-green-700 dark:hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-x-2"
-      >
-        <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
-        <span>Exportar a Excel</span>
-      </button>
-    </app-tooltip>
-  </div>
-
-  <app-general-loading-spinner [visible]="loading" message="Cargando matrículas..."></app-general-loading-spinner>
+  <app-general-loading-spinner [visible]="loading" [message]="spinnerMessage"></app-general-loading-spinner>
 
   <app-notification></app-notification>
 </div>

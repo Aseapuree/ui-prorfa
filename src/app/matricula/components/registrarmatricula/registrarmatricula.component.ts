@@ -20,7 +20,7 @@ import {
   faVenusMars,
   faToggleOn, faToggleOff, faInfoCircle, faPauseCircle, faPlayCircle, faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
-import { Observable, of, forkJoin } from 'rxjs';
+import { Observable, of, forkJoin, throwError } from 'rxjs';
 import { map, catchError, switchMap, startWith, finalize, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
@@ -148,7 +148,6 @@ export class RegistrarMatriculaComponent implements OnInit {
   intercambioMap: { [key: string]: boolean } = {};
   discapacidadMap: { [key: string]: boolean } = {};
 
-
   faIdCard = faIdCard;
   faHashtag = faHashtag;
   faUser = faUser;
@@ -195,6 +194,12 @@ export class RegistrarMatriculaComponent implements OnInit {
   isLoading = true;
   loadingMessage: string = 'Cargando formulario...';
 
+  idMatriculaContinuar: string | null = null;
+  idApoderadoContinuar: string | null = null;
+  idAlumnoContinuar: string | null = null;
+  esContinuacion: boolean = false;
+  matriculaOriginal: Matricula | null = null;
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -214,6 +219,7 @@ export class RegistrarMatriculaComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.nivel = params['nivel'];
       this.grado = +params['grado'];
+      this.idMatriculaContinuar = params['idMatricula'] || null;
 
       if (!this.nivel || !this.grado) {
         this.notificationService.showNotification('Faltan parámetros de nivel o grado.', 'error');
@@ -222,47 +228,165 @@ export class RegistrarMatriculaComponent implements OnInit {
         return;
       }
 
-      forkJoin({
-          entityDocs: this.loadEntityDocuments(),
-          assignedSection: this.matriculaService.asignarSeccion(this.grado).pipe(
-               catchError(err => {
-                    console.error('Error asignando sección:', err);
-                    this.notificationService.showNotification('Error al obtener la sección asignada.', 'error');
-                    return of('ERROR');
-               })
-          )
-      }).pipe(
-          finalize(() => {
-              this.isLoading = false;
-              this.cdRef.detectChanges();
-          })
-      ).subscribe({
-          next: ({ entityDocs, assignedSection }) => {
-              this.seccion = assignedSection;
+      const initialObservables: any = {
+        entityDocs: this.loadEntityDocuments()
+      };
 
-              if (this.seccion === 'SIN VACANTE') {
-                  this.notificationService.showNotification('No hay vacantes disponibles para este grado y nivel.', 'error');
-                  this.loadingMessage = 'Sin vacantes disponibles.';
-              } else if (this.seccion === 'ERROR') {
-                  this.loadingMessage = 'Error al obtener sección.';
-              } else {
-                  this.notificationService.showNotification(`Sección asignada: ${this.seccion}`, 'info');
-                  this.loadingMessage = '';
-              }
-              this.crearFormulario();
-              this.setupDocumentNumberFieldState();
-              this.setupConditionalTextFields();
-              this.setupDocumentFormControls();
-          },
-          error: (err) => {
-              console.error('Error durante la inicialización del forkJoin:', err);
-              this.notificationService.showNotification('Error general durante la inicialización.', 'error');
-              this.isLoading = false;
-              this.loadingMessage = 'Error de inicialización.';
+      if (this.idMatriculaContinuar) {
+        this.esContinuacion = true;
+        this.loadingMessage = 'Cargando datos de matrícula para continuar...';
+        initialObservables.datosMatriculaContinuar = this.matriculaService.obtenerMatricula(this.idMatriculaContinuar).pipe(
+          switchMap(matricula => {
+            if (!matricula || !matricula.idapoderado || !matricula.idalumno) {
+              this.notificationService.showNotification('No se pudo cargar la información completa de la matrícula para continuar.', 'error');
+              return throwError(() => new Error('Datos de matrícula para continuación incompletos o no encontrados.'));
+            }
+            this.matriculaOriginal = matricula;
+            this.idApoderadoContinuar = matricula.idapoderado;
+            this.idAlumnoContinuar = matricula.idalumno;
+            return forkJoin({
+              matricula: of(matricula),
+              apoderado: this.apoderadoService.obtenerApoderado(matricula.idapoderado),
+              alumno: this.alumnoService.obtenerAlumno(matricula.idalumno)
+            });
+          }),
+          catchError(err => {
+            this.notificationService.showNotification('Error al cargar datos para continuar: ' + (err.message || 'Error desconocido.'), 'error');
+            this.esContinuacion = false;
+            this.idMatriculaContinuar = null;
+            this.matriculaOriginal = null;
+            return of(null);
+          })
+        );
+      }
+
+      if (!this.esContinuacion || (this.matriculaOriginal && !this.matriculaOriginal.seccion)) {
+         initialObservables.assignedSection = this.matriculaService.asignarSeccion(this.grado).pipe(
+            catchError(err => {
+                this.notificationService.showNotification('Error al obtener la sección asignada.', 'error');
+                return of('ERROR');
+            })
+        );
+      }
+
+
+      forkJoin(initialObservables).pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdRef.detectChanges();
+        })
+      ).subscribe({
+        next: (results: any) => {
+          if (this.esContinuacion && results.datosMatriculaContinuar && results.datosMatriculaContinuar.matricula && results.datosMatriculaContinuar.matricula.seccion) {
+            this.seccion = (typeof results.datosMatriculaContinuar.matricula.seccion === 'object' && results.datosMatriculaContinuar.matricula.seccion !== null && 'nombre' in results.datosMatriculaContinuar.matricula.seccion)
+                ? (results.datosMatriculaContinuar.matricula.seccion as any).nombre
+                : results.datosMatriculaContinuar.matricula.seccion;
+            this.notificationService.showNotification(`Continuando con sección asignada: ${this.seccion}`, 'info');
+          } else if (results.assignedSection) {
+            this.seccion = results.assignedSection;
+            if (this.seccion === 'SIN VACANTE') {
+              this.notificationService.showNotification('No hay vacantes disponibles para este grado y nivel.', 'error');
+              this.loadingMessage = 'Sin vacantes disponibles.';
+            } else if (this.seccion === 'ERROR') {
+              this.notificationService.showNotification('Error al obtener la sección.', 'error');
+              this.loadingMessage = 'Error al obtener sección.';
+            } else {
+              this.notificationService.showNotification(`Sección asignada: ${this.seccion}`, 'info');
+            }
+          } else if (!this.seccion) {
+             this.notificationService.showNotification('No se pudo determinar la sección.', 'error');
+             this.seccion = 'ERROR';
           }
+
+          this.crearFormulario();
+
+          if (this.esContinuacion && results.datosMatriculaContinuar) {
+            const { matricula, apoderado, alumno } = results.datosMatriculaContinuar;
+            this.poblarFormularioParaContinuacion(matricula, apoderado, alumno);
+            this.apoderadoEncontrado = apoderado;
+            this.currentView = 'apoderado';
+            this.mostrarFormularioApoderado = true;
+            this.formMatricula.get('apoderado.idtipodoc')?.disable({ emitEvent: false });
+            this.formMatricula.get('apoderado.numeroDocumento')?.disable({ emitEvent: false });
+            this.cdRef.detectChanges();
+            setTimeout(() => this.focusFirstInvalidControl('apoderado'), 100);
+          } else {
+            this.currentView = 'search';
+          }
+
+          this.setupDocumentNumberFieldState();
+          this.setupConditionalTextFields();
+          this.setupDocumentFormControls();
+        },
+        error: (err) => {
+          this.notificationService.showNotification('Error general durante la inicialización: ' + (err.message || 'Error desconocido'), 'error');
+          this.isLoading = false;
+          this.loadingMessage = 'Error de inicialización.';
+          this.crearFormulario();
+          this.setupDocumentNumberFieldState();
+          this.setupConditionalTextFields();
+          this.setupDocumentFormControls();
+        }
       });
     });
   }
+
+  poblarFormularioParaContinuacion(matricula: Matricula, apoderado: Apoderado, alumno: Alumno): void {
+    if (!this.formMatricula) {
+        this.crearFormulario();
+    }
+
+    const apoderadoFechaNacimiento = apoderado.fechaNacimiento
+        ? new Date(apoderado.fechaNacimiento).toISOString().substring(0, 10)
+        : '';
+    const alumnoFechaNacimiento = alumno.fechaNacimiento
+        ? new Date(alumno.fechaNacimiento).toISOString().substring(0, 10)
+        : '';
+
+    this.formMatricula.patchValue({
+      relacionEstudiante: matricula.relacionEstudiante,
+      apoderado: {
+        ...apoderado,
+        fechaNacimiento: apoderadoFechaNacimiento
+      },
+      alumno: {
+        ...alumno,
+        fechaNacimiento: alumnoFechaNacimiento,
+        tieneIntercambio: !!alumno.tipoIntercambio,
+        tipoIntercambio: alumno.tipoIntercambio || '',
+        tieneDiscapacidad: !!alumno.tipoDiscapacidad,
+        tipoDiscapacidad: alumno.tipoDiscapacidad || '',
+        tieneOtros: !!alumno.tipoOtros,
+        tipoOtros: alumno.tipoOtros || ''
+      }
+    }, { emitEvent: false });
+
+
+    if (this.allPotentialDocuments.length > 0 && this.documentsPresentedControls.length === this.allPotentialDocuments.length) {
+        this.allPotentialDocuments.forEach((docName, index) => {
+            const isPresented = matricula.documentos?.some(d => d.documento === docName) || false;
+            this.documentsPresentedControls.at(index).patchValue(isPresented, { emitEvent: false });
+        });
+    } else {
+    }
+
+    this.formMatricula.markAsPristine();
+    this.formMatricula.markAsUntouched();
+    Object.keys(this.formMatricula.controls).forEach(key => {
+        const control = this.formMatricula.get(key);
+        control?.markAsPristine();
+        control?.markAsUntouched();
+        if (control instanceof FormGroup || control instanceof FormArray) {
+            Object.keys((control as any).controls).forEach(subKey => {
+                (control as any).get(subKey)?.markAsPristine();
+                (control as any).get(subKey)?.markAsUntouched();
+            });
+        }
+    });
+
+    this.notificationService.showNotification('Datos de matrícula cargados. Por favor, verifique y complete la información.', 'info');
+  }
+
 
   loadEntityDocuments(): Observable<void> {
       return this.entidadService.obtenerEntidadList().pipe(
@@ -308,20 +432,12 @@ export class RegistrarMatriculaComponent implements OnInit {
                                   this.discapacidadMap[docName] = true;
                              });
                    }
-
-                  console.log('Todos los documentos potenciales:', this.allPotentialDocuments);
-                  console.log('Mapa de necesarios:', this.necesariosMap);
-                  console.log('Mapa de intercambio:', this.intercambioMap);
-                  console.log('Mapa de discapacidad:', this.discapacidadMap);
-
               } else {
-                  console.warn('No se encontraron documentos de entidad o estructura inesperada.');
                   this.notificationService.showNotification('No se pudieron cargar los requisitos de documentos de la entidad.', 'error');
               }
           }),
           map(() => void 0),
           catchError(err => {
-              console.error('Error cargando documentos de entidad:', err);
               this.notificationService.showNotification('Error al cargar los requisitos de documentos de la entidad.', 'error');
               this.entidadDocumentos = null;
               this.allPotentialDocuments = [];
@@ -352,6 +468,7 @@ export class RegistrarMatriculaComponent implements OnInit {
         fechaNacimiento: ['', [Validators.required, minAgeValidator(18)]]
       }),
       alumno: this.fb.group({
+        idalumno: [null],
         nombre: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
         apellidoPaterno: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
         apellidoMaterno: ['', [Validators.required, soloLetrasValidator(), noLeadingSpacesValidator()]],
@@ -380,7 +497,6 @@ export class RegistrarMatriculaComponent implements OnInit {
       this.allPotentialDocuments.forEach(() => {
           documentsArray.push(this.fb.control(false));
       });
-      console.log('Controles de documentos creados:', documentsArray.controls.length);
   }
 
   get documentsPresentedControls(): FormArray {
@@ -391,15 +507,12 @@ export class RegistrarMatriculaComponent implements OnInit {
       if (this.necesariosMap[documentName]) {
           return true;
       }
-
       if (this.intercambioMap[documentName] && this.formMatricula.get('alumno.tieneIntercambio')?.value) {
           return true;
       }
-
       if (this.discapacidadMap[documentName] && this.formMatricula.get('alumno.tieneDiscapacidad')?.value) {
           return true;
       }
-
       return false;
   }
 
@@ -413,29 +526,18 @@ export class RegistrarMatriculaComponent implements OnInit {
       apoderadoTipoDocControl?.valueChanges.pipe(
           startWith(apoderadoTipoDocControl.value)
       ).subscribe(tipoDocValue => {
-          if (this.currentView === 'search') {
+          if (this.currentView === 'search' || (!this.esContinuacion && !this.apoderadoEncontrado)) {
               if (tipoDocValue && !this.isSearching) {
                   apoderadoNumeroDocControl?.enable({ emitEvent: false });
               } else {
                   apoderadoNumeroDocControl?.disable({ emitEvent: false });
-                  apoderadoNumeroDocControl?.reset('', { emitEvent: false });
+                  if (!this.isSearching) {
+                    apoderadoNumeroDocControl?.reset('', { emitEvent: false });
+                  }
               }
-               apoderadoNumeroDocControl?.updateValueAndValidity();
           }
+          apoderadoNumeroDocControl?.updateValueAndValidity();
       });
-
-      apoderadoTipoDocControl?.valueChanges.pipe(
-           startWith(apoderadoTipoDocControl.value)
-       ).subscribe(tipoDocValue => {
-           if (this.currentView === 'apoderado' && !this.apoderadoEncontrado) {
-               if (tipoDocValue) {
-                   apoderadoNumeroDocControl?.enable({ emitEvent: false });
-               } else {
-                   apoderadoNumeroDocControl?.disable({ emitEvent: false });
-               }
-               apoderadoNumeroDocControl?.updateValueAndValidity();
-           }
-       });
 
       alumnoTipoDocControl?.valueChanges.pipe(
           startWith(alumnoTipoDocControl.value)
@@ -534,10 +636,12 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     idtipodocControl?.markAsTouched();
     numeroDocumentoControl?.markAsTouched();
+    idtipodocControl?.updateValueAndValidity();
     numeroDocumentoControl?.updateValueAndValidity();
 
     const idtipodoc = idtipodocControl?.value;
     const numeroDocumento = numeroDocumentoControl?.value;
+
     if (!idtipodoc || numeroDocumentoControl?.invalid) {
         this.notificationService.showNotification('Seleccione tipo e ingrese un número de documento válido para buscar.', 'error');
         this.focusFirstInvalidControl('apoderado', ['idtipodoc', 'numeroDocumento']);
@@ -553,18 +657,20 @@ export class RegistrarMatriculaComponent implements OnInit {
         })
     ).subscribe({
       next: (apoderado) => {
+        let fechaNacFormateada = '';
         if (apoderado.fechaNacimiento) {
           try {
                 const dateObj = new Date(apoderado.fechaNacimiento);
-               apoderado.fechaNacimiento = !isNaN(dateObj.getTime()) ? dateObj.toISOString().substring(0, 10) : '';
+               fechaNacFormateada = !isNaN(dateObj.getTime()) ? dateObj.toISOString().substring(0, 10) : '';
           } catch(e) {
-               apoderado.fechaNacimiento = '';
+               fechaNacFormateada = '';
           }
         }
 
-        this.apoderadoEncontrado = apoderado;
+        this.apoderadoEncontrado = {...apoderado, fechaNacimiento: fechaNacFormateada};
         this.formMatricula.get('apoderado')?.patchValue({
             ...apoderado,
+            fechaNacimiento: fechaNacFormateada,
             idapoderado: apoderado.idapoderado
         });
 
@@ -575,31 +681,40 @@ export class RegistrarMatriculaComponent implements OnInit {
         this.currentView = 'apoderado';
         this.notificationService.showNotification('Apoderado encontrado. Verifique/complete los datos.', 'success');
 
-        this.formMatricula.get('apoderado')?.markAsPristine();
-        this.formMatricula.get('apoderado')?.markAsUntouched();
         this.formMatricula.get('relacionEstudiante')?.reset('', { emitEvent: false });
         this.formMatricula.get('relacionEstudiante')?.markAsPristine();
         this.formMatricula.get('relacionEstudiante')?.markAsUntouched();
+
+        this.formMatricula.get('apoderado')?.markAsPristine();
+        this.formMatricula.get('apoderado')?.markAsUntouched();
+        Object.keys((this.formMatricula.get('apoderado') as FormGroup).controls).forEach(key => {
+            this.formMatricula.get(['apoderado', key])?.markAsPristine();
+            this.formMatricula.get(['apoderado', key])?.markAsUntouched();
+        });
 
         setTimeout(() => this.focusFirstInvalidControl('apoderado'), 50);
       },
       error: (err: HttpErrorResponse) => {
         this.apoderadoEncontrado = null;
-        const currentValues = this.formMatricula.get('apoderado')?.value;
+        const currentTipoDoc = this.formMatricula.get('apoderado.idtipodoc')?.value;
+        const currentNumDoc = this.formMatricula.get('apoderado.numeroDocumento')?.value;
+
         this.formMatricula.get('apoderado')?.reset({
             idapoderado: null,
+            idtipodoc: currentTipoDoc,
+            numeroDocumento: currentNumDoc,
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', genero: '', telefono: '',
-            direccion: '', correo: '', fechaNacimiento: ''
+            direccion: '', correo: '', fechaNacimiento: '', nacionalidad: ''
         }, { emitEvent: false });
-        this.formMatricula.get('apoderado.idtipodoc')?.patchValue(currentValues.idtipodoc, { emitEvent: false });
-         this.formMatricula.get('apoderado.numeroDocumento')?.patchValue(currentValues.numeroDocumento, { emitEvent: false });
-         this.formMatricula.get('apoderado.numeroDocumento')?.updateValueAndValidity();
 
          this.formMatricula.get('apoderado.idtipodoc')?.enable({ emitEvent: false });
+         this.formMatricula.get('apoderado.numeroDocumento')?.enable({ emitEvent: false });
+         this.formMatricula.get('apoderado.numeroDocumento')?.updateValueAndValidity();
 
         this.formMatricula.get('relacionEstudiante')?.reset('', { emitEvent: false });
         this.formMatricula.get('relacionEstudiante')?.markAsPristine();
         this.formMatricula.get('relacionEstudiante')?.markAsUntouched();
+
         this.mostrarFormularioApoderado = true;
         this.mostrarFormularioAlumno = false;
         this.mostrarSeccionDocumentos = false;
@@ -608,7 +723,7 @@ export class RegistrarMatriculaComponent implements OnInit {
         if (err.status === 404) {
             this.notificationService.showNotification('Apoderado no registrado. Complete los datos para crearlo.', 'info');
         } else {
-            this.notificationService.showNotification('Error al buscar apoderado. Intente de nuevo.', 'error');
+            this.notificationService.showNotification('Error al buscar apoderado: ' + (err.error?.message || err.message || 'Intente de nuevo.'), 'error');
         }
         setTimeout(() => this.focusFirstInvalidControl('apoderado'), 50);
       }
@@ -635,6 +750,7 @@ export class RegistrarMatriculaComponent implements OnInit {
     } else {
       this.mostrarFormularioAlumno = false;
       this.mostrarSeccionDocumentos = false;
+      this.notificationService.showNotification('Revise los datos del apoderado.', 'error');
       setTimeout(() => {
          this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante');
       }, 50);
@@ -648,11 +764,14 @@ export class RegistrarMatriculaComponent implements OnInit {
 
       if (alumnoGroup?.valid) {
           this.currentView = 'documents';
+          this.mostrarFormularioApoderado = true;
+          this.mostrarFormularioAlumno = true;
           this.mostrarSeccionDocumentos = true;
           this.notificationService.showNotification('Datos del alumno correctos. Seleccione los documentos presentados.', 'info');
           setTimeout(() => document.getElementById('documents-fieldset')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
       } else {
           this.mostrarSeccionDocumentos = false;
+          this.notificationService.showNotification('Revise los datos del alumno.', 'error');
           setTimeout(() => this.focusFirstInvalidControl('alumno'), 50);
       }
   }
@@ -676,79 +795,90 @@ export class RegistrarMatriculaComponent implements OnInit {
       this.mostrarFormularioAlumno = false;
       this.mostrarSeccionDocumentos = false;
       this.apoderadoEncontrado = null;
+      this.esContinuacion = false;
+      this.idMatriculaContinuar = null;
+      this.idApoderadoContinuar = null;
+      this.idAlumnoContinuar = null;
+      this.matriculaOriginal = null;
 
       this.formMatricula.get('apoderado.idtipodoc')?.reset('', { emitEvent: false });
       this.formMatricula.get('apoderado.numeroDocumento')?.reset('', { emitEvent: false });
+      this.formMatricula.get('apoderado.idtipodoc')?.enable({ emitEvent: false });
+
       this.formMatricula.get('apoderado.idtipodoc')?.setErrors(null);
       this.formMatricula.get('apoderado.numeroDocumento')?.setErrors(null);
       this.formMatricula.get('apoderado.idtipodoc')?.markAsUntouched();
       this.formMatricula.get('apoderado.numeroDocumento')?.markAsUntouched();
 
-      this.formMatricula.get('apoderado.idtipodoc')?.enable({ emitEvent: false });
+      this.formMatricula.get('apoderado')?.patchValue({
+          nombre: '', apellidoPaterno: '', apellidoMaterno: '', genero: '', telefono: '',
+          direccion: '', correo: '', fechaNacimiento: '', nacionalidad: '', idapoderado: null
+      });
+      this.formMatricula.get('alumno')?.reset({
+          idalumno: null, nombre: '', apellidoPaterno: '', apellidoMaterno: '', nacionalidad: '',
+          genero: '', idtipodoc: '', numeroDocumento: '', fechaNacimiento: '', direccion: '',
+          tieneIntercambio: false, tipoIntercambio: '', tieneDiscapacidad: false, tipoDiscapacidad: '',
+          tieneOtros: false, tipoOtros: ''
+      });
+      this.formMatricula.get('relacionEstudiante')?.reset('');
+      this.documentsPresentedControls.controls.forEach(control => control.reset(false));
+
+      this.formMatricula.markAsPristine();
+      this.formMatricula.markAsUntouched();
+
+      setTimeout(() => document.getElementById('apoderado_idtipodoc_search')?.focus(), 50);
   }
 
   private convertToLocalDateTime(dateString: string | null | undefined): string | null {
       if (!dateString) return null;
-      try {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-              return null;
-          }
-          return `${dateString}T00:00:00`;
-      } catch (e) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
           return null;
       }
+      return `${dateString}T00:00:00`;
   }
 
-  private processMatricula(estadoMatricula: 'COMPLETADO' | 'EN PROCESO'): void {
+  private processMatricula(estadoMatriculaDeseado: 'COMPLETADO' | 'EN PROCESO'): void {
     if (this.isSubmitting) return;
 
-    if (estadoMatricula === 'COMPLETADO') {
+    if (estadoMatriculaDeseado === 'COMPLETADO') {
         this.formMatricula.markAllAsTouched();
         this.formMatricula.updateValueAndValidity();
 
         if (this.formMatricula.invalid) {
             if (this.formMatricula.get('apoderado')?.invalid || this.formMatricula.get('relacionEstudiante')?.invalid) {
                  this.currentView = 'apoderado';
-                 this.mostrarFormularioApoderado = true;
-                 this.mostrarFormularioAlumno = false;
-                 this.mostrarSeccionDocumentos = false;
+                 this.mostrarFormularioApoderado = true; this.mostrarFormularioAlumno = false; this.mostrarSeccionDocumentos = false;
                  setTimeout(() => this.focusFirstInvalidControl('apoderado', undefined, 'relacionEstudiante'), 50);
             } else if (this.formMatricula.get('alumno')?.invalid) {
                 this.currentView = 'alumno';
-                this.mostrarFormularioApoderado = true;
-                this.mostrarFormularioAlumno = true;
-                this.mostrarSeccionDocumentos = false;
+                this.mostrarFormularioApoderado = true; this.mostrarFormularioAlumno = true; this.mostrarSeccionDocumentos = false;
                 setTimeout(() => this.focusFirstInvalidControl('alumno'), 50);
             } else if (this.formMatricula.get('documentsPresented')?.invalid) {
                  this.currentView = 'documents';
-                 this.mostrarFormularioApoderado = true;
-                 this.mostrarFormularioAlumno = true;
-                 this.mostrarSeccionDocumentos = true;
+                 this.mostrarFormularioApoderado = true; this.mostrarFormularioAlumno = true; this.mostrarSeccionDocumentos = true;
             }
             this.notificationService.showNotification('Formulario inválido. Revise los campos marcados.', 'error');
             return;
         }
     } else {
-         const apoderadoGroup = this.formMatricula.get('apoderado');
-         const alumnoGroup = this.formMatricula.get('alumno');
-         const relacionControl = this.formMatricula.get('relacionEstudiante');
-
-         apoderadoGroup?.markAllAsTouched();
-         alumnoGroup?.markAllAsTouched();
-         relacionControl?.markAsTouched();
-         this.documentsPresentedControls.markAllAsTouched();
-
          const formData = this.formMatricula.getRawValue();
-         const hasApoderadoData = Object.values(formData.apoderado).some(val => val !== null && val !== '' && val !== undefined);
-         const hasAlumnoData = Object.values(formData.alumno).some(val => val !== null && val !== '' && val !== undefined && typeof val !== 'boolean');
-         const hasRelacionData = formData.relacionEstudiante !== null && formData.relacionEstudiante !== '';
-         const hasDocumentsData = formData.documentsPresented.some((presented: boolean) => presented);
-         const hasAdditionalTextFieldData = (formData.alumno.tieneIntercambio && formData.alumno.tipoIntercambio) ||
-                                       (formData.alumno.tieneDiscapacidad && formData.alumno.tipoDiscapacidad) ||
-                                       (formData.alumno.tieneOtros && formData.alumno.tipoOtros);
+         const hasApoderadoData = Object.entries(formData.apoderado).some(([key, value]) =>
+            key !== 'idapoderado' && value !== null && value !== '' && value !== undefined
+         );
+         const hasAlumnoData = Object.entries(formData.alumno).some(([key, value]) =>
+            key !== 'idalumno' && typeof value !== 'boolean' && value !== null && value !== '' && value !== undefined
+         );
 
+         const hasAnyData =
+            hasApoderadoData ||
+            hasAlumnoData ||
+            formData.relacionEstudiante ||
+            formData.documentsPresented.some((presented: boolean) => presented) ||
+            (formData.alumno.tieneIntercambio && formData.alumno.tipoIntercambio) ||
+            (formData.alumno.tieneDiscapacidad && formData.alumno.tipoDiscapacidad) ||
+            (formData.alumno.tieneOtros && formData.alumno.tipoOtros);
 
-         if (!hasApoderadoData && !hasAlumnoData && !hasRelacionData && !hasDocumentsData && !hasAdditionalTextFieldData) {
+         if (!hasAnyData && !this.esContinuacion) {
              this.notificationService.showNotification('No hay suficientes datos ingresados para guardar el trámite en proceso.', 'info');
              return;
          }
@@ -756,43 +886,34 @@ export class RegistrarMatriculaComponent implements OnInit {
 
 
     if (!this.seccion || this.seccion === 'SIN VACANTE' || this.seccion === 'ERROR') {
-        this.notificationService.showNotification(`No se puede ${estadoMatricula === 'COMPLETADO' ? 'registrar' : 'pausar'}: sección inválida o sin vacantes.`, 'error');
+        this.notificationService.showNotification(`No se puede ${estadoMatriculaDeseado === 'COMPLETADO' ? 'registrar' : 'pausar'}: sección inválida (${this.seccion}) o sin vacantes.`, 'error');
         return;
     }
 
     this.isSubmitting = true;
+    this.loadingMessage = estadoMatriculaDeseado === 'COMPLETADO' ? 'Registrando matrícula...' : 'Guardando progreso...';
     this.cdRef.detectChanges();
 
     const formData = this.formMatricula.getRawValue();
-    const apoderadoFechaNacimiento = this.convertToLocalDateTime(formData.apoderado.fechaNacimiento);
-    const alumnoFechaNacimiento = this.convertToLocalDateTime(formData.alumno.fechaNacimiento);
 
     const apoderadoData: Apoderado = {
         ...formData.apoderado,
-        fechaNacimiento: apoderadoFechaNacimiento
+        fechaNacimiento: this.convertToLocalDateTime(formData.apoderado.fechaNacimiento),
+        idapoderado: this.esContinuacion ? this.idApoderadoContinuar : (this.apoderadoEncontrado ? this.apoderadoEncontrado.idapoderado : null)
     };
-    if (apoderadoData.idapoderado === null) {
-        delete apoderadoData.idapoderado;
-    }
-
+    if (!apoderadoData.idapoderado) delete apoderadoData.idapoderado;
 
     const alumnoData: Alumno = {
-        nombre: formData.alumno.nombre || null,
-        apellidoPaterno: formData.alumno.apellidoPaterno || null,
-        apellidoMaterno: formData.alumno.apellidoMaterno || null,
-        nacionalidad: formData.alumno.nacionalidad || null,
-        genero: formData.alumno.genero || null,
-        idtipodoc: formData.alumno.idtipodoc || null,
-        numeroDocumento: formData.alumno.numeroDocumento || null,
-        fechaNacimiento: alumnoFechaNacimiento,
-        direccion: formData.alumno.direccion || null,
+        ...formData.alumno,
+        fechaNacimiento: this.convertToLocalDateTime(formData.alumno.fechaNacimiento),
+        idalumno: this.esContinuacion ? this.idAlumnoContinuar : null,
         tipoIntercambio: formData.alumno.tieneIntercambio ? (formData.alumno.tipoIntercambio || null) : null,
         tipoDiscapacidad: formData.alumno.tieneDiscapacidad ? (formData.alumno.tipoDiscapacidad || null) : null,
         tipoOtros: formData.alumno.tieneOtros ? (formData.alumno.tipoOtros || null) : null
     };
+    if (!alumnoData.idalumno) delete alumnoData.idalumno;
 
     const presentedDocumentsList: Documento[] = [];
-
     formData.documentsPresented.forEach((isChecked: boolean, index: number) => {
         const documentName = this.allPotentialDocuments[index];
         if (isChecked && this.shouldShowDocument(documentName)) {
@@ -800,26 +921,22 @@ export class RegistrarMatriculaComponent implements OnInit {
         }
     });
 
-
     let apoderadoObservable: Observable<Apoderado>;
+    const apoderadoFormGroup = this.formMatricula.get('apoderado') as FormGroup;
 
-    if (this.apoderadoEncontrado && this.apoderadoEncontrado.idapoderado) {
-        const apoderadoGroup = this.formMatricula.get('apoderado') as FormGroup;
-        const isApoderadoModified = Object.keys(apoderadoGroup.controls).some(key => apoderadoGroup.get(key)?.dirty);
-
-        if (isApoderadoModified || estadoMatricula === 'EN PROCESO') {
-             const apoderadoPayload = { ...this.apoderadoEncontrado, ...apoderadoData, idapoderado: this.apoderadoEncontrado.idapoderado };
-            apoderadoObservable = this.apoderadoService.editarApoderado(this.apoderadoEncontrado.idapoderado, apoderadoPayload).pipe(
-                map((resp: any) => (resp && resp.idapoderado) ? resp : (resp && resp.data && resp.data.idapoderado) ? resp.data : (() => { throw new Error('Respuesta inesperada al editar apoderado.'); })())
+    if (apoderadoData.idapoderado) {
+        if (apoderadoFormGroup.dirty || estadoMatriculaDeseado === 'EN PROCESO') {
+            apoderadoObservable = this.apoderadoService.editarApoderado(apoderadoData.idapoderado, apoderadoData).pipe(
+                map(resp => (resp && (resp as any).data) ? (resp as any).data : resp)
             );
         } else {
-            apoderadoObservable = of(this.apoderadoEncontrado);
+            apoderadoObservable = of(apoderadoData);
         }
     } else {
-        if (Object.values(apoderadoData).some(val => val !== null && val !== '' && val !== undefined) || estadoMatricula === 'EN PROCESO') {
-            apoderadoObservable = this.apoderadoService.agregarApoderado(apoderadoData).pipe(
-                map((apoderadoCreado: Apoderado) => (apoderadoCreado && apoderadoCreado.idapoderado) ? apoderadoCreado : (() => { throw new Error('Respuesta inesperada al crear apoderado.'); })())
-            );
+        if (Object.values(formData.apoderado).some(v => v)) {
+             apoderadoObservable = this.apoderadoService.agregarApoderado(apoderadoData).pipe(
+                 map(resp => (resp && (resp as any).data) ? (resp as any).data : resp)
+             );
         } else {
             apoderadoObservable = of({ idapoderado: undefined } as Apoderado);
         }
@@ -827,48 +944,43 @@ export class RegistrarMatriculaComponent implements OnInit {
 
     apoderadoObservable.pipe(
         switchMap((apoderadoProcesado: Apoderado) => {
-            if (estadoMatricula === 'EN PROCESO' && !apoderadoProcesado?.idapoderado && Object.values(apoderadoData).some(val => val !== null && val !== '' && val !== undefined)) {
-                 throw new Error('No se pudo procesar el Apoderado con los datos proporcionados para pausar.');
-            }
-
             const idApoderadoFinal = apoderadoProcesado?.idapoderado;
+            const alumnoFormGroup = this.formMatricula.get('alumno') as FormGroup;
+            let alumnoObservable: Observable<Alumno>;
 
-            if (Object.values(alumnoData).some(val => val !== null && val !== '' && val !== undefined) || estadoMatricula === 'EN PROCESO') {
-                return this.alumnoService.agregarAlumno(alumnoData).pipe(
-                    map((alumnoResp: any) => {
-                        if (alumnoResp && alumnoResp.code >= 200 && alumnoResp.code < 300 && alumnoResp.data && alumnoResp.data.idalumno) {
-                            const idAlumnoCreado = alumnoResp.data.idalumno;
-                            return { idApoderado: idApoderadoFinal, idAlumno: idAlumnoCreado };
-                        } else {
-                             if(estadoMatricula === 'COMPLETADO' && (!alumnoResp?.data?.idalumno) ){
-                                throw new Error('Respuesta inesperada al crear alumno.');
-                             }
-                             return { idApoderado: idApoderadoFinal, idAlumno: undefined };
-                        }
-                    })
-                );
+            if (alumnoData.idalumno) {
+                if (alumnoFormGroup.dirty || estadoMatriculaDeseado === 'EN PROCESO') {
+                    alumnoObservable = this.alumnoService.editarAlumno(alumnoData.idalumno, alumnoData).pipe(
+                         map((resp: any) => (resp && resp.data && resp.data.idalumno) ? resp.data : { ...alumnoData, idalumno: alumnoData.idalumno })
+                    );
+                } else {
+                    alumnoObservable = of(alumnoData);
+                }
             } else {
-                 return of({ idApoderado: idApoderadoFinal, idAlumno: undefined });
+                if (Object.values(formData.alumno).some(v => v && typeof v !== 'boolean')) {
+                    alumnoObservable = this.alumnoService.agregarAlumno(alumnoData).pipe(
+                        map((resp: any) => {
+                            if (resp && resp.code >= 200 && resp.code < 300 && resp.data && resp.data.idalumno) {
+                                return resp.data;
+                            }
+                            throw new Error('Respuesta inesperada al crear alumno.');
+                        })
+                    );
+                } else {
+                     alumnoObservable = of({ idalumno: undefined } as Alumno);
+                }
             }
+            return alumnoObservable.pipe(map(alumnoProcesado => ({ idApoderado: idApoderadoFinal, idAlumno: alumnoProcesado?.idalumno })));
         }),
         switchMap(({ idApoderado, idAlumno }) => {
-            if (estadoMatricula === 'COMPLETADO' && (!idApoderado || !idAlumno)) {
+            if (estadoMatriculaDeseado === 'COMPLETADO' && (!idApoderado || !idAlumno)) {
                 throw new Error('Faltan IDs de apoderado o alumno para completar la matrícula.');
             }
-             const formDataCheck = this.formMatricula.getRawValue();
-             const hasApoderadoDataCheck = Object.values(formDataCheck.apoderado).some(val => val !== null && val !== '' && val !== undefined);
-             const hasAlumnoDataCheck = Object.values(formDataCheck.alumno).some(val => val !== null && val !== '' && val !== undefined && typeof val !== 'boolean');
-             const hasRelacionDataCheck = formDataCheck.relacionEstudiante !== null && formDataCheck.relacionEstudiante !== '';
-             const hasDocumentsDataCheck = formDataCheck.documentsPresented.some((presented: boolean) => presented);
-             const hasAdditionalTextFieldDataCheck = (formDataCheck.alumno.tieneIntercambio && formDataCheck.alumno.tipoIntercambio) ||
-                                                (formDataCheck.alumno.tieneDiscapacidad && formDataCheck.alumno.tipoDiscapacidad) ||
-                                                (formDataCheck.alumno.tieneOtros && formDataCheck.alumno.tipoOtros);
 
-
-             if (estadoMatricula === 'EN PROCESO' && !idApoderado && !idAlumno && !hasRelacionDataCheck && !hasDocumentsDataCheck && !hasAdditionalTextFieldDataCheck) {
+            if (estadoMatriculaDeseado === 'EN PROCESO' && !idApoderado && !idAlumno && !this.esContinuacion && !formData.relacionEstudiante && presentedDocumentsList.length === 0) {
+                this.notificationService.showNotification('No hay suficientes datos para guardar en proceso.', 'info');
                 return of(null);
             }
-
 
             const matriculaRequest: Matricula = {
                 idusuario: this.usuario.idusuario,
@@ -878,18 +990,26 @@ export class RegistrarMatriculaComponent implements OnInit {
                 grado: this.grado,
                 seccion: this.seccion,
                 relacionEstudiante: formData.relacionEstudiante || null,
-                estadoMatricula: estadoMatricula,
+                estadoMatricula: estadoMatriculaDeseado,
                 documentos: presentedDocumentsList.length > 0 ? presentedDocumentsList : null
             };
-            return this.matriculaService.agregarMatricula(matriculaRequest).pipe(
-                 map((matriculaResp: any) => {
-                     if (estadoMatricula === 'COMPLETADO' && (!matriculaResp || !matriculaResp.idmatricula)) {
-                          console.error('Respuesta exitosa del backend, pero falta idmatricula para COMPLETADO:', matriculaResp);
-                          throw new Error('Respuesta inesperada del servidor al registrar matrícula (falta ID).');
-                     }
-                     return matriculaResp;
-                 })
-            );
+
+            if (this.esContinuacion && this.matriculaOriginal) {
+                matriculaRequest.idmatricula = this.idMatriculaContinuar;
+                matriculaRequest.fechaCreacion = this.matriculaOriginal.fechaCreacion;
+                matriculaRequest.fechaActualizacion = new Date().toISOString();
+            } else {
+                matriculaRequest.fechaCreacion = new Date().toISOString();
+                matriculaRequest.fechaActualizacion = null;
+            }
+
+            if (this.esContinuacion && this.idMatriculaContinuar) {
+                return this.matriculaService.editarMatricula(this.idMatriculaContinuar, matriculaRequest).pipe(
+                    map(matriculaEditada => ({ ...matriculaEditada, idmatricula: this.idMatriculaContinuar }))
+                );
+            } else {
+                return this.matriculaService.agregarMatricula(matriculaRequest);
+            }
         }),
         catchError(err => {
             let errorMsg = 'Error desconocido durante el registro.';
@@ -903,50 +1023,37 @@ export class RegistrarMatriculaComponent implements OnInit {
             } else if (err instanceof Error) {
                  errorMsg = err.message;
             }
-            console.error('Error capturado en el observable pipe:', err);
             this.notificationService.showNotification(`Error: ${errorMsg}`, 'error');
             return of(null);
         }),
         finalize(() => {
             this.isSubmitting = false;
+            this.loadingMessage = 'Cargando formulario...';
             this.cdRef.detectChanges();
         })
     ).subscribe({
-        next: (matriculaCreada: any) => {
-            try {
-                console.log('Respuesta final procesada antes de la redirección:', matriculaCreada);
+        next: (matriculaProcesada: any) => {
+            if (matriculaProcesada === null) {
+                 return;
+            }
 
-                if (matriculaCreada === null) {
-                     console.log('matriculaCreada es null, no se redirige.');
-                     return;
-                }
-
-                if (estadoMatricula === 'COMPLETADO') {
-                     console.log('Estado de matrícula es COMPLETADO.');
-                     if (matriculaCreada && matriculaCreada.idmatricula) {
-                         console.log('Matrícula creada con ID:', matriculaCreada.idmatricula);
-                         const idMatriculaCreada = matriculaCreada.idmatricula;
-                         this.notificationService.showNotification('¡Matrícula registrada! Generando comprobantes...', 'success');
-                         console.log('Intentando navegar a /comprobantes con ID:', idMatriculaCreada, 'y nivel:', this.nivel);
-                         this.router.navigate(['/comprobantes'], {
-                             queryParams: { idMatricula: idMatriculaCreada, nivel: this.nivel }
-                         });
-                     } else {
-                         console.warn('Matrícula procesada, pero falta idmatricula en la respuesta para COMPLETADO (fallback check).', matriculaCreada);
-                         this.notificationService.showNotification('Matrícula procesada, pero hubo un problema al obtener la confirmación para COMPLETADO.', 'error');
-                     }
-                } else if (estadoMatricula === 'EN PROCESO') {
-                    console.log('Estado de matrícula es EN PROCESO. Navegando a lista de matrículas.');
-                    this.notificationService.showNotification('Trámite de matrícula guardado en proceso.', 'info');
-                    this.router.navigate(['/matriculas/', this.nivel?.toLowerCase()]);
-                }
-            } catch (e) {
-                console.error('Error inesperado dentro del bloque next del subscribe:', e);
-                this.notificationService.showNotification('Ocurrió un error inesperado después de registrar la matrícula.', 'error');
+            if (estadoMatriculaDeseado === 'COMPLETADO') {
+                 if (matriculaProcesada && matriculaProcesada.idmatricula) {
+                     this.notificationService.showNotification('¡Matrícula registrada/actualizada! Generando comprobantes...', 'success');
+                     this.router.navigate(['/comprobantes'], {
+                         queryParams: { idMatricula: matriculaProcesada.idmatricula, nivel: this.nivel }
+                     });
+                 } else {
+                     this.notificationService.showNotification('Matrícula procesada, pero hubo un problema al obtener la confirmación final.', 'error');
+                 }
+            } else if (estadoMatriculaDeseado === 'EN PROCESO') {
+                this.notificationService.showNotification('Trámite de matrícula guardado en proceso.', 'info');
+                this.router.navigate(['/matriculas/', this.nivel?.toLowerCase()]);
             }
         }
     });
   }
+
 
   onSubmit(): void {
     this.processMatricula('COMPLETADO');
@@ -956,7 +1063,7 @@ export class RegistrarMatriculaComponent implements OnInit {
     this.processMatricula('EN PROCESO');
   }
 
-   focusFirstInvalidControl(
+  focusFirstInvalidControl(
        groupName: 'apoderado' | 'alumno',
        specificFields?: string[],
        singleControlName?: 'relacionEstudiante'
@@ -980,22 +1087,16 @@ export class RegistrarMatriculaComponent implements OnInit {
                    const control = formGroup.get(key);
                    if (control?.invalid && control.touched) {
                        controlToFocus = control;
-                       elementId = `${groupName}_${key}`;
-                       if (elementId === 'apoderado_numeroDocumento' && this.currentView === 'search') {
-                            elementId = 'apoderado_numeroDocumento_buscar';
-                       } else if (elementId === 'apoderado_numeroDocumento' && this.currentView === 'apoderado') {
-                            elementId = 'apoderado_numeroDocumento_completo';
-                       } else if (elementId === 'apoderado_idtipodoc' && this.currentView === 'search') {
-                            elementId = 'apoderado_idtipodoc_search';
-                       } else if (elementId === 'apoderado_idtipodoc' && this.currentView === 'apoderado') {
-                            elementId = 'apoderado_idtipodoc_confirm';
-                       }
-                       else if (elementId === 'apoderado_genero') {
-                           elementId = 'apoderado_genero';
-                       } else if (elementId === 'alumno_genero') {
-                           elementId = 'alumno_genero';
-                       } else if (elementId.startsWith('alumno_tipo')) {
-                           elementId = elementId.replace('tipo', 'tiene');
+                       if (groupName === 'apoderado') {
+                           if (key === 'idtipodoc') {
+                               elementId = this.currentView === 'search' ? 'apoderado_idtipodoc_search' : 'apoderado_idtipodoc_confirm';
+                           } else if (key === 'numeroDocumento') {
+                               elementId = this.currentView === 'search' ? 'apoderado_numeroDocumento_buscar' : 'apoderado_numeroDocumento_completo';
+                           } else {
+                               elementId = `apoderado_${key}`;
+                           }
+                       } else {
+                           elementId = `alumno_${key}`;
                        }
                        break;
                    }
@@ -1003,11 +1104,13 @@ export class RegistrarMatriculaComponent implements OnInit {
            }
        }
 
+
        if (controlToFocus && elementId) {
            const element = document.getElementById(elementId) as HTMLElement | null;
            if (element) {
                element.focus({ preventScroll: false });
                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+           } else {
            }
        }
    }

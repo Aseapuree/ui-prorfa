@@ -67,6 +67,7 @@ export interface MatriculadoDisplay extends Matricula {
 })
 export class MatriculadosComponent implements OnInit {
   loading = false;
+  spinnerMessage: string = 'Cargando matrículas...';
 
   matriculados: MatriculadoDisplay[] = [];
   allMatriculados: MatriculadoDisplay[] = [];
@@ -124,7 +125,12 @@ export class MatriculadosComponent implements OnInit {
       { field: 'codigomatricula', header: 'CODIGO MATRICULA', maxWidth: 150, sortable: true },
       { field: 'codigopago', header: 'CODIGO PAGO', maxWidth: 150, sortable: true },
       { field: 'grado', header: 'GRADO', maxWidth: 100, sortable: true },
-      {field: 'seccion',header: 'SECCION',maxWidth: 100,sortable: true,},
+      {
+        field: 'seccion',
+        header: 'SECCION',
+        maxWidth: 100,
+        sortable: true,
+      },
       { field: 'nivel', header: 'NIVEL', maxWidth: 100, sortable: true },
       { field: 'numeroDocumentoApoderado', header: 'DOCUMENTO APODERADO', maxWidth: 110, sortable: true },
       { field: 'numeroDocumentoAlumno', header: 'DOCUMENTO ALUMNO', maxWidth: 110, sortable: true },
@@ -141,14 +147,17 @@ export class MatriculadosComponent implements OnInit {
         hoverColor: 'green',
         visible: (item: MatriculadoDisplay) => {
            const estado = item.estadoMatricula?.trim().toUpperCase();
-           return estado === 'EN ESPERA';
+           return estado === 'EN PROCESO';
         }
       },
       {
         name: 'print-payment',
         icon: ['fas', 'dollar-sign'],
         tooltip: 'COMPROBANTE PAGO',
-        action: (item: MatriculadoDisplay) => this.viewComprobante(item, 'pago'),
+        action: (item: MatriculadoDisplay) => {
+          this.spinnerMessage = 'Generando comprobante de pago...';
+          this.viewComprobante(item, 'pago');
+        },
         hoverColor: 'blue',
         visible: (item: MatriculadoDisplay) => {
            const estado = item.estadoMatricula?.trim().toUpperCase();
@@ -159,7 +168,10 @@ export class MatriculadosComponent implements OnInit {
         name: 'print-enrollment',
         icon: ['fas', 'file-alt'],
         tooltip: 'COMPROBANTE MATRICULA',
-        action: (item: MatriculadoDisplay) => this.viewComprobante(item, 'matricula'),
+        action: (item: MatriculadoDisplay) => {
+          this.spinnerMessage = 'Generando comprobante de matrícula...';
+          this.viewComprobante(item, 'matricula');
+        },
         hoverColor: 'purple',
         visible: (item: MatriculadoDisplay) => {
            const estado = item.estadoMatricula?.trim().toUpperCase();
@@ -180,6 +192,7 @@ export class MatriculadosComponent implements OnInit {
             .map(n => n.nombre)
             .filter((nombre): nombre is string => !!nombre)
             .sort();
+          this.notificationService.showNotification('Niveles cargados exitosamente para los filtros.', 'success');
         } else {
           this.notificationService.showNotification('No se pudieron cargar los niveles para los filtros desde la entidad.', 'error');
           this.nivelesParaFiltro = [];
@@ -218,7 +231,12 @@ export class MatriculadosComponent implements OnInit {
             }
             return a.localeCompare(b);
           });
+        this.notificationService.showNotification(`Grados cargados para el nivel: ${this.filters.nivel}`, 'info');
+      } else {
+        this.notificationService.showNotification('No se encontraron grados para el nivel seleccionado.', 'info');
       }
+    } else {
+      this.notificationService.showNotification('Nivel no seleccionado o datos de entidad no disponibles.', 'error');
     }
   }
 
@@ -236,17 +254,24 @@ export class MatriculadosComponent implements OnInit {
         );
         if (gradoSeleccionado && gradoSeleccionado.secciones) {
           this.seccionesParaFiltro = [...gradoSeleccionado.secciones].sort((a, b) => a.nombre.localeCompare(b.nombre));
+          this.notificationService.showNotification(`Secciones cargadas para el grado: ${this.filters.grado}`, 'info');
+        } else {
+          this.notificationService.showNotification('No se encontraron secciones para el grado seleccionado.', 'info');
         }
       }
+    } else {
+      this.notificationService.showNotification('Nivel o grado no seleccionado, o datos de entidad no disponibles.', 'error');
     }
   }
 
   loadMatriculas(): void {
      this.loading = true;
+     this.spinnerMessage = 'Cargando matrículas...';
      this.matriculaService.obtenerMatriculas()
        .pipe(
          switchMap(matriculas => {
            if (!matriculas || matriculas.length === 0) {
+             this.notificationService.showNotification('No se encontraron matrículas.', 'info');
              return of([]);
            }
            const observables = matriculas.map(matricula => {
@@ -259,11 +284,9 @@ export class MatriculadosComponent implements OnInit {
          }),
          map(results => {
            return results.map(([matricula, apoderado, alumno, comprobante]) => {
-             console.log('Valor original de matricula.seccion:', matricula.seccion); // Log para depuración
              const mappedSeccion = (matricula.seccion && typeof matricula.seccion === 'object' && 'nombre' in matricula.seccion)
                         ? (matricula.seccion as SeccionVacantes).nombre
                         : (matricula.seccion || null);
-             console.log('Valor mapeado de seccion:', mappedSeccion); // Log para depuración
 
              return {
                ...matricula,
@@ -278,7 +301,7 @@ export class MatriculadosComponent implements OnInit {
                numeroDocumentoAlumno: alumno?.numeroDocumento || null,
                nivel: matricula.nivel,
                grado: matricula.grado,
-               seccion: mappedSeccion, // Se asigna la sección ya como string
+               seccion: mappedSeccion,
                montoTotalComprobante: comprobante?.montototal ? parseFloat(comprobante.montototal) : undefined,
              } as MatriculadoDisplay;
            });
@@ -289,6 +312,11 @@ export class MatriculadosComponent implements OnInit {
            this.allMatriculados = data;
            this.applyFiltersAndPagination(this.filters.fechaInicio || undefined, this.filters.fechaFin || undefined);
            this.loading = false;
+           if (this.allMatriculados.length === 0) {
+             this.notificationService.showNotification('No hay matrículas registradas para mostrar.', 'info');
+           } else {
+             this.notificationService.showNotification('Matrículas cargadas exitosamente.', 'success');
+           }
          },
          error: err => {
            this.notificationService.showNotification('Error al cargar matrículas: ' + err.message, 'error');
@@ -373,6 +401,9 @@ export class MatriculadosComponent implements OnInit {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
     this.matriculados = filteredMatriculados.slice(startIndex, endIndex);
+    if (this.matriculados.length === 0 && this.allMatriculados.length > 0) {
+      this.notificationService.showNotification('No se encontraron matrículas con los filtros aplicados.', 'info');
+    }
   }
 
   isValidDateFormat(dateString: string | null): boolean {
@@ -408,12 +439,14 @@ export class MatriculadosComponent implements OnInit {
       }
   }
 
-  onSearch(sortEvent?: { field: string, direction: 'asc' | 'desc' }): void {
+  onSearch(sortEvent?: { sortBy: string, sortDir: string }): void {
     this.loading = true;
+    this.spinnerMessage = 'Buscando matrículas...';
+    this.notificationService.showNotification('Aplicando filtros y buscando matrículas...', 'info');
 
     if (sortEvent) {
-        this.currentSortField = sortEvent.field;
-        this.currentSortDirection = sortEvent.direction;
+        this.currentSortField = sortEvent.sortBy;
+        this.currentSortDirection = (sortEvent.sortDir === 'asc' || sortEvent.sortDir === 'desc') ? (sortEvent.sortDir as 'asc' | 'desc') : null;
     } else {
         this.currentPage = 1;
     }
@@ -464,6 +497,7 @@ export class MatriculadosComponent implements OnInit {
     setTimeout(() => {
       this.applyFiltersAndPagination(fechaInicioBusqueda || undefined, fechaFinBusqueda || undefined);
       this.loading = false;
+      this.notificationService.showNotification('Filtros aplicados y búsqueda completada.', 'success');
     }, 300);
   }
 
@@ -477,21 +511,24 @@ export class MatriculadosComponent implements OnInit {
         fechaFinActiva = this.currentDate;
     }
     this.applyFiltersAndPagination(fechaInicioActiva || undefined, fechaFinActiva || undefined);
+    this.notificationService.showNotification(`Cambiando a la página ${newPage}.`, 'info');
   }
 
   continueMatricula(matricula: MatriculadoDisplay): void {
     const estadoActual = matricula.estadoMatricula?.trim().toUpperCase();
-    if (estadoActual === 'EN ESPERA' && matricula.idmatricula) {
+    if (estadoActual === 'EN PROCESO' && matricula.idmatricula) {
       this.notificationService.showNotification(`Continuando trámite para matrícula ID: ${matricula.idmatricula}`, 'info');
-      this.router.navigate(['/registrar-matricula'], {
+      this.router.navigate(['/registrarmatricula'], {
         queryParams: {
             idMatricula: matricula.idmatricula,
             nivel: matricula.nivel,
-            grado: matricula.grado
+            grado: matricula.grado,
         }
       });
     } else if (!matricula.idmatricula) {
        this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para continuar.', 'error');
+    } else {
+      this.notificationService.showNotification(`Solo se puede continuar matrículas en estado 'En Proceso'. Estado actual: ${matricula.estadoMatricula}`, 'error');
     }
   }
 
@@ -542,7 +579,6 @@ export class MatriculadosComponent implements OnInit {
           }
 
           this.notificationService.showNotification(displayMessage, 'error');
-          console.error(`Error completo al generar PDF para ${tipoComprobante}, matrícula ID ${matricula.idmatricula}:`, err);
         }
       });
   }
@@ -569,6 +605,7 @@ export class MatriculadosComponent implements OnInit {
 
   exportToExcel(): void {
     this.loading = true;
+    this.notificationService.showNotification('Preparando datos para exportar a Excel...', 'info');
 
     let fechaInicioBusqueda = this.filters.fechaInicio;
     let fechaFinBusqueda = this.filters.fechaFin;
@@ -657,7 +694,7 @@ export class MatriculadosComponent implements OnInit {
           'Código Matrícula': m.codigomatricula || '-',
           'Código Pago': m.codigopago || '-',
           'Grado': m.grado || '-',
-          'Sección': m.seccion || '-', // Aquí 'seccion' ya es string gracias al mapeo en loadMatriculas
+          'Sección': m.seccion || '-',
           'Nivel': m.nivel || '-',
           'Documento Apoderado': m.numeroDocumentoApoderado || '-',
           'Documento Alumno': m.numeroDocumentoAlumno || '-',

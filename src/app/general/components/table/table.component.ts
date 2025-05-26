@@ -20,6 +20,7 @@ export interface ActionConfig {
   tooltip: string;
   action: (item: any) => void;
   hoverColor?: string;
+  visible?: (item: any) => boolean; // CAMBIO: Añadida la propiedad 'visible' para controlar la visibilidad de acciones
 }
 
 @Component({
@@ -38,9 +39,9 @@ export class TableComponent {
   @Input() sortDir: string = 'asc';
   @Output() sortChange = new EventEmitter<{ sortBy: string, sortDir: string }>();
 
-  // ... existing code ...
+  // Código existente
   showCompetenciasModal(item: any): void {
-    // Emit an event to the parent component to handle modal opening
+    // Emite un evento al componente padre para manejar la apertura del modal
     this.competenciasClick.emit(item);
   }
 
@@ -56,4 +57,3 @@ export class TableComponent {
     this.sortChange.emit({ sortBy: this.sortBy, sortDir: this.sortDir });
   }
 }
-

@@ -1,5 +1,5 @@
 export class Matricula {
-  idmatricula?: string;
+  idmatricula?: string| null;
   idusuario?: string;
   idapoderado?: string;
   idalumno?: string;
@@ -10,6 +10,7 @@ export class Matricula {
   seccion?: string | null;
   relacionEstudiante?: string | null;
   fechaCreacion?: string | null;
+  fechaActualizacion?: string| null;
 }
 
 export interface Documento {
