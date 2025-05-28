@@ -104,10 +104,13 @@
     </table>
   </div>
 
-  <!-- Botón de regresar -->
-  <div class="actions mt-6 text-center">
+  <!-- Botones de acción -->
+  <div class="actions mt-6 text-center flex justify-center gap-4">
     <button class="btn-regresar flex items-center justify-center" (click)="regresar()">
       <i class="fas fa-arrow-left mr-2"></i>Regresar
+    </button>
+    <button class="btn-imprimir flex items-center justify-center" (click)="imprimirBoleta()">
+      <i class="fas fa-print mr-2"></i>Imprimir Boleta
     </button>
   </div>
   <app-pagination
