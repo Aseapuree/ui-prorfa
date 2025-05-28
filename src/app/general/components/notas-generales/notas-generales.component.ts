@@ -8,7 +8,6 @@ import { NotasService } from '../../../campus/services/notas.service';
 import { catchError, map, throwError } from 'rxjs';
 import { PaginationComponent } from '../pagination/pagination.component';
 
-
 @Component({
   selector: 'app-notas-generales',
   standalone: true,
@@ -29,7 +28,8 @@ export class NotasGeneralesComponent implements OnInit {
   nivel: string = '';
   filterActivity: string = '';
   filterSession: string = '';
-  filterNotaMin: number | null = null;
+  filterNotaMin: number | null = null; // Mantendremos esta propiedad por compatibilidad, pero no la usaremos
+  filterNotaType: string = ''; // Nueva propiedad para el tipo de filtro
   availableActivities: string[] = [];
   availableSessions: string[] = [];
 
@@ -158,8 +158,10 @@ export class NotasGeneralesComponent implements OnInit {
       notasFiltradas = notasFiltradas.filter(nota => nota.idNota === this.filterSession);
     }
 
-    if (this.filterNotaMin !== null) {
-      notasFiltradas = notasFiltradas.filter(nota => (nota.nota ?? 0) >= this.filterNotaMin!);
+    if (this.filterNotaType === 'aprobatoria') {
+      notasFiltradas = notasFiltradas.filter(nota => (nota.nota ?? 0) > 12);
+    } else if (this.filterNotaType === 'desaprobatoria') {
+      notasFiltradas = notasFiltradas.filter(nota => (nota.nota ?? 0) <= 12);
     }
 
     return notasFiltradas;
