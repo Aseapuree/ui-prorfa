@@ -1,0 +1,203 @@
+<div class="container mx-auto my-10 p-6 relative">
+  <!-- Alert Notifications -->
+  <div class="space-y-4 mb-6">
+    <app-alert *ngIf="successMessage" [message]="successMessage" type="success"></app-alert>
+    <app-alert *ngIf="errorMessage" [message]="errorMessage" type="error"></app-alert>
+  </div>
+
+  <!-- Main Form -->
+  <div class="bg-secondary-dark rounded-2xl shadow-sm p-8 backdrop-blur-md inner-glow">
+    <div class="header-bg text-center p-6 rounded-t-2xl mb-12">
+      <h2 class="text-4xl font-medium tracking-widest relative header-underline" style="color: #D3D8E0;">Registro de Usuario</h2>
+    </div>
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-16">
+      <!-- Personal Information -->
+      <div class="card-section">
+        <h3 class="text-2xl font-medium tracking-widest relative header-underline mb-8" style="color: #D3D8E0;">Información Personal</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div class="relative">
+            <label for="nombre" class="block text-xl font-medium" style="color: #D3D8E0;">Nombre <span class="text-red-300">*</span></label>
+            <input id="nombre" formControlName="nombre" type="text" class="custom-input"
+                   [class.border-red-300]="userForm.get('nombre')?.invalid && userForm.get('nombre')?.touched"
+                   placeholder="Ej: Juan" required (keyup)="onKeyUp('nombre', $event)" />
+            <div *ngIf="userForm.get('nombre')?.invalid && userForm.get('nombre')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('nombre')?.errors?.['required']">El nombre es obligatorio.</span>
+              <span *ngIf="userForm.get('nombre')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+              <span *ngIf="userForm.get('nombre')?.errors?.['pattern']">{{ userForm.get('nombre')?.errors?.['pattern']?.message }}</span>
+            </div>
+          </div>
+          <div class="relative">
+            <label for="apellidopaterno" class="block text-xl font-medium" style="color: #D3D8E0;">Apellido Paterno <span class="text-red-300">*</span></label>
+            <input id="apellidopaterno" formControlName="apellidopaterno" type="text" class="custom-input"
+            [class.border-red-300]="userForm.get('apellidopaterno')?.invalid && userForm.get('apellidopaterno')?.touched"
+            placeholder="Ej: Pérez" required (keyup)="onKeyUp('apellidopaterno', $event)" />
+     
+     <div *ngIf="userForm.get('apellidopaterno')?.invalid && userForm.get('apellidopaterno')?.touched" class="text-red-300 text-lg font-medium mt-2">
+       <span *ngIf="userForm.get('apellidopaterno')?.errors?.['required']">El apellido paterno es obligatorio.</span>
+       <span *ngIf="userForm.get('apellidopaterno')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+       <span *ngIf="userForm.get('apellidopaterno')?.errors?.['pattern']">{{ userForm.get('apellidopaterno')?.errors?.['pattern']?.message }}</span>
+     </div>
+     
+          </div>
+          <div class="relative">
+            <label for="apellidomaterno" class="block text-xl font-medium" style="color: #D3D8E0;">Apellido Materno</label>
+            <input id="apellidomaterno" formControlName="apellidomaterno" type="text" class="custom-input"
+                   [class.border-red-300]="userForm.get('apellidomaterno')?.invalid && userForm.get('apellidomaterno')?.touched"
+                   placeholder="Ej: Gómez" (keyup)="onKeyUp('apellidomaterno', $event)" />
+            <div *ngIf="userForm.get('apellidomaterno')?.invalid && userForm.get('apellidomaterno')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('apellidomaterno')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+              <span *ngIf="userForm.get('apellidomaterno')?.errors?.['pattern']">{{ userForm.get('apellidomaterno')?.errors?.['pattern']?.message }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document Information -->
+      <div class="card-section">
+        <h3 class="text-2xl font-medium tracking-widest relative header-underline mb-8" style="color: #D3D8E0;">Información de Documento</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="relative">
+            <label for="idtipodoc" class="block text-xl font-medium" style="color: #D3D8E0;">Tipo de Documento <span class="text-red-300">*</span></label>
+            <select id="idtipodoc" formControlName="idtipodoc" class="custom-input"
+                    [class.border-red-300]="userForm.get('idtipodoc')?.invalid && userForm.get('idtipodoc')?.touched"
+                    required>
+              <option value="">Seleccione...</option>
+              <option *ngFor="let doc of docTypes" [value]="doc.correlativo">{{ doc.descripcion }}</option>
+            </select>
+            <div *ngIf="userForm.get('idtipodoc')?.invalid && userForm.get('idtipodoc')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              El tipo de documento es obligatorio.
+            </div>
+          </div>
+          <div class="relative">
+            <label for="numerodocidenti" class="block text-xl font-medium" style="color: #D3D8E0;">Número de Documento <span class="text-red-300">*</span></label>
+            <input id="numerodocidenti" formControlName="numerodocidenti" type="text" class="custom-input"
+                   [class.border-red-300]="userForm.get('numerodocidenti')?.invalid && userForm.get('numerodocidenti')?.touched"
+                   placeholder="Ej: 12345678" required (keyup)="onKeyUp('numerodocidenti', $event)" />
+            <div *ngIf="userForm.get('numerodocidenti')?.invalid && userForm.get('numerodocidenti')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('numerodocidenti')?.errors?.['required']">Obligatorio.</span>
+              <span *ngIf="userForm.get('numerodocidenti')?.errors?.['minlength']">Mínimo 8 caracteres.</span>
+              <span *ngIf="userForm.get('numerodocidenti')?.errors?.['maxlength']">Máximo 20 caracteres.</span>
+              <span *ngIf="userForm.get('numerodocidenti')?.errors?.['pattern']">{{ userForm.get('numerodocidenti')?.errors?.['pattern']?.message }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Information -->
+      <div class="card-section">
+        <h3 class="text-2xl font-medium tracking-widest relative header-underline mb-8" style="color: #D3D8E0;">Información de Cuenta</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="relative">
+            <label for="nombreusuario" class="block text-xl font-medium" style="color: #D3D8E0;">Nombre de Usuario <span class="text-red-300">*</span></label>
+            <input id="nombreusuario" formControlName="nombreusuario" type="text" class="custom-input"
+                   [class.border-red-300]="userForm.get('nombreusuario')?.invalid && userForm.get('nombreusuario')?.touched"
+                   placeholder="Ej: juan.perez" required (keyup)="onKeyUp('nombreusuario', $event)" />
+            <div *ngIf="userForm.get('nombreusuario')?.invalid && userForm.get('nombreusuario')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('nombreusuario')?.errors?.['required']">Obligatorio.</span>
+              <span *ngIf="userForm.get('nombreusuario')?.errors?.['minlength']">Mínimo 4 caracteres.</span>
+              <span *ngIf="userForm.get('nombreusuario')?.errors?.['maxlength']">Máximo 30 caracteres.</span>
+              <span *ngIf="userForm.get('nombreusuario')?.errors?.['pattern']">{{ userForm.get('nombreusuario')?.errors?.['pattern']?.message }}</span>
+            </div>
+          </div>
+          <div class="relative">
+            <label for="correo" class="block text-xl font-medium" style="color: #D3D8E0;">Correo <span class="text-red-300">*</span></label>
+            <input id="correo" formControlName="correo" type="email" class="custom-input"
+                   [class.border-red-300]="userForm.get('correo')?.invalid && userForm.get('correo')?.touched"
+                   placeholder="Ej: juan.perez@ejemplo.com" required />
+            <div *ngIf="userForm.get('correo')?.invalid && userForm.get('correo')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('correo')?.errors?.['required']">Obligatorio.</span>
+              <span *ngIf="userForm.get('correo')?.errors?.['email']">Ingrese un correo válido.</span>
+              <span *ngIf="userForm.get('correo')?.errors?.['maxlength']">Máximo 100 caracteres.</span>
+            </div>
+          </div>
+          <div class="relative">
+            <label for="telefono" class="block text-xl font-medium" style="color: #D3D8E0;">Teléfono</label>
+            <input id="telefono" formControlName="telefono" type="text" class="custom-input"
+                   [class.border-red-300]="userForm.get('telefono')?.invalid && userForm.get('telefono')?.touched"
+                   placeholder="Ej: 987654321" (keyup)="onKeyUp('telefono', $event)" />
+            <div *ngIf="userForm.get('telefono')?.invalid && userForm.get('telefono')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('telefono')?.errors?.['maxlength']">Máximo 9 caracteres.</span>
+              <span *ngIf="userForm.get('telefono')?.errors?.['pattern']">{{ userForm.get('telefono')?.errors?.['pattern']?.message }}</span>
+            </div>
+          </div>
+          <div class="relative">
+            <label for="direccion" class="block text-xl font-medium" style="color: #D3D8E0;">Dirección</label>
+            <input id="direccion" formControlName="direccion" type="text" class="custom-input"
+                   [class.border-red-300]="userForm.get('direccion')?.invalid && userForm.get('direccion')?.touched"
+                   placeholder="Ej: Av. Principal 123" (keyup)="onKeyUp('direccion', $event)" />
+            <div *ngIf="userForm.get('direccion')?.invalid && userForm.get('direccion')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('direccion')?.errors?.['maxlength']">Máximo 200 caracteres.</span>
+              <span *ngIf="userForm.get('direccion')?.errors?.['pattern']">{{ userForm.get('direccion')?.errors?.['pattern']?.message }}</span>
+            </div>
+          </div>
+          <div class="relative col-span-full">
+            <label class="block text-xl font-medium" style="color: #D3D8E0;">Foto de Perfil <span class="text-red-300">*</span></label>
+            <div class="mt-2 flex items-center justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-300"
+                 [class.border-red-300]="userForm.get('profileImage')?.invalid && userForm.get('profileImage')?.touched"
+                 (dragover)="onDragOver($event)" (drop)="onDrop($event)" (dragleave)="onDragLeave($event)">
+              <div class="space-y-1 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="flex text-sm text-gray-600">
+                  <label for="profileImage" class="relative cursor-pointer bg-accent-color text-white rounded-md font-medium py-2 px-4 hover:bg-opacity-90 transition-all duration-300">
+                    <span>Subir archivo</span>
+                    <input id="profileImage" formControlName="profileImage" type="file" class="sr-only"
+                           accept="image/jpeg,image/png" (change)="onImageChange($event)" required />
+                  </label>
+                  <p class="pl-1">o arrastra y suelta</p>
+                </div>
+                <p class="text-xs text-gray-500">PNG, JPG hasta 10MB</p>
+              </div>
+            </div>
+            <div *ngIf="userForm.get('profileImage')?.invalid && userForm.get('profileImage')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              Seleccione una imagen JPEG o PNG.
+            </div>
+            <div *ngIf="imagePreview" class="mt-6">
+              <img [src]="imagePreview" alt="Vista previa de la imagen" class="rounded-xl max-h-56 w-full shadow" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Access Configuration -->
+      <div class="card-section">
+        <h3 class="text-2xl font-medium tracking-widest relative header-underline mb-8" style="color: #D3D8E0;">Configuración de Acceso</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="relative">
+            <label for="rol" class="block text-xl font-medium" style="color: #D3D8E0;">Rol <span class="text-red-300">*</span></label>
+            <select id="rol" formControlName="rol" class="custom-input"
+                    [class.border-red-300]="userForm.get('rol')?.invalid && userForm.get('rol')?.touched"
+                    required>
+              <option value="">Seleccione...</option>
+              <option *ngFor="let role of roles" [value]="role.nombreRol">{{ role.nombreRol }}</option>
+            </select>
+            <div *ngIf="userForm.get('rol')?.invalid && userForm.get('rol')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              El rol es obligatorio.
+            </div>
+          </div>
+          <div class="relative">
+            <label for="password" class="block text-xl font-medium" style="color: #D3D8E0;">Contraseña <span class="text-red-300">*</span></label>
+            <input id="password" formControlName="password" type="password" class="custom-input"
+                   [class.border-red-300]="userForm.get('password')?.invalid && userForm.get('password')?.touched"
+                   placeholder="Mínimo 8 caracteres" required (keyup)="onKeyUp('password', $event)" />
+            <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="text-red-300 text-lg font-medium mt-2">
+              <span *ngIf="userForm.get('password')?.errors?.['required']">Obligatoria.</span>
+              <span *ngIf="userForm.get('password')?.errors?.['minlength']">Mínimo 8 caracteres.</span>
+              <span *ngIf="userForm.get('password')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+              <span *ngIf="userForm.get('password')?.errors?.['pattern']">{{ userForm.get('password')?.errors?.['pattern']?.message }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="w-full bg-accent-color text-white py-5 rounded-2xl text-xl font-light transition-all duration-500 shadow hover:shadow-md relative overflow-hidden ripple-button"
+              [disabled]="userForm.invalid || isSubmitting">
+        <span *ngIf="isSubmitting" class="inline-block w-6 h-6 border-2 border-t-transparent border-white rounded-full animate-spin mr-4"></span>
+        {{ isSubmitting ? 'Registrando...' : 'Registrar' }}
+        <span class="ripple"></span>
+      </button>
+    </form>
+  </div>
+</div>

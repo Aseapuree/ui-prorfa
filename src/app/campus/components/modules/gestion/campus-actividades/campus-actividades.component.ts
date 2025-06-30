@@ -12,7 +12,7 @@ import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
-import { UserData, ValidateService } from '../../../../../services/validateAuth.service';
+import { UserData, ValidateService } from '../../../../../core/services/validateAuth.service'
 import { lastValueFrom } from 'rxjs';
 import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 import { AsistenciaComponent } from '../../../../../general/components/asistencia/asistencia.component';

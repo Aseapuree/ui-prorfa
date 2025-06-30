@@ -6,7 +6,7 @@ import { DTOmenuService } from '../../Services/dtomenu.service';
 import { DTOUsuarioService } from '../../Services/dtousuario.service';
 import { DTOMenu } from '../../Interface/DTOMenu';
 import { DTOUsuario } from '../../Interface/DTOUsuario';
-import { ValidateService } from '../../../services/validateAuth.service';
+import { ValidateService } from '../../../core/services/validateAuth.service'; 
 import { lastValueFrom } from 'rxjs';
 import { FooterComponent } from '../footer/footer.component';
 

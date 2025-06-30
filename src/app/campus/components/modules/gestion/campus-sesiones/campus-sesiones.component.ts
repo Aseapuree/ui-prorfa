@@ -14,7 +14,7 @@ import { ModalSesionComponent } from '../../modals/modal-sesion/modal-sesion.com
 import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/dialogo-confirmacion.component';
 import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
-import { UserData, ValidateService } from '../../../../../services/validateAuth.service';
+import { UserData, ValidateService } from '../../../../../core/services/validateAuth.service'
 import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 import { ProfesorCursoService } from '../../../../services/profesor-curso.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
