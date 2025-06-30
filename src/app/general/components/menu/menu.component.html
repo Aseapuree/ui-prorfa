@@ -1,98 +1,110 @@
 <nav [class.closed]="menuCerrado" class="h-full w-64 text-white p-4 flex flex-col shadow-lg transition-all duration-300 bg-[--primary-dark]">
-  <!-- Botón para retraer/expandir -->
-  <button class="toggle-menu" (click)="toggleMenu()">☰</button>
+  <button class="toggle-menu" (click)="toggleMenu()">
+    <svg *ngIf="!menuCerrado" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    <svg *ngIf="menuCerrado" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+  </button>
 
-  <div [ngClass]="{ 'hidden': menuCerrado, 'flex': !menuCerrado }" class="flex flex-col items-center justify-center mb-6">
-    <!-- Ícono del usuario y nombre -->
-    <div *ngIf="!imagenValida" class="w-20 h-20 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center text-white text-2xl">
+  <div [ngClass]="{ 'hidden': menuCerrado, 'flex': !menuCerrado }" class="flex flex-col items-center justify-center mb-6 profile-section">
+    <div *ngIf="!imagenValida" class="w-20 h-20 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center text-white text-2xl initials-circle">
       {{ obtenerIniciales() }}
     </div>
-    <img *ngIf="imagenValida" [src]="perfilUrl" alt="Foto de perfil" class="w-20 h-20 rounded-full object-cover border-2 border-white">
-    <p class="text-lg font-bold text-white mt-2" *ngIf="!menuCerrado">
+    <img *ngIf="imagenValida" [src]="perfilUrl" alt="Foto de perfil" class="w-20 h-20 rounded-full object-cover border-2 border-white profile-image">
+    <p class="text-lg font-bold text-white mt-2 user-name" *ngIf="!menuCerrado">
       {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
     </p>
-    <p class="text-sm text-gray-300" *ngIf="!menuCerrado">{{ nombreRol || 'Sin Rol' }}</p>
+    <p class="text-sm text-gray-300 user-role" *ngIf="!menuCerrado">{{ nombreRol || 'Sin Rol' }}</p>
   </div>
 
-  <!-- Menús y submenús -->
-  <ul class="space-y-2">
-    <!-- Botón de Inicio -->
-    <li class="relative">
-      <button class="menu-btn flex items-center gap-3 w-full" (click)="principal()">
-        <fa-icon [icon]="faHome" class="text-lg"></fa-icon>
-        <span *ngIf="!menuCerrado" class="flex-grow text-left">Inicio</span>
-      </button>
-      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
-        <fa-icon [icon]="faHome" class="text-lg"></fa-icon>
-        <span class="text-base">Inicio</span>
+  <ul class="space-y-2 menu-list">
+    <li class="relative menu-item-list-element"
+        (mouseenter)="menuCerrado && showExpanded('inicio')"
+        (mouseleave)="menuCerrado && hideExpanded()">
+      <div class="menu-item-wrapper">
+        <button class="menu-btn flex items-center gap-3 w-full"
+                [class.expanded]="menuCerrado && activeTooltipId === 'inicio'"
+                [ngClass]="{'active': activeMenuId === 'inicio'}"
+                (click)="principal()">
+          <fa-icon [icon]="faHome" class="text-lg menu-icon"></fa-icon>
+          <span class="menu-btn-text flex-grow text-left">Inicio</span>
+        </button>
       </div>
     </li>
-    <li *ngFor="let menu of menuJerarquico; trackBy: trackById" class="relative">
-      <button class="menu-btn flex items-center gap-3 w-full" 
-              (click)="menu.submenus.length ? toggleSubMenu(menu.idMenu) : navigate(menu)"
-              (mouseenter)="showSubmenuTooltip(menu.idMenu)">
-        <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg"></fa-icon> 
-        <span *ngIf="!menuCerrado" class="flex-grow text-left">{{ menu.menu_descripcion }}</span>
-        <span *ngIf="menu.submenus.length && !menuCerrado" class="submenu-icon">
-          {{ subMenuOpen[menu.idMenu] ? '▼' : '►' }}
-        </span>
-      </button>
-      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
-        <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg"></fa-icon>
-        <span class="text-base">{{ menu.menu_descripcion }}</span>
-      </div>
-      <!-- Panel de submenús como tooltip cuando el menú está cerrado -->
-      <div *ngIf="menuCerrado && activeSubmenuId === menu.idMenu && menu.submenus.length" 
-           class="submenu-tooltip" 
-           (mouseleave)="hideSubmenuTooltip()">
-        <ul class="submenu-list">
-          <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="submenu-item">
-            <button class="submenu-btn" (click)="navigate(submenu)">
-              <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-sm"></fa-icon>
-              <span>{{ submenu.menu_descripcion }}</span>
-            </button>
-          </li>
-        </ul>
-      </div>
 
-      <!-- Submenús desplegables -->
-      <ul *ngIf="menu.submenus.length && subMenuOpen[menu.idMenu] && !menuCerrado" class="submenu pl-6">
-        <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="relative">
-          <button class="submenu-btn flex items-center gap-3 w-full" 
+    <!-- Dentro del <li> que itera sobre menuJerarquico -->
+<li *ngFor="let menu of menuJerarquico; trackBy: trackById" class="relative menu-item-list-element">
+  <div class="menu-item-wrapper"
+       (mouseenter)="menuCerrado && showExpanded(menu.idMenu!)"
+       (mouseleave)="menuCerrado && hideExpanded()">
+
+    <button class="menu-btn flex items-center gap-3 w-full"
+            [class.expanded]="menuCerrado && activeTooltipId === menu.idMenu"
+            [ngClass]="{'active': menu.idMenu === activeMenuId && !activeSubMenuId}"
+            (click)="menu.submenus?.length ? toggleSubMenu(menu.idMenu!) : navigate(menu)">
+      <fa-icon *ngIf="menu.icono" [icon]="menu.icono" class="text-lg menu-icon"></fa-icon>
+      <span class="menu-btn-text flex-grow text-left">{{ menu.menu_descripcion }}</span>
+      <span *ngIf="menu.submenus?.length && !menuCerrado" class="submenu-toggle-icon">
+        {{ subMenuOpen[menu.idMenu!] ? '▼' : '►' }}
+      </span>
+    </button>
+
+    <div *ngIf="menuCerrado && activeTooltipId === menu.idMenu && menu.submenus && menu.submenus.length > 0"
+         class="expanded-submenu-panel"
+         (click)="$event.stopPropagation()"
+         (mouseenter)="menuCerrado && showExpanded(menu.idMenu!)"
+         (mouseleave)="menuCerrado && hideExpanded()">
+      <ul class="expanded-submenu-list">
+        <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="expanded-submenu-item">
+          <button class="expanded-submenu-btn"
+                  [ngClass]="{'active': submenu.idMenu === activeSubMenuId}"
                   (click)="navigate(submenu)">
-            <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-lg"></fa-icon> 
-            <span *ngIf="!menuCerrado" class="flex-grow text-left">{{ submenu.menu_descripcion }}</span>
+            <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-sm submenu-icon"></fa-icon>
+            <span class="submenu-text">{{ submenu.menu_descripcion }}</span>
           </button>
-          <div *ngIf="menuCerrado" class="tooltip">
-            <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-sm"></fa-icon>
-            <span>{{ submenu.menu_descripcion }}</span>
-          </div>
         </li>
       </ul>
-    </li>
+    </div>
+  </div>
 
-    <!-- Botón de Perfil -->
-    <li class="relative">
-      <button class="menu-btn flex items-center gap-3 w-full" (click)="irAPerfil()">
-        <fa-icon [icon]="faUserCircle" class="text-lg text-blue-400"></fa-icon>
-        <span *ngIf="!menuCerrado" class="flex-grow text-left">Perfil</span>
+  <ul *ngIf="menu.submenus?.length && !menuCerrado"
+      class="submenu-open-list pl-6"
+      [class.open]="subMenuOpen[menu.idMenu!]">
+    <li *ngFor="let submenu of menu.submenus; trackBy: trackById" class="relative">
+      <button class="submenu-open-btn flex items-center gap-3 w-full"
+              [ngClass]="{'active': submenu.idMenu === activeSubMenuId}"
+              (click)="navigate(submenu)">
+        <fa-icon *ngIf="submenu.icono" [icon]="submenu.icono" class="text-lg submenu-open-icon"></fa-icon>
+        <span class="flex-grow text-left submenu-open-text">{{ submenu.menu_descripcion }}</span>
       </button>
-      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
-        <fa-icon [icon]="faUserCircle" class="text-lg text-blue-400"></fa-icon>
-        <span class="text-base">Perfil</span>
+    </li>
+  </ul>
+</li>
+
+    <li class="relative menu-item-list-element"
+        (mouseenter)="menuCerrado && showExpanded('perfil')"
+        (mouseleave)="menuCerrado && hideExpanded()">
+      <div class="menu-item-wrapper">
+        <button class="menu-btn flex items-center gap-3 w-full"
+                [class.expanded]="menuCerrado && activeTooltipId === 'perfil'"
+                [ngClass]="{'active': activeMenuId === 'perfil'}"
+                (click)="irAPerfil()">
+          <fa-icon [icon]="faUserCircle" class="text-lg text-blue-400 menu-icon"></fa-icon>
+          <span class="menu-btn-text flex-grow text-left">Perfil</span>
+        </button>
       </div>
     </li>
 
-    <!-- Botón de Cerrar Sesión -->
-    <li class="relative">
-      <button class="exit-btn flex items-center gap-3 w-full" (click)="logout()">
-        <fa-icon [icon]="faSignOutAlt" class="text-lg text-white drop-shadow-md"></fa-icon>
-        <span *ngIf="!menuCerrado" class="flex-grow text-left text-white">Cerrar Sesión</span>
-      </button>
-      <div *ngIf="menuCerrado" class="tooltip" (click)="$event.stopPropagation()">
-        <fa-icon [icon]="faSignOutAlt" class="text-lg text-white"></fa-icon>
-        <span class="text-base">Cerrar Sesión</span>
+    <li class="relative menu-item-list-element"
+        (mouseenter)="menuCerrado && showExpanded('logout')"
+        (mouseleave)="menuCerrado && hideExpanded()">
+      <div class="menu-item-wrapper">
+        <button class="exit-btn flex items-center gap-3 w-full"
+                [class.expanded]="menuCerrado && activeTooltipId === 'logout'"
+                (click)="logout()">
+          <fa-icon [icon]="faSignOutAlt" class="text-lg text-white drop-shadow-md menu-icon"></fa-icon>
+          <span class="menu-btn-text flex-grow text-left">Cerrar Sesión</span>
+        </button>
       </div>
     </li>
   </ul>
 </nav>
+

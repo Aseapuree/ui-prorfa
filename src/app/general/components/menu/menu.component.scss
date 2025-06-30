@@ -4,38 +4,142 @@ nav {
   transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
+  overflow: visible;
+  z-index: 50;
 }
 
 /* Menú retraído */
-.closed {
+nav.closed {
   width: 60px;
-  transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
 
-  ul {
-    li {
-      .menu-btn,
-      .exit-btn {
-        justify-content: center;
-        padding: 10px;
-      }
-
-      .menu-btn span,
-      .exit-btn span,
-      .submenu span {
-        display: none;
-      }
-
-      .submenu {
-        display: none;
-      }
+  .profile-section {
+    .user-name, .user-role {
+      display: none;
+    }
+    .initials-circle, .profile-image {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
     }
   }
-}
 
-/* Ajuste para el contenido principal */
-.closed + .content {
-  margin-left: 60px;
-  transition: margin-left 0.3s ease-in-out;
+  .menu-list {
+    .menu-item-list-element {
+      position: relative;
+    }
+
+    .menu-btn,
+    .exit-btn {
+      justify-content: center;
+      padding: 10px;
+      span.menu-btn-text,
+      span.submenu-toggle-icon {
+        display: none;
+      }
+
+      &.expanded {
+        width: 200px;
+        justify-content: flex-start;
+        background-color: var(--secondary-dark); /* Fondo cuando está expandido */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 55;
+
+        span.menu-btn-text {
+          display: inline-block !important;
+        }
+
+        &.active {
+          background-color: var(--active-bg-color) !important;
+          color: var(--active-text-color) !important;
+        }
+      }
+
+      &.active:not(.expanded) {
+        background-color: var(--active-bg-color);
+        border-left: 3px solid var(--active-text-color);
+        padding-left: 7px; /* Ajuste para el borde (10px original padding - 3px border) */
+      }
+    }
+
+    .submenu-open-list {
+      display: none; /* En modo cerrado, estos no se usan */
+    }
+  }
+
+  /* Panel de submenús que aparece al hacer hover o clic en modo cerrado */
+  .expanded-submenu-panel {
+    position: absolute;
+    left: 200px; /* Debe coincidir con el width de .menu-btn.expanded */
+    top: 0;
+    min-width: 220px;
+    background-color: var(--primary-dark);
+    border-left: 1px solid var(--border-color);
+    border-radius: 0 8px 8px 0;
+    box-shadow: 4px 0px 10px rgba(0, 0, 0, 0.25);
+    z-index: 60;
+    padding: 10px;
+    opacity: 0;
+    transform: translateX(-15px);
+    animation: fadeInSlideRight 0.25s forwards ease-out;
+    animation-delay: 0.05s;
+  }
+
+  @keyframes fadeInSlideRight {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .expanded-submenu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .expanded-submenu-item {
+    margin-bottom: 5px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .expanded-submenu-btn {
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    background-color: var(--secondary-dark);
+    color: var(--text-color);
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, transform 0.2s, border-color 0.2s, padding-left 0.2s;
+    font-size: 0.9em;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .submenu-icon {
+      font-size: 0.95em;
+      opacity: 0.8;
+    }
+
+    &:hover {
+      background-color: var(--primary-hover);
+      border-color: var(--border-color);
+      transform: translateX(4px);
+      color: #fff;
+    }
+
+    &.active {
+      background-color: var(--active-bg-color);
+      color: var(--active-text-color);
+      font-weight: 600;
+      transform: translateX(4px);
+      border-left: 3px solid var(--active-text-color);
+      padding-left: 9px; /* Ajustar padding por el borde (12px original - 3px) */
+    }
+  }
 }
 
 /* Botón de toggle */
@@ -47,173 +151,150 @@ nav {
   cursor: pointer;
   align-self: flex-end;
   padding: 5px;
-  transition: transform 0.3s;
+  margin-bottom: 10px;
+  transition: transform 0.3s, color 0.3s;
+  line-height: 1;
+
+  &:hover {
+    color: var(--primary-hover);
+  }
 }
 
-.toggle-menu:hover {
-  transform: rotate(90deg);
-}
-
-/* Botones principales del menú */
+/* Botones principales del menú (cuando el menú está ABIERTO) */
 .menu-btn,
 .exit-btn {
   width: 100%;
-  background-color: var(--secondary-dark);
+  background-color: transparent;
   color: var(--text-color);
   padding: 12px 15px;
-  font-weight: bold;
+  font-weight: 500;
   text-align: left;
   border-radius: 8px;
-  transition: background 0.3s, transform 0.2s;
-  border: 1px solid var(--border-color);
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s, border-color 0.2s, padding-left 0.2s;
+  border: 1px solid transparent;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   position: relative;
+  overflow: visible;
+  white-space: nowrap;
+
+  .menu-icon {
+    font-size: 1.1em;
+    opacity: 0.9;
+    min-width: 20px;
+  }
 }
 
 .menu-btn:hover,
 .exit-btn:hover {
   background-color: var(--primary-hover);
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  color: #fff;
+  border-color: var(--border-color);
 }
+
+/* Estilo activo para botones de menú principales (cuando el menú está ABIERTO) */
+.menu-btn.active {
+  background-color: var(--active-bg-color);
+  color: var(--active-text-color);
+  font-weight: 600;
+  border-left: 3px solid var(--active-text-color);
+  padding-left: 12px; /* Ajustar padding por el borde (15px original - 3px borde) */
+}
+
+.exit-btn.active {
+  background-color: var(--active-bg-color);
+  color: var(--active-text-color);
+  border-left: 3px solid var(--active-text-color);
+  padding-left: 12px;
+}
+
+// Estilo activo para botones de menú principales (cuando el menú está ABIERTO)
+.menu-btn.active {
+  background-color: var(--active-bg-color);
+  color: var(--active-text-color);
+  font-weight: 600;
+  border-left: 3px solid var(--active-text-color);
+  padding-left: 12px; // Ajustar padding por el borde (15px original - 3px borde)
+}
+// No se suele tener un estado "activo" persistente para logout, pero si lo necesitas:
+.exit-btn.active {
+    background-color: var(--active-bg-color);
+    color: var(--active-text-color);
+    border-left: 3px solid var(--active-text-color);
+    padding-left: 12px;
+}
+
 
 .exit-btn {
-  background-color: #e63946;
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 8px 8px;
 }
 
-.exit-btn:hover {
-  background-color: #d62828;
-}
-
-/* Icono de submenú */
-.submenu-icon {
-  font-size: 1.2rem;
-  color: white;
+/* Icono de submenú (flechita) cuando el menú está ABIERTO */
+.submenu-toggle-icon {
+  font-size: 0.8rem;
+  color: var(--text-color);
+  margin-left: auto;
   transition: transform 0.3s;
 }
 
-.submenu-icon:hover {
-  transform: scale(1.2);
-}
-
-/* Submenús desplegables */
-.submenu {
-  margin-left: 10px;
-  padding-left: 10px;
-  border-left: 2px solid var(--border-color);
-  transition: max-height 0.3s ease-in-out;
-  max-height: 500px;
+/* Submenús desplegables (cuando el menú está ABIERTO) */
+.submenu-open-list {
+  margin-left: 20px;
+  padding-left: 15px;
+  border-left: 1px solid var(--border-color);
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  max-height: 0; /* Inicia cerrado para animación */
+  opacity: 0;    /* Inicia invisible para animación */
   overflow: hidden;
+  list-style: none;
+
+  &.open {
+    max-height: 500px; /* Altura suficiente para los submenús */
+    opacity: 1;
+  }
 }
 
-.submenu-btn {
+.submenu-open-btn {
   width: 100%;
   text-align: left;
-  padding: 8px 15px;
-  background: var(--secondary-dark);
+  padding: 10px 15px;
+  background: transparent;
   border-radius: 6px;
   color: var(--text-color);
-  transition: background 0.3s, transform 0.2s;
-  border: 1px solid var(--border-color);
+  transition: background-color 0.2s, transform 0.2s, padding-left 0.2s, border-color 0.2s;
+  border: 1px solid transparent;
   display: flex;
   align-items: center;
   gap: 10px;
-  position: relative;
+  font-size: 0.95em;
+
+  .submenu-open-icon {
+    font-size: 1em;
+    opacity: 0.8;
+  }
 
   &:hover {
     background: var(--primary-hover);
-    transform: scale(1.03);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding-left: 20px;
+    color: #fff;
+    border-color: var(--border-color);
+  }
+
+  &.active {
+    background-color: var(--active-bg-color);
+    color: var(--active-text-color);
+    font-weight: 600;
+    padding-left: 17px; /* Ajustar por el borde (20px hover - 3px borde) */
+    border-left: 3px solid var(--active-text-color);
   }
 }
 
-/* Tooltip personalizado */
-.relative {
-  position: relative;
-}
-
-.tooltip {
-  display: none;
-  position: absolute;
-  left: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: linear-gradient(90deg, #1a2a44, #0d1b2a);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  font-size: 1rem;
-  white-space: nowrap;
-  z-index: 1000;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.relative:hover .tooltip {
-  display: flex;
-  opacity: 1;
-}
-
-/* Panel de submenús como tooltip */
-.submenu-tooltip {
-  display: none;
-  position: absolute;
-  left: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: linear-gradient(90deg, #1a2a44, #0d1b2a);
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.submenu-tooltip.active {
-  display: block;
-  opacity: 1;
-}
-
-.submenu-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.submenu-item {
-  margin-bottom: 5px;
-}
-
-.submenu-item:last-child {
-  margin-bottom: 0;
-}
-
-.submenu-btn {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--secondary-dark);
-  border-radius: 6px;
-  color: var(--text-color);
-  transition: background 0.3s, transform 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--primary-hover);
-    transform: scale(1.03);
-  }
-}
-
-/* Clases de colores para los iconos (sin cambios) */
+/* Clases de colores para los iconos */
 .text-green { color: #4CAF50; }
 .text-yellow { color: #FFD700; }
 .text-blue { color: #00BFFF; }

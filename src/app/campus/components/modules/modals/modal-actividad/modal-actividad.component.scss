@@ -1,3 +1,6 @@
+/* modal-actividad.component.scss */
+
+/* Estilos existentes (mantenerlos) */
 :host {
   display: block;
 }
@@ -28,42 +31,41 @@ mat-form-field {
 }
 
 mat-datepicker {
-  z-index: 1001; // Asegura que el datepicker esté encima de otros elementos
+  z-index: 1001;
 }
 
 .mat-mdc-form-field {
   .mat-mdc-text-field-wrapper {
-    background-color: #1f2937; // Equivalente a bg-gray-800
-    border-radius: 8px; // Bordes redondeados
+    background-color: #1f2937; /* bg-gray-800 */
+    border-radius: 8px;
     transition: box-shadow 0.3s ease;
   }
 
   .mat-mdc-form-field-input-control {
-    color: #ffffff !important; // Texto blanco
-    caret-color: #60a5fa !important; // Cursor azul claro (blue-400)
+    color: #ffffff !important; /* Texto blanco */
+    caret-color: #60a5fa !important; /* Cursor azul claro (blue-400) */
   }
 
   .mat-mdc-form-field-label {
-    color: #9ca3af !important; // Equivalente a text-gray-400
+    color: #9ca3af !important; /* text-gray-400 */
   }
 
-  // Eliminar el borde del mat-form-field
   .mat-mdc-form-field-outline {
-    display: none !important; // Ocultar el borde por completo
+    display: none !important;
   }
 
   &.mat-focused {
     .mat-mdc-form-field-outline {
-      display: none !important; // Ocultar el borde incluso al enfocar
+      display: none !important;
     }
     .mat-mdc-text-field-wrapper {
-      box-shadow: 0 0 0 2px #60a5fa; // Sombra azul claro al enfocar (blue-400)
+      box-shadow: 0 0 0 2px #60a5fa; /* Sombra azul claro al enfocar (blue-400) */
     }
   }
 }
 
 input[type="file"] {
-  color: #f3f4f6 !important; // Equivalente a text-gray-100
+  color: #f3f4f6 !important; /* text-gray-100 */
 }
 
 .overlay {
@@ -72,7 +74,7 @@ input[type="file"] {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7); // Fondo semitransparente más oscuro
+  background-color: rgba(0, 0, 0, 0.7); /* Fondo semitransparente más oscuro */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -80,26 +82,68 @@ input[type="file"] {
 }
 
 .mat-mdc-progress-spinner {
-  --mdc-circular-progress-active-indicator-color: #60a5fa !important; // Azul claro (blue-400)
+  --mdc-circular-progress-active-indicator-color: #60a5fa !important; /* Azul claro (blue-400) */
 }
 
 .mat-mdc-dialog-actions {
-  border-top: 1px solid #374151; // Separador gris oscuro (border-gray-700)
+  border-top: 1px solid #374151; /* Separador gris oscuro (border-gray-700) */
 }
 
-// Asegurar que los botones no tengan fondo por defecto
-.mat-mdc-button, .mat-mdc-raised-button {
-  background: none !important; // Eliminar fondo por defecto
-  color: white !important; // Texto blanco
+.mat-mdc-button,
+.mat-mdc-raised-button {
+  background: none !important;
+  color: white !important;
 }
 
 .mat-mdc-raised-button:hover {
-  background: #b90bd8 !important; // Fondo morado claro (purple-500)
+  background: #b90bd8 !important; /* Fondo morado claro (purple-500) */
 }
 
-.mat-mdc-button {
-  &.mat-primary {
-    background: none !important; // Eliminar fondo por defecto del botón primario
+.mat-mdc-button.mat-primary {
+  background: none !important;
+}
+
+/* Nuevos estilos mejorados para mat-select con ::ng-deep */
+::ng-deep mat-form-field {
+  /* Color del texto del valor seleccionado */
+  .mat-mdc-select-value {
+    color: #ffffff !important; /* Blanco */
+  }
+
+  /* Color del placeholder (label) */
+  .mat-mdc-form-field-label {
+    color: #9ca3af !important; /* text-gray-400 */
+  }
+
+  /* Color del panel desplegable */
+  .mat-mdc-select-panel {
+    background-color: #1f2937 !important; /* bg-gray-800 */
+  }
+
+  /* Color del texto de las opciones */
+  .mat-mdc-option {
+    color: #ffffff !important; /* Blanco */
+  }
+
+  /* Estilo para opciones al pasar el ratón o seleccionadas */
+  .mat-mdc-option:hover,
+  .mat-mdc-option.mat-mdc-option-active {
+    background-color: #4b5563 !important; /* bg-gray-600 */
+    color: #ffffff !important; /* Blanco puro */
   }
 }
 
+/* Forzar el color blanco para el icono del calendario */
+::ng-deep mat-datepicker-toggle {
+  color: #ffffff !important; /* Blanco */
+}
+
+/* Asegurar que el SVG dentro del toggle también sea blanco */
+::ng-deep mat-datepicker-toggle .mat-mdc-icon-button {
+  color: #ffffff !important; /* Blanco */
+}
+
+/* Cambiar el color del SVG específicamente */
+::ng-deep mat-datepicker-toggle .mat-mdc-icon-button svg {
+  fill: #ffffff !important; /* Blanco para el icono SVG */
+}

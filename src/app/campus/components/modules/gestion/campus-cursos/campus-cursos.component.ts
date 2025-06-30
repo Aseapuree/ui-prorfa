@@ -18,6 +18,7 @@ import { TooltipComponent } from '../../../../../general/components/tooltip/tool
 import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 import { ActionConfig, ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
 import { ModalCompetenciasComponent } from '../../modals/modal-competencias/modal-competencias.component';
+import { SEARCH_INTERMEDIATE_REGEX, SEARCH_NO_NUMBERS_INTERMEDIATE_REGEX, SEARCH_NO_NUMBERS_REGEX, SEARCH_REGEX, SEARCH_VALIDATION_MESSAGES } from '../../../../../general/components/const/const';
 
 
 @Component({
@@ -166,8 +167,7 @@ export class CampusCursosComponent {
 
   isKeywordValid(): boolean {
     if (!this.keyword) return true;
-    const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+)*$/;
-    return regex.test(this.keyword.trim());
+    return SEARCH_NO_NUMBERS_REGEX.test(this.keyword.trim());
   }
 
   onInputChange(event: Event): void {
@@ -178,7 +178,7 @@ export class CampusCursosComponent {
       input.value = this.lastValidKeyword;
       this.keyword = this.lastValidKeyword;
       this.notificationService.showNotification(
-        'No se permiten espacios al inicio.',
+        SEARCH_VALIDATION_MESSAGES.NO_LEADING_SPACE,
         'info'
       );
       this.cdr.detectChanges();
@@ -195,12 +195,11 @@ export class CampusCursosComponent {
       return;
     }
 
-    const intermediateRegex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+( [a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)*$/;
-    if (!intermediateRegex.test(newValue)) {
+    if (!SEARCH_NO_NUMBERS_INTERMEDIATE_REGEX.test(newValue)) {
       input.value = this.lastValidKeyword;
       this.keyword = this.lastValidKeyword;
       this.notificationService.showNotification(
-        'Solo se permiten letras, números, acentos, ñ y un solo espacio entre palabras.',
+        SEARCH_VALIDATION_MESSAGES.NO_NUMBERS_INVALID_FORMAT,
         'info'
       );
       this.cdr.detectChanges();
@@ -361,41 +360,65 @@ export class CampusCursosComponent {
   }
 
   buscarCursos(): void {
-    if (!this.isKeywordValid()) {
-      this.notificationService.showNotification(
-        'El término de búsqueda no es válido. Use solo letras, números, acentos, ñ y un solo espacio entre palabras.',
-        'info'
-      );
-      return;
-    }
-
-    if (!this.keyword.trim()) {
-      this.cargarCursos();
-      return;
-    }
-
-    this.courseService.buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir).subscribe({
-      next: (resultado) => {
-        this.totalCursos = resultado.length;
-        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
-        const startIndex = (this.page - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        this.cursos = resultado.slice(startIndex, endIndex);
-        this.updatePageSizeOptions();
-        if (this.page > this.totalPages) {
-          this.page = 1;
-          this.buscarCursos();
-          return;
-        }
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.cursos = [];
-        this.totalCursos = 0;
-        this.totalPages = 1;
-        this.notificationService.showNotification('Error al buscar cursos: ' + err.message, 'error');
-        console.error('Error en la búsqueda:', err);
-      },
-    });
+  if (!this.isKeywordValid()) {
+    this.notificationService.showNotification(
+      SEARCH_VALIDATION_MESSAGES.NO_NUMBERS_INVALID_FORMAT,
+      'info'
+    );
+    return;
   }
+
+  // Si el keyword está vacío, cargar todos los cursos
+  if (!this.keyword.trim()) {
+    this.cargarCursos();
+    return;
+  }
+
+  // Activar el spinner
+  this.isLoading = true;
+
+  this.courseService.buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir).subscribe({
+    next: (resultado) => {
+      this.totalCursos = resultado.length;
+      this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
+      const startIndex = (this.page - 1) * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
+      this.cursos = resultado.slice(startIndex, endIndex);
+
+      // Mostrar notificación si no se encontraron resultados
+      if (resultado.length === 0) {
+        this.notificationService.showNotification(
+          'No se encontraron cursos con el criterio de búsqueda.',
+          'info'
+        );
+      }
+
+      this.updatePageSizeOptions();
+      if (this.page > this.totalPages && this.totalPages > 0) {
+        this.page = 1;
+        this.buscarCursos();
+        return;
+      }
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      this.cursos = [];
+      this.totalCursos = 0;
+      this.totalPages = 1;
+      this.notificationService.showNotification(
+        'Error al buscar cursos: ' + err.message,
+        'error'
+      );
+      console.error('Error en la búsqueda:', err);
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    },
+    complete: () => {
+      // Asegurarse de que el spinner se desactive
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    },
+  });
+}
 }

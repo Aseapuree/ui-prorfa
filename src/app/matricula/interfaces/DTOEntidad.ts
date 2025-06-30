@@ -8,7 +8,29 @@ export class Entidad {
   correoColegio?: string;
   logoColegio?: string;
   documentos?: DocumentoEntidad;
+  datosngs?: DatosNGS;
 }
+
+
+export interface DatosNGS {
+  niveles?: Nivel[];
+}
+
+export interface Nivel {
+  nombre: string;
+  grados?: Grado[];
+}
+
+export interface Grado {
+  nombre: string;
+  secciones?: SeccionVacantes[];
+}
+
+export interface SeccionVacantes {
+  nombre: string;
+  vacantes: number;
+}
+
 
 export class DocumentoEntidad {
   necesarios?: Necesarios;
@@ -33,4 +55,3 @@ export class Intercambio {
 export class Discapacidad {
   documento1?: string; // CERTIFICADO DE DISCAPACIDAD
 }
-

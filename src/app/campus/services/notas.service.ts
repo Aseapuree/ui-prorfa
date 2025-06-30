@@ -18,12 +18,40 @@ interface DTOAlumno {
   fechaActualizacion: string | null;
 }
 
+// Interfaz para la respuesta del endpoint /profesor-curso/{idProfesorCurso}
+interface DTOCursoNotas {
+  curso: {
+    idProfesorCurso: string;
+    usuario: any; // Ajusta según el modelo real
+    curso: any;   // Ajusta según el modelo real
+    grado: string;
+    seccion: string;
+    nivel: string;
+    estado: number;
+    fechaAsignacion: string;
+    fechaActualizacion: string | null;
+  };
+  sesiones: {
+    sesion: {
+      idSesion: string;
+      infoCurso: any; // Ajusta según el modelo real
+      titulo: string;
+      descripcion: string;
+      fechaAsignada: string;
+      fechaActualizacion: string | null;
+      actividades: any[]; // Ajusta según el modelo real
+      profesorGuardar: string | null;
+    };
+    notas: DTONotaResponse[]; // Ajusta si el backend devuelve un formato diferente
+  }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class NotasService {
   private urlBase = "http://localhost:8080/v1/notas";
-  private alumnoUrlBase = "http://localhost:8080/v1/alumnos"; // URL base para el endpoint de alumnos
+  private alumnoUrlBase = "http://localhost:8080/v1/alumnos";
 
   constructor(private clienteHttp: HttpClient) { }
 
@@ -98,6 +126,25 @@ export class NotasService {
       catchError(error => {
         console.error('Error al registrar la nota:', error);
         return throwError(() => new Error('Error al registrar la nota: ' + (error.error?.message || error.message)));
+      })
+    );
+  }
+
+  // Método para listar las notas por profesor-curso
+  listarNotasPorProfesorCurso(idProfesorCurso: string): Observable<DTOResponse<DTOCursoNotas>> {
+    console.log('Listando notas para el profesor-curso:', idProfesorCurso);
+    return this.clienteHttp.get<DTOResponse<DTOCursoNotas>>(`${this.urlBase}/profesor-curso/${idProfesorCurso}`, { withCredentials: true }).pipe(
+      map(response => {
+        console.log('Respuesta del servidor (listarNotasPorProfesorCurso):', response);
+        if (response.code === 200 && response.data) {
+          return response;
+        } else {
+          throw new Error('No se encontraron notas para el curso');
+        }
+      }),
+      catchError(error => {
+        console.error('Error al listar las notas por profesor-curso:', error);
+        return throwError(() => new Error('Error al listar las notas por profesor-curso: ' + (error.message || error)));
       })
     );
   }
