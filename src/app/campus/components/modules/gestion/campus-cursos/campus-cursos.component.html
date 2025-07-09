@@ -92,11 +92,10 @@
 
   <!-- Paginación -->
   <app-pagination
-    [page]="page"
-    [totalPages]="totalPages"
-    [maxSize]="7"
-    (pageChange)="onPageChange($event)"
-  ></app-pagination>
+  [page]="page"
+  [totalPages]="totalPages"
+  (pageChange)="onPageChange($event)"
+></app-pagination>
   <!-- Componente de notificaciones -->
   <app-notification></app-notification>
 </section>

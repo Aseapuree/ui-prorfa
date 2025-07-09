@@ -160,7 +160,6 @@
       *ngIf="!loading && totalPages > 1"
       [page]="currentPage"
       [totalPages]="totalPages"
-      [maxSize]="maxPaginationSize"
       (pageChange)="onPageChange($event)"
     ></app-pagination>
   </div>
