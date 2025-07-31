@@ -141,40 +141,49 @@
     <!-- Fecha Inicio -->
 <div class="w-60 space-y-3">
   <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Inicio</label>
-  <input
-    type="date"
-    id="fechaInicio"
-    [(ngModel)]="filters.fechaInicio"
-    (ngModelChange)="onDateChange($event, 'fechaInicio')"
-    (input)="onDateInput($event, 'fechaInicio')"
-    (blur)="onBlurDate($event, 'fechaInicio')"
-    [max]="maxDate"
-    [ngClass]="{'border-red-500': !isValidFechaInicio, 'border-gray-300': isValidFechaInicio}"
-    class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
-    placeholder="yyyy-mm-dd"
-  />
-  <p *ngIf="!isValidFechaInicio && filters.fechaInicio" class="text-xs text-red-500 mt-1">
-    Fecha inválida. El año no puede ser mayor a {{ currentYear }}. Use formato yyyy-mm-dd.
+  <mat-form-field class="w-full" appearance="fill">
+    <input
+      matInput
+      [matDatepicker]="pickerStart"
+      [(ngModel)]="startDate"
+      (dateChange)="onDateChange($event.value, 'fechaInicio')"
+      (blur)="onBlurDate($event, 'fechaInicio')"
+      [max]="maxDateObj"
+      placeholder="dd/mm/yyyy"
+      [ngClass]="{'border-red-500': !isValidFechaInicio, 'border-gray-300': isValidFechaInicio}"
+      class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
+    <mat-datepicker #pickerStart></mat-datepicker>
+  </mat-form-field>
+  <p *ngIf="!isValidFechaInicio && startDate" class="text-xs text-red-500 mt-1">
+    Fecha inválida. El año no puede ser mayor a {{ currentYear }}.
   </p>
 </div>
 
-<!-- Fecha Fin -->
+      <!-- Fecha Fin -->
 <div class="w-60 space-y-3">
   <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Fin</label>
-  <input
-    type="date"
-    id="fechaFin"
-    [(ngModel)]="filters.fechaFin"
-    (ngModelChange)="onDateChange($event, 'fechaFin')"
-    (input)="onDateInput($event, 'fechaFin')"
-    (blur)="onBlurDate($event, 'fechaFin')"
-    [max]="maxDate"
-    [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
-    class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
-    placeholder="yyyy-mm-dd"
-  />
-  <p *ngIf="!isValidFechaFin && filters.fechaFin" class="text-xs text-red-500 mt-1">
-    Fecha inválida. El año no puede ser mayor a {{ currentYear }}. Use formato yyyy-mm-dd.
+  <mat-form-field class="w-full" appearance="fill">
+    <input
+  matInput
+  [matDatepicker]="pickerEnd"
+  [(ngModel)]="endDate"
+  (dateChange)="onDateChange($event.value, 'fechaFin')"
+  (dateInput)="onDateInputChange($event.value, 'fechaFin')"
+  (blur)="onBlurDate($event, 'fechaFin')"
+  [max]="maxDateObj"
+  [min]="startDate ? startDate : null"
+  [matDatepickerFilter]="dateFilter"
+  placeholder="dd/mm/yyyy"
+  [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
+  class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
+/>
+    <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+    <mat-datepicker #pickerEnd></mat-datepicker>
+  </mat-form-field>
+  <p *ngIf="!isValidFechaFin && endDate" class="text-xs text-red-500 mt-1">
+    Fecha inválida. El año no puede ser mayor a {{ currentYear }} o anterior a la fecha de inicio.
   </p>
 </div>
   </div>
@@ -271,7 +280,6 @@
   <app-pagination
     [page]="page"
     [totalPages]="totalPages"
-    [maxSize]="7"
     (pageChange)="onPageChange($event)"
   ></app-pagination>
   <app-notification></app-notification>

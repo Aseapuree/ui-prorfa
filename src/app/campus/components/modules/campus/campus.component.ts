@@ -9,7 +9,7 @@ import { ProfesorCurso } from '../../../interface/ProfesorCurso';
 import { lastValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
-import { UserData, ValidateService } from '../../../../services/validateAuth.service';
+import { UserData, ValidateService } from '../../../../core/services/validateAuth.service'
 import { UsuarioService } from '../../../services/usuario.service';
 import { AlumnoCursoService } from '../../../services/alumno-curso.service';
 import { AlumnoCurso } from '../../../interface/AlumnoCurso';

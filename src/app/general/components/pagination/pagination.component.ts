@@ -12,21 +12,29 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 export class PaginationComponent {
   @Input() page: number = 1;
   @Input() totalPages: number = 1;
-  @Input() maxSize: number = 7;
   @Output() pageChange = new EventEmitter<number>();
 
   get pagesToShow(): number[] {
     const pages: number[] = [];
-    const half = Math.floor(this.maxSize / 2);
-    let start = Math.max(1, this.page - half);
-    let end = Math.min(this.totalPages, start + this.maxSize - 1);
+    const maxPagesToShow = 3; // Mostrar solo 3 páginas
 
-    if (end - start + 1 < this.maxSize) {
-      start = Math.max(1, end - this.maxSize + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
+    if (this.totalPages <= 4) {
+      // Si hay 4 o menos páginas, mostrar todas
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Lógica para más de 4 páginas
+      if (this.page <= 2) {
+        // Si estamos en las primeras páginas (1 o 2)
+        pages.push(1, 2, 3);
+      } else if (this.page >= this.totalPages - 1) {
+        // Si estamos en las últimas páginas
+        pages.push(this.totalPages - 2, this.totalPages - 1, this.totalPages);
+      } else {
+        // Si estamos en una página intermedia
+        pages.push(this.page - 1, this.page, this.page + 1);
+      }
     }
 
     return pages;
@@ -39,10 +47,12 @@ export class PaginationComponent {
   }
 
   shouldShowEllipsisBefore(): boolean {
-    return this.pagesToShow[0] > 1;
+    // Mostrar puntos suspensivos antes si la primera página visible es mayor a 2
+    return this.totalPages > 4 && this.pagesToShow[0] > 2;
   }
 
   shouldShowEllipsisAfter(): boolean {
-    return this.pagesToShow[this.pagesToShow.length - 1] < this.totalPages;
+    // Mostrar puntos suspensivos después si la última página visible es menor que totalPages - 1
+    return this.totalPages > 4 && this.pagesToShow[this.pagesToShow.length - 1] < this.totalPages - 1;
   }
 }

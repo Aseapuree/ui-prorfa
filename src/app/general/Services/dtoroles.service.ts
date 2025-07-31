@@ -7,11 +7,15 @@ import { DTOResponse } from '../Interface/DTOResponse';
     providedIn: 'root'
   })
   export class DTOrolesService {
-    private url = 'http://localhost:8080/v1/usuario/mostrar?id=';
+    private url = 'http://localhost:8080/v1/';
   
     constructor(private http: HttpClient) { }
   
     getRol(idrolu:any): Observable<DTOResponse<DTORoles>> {
-      return this.http.get<DTOResponse<DTORoles>>(`${this.url}${idrolu}`,{withCredentials:true});
+      return this.http.get<DTOResponse<DTORoles>>(`${this.url}usuario/mostrar?id=${idrolu}`,{withCredentials:true});
+    }
+
+    getRoles():Observable<DTORoles[]>{
+      return this.http.get<[]>(`${this.url}roles/listar`,{withCredentials:true});
     }
   }
