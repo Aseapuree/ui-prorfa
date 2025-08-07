@@ -143,7 +143,9 @@
       th {
         background-color: var(--secondary-dark, #2a3448);
         font-weight: 600;
-        color: var(--accent-color, #7dd3fc);
+        /* Cambio: Color más visible para los encabezados */
+        color: #a3e4ff; /* Azul claro brillante para mejor contraste */
+        /* Comentario: Puedes mover este color a una variable CSS (ej. --header-color) en :root de tu archivo global si quieres personalizarlo más adelante */
         position: sticky;
         top: 0;
         z-index: 1;
@@ -177,7 +179,9 @@
 
             th {
               background-color: var(--primary-dark, #1a2330);
-              color: var(--accent-color, #7dd3fc);
+              /* Cambio: Color más visible para los encabezados de detalles */
+              color: #a3e4ff; /* Azul claro brillante para mejor contraste */
+              /* Comentario: Puedes mover este color a una variable CSS (ej. --header-detail-color) en :root de tu archivo global si quieres personalizarlo más adelante */
             }
 
             td {
