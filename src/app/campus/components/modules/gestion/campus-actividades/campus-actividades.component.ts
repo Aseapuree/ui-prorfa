@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SesionService } from '../../../../services/sesion.service';
-import { DTOActividad, DTOActividadesSesion } from '../../../../interface/DTOActividad';
+import {  DTOActividadesSesion } from '../../../../interface/DTOActividad';
 import { MatDialog } from '@angular/material/dialog';
 import { ModalActividadComponent } from '../../modals/modal-actividad/modal-actividad.component';
 import { CommonModule } from '@angular/common';
@@ -16,7 +16,7 @@ import { UserData, ValidateService } from '../../../../../core/services/validate
 import { lastValueFrom } from 'rxjs';
 import { AlumnoCursoService } from '../../../../services/alumno-curso.service';
 import { AsistenciaComponent } from '../../../../../general/components/asistencia/asistencia.component';
-import { Actividad } from '../../../../interface/AlumnoCurso';
+import { DTOActividad } from '../../../../interface/DTOActividad';
 import { NotasService } from '../../../../services/notas.service';
 import { DTONota, AlumnoNotas, ActividadNota, DTONotaResponse } from '../../../../interface/DTONota';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +27,7 @@ import { faStickyNote as farStickyNote } from '@fortawesome/free-regular-svg-ico
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
 // Nueva interfaz sin esActividadPresencial
-interface ActividadWithPresencial extends DTOActividad, Actividad {}
+interface ActividadWithPresencial extends DTOActividad {}
 
 interface Alumno {
   idAlumno: string;
@@ -76,7 +76,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
   actividadSeleccionada: TipoActividad = 'introducciones';
   contenidoActual: { tipo: 'pdf' | 'video' | 'text' | 'docx'; url: string; actividad: ActividadWithPresencial } | null = null;
   errorLoadingFile: boolean = false;
-  actividadesOriginales: Actividad[] = [];
+  actividadesOriginales: DTOActividad[] = [];
   actividadesActuales: ActividadWithPresencial[] = [];
   isAddButtonDisabled: boolean = false;
   fechaAsignada: string | null = null;
@@ -602,7 +602,7 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
       console.log('Filtrando actividades para tipo:', tipoEsperadoNormalized);
 
       const actividadesFiltradas = this.actividadesOriginales.filter(a => {
-        const actividad = a as Actividad;
+        const actividad = a as DTOActividad;
         if (!actividad.actividadTipo) {
           console.warn('Actividad sin actividadTipo:', actividad);
           return false;
