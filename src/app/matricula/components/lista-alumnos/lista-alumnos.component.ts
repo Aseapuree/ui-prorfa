@@ -4,7 +4,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 import { NotasService } from '../../../campus/services/notas.service';
-import { catchError, map, throwError } from 'rxjs';
+
 import { PaginationComponent } from '../../../general/components/pagination/pagination.component';
 
 @Component({
