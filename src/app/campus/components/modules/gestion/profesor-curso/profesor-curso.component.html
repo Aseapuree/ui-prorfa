@@ -21,239 +21,374 @@
     </div>
   </div>
 
- <!-- Filtros -->
-<div class="mt-4 flex flex-col gap-4 w-full">
-  <!-- Todos los filtros en un solo div -->
-  <div class="flex flex-wrap gap-4 sm:gap-6">
-    <!-- Filtro de Profesor -->
-    <div class="w-60 space-y-3">
-      <label for="profesorId" class="block text-sm font-medium text-gray-700 dark:text-white">Profesor</label>
-      <input
-        type="text"
-        id="profesorId"
-        [(ngModel)]="filters.profesorId"
-        (input)="onInputChange($event, 'profesorId')"
-        placeholder="Nombre del profesor"
-        class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-      />
-    </div>
-
-    <!-- Filtro de Curso -->
-    <div class="w-60 space-y-3">
-      <label for="cursoId" class="block text-sm font-medium text-gray-700 dark:text-white">Curso</label>
-      <input
-        type="text"
-        id="cursoId"
-        [(ngModel)]="filters.cursoId"
-        (input)="onInputChange($event, 'cursoId')"
-        placeholder="Nombre del curso"
-        class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-      />
-    </div>
-
-    <!-- Filtro de Nivel -->
-    <div class="w-60 space-y-3">
-      <label for="nivel" class="block text-sm font-medium text-gray-700 dark:text-white">Nivel</label>
-      <div class="relative">
-        <select
-          id="nivel"
-          [(ngModel)]="filters.nivel"
-          (change)="onNivelChange()"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-          [ngClass]="{'border-teal-500': filters.nivel, 'border-gray-200': !filters.nivel}"
+  <!-- Filtros -->
+  <div class="mt-4 flex flex-col gap-4 w-full">
+    <!-- Todos los filtros en un solo div -->
+    <div class="flex flex-wrap gap-4 sm:gap-6">
+      <!-- Filtro de Profesor -->
+      <div class="w-60 space-y-3">
+        <label
+          for="profesorId"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Profesor</label
         >
-          <option value="">Seleccionar nivel</option>
-          <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
-        </select>
-        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.nivel">
-          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+        <input
+          type="text"
+          id="profesorId"
+          [(ngModel)]="filters.profesorId"
+          (input)="onInputChange($event, 'profesorId')"
+          placeholder="Nombre del profesor"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <!-- Filtro de Curso -->
+      <div class="w-60 space-y-3">
+        <label
+          for="cursoId"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Curso</label
+        >
+        <input
+          type="text"
+          id="cursoId"
+          [(ngModel)]="filters.cursoId"
+          (input)="onInputChange($event, 'cursoId')"
+          placeholder="Nombre del curso"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <!-- Filtro de Nivel -->
+      <div class="w-60 space-y-3">
+        <label
+          for="nivel"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Nivel</label
+        >
+        <div class="relative">
+          <select
+            id="nivel"
+            [(ngModel)]="filters.nivel"
+            (change)="onNivelChange()"
+            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+            [ngClass]="{
+              'border-teal-500': filters.nivel,
+              'border-gray-200': !filters.nivel
+            }"
+          >
+            <option value="">Seleccionar nivel</option>
+            <option *ngFor="let nivel of niveles" [value]="nivel">
+              {{ nivel }}
+            </option>
+          </select>
+          <div
+            class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
+            *ngIf="filters.nivel"
+          >
+            <svg
+              class="shrink-0 size-4 text-teal-500"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Filtro de Grado -->
-    <div class="w-60 space-y-3">
-      <label for="grado" class="block text-sm font-medium text-gray-700 dark:text-white">Grado</label>
-      <div class="relative">
-        <select
-          id="grado"
-          [(ngModel)]="filters.grado"
-          (ngModelChange)="onGradoChange()"
-          [disabled]="!filters.nivel"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-          [ngClass]="{'border-teal-500': filters.grado, 'border-gray-200': !filters.grado, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+      <!-- Filtro de Grado -->
+      <div class="w-60 space-y-3">
+        <label
+          for="grado"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Grado</label
         >
-          <option value="">Seleccionar grado</option>
-          <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
-        </select>
-        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.grado">
-          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+        <div class="relative">
+          <select
+            id="grado"
+            [(ngModel)]="filters.grado"
+            (ngModelChange)="onGradoChange()"
+            [disabled]="!filters.nivel"
+            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+            [ngClass]="{
+              'border-teal-500': filters.grado,
+              'border-gray-200': !filters.grado,
+              'opacity-50 cursor-not-allowed': !filters.nivel
+            }"
+          >
+            <option value="">Seleccionar grado</option>
+            <option *ngFor="let grado of grados" [value]="grado">
+              {{ grado }}
+            </option>
+          </select>
+          <div
+            class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
+            *ngIf="filters.grado"
+          >
+            <svg
+              class="shrink-0 size-4 text-teal-500"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Filtro de Sección -->
-    <div class="w-60 space-y-3">
-      <label for="seccion" class="block text-sm font-medium text-gray-700 dark:text-white">Sección</label>
-      <div class="relative">
-        <select
-          id="seccion"
-          [(ngModel)]="filters.seccion"
-          [disabled]="!filters.nivel"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-          [ngClass]="{'border-teal-500': filters.seccion, 'border-gray-200': !filters.seccion, 'opacity-50 cursor-not-allowed': !filters.nivel}"
+      <!-- Filtro de Sección -->
+      <div class="w-60 space-y-3">
+        <label
+          for="seccion"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Sección</label
         >
-          <option value="">Seleccionar sección</option>
-          <option *ngFor="let seccion of secciones" [value]="seccion.nombre">{{ seccion.nombre }}</option> <!-- Se agrego .nombre para manejar la nueva estructura de entidad-->
-        </select>
-        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.seccion">
-          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+        <div class="relative">
+          <select
+            id="seccion"
+            [(ngModel)]="filters.seccion"
+            [disabled]="!filters.nivel"
+            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+            [ngClass]="{
+              'border-teal-500': filters.seccion,
+              'border-gray-200': !filters.seccion,
+              'opacity-50 cursor-not-allowed': !filters.nivel
+            }"
+          >
+            <option value="">Seleccionar sección</option>
+            <option *ngFor="let seccion of secciones" [value]="seccion.nombre">
+              {{ seccion.nombre }}
+            </option>
+            <!-- Se agrego .nombre para manejar la nueva estructura de entidad-->
+          </select>
+          <div
+            class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
+            *ngIf="filters.seccion"
+          >
+            <svg
+              class="shrink-0 size-4 text-teal-500"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Tipo de Fecha -->
-    <div class="w-60 space-y-3">
-      <label for="fechaTipo" class="block text-sm font-medium text-gray-700 dark:text-white">Tipo de Fecha</label>
-      <div class="relative">
-        <select
-          id="fechaTipo"
-          [(ngModel)]="filters.fechaTipo"
-          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
-          [ngClass]="{'border-teal-500': filters.fechaTipo, 'border-gray-200': !filters.fechaTipo}"
+      <!-- Tipo de Fecha -->
+      <div class="w-60 space-y-3">
+        <label
+          for="fechaTipo"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Tipo de Fecha</label
         >
-          <option *ngFor="let tipo of fechaTipos" [value]="tipo.value">{{ tipo.label }}</option>
-        </select>
-        <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8" *ngIf="filters.fechaTipo">
-          <svg class="shrink-0 size-4 text-teal-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+        <div class="relative">
+          <select
+            id="fechaTipo"
+            [(ngModel)]="filters.fechaTipo"
+            class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-teal-500 disabled:opacity-50 disabled:pointer-events-none bg-white border-gray-300 text-gray-900"
+            [ngClass]="{
+              'border-teal-500': filters.fechaTipo,
+              'border-gray-200': !filters.fechaTipo
+            }"
+          >
+            <option *ngFor="let tipo of fechaTipos" [value]="tipo.value">
+              {{ tipo.label }}
+            </option>
+          </select>
+          <div
+            class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
+            *ngIf="filters.fechaTipo"
+          >
+            <svg
+              class="shrink-0 size-4 text-teal-500"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Fecha Inicio -->
-<div class="w-60 space-y-3">
-  <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Inicio</label>
-  <mat-form-field class="w-full" appearance="fill">
-    <input
-      matInput
-      [matDatepicker]="pickerStart"
-      [(ngModel)]="startDate"
-      (dateChange)="onDateChange($event.value, 'fechaInicio')"
-      (blur)="onBlurDate($event, 'fechaInicio')"
-      [max]="maxDateObj"
-      placeholder="dd/mm/yyyy"
-      [ngClass]="{'border-red-500': !isValidFechaInicio, 'border-gray-300': isValidFechaInicio}"
-      class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
-    />
-    <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
-    <mat-datepicker #pickerStart></mat-datepicker>
-  </mat-form-field>
-  <p *ngIf="!isValidFechaInicio && startDate" class="text-xs text-red-500 mt-1">
-    Fecha inválida. El año no puede ser mayor a {{ currentYear }}.
-  </p>
-</div>
+      <!-- Fecha Inicio -->
+      <div class="w-60 space-y-3">
+        <label
+          for="fechaInicio"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Fecha Inicio</label
+        >
+        <mat-form-field class="w-full" appearance="fill">
+          <input
+            matInput
+            [matDatepicker]="pickerStart"
+            [(ngModel)]="startDate"
+            (dateChange)="onDateChange($event.value, 'fechaInicio')"
+            (blur)="onBlurDate($event, 'fechaInicio')"
+            [max]="maxDateObj"
+            placeholder="dd/mm/yyyy"
+            [ngClass]="{
+              'border-red-500': !isValidFechaInicio,
+              'border-gray-300': isValidFechaInicio
+            }"
+            class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
+          />
+          <mat-datepicker-toggle
+            matIconSuffix
+            [for]="pickerStart"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #pickerStart></mat-datepicker>
+        </mat-form-field>
+        <p
+          *ngIf="!isValidFechaInicio && startDate"
+          class="text-xs text-red-500 mt-1"
+        >
+          Fecha inválida. El año no puede ser mayor a {{ currentYear }}.
+        </p>
+      </div>
 
       <!-- Fecha Fin -->
-<div class="w-60 space-y-3">
-  <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Fin</label>
-  <mat-form-field class="w-full" appearance="fill">
-    <input
-  matInput
-  [matDatepicker]="pickerEnd"
-  [(ngModel)]="endDate"
-  (dateChange)="onDateChange($event.value, 'fechaFin')"
-  (dateInput)="onDateInputChange($event.value, 'fechaFin')"
-  (blur)="onBlurDate($event, 'fechaFin')"
-  [max]="maxDateObj"
-  [min]="startDate ? startDate : null"
-  [matDatepickerFilter]="dateFilter"
-  placeholder="dd/mm/yyyy"
-  [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
-  class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
-/>
-    <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
-    <mat-datepicker #pickerEnd></mat-datepicker>
-  </mat-form-field>
-  <p *ngIf="!isValidFechaFin && endDate" class="text-xs text-red-500 mt-1">
-    Fecha inválida. El año no puede ser mayor a {{ currentYear }} o anterior a la fecha de inicio.
-  </p>
-</div>
-  </div>
-
-  <!-- Selector de cantidad de datos por página y botones -->
-  <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-    <!-- Selector a la izquierda -->
-    <div class="flex items-center">
-      <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">
-        Mostrar:
-      </label>
-      <select
-        id="itemsPerPage"
-        [(ngModel)]="itemsPerPage"
-        (ngModelChange)="onItemsPerPageChange($event)"
-        class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
-      >
-        <option *ngFor="let option of pageSizeOptions" [value]="option">
-          {{ option }}
-        </option>
-      </select>
-      <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
+      <div class="w-60 space-y-3">
+        <label
+          for="fechaFin"
+          class="block text-sm font-medium text-gray-700 dark:text-white"
+          >Fecha Fin</label
+        >
+        <mat-form-field class="w-full" appearance="fill">
+          <input
+            matInput
+            [matDatepicker]="pickerEnd"
+            [(ngModel)]="endDate"
+            (dateChange)="onDateChange($event.value, 'fechaFin')"
+            (dateInput)="onDateInputChange($event.value, 'fechaFin')"
+            (blur)="onBlurDate($event, 'fechaFin')"
+            [max]="maxDateObj"
+            [min]="startDate ? startDate : null"
+            [matDatepickerFilter]="dateFilter"
+            placeholder="dd/mm/yyyy"
+            [ngClass]="{
+              'border-red-500': !isValidFechaFin,
+              'border-gray-300': isValidFechaFin
+            }"
+            class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
+          />
+          <mat-datepicker-toggle
+            matIconSuffix
+            [for]="pickerEnd"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #pickerEnd></mat-datepicker>
+        </mat-form-field>
+        <p
+          *ngIf="!isValidFechaFin && endDate"
+          class="text-xs text-red-500 mt-1"
+        >
+          Fecha inválida. El año no puede ser mayor a {{ currentYear }} o
+          anterior a la fecha de inicio.
+        </p>
+      </div>
     </div>
 
-    <!-- Botones a la derecha -->
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- Botón Buscar -->
-      <app-tooltip tooltipText="Buscar asignaciones">
-        <button
-          (click)="buscarAsignaciones()"
-          [disabled]="!isFormValid()"
-          class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+    <!-- Selector de cantidad de datos por página y botones -->
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+      <!-- Selector a la izquierda -->
+      <div class="flex items-center">
+        <label
+          for="itemsPerPage"
+          class="text-sm text-gray-500 dark:text-gray-400 mr-2"
         >
-          <fa-icon [icon]="['fas', 'search']"></fa-icon>
-          <span>Buscar</span>
-        </button>
-      </app-tooltip>
-      <app-tooltip tooltipText="Agregar nueva asignación">
-        <button
-          (click)="openAddModal()"
-          class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          Mostrar:
+        </label>
+        <select
+          id="itemsPerPage"
+          [(ngModel)]="itemsPerPage"
+          (ngModelChange)="onItemsPerPageChange($event)"
+          class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
         >
-          <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-          <span>Agregar</span>
-        </button>
-      </app-tooltip>
-      <app-tooltip tooltipText="Limpiar filtros">
-        <button
-          (click)="resetFilter('all')"
-          class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          <option *ngFor="let option of pageSizeOptions" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400"
+          >registros por página</span
         >
-          <fa-icon [icon]="['fas', 'broom']"></fa-icon>
-          <span>Limpiar</span>
-        </button>
-      </app-tooltip>
+      </div>
+
+      <!-- Botones a la derecha -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Botón Buscar -->
+        <app-tooltip tooltipText="Buscar asignaciones">
+          <button
+            (click)="buscarAsignaciones()"
+            [disabled]="!isFormValid()"
+            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <fa-icon [icon]="['fas', 'search']"></fa-icon>
+            <span>Buscar</span>
+          </button>
+        </app-tooltip>
+        <app-tooltip tooltipText="Agregar nueva asignación">
+          <button
+            (click)="openAddModal()"
+            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          >
+            <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+            <span>Agregar</span>
+          </button>
+        </app-tooltip>
+        <app-tooltip tooltipText="Limpiar filtros">
+          <button
+            (click)="resetFilter('all')"
+            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+          >
+            <fa-icon [icon]="['fas', 'broom']"></fa-icon>
+            <span>Limpiar</span>
+          </button>
+        </app-tooltip>
         <!-- Botón para exportar a Excel -->
-      <app-tooltip tooltipText="Exportar asignaciones">
-  <button
-    (click)="descargarExcel()"
-    [disabled]="isLoading"
-    class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed gap-x-2"
-  >
-    <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
-    <span *ngIf="!isLoading">Exportar</span>
-    <span *ngIf="isLoading">Descargando...</span>
-  </button>
-</app-tooltip>
+        <app-tooltip tooltipText="Exportar asignaciones">
+          <button
+            (click)="descargarExcel()"
+            [disabled]="isLoading"
+            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed gap-x-2"
+          >
+            <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
+            <span *ngIf="!isLoading">Exportar</span>
+            <span *ngIf="isLoading">Descargando...</span>
+          </button>
+        </app-tooltip>
+      </div>
     </div>
   </div>
-</div>
 
   <!-- Tabla Reutilizable y Mensaje Condicional -->
   <div class="mt-6">

@@ -107,9 +107,9 @@ export class ProfesorCursoService {
 }
 
 // Editar una asignación existente
-editarCurso(id: string, profesorCurso: ProfesorCurso): Observable<ProfesorCurso> {
+editarCurso(profesorCurso: ProfesorCurso): Observable<ProfesorCurso> {
   return this.clienteHttp
-    .put<{ data: ProfesorCurso }>(`${this.urlBase}/editar/${id}`, profesorCurso, { withCredentials: true })
+    .put<{ data: ProfesorCurso }>(`${this.urlBase}/editar`, profesorCurso, { withCredentials: true })
     .pipe(
       map(response => response.data),
       catchError(error => {

@@ -1,4 +1,4 @@
-// src/app/interface/AlumnoCurso.ts
+import { Sesion } from "./sesion";
 export interface AlumnoCurso {
     idCurso?: string;
     nombreCurso?: string;
@@ -10,21 +10,3 @@ export interface AlumnoCurso {
     abreviatura?: string;
   }
   
-  export interface Sesion {
-    idSesion?: string;
-    titulo?: string;
-    descripcion?: string;
-    fechaAsignada?: string;
-    actividades?: Actividad[];
-  }
-  
-  export interface Actividad {
-    idActividad?: string;
-    actividadNombre?: string;
-    actividadUrl?: string;
-    actividadTipo?: string; // Debe ser 'introduccion', 'material' o 'actividad'
-    fechaCreacion?: string;
-    fechaInicio?: Date | string | null; // Permitir Date, string, o null
-  fechaFin?: Date | string | null;    // Permitir Date, string, o null
-  presencial?: boolean | null;// nuevo campo para indicar si es presencial o no
-  }

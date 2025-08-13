@@ -1,17 +1,5 @@
-export class Usuario {
-    idusuario?: string;
-    nombre?: string;
-    apellidopaterno?: string;
-    apellidomaterno?: string;
-    nombreusuario?: string;
-    rol?: string;
-}
-
-export class Curso {
-    idCurso?: string;
-    nombre?: string;
-    abreviatura?: string;
-}
+import { Curso } from "./curso";
+import { Usuario } from "./usuario";
 
 export class ProfesorCurso {
     idProfesorCurso?: string;

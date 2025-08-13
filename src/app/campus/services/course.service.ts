@@ -47,9 +47,9 @@ export class CourseService {
       );
   }
 
-  actualizarCurso(id: string, curso: Partial<Curso>): Observable<Curso> {
+  actualizarCurso(curso: Curso): Observable<Curso> {
     return this.clienteHttp
-      .put<DTOResponse<Curso>>(`${this.urlBase}/editar/${id}`, curso, { withCredentials: true })
+      .put<DTOResponse<Curso>>(`${this.urlBase}/editar`, curso, { withCredentials: true })
       .pipe(
         map((response) => {
           if (response.code !== 200) {
@@ -62,7 +62,7 @@ export class CourseService {
           return throwError(() => new Error(error.message || 'Error al actualizar el curso'));
         })
       );
-  }
+}
 
   eliminarCurso(id: string): Observable<void> {
     return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`,{withCredentials:true});

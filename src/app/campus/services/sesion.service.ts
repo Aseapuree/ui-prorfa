@@ -69,8 +69,16 @@ agregarSesion(sesion: Sesion): Observable<Sesion> {
     );
 }
 
-editarSesion(id: string, sesion: Sesion): Observable<Sesion> {
-  return this.clienteHttp.put<Sesion>(`${this.urlBase}/editar/${id}`, sesion,{withCredentials:true});
+editarSesion(sesion: Sesion): Observable<Sesion> {
+  return this.clienteHttp
+    .put<DTOResponse<Sesion>>(`${this.urlBase}/editar`, sesion, { withCredentials: true })
+    .pipe(
+      map(response => response.data),
+      catchError(error => {
+        console.error('Error al editar sesión:', error);
+        return throwError(() => new Error('Error al editar la sesión'));
+      })
+    );
 }
 
 eliminarSesion(id: string): Observable<void> {

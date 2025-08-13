@@ -167,44 +167,45 @@ export class ModalComponent implements OnInit {
   }
 
   async onSubmit() {
-    if (this.contactForm.invalid) {
-      console.log('Formulario inválido:', this.contactForm.errors, this.contactForm.value);
-      this.contactForm.markAllAsTouched();
-      const competenciasFormArray = this.contactForm.get('competencias') as FormArray;
-      competenciasFormArray.controls.forEach((group, index) => {
-        console.log(`Competencia ${index}:`, group.value, 'Válido:', group.valid, 'Errores:', group.errors);
-      });
-      this._notificationService.showNotification('Por favor, corrige los errores en el formulario.', 'error');
-      return;
-    }
-
-    const curso: Curso = this.contactForm.value;
-    console.log('Enviando curso:', curso);
-
-    if (this._matDialog.isEditing && curso.idCurso) {
-      this._contactSVC.actualizarCurso(curso.idCurso, curso).subscribe({
-        next: (cursoActualizado) => {
-          this._dialogRef.close(cursoActualizado);
-          this._notificationService.showNotification('Curso actualizado con éxito.', 'success');
-        },
-        error: (err) => {
-          console.error('Error al actualizar curso:', err);
-          this._notificationService.showNotification('Error al actualizar curso: ' + err.message, 'error');
-        },
-      });
-    } else {
-      this._contactSVC.agregarCurso(curso).subscribe({
-        next: (cursoAgregado) => {
-          this._dialogRef.close(cursoAgregado);
-          this._notificationService.showNotification('Curso agregado con éxito.', 'success');
-        },
-        error: (err) => {
-          console.error('Error al agregar curso:', err);
-          this._notificationService.showNotification('Error al agregar curso: ' + err.message, 'error');
-        },
-      });
-    }
+  if (this.contactForm.invalid) {
+    console.log('Formulario inválido:', this.contactForm.errors, this.contactForm.value);
+    this.contactForm.markAllAsTouched();
+    const competenciasFormArray = this.contactForm.get('competencias') as FormArray;
+    competenciasFormArray.controls.forEach((group, index) => {
+      console.log(`Competencia ${index}:`, group.value, 'Válido:', group.valid, 'Errores:', group.errors);
+    });
+    this._notificationService.showNotification('Por favor, corrige los errores en el formulario.', 'error');
+    return;
   }
+
+  const curso: Curso = this.contactForm.value;
+  console.log('Enviando curso:', curso);
+
+  if (this._matDialog.isEditing && curso.idCurso) {
+    // Llamar al método actualizarCurso con el objeto Curso completo
+    this._contactSVC.actualizarCurso(curso).subscribe({
+      next: (cursoActualizado) => {
+        this._dialogRef.close(cursoActualizado);
+        this._notificationService.showNotification('Curso actualizado con éxito.', 'success');
+      },
+      error: (err) => {
+        console.error('Error al actualizar curso:', err);
+        this._notificationService.showNotification('Error al actualizar curso: ' + err.message, 'error');
+      },
+    });
+  } else {
+    this._contactSVC.agregarCurso(curso).subscribe({
+      next: (cursoAgregado) => {
+        this._dialogRef.close(cursoAgregado);
+        this._notificationService.showNotification('Curso agregado con éxito.', 'success');
+      },
+      error: (err) => {
+        console.error('Error al agregar curso:', err);
+        this._notificationService.showNotification('Error al agregar curso: ' + err.message, 'error');
+      },
+    });
+  }
+}
 
   getTitle(): string {
     if (this.isReadOnly) return 'Detalles del Curso';
