@@ -1,0 +1,197 @@
+@use 'tailwindcss/base';
+@use 'tailwindcss/components';
+@use 'tailwindcss/utilities';
+
+.notas-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--primary-dark, #1a2330);
+  color: var(--text-color, #e0e7ff);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: var(--secondary-dark, #2a3448);
+    border-radius: 8px;
+
+    .nav-item {
+      color: var(--accent-color, #7dd3fc);
+      text-decoration: none;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        color: var(--primary-hover, #93c5fd);
+      }
+    }
+
+    .nav-info {
+      color: var(--text-color, #e0e7ff);
+      opacity: 0.8;
+      font-size: 1rem;
+    }
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: var(--secondary-dark, #2a3448);
+    border-radius: 8px;
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: var(--text-color, #e0e7ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fade-in 0.5s ease-in-out;
+    }
+
+    p {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      color: var(--text-color, #e0e7ff);
+    }
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 20px;
+    background-color: var(--secondary-dark, #2a3448);
+    border-radius: 8px;
+    opacity: 0.7;
+    font-size: 1.1rem;
+    color: var(--text-color, #e0e7ff);
+  }
+
+  .table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+
+    .notas-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid var(--border-color, #4b5e8a);
+        vertical-align: middle;
+        text-align: left;
+      }
+
+      th {
+        background-color: var(--secondary-dark, #2a3448);
+        font-weight: 600;
+        color: #a3e4ff; /* Azul claro brillante para mejor contraste */
+        /* Comentario: Puedes mover este color a una variable CSS (ej. --header-color) en :root de tu archivo global si quieres personalizarlo más adelante */
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      td {
+        background-color: var(--primary-dark, #1a2330);
+        color: var(--text-color, #e0e7ff);
+      }
+
+      tr:hover {
+        background-color: var(--primary-hover, #2a3448);
+        transition: background-color 0.3s;
+      }
+    }
+  }
+
+  .actions {
+    margin-top: 30px;
+    text-align: center;
+
+    .btn-regresar {
+      padding: 10px 20px;
+      background-color: var(--accent-color, #7dd3fc);
+      color: var(--text-color, #1a2330);
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+      &:hover {
+        background-color: var(--primary-hover, #93c5fd);
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .notas-container {
+    padding: 10px;
+
+    .nav {
+      flex-direction: column;
+      text-align: center;
+
+      .nav-item,
+      .nav-info {
+        margin: 5px 0;
+      }
+    }
+
+    .header {
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+      }
+    }
+
+    .table-container {
+      .notas-table {
+        th,
+        td {
+          padding: 8px;
+          font-size: 0.9rem;
+        }
+
+        th {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    .actions {
+      .btn-regresar {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
