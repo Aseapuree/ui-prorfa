@@ -1,5 +1,3 @@
-/* modal-actividad.component.scss */
-
 /* Estilos existentes (mantenerlos) */
 :host {
   display: block;
@@ -53,6 +51,8 @@ mat-datepicker {
   .mat-mdc-form-field-outline {
     display: none !important;
   }
+
+  
 
   &.mat-focused {
     .mat-mdc-form-field-outline {
@@ -110,8 +110,18 @@ input[type="file"] {
     color: #ffffff !important; /* Blanco */
   }
 
+  /* Color del asterisco */
+  .mat-mdc-form-field-required-marker {
+    color: #9ca3af !important; /* text-gray-400 */
+  }
+
   /* Color del placeholder (label) */
   .mat-mdc-form-field-label {
+    color: #9ca3af !important; /* text-gray-400 */
+  }
+
+  /* Color del texto de ayuda (hint) */
+  .mat-mdc-form-field-hint {
     color: #9ca3af !important; /* text-gray-400 */
   }
 

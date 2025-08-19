@@ -15,6 +15,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { Competencia } from '../../../../interface/curso';
 import { CourseService } from '../../../../services/course.service';
 import { lastValueFrom } from 'rxjs';
+import { NotificationService } from '../../../shared/notificaciones/notification.service';
 
 const MATERIAL_MODULES = [
   MatFormFieldModule,
@@ -56,7 +57,8 @@ export class ModalActividadComponent implements OnInit {
     },
     private fb: FormBuilder,
     private sesionService: SesionService,
-    private courseService: CourseService // Inyectar CourseService
+    private courseService: CourseService, // Inyectar CourseService
+    private notificationService: NotificationService
   ) {
     this.tipoContenido = data.tipo;
     this.esEdicion = !!data.actividad;
@@ -200,29 +202,39 @@ export class ModalActividadComponent implements OnInit {
   }
 
   onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      const allowedTypes = [
-        'application/pdf',
-        'video/mp4',
-        'video/avi',
-        'video/quicktime',
-        'text/plain', // Nuevo: Soporte para .txt
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // Nuevo: Soporte para .docx
-      ];
-      if (allowedTypes.includes(file.type)) {
-        this.archivoSeleccionado = file;
-        this.alertMessage = null;
-        console.log('Archivo seleccionado:', file.name);
-      } else {
-        this.archivoSeleccionado = null;
-        this.alertMessage =
-          'Tipo de archivo no permitido. Solo se permiten PDFs, videos (MP4, AVI, MOV), TXT y DOCX.';
-        this.alertType = 'error';
-        console.error('Archivo no permitido:', file.type);
-      }
+  const file = event.target.files[0];
+  if (file) {
+    const allowedTypes = [
+      'application/pdf',
+      'video/mp4',
+      'video/avi',
+      'video/quicktime',
+      'text/plain',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    const maxFileSizeBytes = 7 * 1024 * 1024; // 6MB
+    if (file.size > maxFileSizeBytes) {
+      this.archivoSeleccionado = null;
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      this.alertMessage = `El archivo excede el límite de tamaño permitido. Tamaño máximo: 7MB. Tamaño del archivo: ${fileSizeMB}MB.`;
+      this.alertType = 'error';
+      console.error('Archivo demasiado grande:', file.size);
+      return;
+    }
+    if (allowedTypes.includes(file.type)) {
+      this.archivoSeleccionado = file;
+      this.alertMessage = null;
+      console.log('Archivo seleccionado:', file.name);
+    } else {
+      this.archivoSeleccionado = null;
+      this.alertMessage =
+        'Tipo de archivo no permitido. Solo se permiten PDFs, videos (MP4, AVI, MOV), TXT y DOCX.';
+      this.alertType = 'error';
+      console.error('Archivo no permitido:', file.type);
+      this.notificationService.showNotification(this.alertMessage, 'error');
     }
   }
+}
 
   getFileNameFromUrl(url: string | undefined): string {
     if (!url) return 'Archivo desconocido';
@@ -239,62 +251,61 @@ export class ModalActividadComponent implements OnInit {
       'Valores:',
       this.formulario.value
     );
-  
-    // Si no es una actividad, ignorar el control presencial para la validación
+
     if (this.tipoContenido !== 'actividades') {
       this.formulario.get('presencial')?.clearValidators();
       this.formulario.get('presencial')?.updateValueAndValidity();
     }
-  
+
     if (this.formulario.invalid) {
       this.alertMessage = 'Por favor, completa todos los campos requeridos.';
       this.alertType = 'error';
       console.error('Formulario inválido:', this.formulario.errors);
       return;
     }
-  
+
     if (!this.archivoSeleccionado && !this.esEdicion) {
       this.alertMessage = 'Por favor, selecciona un archivo válido.';
       this.alertType = 'error';
       console.error('No se seleccionó archivo en modo agregar');
       return;
     }
-  
+
     this.cargando = true;
     this.alertMessage = null;
     const formData = new FormData();
     const actividad: DTOActividad = {
-    actividadNombre: this.formulario.get('nombre')?.value,
-    infoMaestra: {
-      descripcion: this.tipoContenido === 'introducciones'
-        ? 'Introducción'
-        : this.tipoContenido === 'materiales'
-        ? 'Material'
-        : 'Actividad',
-    },
-    fechaInicio: this.tipoContenido === 'actividades' ? this.formulario.get('fechaInicio')?.value : null,
-    fechaFin: this.tipoContenido === 'actividades' ? this.formulario.get('fechaFin')?.value : null,
-    presencial: this.tipoContenido === 'actividades' ? this.formulario.get('presencial')?.value : null,
-    competencia: this.tipoContenido === 'actividades' ? { nombre: this.formulario.get('competencia')?.value } : null,
-  };
-  
+      actividadNombre: this.formulario.get('nombre')?.value,
+      infoMaestra: {
+        descripcion: this.tipoContenido === 'introducciones'
+          ? 'Introducción'
+          : this.tipoContenido === 'materiales'
+          ? 'Material'
+          : 'Actividad',
+      },
+      fechaInicio: this.tipoContenido === 'actividades' ? this.formulario.get('fechaInicio')?.value : null,
+      fechaFin: this.tipoContenido === 'actividades' ? this.formulario.get('fechaFin')?.value : null,
+      presencial: this.tipoContenido === 'actividades' ? this.formulario.get('presencial')?.value : null,
+      competencia: this.tipoContenido === 'actividades' ? { nombre: this.formulario.get('competencia')?.value } : null,
+    };
+
     if (this.tipoContenido === 'actividades') {
       const fechaInicio = this.formulario.get('fechaInicio')?.value;
       const horaInicio = this.formulario.get('horaInicio')?.value;
       const fechaFin = this.formulario.get('fechaFin')?.value;
       const horaFin = this.formulario.get('horaFin')?.value;
-  
+
       if (fechaInicio && horaInicio) {
         const fechaInicioDate = this.combineDateAndTime(fechaInicio, horaInicio);
         actividad.fechaInicio = fechaInicioDate.toISOString();
       }
-  
+
       if (fechaFin && horaFin) {
         const fechaFinDate = this.combineDateAndTime(fechaFin, horaFin);
         actividad.fechaFin = fechaFinDate.toISOString();
       }
     }
-  
+
     console.log('Datos de actividad a enviar:', actividad);
     formData.append(
       'actividad',
@@ -307,7 +318,7 @@ export class ModalActividadComponent implements OnInit {
         this.archivoSeleccionado.name
       );
     }
-  
+
     const request = this.esEdicion
       ? this.sesionService.editarActividad(
           this.data.sesionId,
@@ -315,17 +326,26 @@ export class ModalActividadComponent implements OnInit {
           formData
         )
       : this.sesionService.agregarActividad(this.data.sesionId, formData);
-  
+
     request.subscribe({
-      next: () => {
+      next: (response: any) => {
         this.cargando = false;
         this.dialogRef.close(true);
-        console.log('Actividad guardada exitosamente');
+        console.log('Actividad guardada exitosamente', response);
+        this.notificationService.showNotification(
+          this.esEdicion ? 'Actividad editada con éxito' : 'Actividad agregada con éxito',
+          'success'
+        );
       },
       error: (err) => {
         this.cargando = false;
-        this.alertMessage = `Error al procesar contenido. Detalle: ${err.message}`;
+        let errorMessage = 'Error al procesar contenido.';
+        if (err.error && err.error.message) {
+          errorMessage = err.error.message; // Use the backend's error message
+        }
+        this.alertMessage = errorMessage;
         this.alertType = 'error';
+        this.notificationService.showNotification(errorMessage, 'error');
         console.error('Error al guardar actividad:', err);
       },
     });

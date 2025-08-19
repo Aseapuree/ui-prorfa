@@ -1,3 +1,13 @@
+:host ::ng-deep .mat-mdc-dialog-container .mdc-dialog .mdc-dialog__title {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+:host ::ng-deep .bg-gray-800 {
+  padding-top: 0 !important;
+  padding-bottom: 6px !important;
+}
+
 .noBorder {
   border-color: coral;
   outline: none;
@@ -28,3 +38,85 @@ mat-error {
   font-size: 12px;
   color: #dc2626; /* Asegura que los errores sean visibles */
 }
+
+::ng-deep mat-form-field {
+  .mat-mdc-select-value {
+    color: #ffffff !important; /* Blanco */
+  }
+
+  
+  .mat-mdc-form-field-required-marker {
+    color: #9ca3af !important; /* text-gray-400 */
+  }
+
+  /* Texto dentro del input */
+  .mat-mdc-form-field-input-control {
+    color: #ffffff !important; /* Texto blanco para el contenido del input */
+    caret-color: #60a5fa !important; /* Cursor azul claro (blue-400) al escribir */
+  }
+}
+
+
+
+::ng-deep .mat-mdc-icon-button {
+  color: #ffffff !important; /* Blanco para el ícono por defecto */
+}
+
+
+/* Cambia el color del ícono al pasar el ratón */
+::ng-deep .mat-mdc-icon-button:hover {
+  color: #b90bd8 !important; /* Morado claro (purple-600) para el efecto hover */
+}
+
+/* Asegura que el texto y el ícono del botón sean blancos */
+button[mat-stroked-button] {
+  color: #ffffff !important; /* Blanco para el texto */
+}
+
+button[mat-stroked-button] fa-icon {
+  color: #ffffff !important; /* Blanco para el ícono */
+}
+
+/* Opcional: Mantener el color blanco al pasar el ratón para evitar conflictos */
+button[mat-stroked-button]:hover {
+  color: #ffffff !important; /* Mantener el texto blanco al pasar el ratón */
+}
+
+button[mat-stroked-button]:hover fa-icon {
+  color: #ffffff !important; /* Mantener el ícono blanco al pasar el ratón */
+}
+
+/* Asegura que el botón "Cancelar" sea siempre blanco */
+button[mat-button] {
+  color: #ffffff !important; /* Blanco para el texto */
+}
+
+button[mat-button] fa-icon {
+  color: #ffffff !important; /* Blanco para el ícono si lo hay */
+}
+
+/* Estilo para el botón "Agregar Curso" deshabilitado (opaco) */
+button[mat-raised-button][disabled] {
+  color: #ffffff !important; /* Blanco opaco para el texto */
+  background-color: #4b5563 !important; /* Gris oscuro opaco (gray-600) */
+  opacity: 0.5 !important; /* Efecto opaco */
+  cursor: not-allowed !important; /* Cursor que indica deshabilitado */
+}
+
+/* Estilo para el botón "Agregar Curso" habilitado (blanco y activo) */
+button[mat-raised-button]:not([disabled]) {
+  color: #ffffff !important; /* Blanco para el texto */
+  background-color: #1f2937 !important; /* Gris oscuro base (gray-800) */
+  opacity: 1 !important; /* Completamente visible */
+  cursor: pointer !important; /* Cursor que indica habilitado */
+}
+
+/* Efecto hover para el botón "Agregar Curso" habilitado */
+button[mat-raised-button]:not([disabled]):hover {
+  background-color: #b90bd8 !important; /* Morado (purple-600) al pasar el ratón */
+  color: #ffffff !important; /* Blanco para mantener contraste */
+}
+
+
+
+

@@ -89,7 +89,7 @@ obtenerActividadesPorSesion(idSesion: string): Observable<DTOActividadesSesion> 
   return this.clienteHttp.get<DTOActividadesSesion>(
     `${this.urlBase}/actividades/${idSesion}`, { withCredentials: true }
   ).pipe(
-    map(response => response) // Ya no necesitas extraer 'data' aquí, el tipo ya lo incluye
+    map(response => response) 
   );
 }
 

@@ -78,7 +78,7 @@ export class ProfesorCursoComponent implements OnInit {
   appliedFilters: any = null;
   isValidFechaInicio: boolean = true;
   isValidFechaFin: boolean = true;
-  currentYear: number = new Date().getFullYear(); // Año actual para validaciones
+  currentYear: number = new Date().getFullYear();
 
   // Variables de filtros
   profesores: Usuario[] = [];
@@ -104,11 +104,6 @@ export class ProfesorCursoComponent implements OnInit {
 
   // Fecha máxima
   maxDate!: string;
-  maxDateObj: Date = new Date(); // Fecha máxima como objeto Date
-
-  // Nuevas propiedades para Datepicker
-  startDate: Date | null = null;
-  endDate: Date | null = null;
 
   // Configuración de columnas para la tabla
   tableColumns: ColumnConfig[] = [
@@ -163,6 +158,8 @@ export class ProfesorCursoComponent implements OnInit {
     },
   ];
 
+  
+
   // Configuración de acciones para la tabla
   tableActions: ActionConfig[] = [
     {
@@ -202,8 +199,6 @@ export class ProfesorCursoComponent implements OnInit {
     this.updateMaxDate();
   }
 
-  private readonly _dialog = inject(MatDialog);
-
   ngOnInit(): void {
     const savedItemsPerPage = localStorage.getItem('itemsPerPage');
     if (savedItemsPerPage) {
@@ -214,7 +209,7 @@ export class ProfesorCursoComponent implements OnInit {
     this.cargarProfesores();
     this.cargarCursos();
     this.cargarEntidadData();
-    this.updateMaxDate(); // Asegurar que se actualice al iniciar
+    this.updateMaxDate();
   }
 
   descargarExcel(): void {
@@ -242,285 +237,146 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   private updateMaxDate(): void {
-    this.maxDateObj = new Date();
-    this.maxDateObj.setHours(0, 0, 0, 0); // Establecer a medianoche
-    this.maxDate = this.maxDateObj.toISOString().split('T')[0]; // Formato AAAA-MM-DD
-    this.currentYear = this.maxDateObj.getFullYear();
-    console.log(
-      `maxDate actualizado: ${this.maxDate}, currentYear: ${this.currentYear}`
-    );
-  }
+  const today = new Date(); // 12:11 AM -05, 13 de agosto de 2025
+  today.setHours(0, 0, 0, 0); // Establecer a medianoche
+  this.maxDate = today.toISOString().split('T')[0]; // "2025-08-13"
+  this.currentYear = today.getFullYear(); // 2025
+  console.log(`maxDate actualizado: ${this.maxDate}, currentYear: ${this.currentYear}`);
+}
 
   isValidDateFormat(dateStr: string): boolean {
-    console.log(`Validando fecha: ${dateStr}`);
+  console.log(`Validando fecha: ${dateStr}`);
 
-    if (!dateStr || dateStr.length !== 10) {
-      console.log(
-        `Fecha inválida: longitud incorrecta (${dateStr?.length || 0})`
-      );
-      return false;
-    }
-
-    if (!DATE_REGEX.test(dateStr)) {
-      console.log(`Fecha inválida: no coincide con el formato AAAA-MM-DD`);
-      return false;
-    }
-
-    const [year, month, day] = dateStr.split('-').map(Number);
-
-    if (isNaN(year) || isNaN(month) || isNaN(day)) {
-      console.log(`Fecha inválida: partes no numéricas`);
-      return false;
-    }
-
-    const date = new Date(dateStr + 'T00:00:00');
-    if (isNaN(date.getTime())) {
-      console.log(`Fecha inválida: no se puede parsear a Date`);
-      return false;
-    }
-
-    const isValid =
-      year >= 1900 &&
-      year <= this.currentYear &&
-      month >= 1 &&
-      month <= 12 &&
-      day >= 1 &&
-      day <= new Date(year, month, 0).getDate() &&
-      date.getFullYear() === year &&
-      date.getMonth() + 1 === month &&
-      date.getDate() === day;
-
-    if (!isValid) {
-      if (year > this.currentYear) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
-          'error'
-        );
-      } else if (month < 1 || month > 12) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.INVALID_MONTH,
-          'error'
-        );
-      } else if (day < 1 || day > new Date(year, month, 0).getDate()) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.INVALID_DAY,
-          'error'
-        );
-      }
-    }
-
-    console.log(`Resultado de validación: ${isValid}`);
-    return isValid;
+  if (!dateStr || dateStr.length !== 10) {
+    console.log(`Fecha inválida: longitud incorrecta (${dateStr?.length || 0})`);
+    return false;
   }
 
-  onDateInput(event: Event, field: 'fechaInicio' | 'fechaFin'): void {
-    const input = event.target as HTMLInputElement;
-    let value = input.value;
-    console.log(`onDateInput: ${field} = ${value}`);
-
-    if (!value) {
-      if (field === 'fechaInicio') {
-        this.startDate = null;
-        this.filters.fechaInicio = '';
-        this.isValidFechaInicio = true;
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = true;
-      } else if (field === 'fechaFin') {
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = true;
-      }
-      this.cdr.detectChanges();
-      return;
-    }
-
-    if (value.length === 10 && !this.isValidDateFormat(value)) {
-      this.notificationService.showNotification(
-        DATE_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      if (field === 'fechaInicio') {
-        this.startDate = null;
-        this.filters.fechaInicio = '';
-        this.isValidFechaInicio = false;
-      } else if (field === 'fechaFin') {
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-      }
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const inputDate = new Date(value + 'T00:00:00');
-    const maxDate = new Date(this.maxDate + 'T00:00:00');
-    if (inputDate > maxDate) {
-      this.notificationService.showNotification(
-        DATE_VALIDATION_MESSAGES.FUTURE_DATE,
-        'error'
-      );
-      if (field === 'fechaInicio') {
-        this.startDate = null;
-        this.filters.fechaInicio = '';
-        this.isValidFechaInicio = false;
-      } else if (field === 'fechaFin') {
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-      }
-      this.cdr.detectChanges();
-      return;
-    }
-
-    if (
-      field === 'fechaFin' &&
-      this.startDate &&
-      this.isValidDateFormat(this.startDate.toISOString().split('T')[0])
-    ) {
-      const startDate = new Date(
-        this.startDate.toISOString().split('T')[0] + 'T00:00:00'
-      );
-      const endDate = new Date(value + 'T00:00:00');
-      if (endDate < startDate) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.END_BEFORE_START,
-          'error'
-        );
-        this.endDate = null;
-        this.filters[field] = '';
-        this.isValidFechaFin = false;
-        this.cdr.detectChanges();
-        return;
-      }
-    }
-
-    if (field === 'fechaInicio') {
-      this.startDate = inputDate;
-      this.filters.fechaInicio = value;
-      this.isValidFechaInicio = true;
-    } else if (field === 'fechaFin') {
-      this.endDate = inputDate;
-      this.filters.fechaFin = value;
-      this.isValidFechaFin = true;
-    }
-    this.cdr.detectChanges();
+  if (!DATE_REGEX.test(dateStr)) {
+    console.log(`Fecha inválida: no coincide con el formato aaaa-mm-dd`);
+    return false;
   }
 
-  onBlurDate(event: FocusEvent, field: 'fechaInicio' | 'fechaFin'): void {
-    const value = field === 'fechaInicio' ? this.startDate : this.endDate;
-    console.log(`onBlurDate: ${field} = ${value}`);
-    this.onDateChange(value, field); // Pasar Date | null directamente
-  }
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(dateStr);
 
-  onDateInputChange(
-    value: Date | null,
-    field: 'fechaInicio' | 'fechaFin'
-  ): void {
-    if (field === 'fechaFin' && this.startDate && value) {
-      const startDate = new Date(
-        this.startDate.toISOString().split('T')[0] + 'T00:00:00'
-      );
-      const endDate = new Date(value.toISOString().split('T')[0] + 'T00:00:00');
-      if (endDate < startDate) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.END_BEFORE_START,
-          'error'
-        );
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-        this.cdr.detectChanges();
-      }
-    }
-  }
+  // Verificar si la fecha es válida y no excede el año actual
+  const isValid =
+    !isNaN(date.getTime()) &&
+    year >= 1900 &&
+    year <= this.currentYear &&
+    month >= 1 &&
+    month <= 12 &&
+    day >= 1 &&
+    day <= new Date(year, month, 0).getDate();
 
-  onDateChange(value: Date | null, field: 'fechaInicio' | 'fechaFin'): void {
-    console.log(`onDateChange: ${field} = ${value}`);
-
-    if (!value) {
-      if (field === 'fechaInicio') {
-        this.startDate = null;
-        this.filters.fechaInicio = '';
-        this.isValidFechaInicio = true;
-        this.endDate = null; // Limpiar fecha fin si inicio se borra
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = true;
-      } else if (field === 'fechaFin') {
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = true;
-      }
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const dateStr = value.toISOString().split('T')[0]; // ej. 2025-07-08
-    const year = parseInt(dateStr.split('-')[0], 10);
-
-    if (!this.isValidDateFormat(dateStr)) {
-      this.notificationService.showNotification(
-        DATE_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      if (field === 'fechaInicio') {
-        this.startDate = null;
-        this.filters.fechaInicio = '';
-        this.isValidFechaInicio = false;
-      } else if (field === 'fechaFin') {
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-      }
-      this.cdr.detectChanges();
-      return;
-    }
-
+  if (!isValid) {
     if (year > this.currentYear) {
       this.notificationService.showNotification(
         DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
         'error'
       );
-      if (field === 'fechaInicio') {
-        this.startDate = null;
-        this.filters.fechaInicio = '';
-        this.isValidFechaInicio = false;
-      } else if (field === 'fechaFin') {
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-      }
-      this.cdr.detectChanges();
-      return;
+    } else if (month < 1 || month > 12) {
+      this.notificationService.showNotification(
+        DATE_VALIDATION_MESSAGES.INVALID_MONTH,
+        'error'
+      );
+    } else if (day < 1 || day > new Date(year, month, 0).getDate()) {
+      this.notificationService.showNotification(
+        DATE_VALIDATION_MESSAGES.INVALID_DAY,
+        'error'
+      );
     }
+  }
 
-    if (field === 'fechaFin' && this.startDate) {
-      const startDateStr = this.startDate.toISOString().split('T')[0];
-      const startDate = new Date(startDateStr + 'T00:00:00');
-      const endDate = new Date(dateStr + 'T00:00:00');
-      if (endDate < startDate) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.END_BEFORE_START,
-          'error'
-        );
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-        this.cdr.detectChanges();
-        return;
-      }
-    }
+  console.log(`Resultado de validación: ${isValid}`);
+  return isValid;
+}
 
+  onDateChange(event: Event, field: 'fechaInicio' | 'fechaFin'): void {
+  const input = event.target as HTMLInputElement;
+  const value = input.value; // Cadena en formato aaaa-mm-dd
+  console.log(`onDateChange: ${field} = ${value}`);
+
+  if (!value) {
     if (field === 'fechaInicio') {
-      this.startDate = value;
-      this.filters.fechaInicio = dateStr;
+      this.filters.fechaInicio = '';
       this.isValidFechaInicio = true;
+      this.filters.fechaFin = ''; // Limpiar fechaFin si se borra fechaInicio
+      this.isValidFechaFin = true;
     } else if (field === 'fechaFin') {
-      this.endDate = value;
-      this.filters.fechaFin = dateStr;
+      this.filters.fechaFin = '';
       this.isValidFechaFin = true;
     }
     this.cdr.detectChanges();
+    return;
+  }
+
+  // Validar la fecha antes de asignarla
+  if (!this.isValidDateFormat(value)) {
+    this.notificationService.showNotification(
+      DATE_VALIDATION_MESSAGES.INVALID_FORMAT,
+      'error'
+    );
+    if (field === 'fechaInicio') {
+      this.filters.fechaInicio = '';
+      this.isValidFechaInicio = false;
+    } else if (field === 'fechaFin') {
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+    }
+    this.cdr.detectChanges();
+    return;
+  }
+
+  const year = parseInt(value.split('-')[0], 10);
+  if (year > this.currentYear) {
+    this.notificationService.showNotification(
+      DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
+      'error'
+    );
+    if (field === 'fechaInicio') {
+      this.filters.fechaInicio = '';
+      this.isValidFechaInicio = false;
+    } else if (field === 'fechaFin') {
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+    }
+    this.cdr.detectChanges();
+    return;
+  }
+
+  if (field === 'fechaFin' && this.filters.fechaInicio) {
+    const startDate = new Date(this.filters.fechaInicio);
+    const endDate = new Date(value);
+    if (endDate < startDate) {
+      this.notificationService.showNotification(
+        DATE_VALIDATION_MESSAGES.END_BEFORE_START,
+        'error'
+      );
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+      this.cdr.detectChanges();
+      return;
+    }
+  }
+
+  // Asignar el valor solo si pasa todas las validaciones
+  if (field === 'fechaInicio') {
+    this.filters.fechaInicio = value;
+    this.isValidFechaInicio = true;
+  } else if (field === 'fechaFin') {
+    this.filters.fechaFin = value;
+    this.isValidFechaFin = true;
+  }
+  this.cdr.detectChanges();
+}
+
+  onBlurDate(event: FocusEvent, field: 'fechaInicio' | 'fechaFin'): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    console.log(`onBlurDate: ${field} = ${value}`);
+    this.onDateChange(event, field);
   }
 
   validateDates(): boolean {
@@ -531,74 +387,62 @@ export class ProfesorCursoComponent implements OnInit {
     this.updateMaxDate();
     let isValid = true;
 
-    if (this.startDate) {
-      const dateStr = this.startDate.toISOString().split('T')[0];
-      const year = parseInt(dateStr.split('-')[0], 10);
-
-      if (!this.isValidDateFormat(dateStr)) {
+    if (this.filters.fechaInicio) {
+      if (!this.isValidDateFormat(this.filters.fechaInicio)) {
         this.notificationService.showNotification(
           DATE_VALIDATION_MESSAGES.INCOMPLETE_DATE,
           'error'
         );
-        this.startDate = null;
         this.filters.fechaInicio = '';
         this.isValidFechaInicio = false;
         isValid = false;
-      } else if (year > this.currentYear) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
-          'error'
-        );
-        this.startDate = null;
-        this.filters.fechaInicio = '';
-        this.isValidFechaInicio = false;
-        isValid = false;
-      }
-    }
-
-    if (this.endDate) {
-      const dateStr = this.endDate.toISOString().split('T')[0];
-      const year = parseInt(dateStr.split('-')[0], 10);
-
-      if (!this.isValidDateFormat(dateStr)) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.INCOMPLETE_DATE,
-          'error'
-        );
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-        isValid = false;
-      } else if (year > this.currentYear) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
-          'error'
-        );
-        this.endDate = null;
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-        isValid = false;
-      } else if (
-        this.startDate &&
-        this.isValidDateFormat(this.startDate.toISOString().split('T')[0])
-      ) {
-        const startDate = new Date(this.startDate.toISOString().split('T')[0]);
-        const endDate = new Date(dateStr);
-        if (endDate < startDate) {
+      } else {
+        const year = parseInt(this.filters.fechaInicio.split('-')[0], 10);
+        if (year > this.currentYear) {
           this.notificationService.showNotification(
-            DATE_VALIDATION_MESSAGES.END_BEFORE_START,
+            DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
             'error'
           );
-          this.endDate = null;
-          this.filters.fechaFin = '';
-          this.isValidFechaFin = false;
+          this.filters.fechaInicio = '';
+          this.isValidFechaInicio = false;
           isValid = false;
         }
       }
-    } else if (this.startDate) {
-      this.endDate = null;
-      this.filters.fechaFin = '';
-      this.isValidFechaFin = true;
+    }
+
+    if (this.filters.fechaFin) {
+      if (!this.isValidDateFormat(this.filters.fechaFin)) {
+        this.notificationService.showNotification(
+          DATE_VALIDATION_MESSAGES.INCOMPLETE_DATE,
+          'error'
+        );
+        this.filters.fechaFin = '';
+        this.isValidFechaFin = false;
+        isValid = false;
+      } else {
+        const year = parseInt(this.filters.fechaFin.split('-')[0], 10);
+        if (year > this.currentYear) {
+          this.notificationService.showNotification(
+            DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
+            'error'
+          );
+          this.filters.fechaFin = '';
+          this.isValidFechaFin = false;
+          isValid = false;
+        } else if (this.filters.fechaInicio) {
+          const startDate = new Date(this.filters.fechaInicio);
+          const endDate = new Date(this.filters.fechaFin);
+          if (endDate < startDate) {
+            this.notificationService.showNotification(
+              DATE_VALIDATION_MESSAGES.END_BEFORE_START,
+              'error'
+            );
+            this.filters.fechaFin = '';
+            this.isValidFechaFin = false;
+            isValid = false;
+          }
+        }
+      }
     }
 
     if (!isValid) {
@@ -610,11 +454,9 @@ export class ProfesorCursoComponent implements OnInit {
 
   isFormValid(): boolean {
     const fechaInicioValid =
-      !this.startDate ||
-      this.isValidDateFormat(this.startDate.toISOString().split('T')[0]);
+      !this.filters.fechaInicio || this.isValidDateFormat(this.filters.fechaInicio);
     const fechaFinValid =
-      !this.endDate ||
-      this.isValidDateFormat(this.endDate.toISOString().split('T')[0]);
+      !this.filters.fechaFin || this.isValidDateFormat(this.filters.fechaFin);
     const isValid = fechaInicioValid && fechaFinValid;
 
     console.log(`isFormValid: ${isValid}`, {
@@ -785,8 +627,6 @@ export class ProfesorCursoComponent implements OnInit {
       this.secciones = [];
       this.keyword = '';
       this.page = 1;
-      this.startDate = null;
-      this.endDate = null;
       this.isValidFechaInicio = true;
       this.isValidFechaFin = true;
       this.cargarAsignaciones();
@@ -1149,12 +989,8 @@ export class ProfesorCursoComponent implements OnInit {
         ? this.filters.seccion.toLowerCase()
         : undefined,
       nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
-      fechaInicio: this.startDate
-        ? this.startDate.toISOString().split('T')[0]
-        : undefined,
-      fechaFin: this.endDate
-        ? this.endDate.toISOString().split('T')[0]
-        : undefined,
+      fechaInicio: this.filters.fechaInicio || undefined,
+      fechaFin: this.filters.fechaFin || undefined,
       fechaTipo: this.filters.fechaTipo || undefined,
     };
 
@@ -1216,9 +1052,4 @@ export class ProfesorCursoComponent implements OnInit {
         },
       });
   }
-
-  dateFilter = (date: Date | null): boolean => {
-    if (!date || !this.startDate) return true;
-    return date >= this.startDate;
-  };
 }
