@@ -1,0 +1,54 @@
+
+<app-general-loading-spinner [visible]="isLoading" [message]="loadingMessage"></app-general-loading-spinner>
+<div class="notas-container">
+  <!-- Navegación -->
+  <div class="nav">
+    <a href="javascript:void(0)" (click)="regresar()" class="nav-item">
+      <i class="fas fa-chevron-left mr-2"></i>Campus
+    </a>
+    <span class="nav-info">
+      <i class="fas fa-graduation-cap mr-2"></i>{{ grado }} {{ nivel }} - Sección {{ seccion }}
+    </span>
+  </div>
+
+  <!-- Encabezado -->
+  <div class="header">
+    <h1 class="text-3xl font-extrabold text-[--text-color] flex items-center justify-center animate-fade-in">
+      <i class="fas fa-users mr-4 text-[--accent-color] text-4xl"></i>Lista de Alumnos
+    </h1>
+    <p class="text-[--text-color] opacity-80 text-center mt-2">Seleccione un alumno para ver su boleta bimestral</p>
+  </div>
+
+  <!-- Mensaje si no hay alumnos -->
+  <div class="no-data" *ngIf="alumnos.length === 0 && isDataLoaded">
+    <p class="text-[--text-color] opacity-70">No hay alumnos registrados en esta sección.</p>
+  </div>
+
+  <!-- Tabla de alumnos -->
+  <div class="table-container" *ngIf="alumnos.length > 0">
+    <table class="notas-table w-full">
+      <thead>
+        <tr>
+          <th class="p-3">Nombre</th>
+          <th class="p-3">Grado</th>
+          <th class="p-3">Sección</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let alumno of alumnos" class="cursor-pointer hover:bg-[--primary-hover] transition-colors" (click)="verBoleta(alumno.id, alumno.nombre)">
+          <td class="p-3">{{ alumno.nombre }}</td>
+          <td class="p-3 text-center">{{ alumno.grado }}</td>
+          <td class="p-3 text-center">{{ alumno.seccion }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="actions mt-6 text-center flex justify-center gap-4">
+    <button class="btn-regresar flex items-center justify-center" (click)="regresar()">
+      <i class="fas fa-arrow-left mr-2"></i>Regresar
+    </button>
+  </div>
+  <app-pagination></app-pagination>
+</div>
