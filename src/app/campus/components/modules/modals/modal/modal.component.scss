@@ -65,7 +65,7 @@ mat-error {
 
 /* Cambia el color del ícono al pasar el ratón */
 ::ng-deep .mat-mdc-icon-button:hover {
-  color: #b90bd8 !important; /* Morado claro (purple-600) para el efecto hover */
+  color: gray-800 !important; /* Morado claro (purple-600) para el efecto hover */
 }
 
 /* Asegura que el texto y el ícono del botón sean blancos */
@@ -113,7 +113,7 @@ button[mat-raised-button]:not([disabled]) {
 
 /* Efecto hover para el botón "Agregar Curso" habilitado */
 button[mat-raised-button]:not([disabled]):hover {
-  background-color: #b90bd8 !important; /* Morado (purple-600) al pasar el ratón */
+  background-color: #1f2937  !important; /* Gris oscuro (gray-800) al pasar el ratón */
   color: #ffffff !important; /* Blanco para mantener contraste */
 }
 

@@ -1,4 +1,4 @@
-<div class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100 p-6">
+<div class="bg-gray-900 dark:bg-gray-900 text-gray-100 dark:text-gray-100 p-6">
   <div mat-dialog-title>
     <h1 class="text-2xl font-semibold mb-6 text-gray-100 dark:text-gray-100">
       {{ getTitle() }}
@@ -172,7 +172,7 @@
           mat-stroked-button
           type="button"
           (click)="addCompetencia()"
-          class="w-full mt-2 bg-gray-700 dark:bg-gray-700 text-white dark:text-white hover:bg-purple-600 dark:hover:bg-purple-600 rounded-md transition-colors duration-300"
+          class="w-full mt-2 bg-gray-700 dark:bg-gray-700 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-800 rounded-md transition-colors duration-300"
         >
           <fa-icon [icon]="['fas', 'plus']" class="mr-2"></fa-icon>
           Agregar Competencia
@@ -181,13 +181,13 @@
     </div>
     <div
       mat-dialog-actions
-      class="flex justify-end space-x-2 bg-gray-800 dark:bg-gray-800 p-6 border-t border-gray-700 dark:border-gray-700"
+      class="flex justify-end space-x-2 bg-gray-900 dark:bg-gray-900 p-6 border-t border-gray-700 dark:border-gray-700"
     >
       <button
         mat-button
         [mat-dialog-close]="false"
         type="button"
-        class="px-4 py-2 bg-gray-800 dark:bg-write text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-purple-600 dark:hover:bg-purple-600 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300"
+        class="px-4 py-2 bg-gray-800 dark:bg-write text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-gray-800 dark:hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300"
       >
         {{ isReadOnly ? "Cerrar" : "Cancelar" }}
       </button>
@@ -196,7 +196,7 @@
         [disabled]="!contactForm.valid"
         mat-raised-button
         type="submit"
-        class="px-4 py-2 bg-gray-800 dark:bg-gray-800 text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-purple-600 dark:hover:bg-purple-600 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300"
+        class="px-4 py-2 bg-gray-800 dark:bg-gray-800 text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-gray-800 dark:hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300"
       >
         {{ getTitle() }}
       </button>
