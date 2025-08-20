@@ -1,0 +1,173 @@
+/* Estilos generales y básicos para la página */
+:root {
+    --primary-color: #4A90E2;
+    --secondary-color: #f1f5f9;
+    --text-color: #333;
+    --border-color: #E2E8F0;
+    --shadow-color: rgba(0, 0, 0, 0.05);
+    --error-color: #FF4136;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.main-container {
+    background-color: #fff;
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 25px var(--shadow-color);
+    width: 100%;
+    max-width: 650px;
+}
+
+h2 {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Estilos del formulario de edición */
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+/* Estilos para los campos de entrada */
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.8rem;
+    font-size: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    outline: none;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.input-with-icon input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.input-with-icon .input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+/* Estilos del área de texto */
+.input-with-icon textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    outline: none;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+.input-with-icon textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+/* Contenedor de botones */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Estilo para los botones */
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #3879be;
+}
+
+.btn-secondary {
+    background-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background-color: #ccc;
+}
+
+/* Mensaje de estado (éxito o error) */
+.status-message {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    font-weight: 500;
+    display: none; /* Oculto por defecto */
+}
+
+.status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 1.5rem;
+        border-radius: 1rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .button-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

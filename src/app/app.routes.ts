@@ -17,6 +17,7 @@ import { CampusGradosComponent } from './campus/components/modules/campus-grados
 import { ProfesorCursoComponent } from './campus/components/modules/gestion/profesor-curso/profesor-curso.component';
 import { NotasGeneralesComponent } from './general/components/notas-generales/notas-generales.component';
 import { CampusVistaComponent } from './general/components/campus-vista/campus-vista.component';
+import { EntidadComponent } from './matricula/components/entidad/entidad.component';
 
 export const routes: Routes = [
     {
@@ -45,6 +46,8 @@ export const routes: Routes = [
           {path:'notas',component:NotasGeneralesComponent,canActivate:[AuthGuard]},
           { path: 'campus-vista', component: CampusVistaComponent, canActivate: [AuthGuard] },
           //{ path: 'comprobante/:type/:idMatricula', component: ComprobanteComponent, canActivate: [AuthGuard] },
+          {path:'entidad',component:EntidadComponent,canActivate:[AuthGuard]},
+
         ],
         canActivate: [AuthGuard]
       }

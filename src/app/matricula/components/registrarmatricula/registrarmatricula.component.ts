@@ -58,7 +58,7 @@ function documentRegexValidator(): ValidatorFn {
     if (idtipodoc === DNI_UUID) {
       regex = /^\d{8}$/;
     } else if (idtipodoc === CARNET_EXTRANJERIA_UUID) {
-      regex = /^\d{9}$/;
+      regex = /^\d{12}$/;
     } else {
       return null;
     }
@@ -589,7 +589,7 @@ export class RegistrarMatriculaComponent implements OnInit {
       const DNI_UUID = '29c2c5c3-2fc9-4410-ab24-52a8111f9c05';
       const CARNET_EXTRANJERIA_UUID = 'fa65a599-60fd-43e1-85e2-7a95f3cf072e';
       if (tipo === DNI_UUID) return 8;
-      if (tipo === CARNET_EXTRANJERIA_UUID) return 9;
+      if (tipo === CARNET_EXTRANJERIA_UUID) return 12;
     }
     return 20;
   }
@@ -1040,9 +1040,18 @@ export class RegistrarMatriculaComponent implements OnInit {
             if (estadoMatriculaDeseado === 'COMPLETADO') {
                  if (matriculaProcesada && matriculaProcesada.idmatricula) {
                      this.notificationService.showNotification('¡Matrícula registrada/actualizada! Generando comprobantes...', 'success');
-                     this.router.navigate(['/comprobantes'], {
-                         queryParams: { idMatricula: matriculaProcesada.idmatricula, nivel: this.nivel }
-                     });
+                     //this.router.navigate(['/comprobantes'], {
+                       //  queryParams: { idMatricula: matriculaProcesada.idmatricula, nivel: this.nivel }
+                    // });
+                    /* INICIO*/
+                    this.router.navigate(['/comprobantes'], {
+  queryParams: {
+    idMatricula: matriculaProcesada.idmatricula,
+    nivel: this.nivel,
+    refresh: Date.now() // Parámetro único para forzar recarga
+  }
+});
+/* FIN*/
                  } else {
                      this.notificationService.showNotification('Matrícula procesada, pero hubo un problema al obtener la confirmación final.', 'error');
                  }
