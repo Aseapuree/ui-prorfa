@@ -1,24 +1,79 @@
 :host {
-    display: block;
+  display: block;
+}
+
+/* Estilos para los campos de entrada: bordes y texto blanco */
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: #1f2937; 
+    border: 1px solid #ffffff !important; 
+    border-radius: 4px; 
   }
-  
-  .mat-mdc-form-field {
-    .mat-mdc-text-field-wrapper {
-      background-color: #1f2937; // Equivalente a bg-gray-800
-      border-color: #374151; // Equivalente a border-gray-700
-    }
-  
-    .mat-mdc-form-field-input-control {
-      color: #ffffff !important; // Forzar texto blanco
-      caret-color: #ffffff !important; // Color del cursor también blanco
-    }
-  
-    .mat-mdc-form-field-label {
-      color: #ffffff !important; // Texto de la etiqueta blanco (para "Título")
-    }
+
+  .mat-mdc-form-field-input-control {
+    color: #ffffff !important; /* Texto blanco en los inputs */
+    caret-color: #ffffff !important; /* Cursor blanco */
   }
-  
-  textarea.mat-mdc-form-field-input-control {
-    color: #ffffff !important; // Forzar texto blanco en el textarea
-    caret-color: #ffffff !important; // Color del cursor también blanco
+
+  .mat-mdc-form-field-label {
+    color: #ffffff !important; /* Etiquetas blancas (Título, Descripción, Fecha) */
   }
+
+  /* Bordes blancos en estado activo (focus) */
+  &.mat-focused .mat-mdc-text-field-wrapper {
+    border-color: #ffffff !important; /* Bordes blancos al enfocar */
+  }
+}
+
+/* Estilos específicos para textarea */
+textarea.mat-mdc-form-field-input-control {
+  color: #ffffff !important; /* Texto blanco en textarea */
+  caret-color: #ffffff !important; /* Cursor blanco */
+}
+
+/* Icono del calendario */
+.mat-mdc-icon-button {
+  color: #ffffff !important; /* Icono del calendario blanco */
+}
+
+/* Estilos para el calendario: fechas en blanco */
+/* styles.css */
+.mat-calendar {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+.mat-calendar-body-cell-content {
+  color: #ffffff !important;
+}
+.mat-calendar-body-today {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+.mat-calendar-body-selected {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+.mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover > .mat-calendar-body-cell-content {
+  background-color: #4b5563 !important;
+  color: #ffffff !important;
+}
+.mat-calendar-body-label,
+.mat-calendar-period-button,
+.mat-calendar-arrow {
+  color: #ffffff !important;
+}
+
+/* Botón Cancelar: texto blanco */
+button.mat-mdc-button {
+  color: #ffffff !important; /* Texto blanco para el botón Cancelar */
+}
+
+/* Botón de enviar: mantener estilo azul */
+button.mat-mdc-raised-button[color="primary"] {
+  background-color: #2563eb !important; /* Fondo azul (bg-blue-600) */
+  color: #ffffff !important; /* Texto blanco */
+}
+
+button.mat-mdc-raised-button[color="primary"]:hover {
+  background-color: #1d4ed8 !important; /* Azul más oscuro al pasar el ratón (bg-blue-700) */
+}

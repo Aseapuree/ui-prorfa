@@ -54,7 +54,7 @@ export class MenuComponent implements OnInit, OnChanges {
       this.router.events.pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd)
       ).subscribe((event: NavigationEnd) => {
-        console.log('Evento de enrutador NavigationEnd:', event.urlAfterRedirects);
+        //console.log('Evento de enrutador NavigationEnd:', event.urlAfterRedirects);
         this.updateActiveMenu(event.urlAfterRedirects);
       });
       this.updateActiveMenu(this.router.url);
@@ -63,10 +63,10 @@ export class MenuComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['idRol'] && this.idRol && this.idRol !== 'undefined') {
-      console.log('ngOnChanges: Cambió idRol, obteniendo menús para rol:', this.idRol);
+      //console.log('ngOnChanges: Cambió idRol, obteniendo menús para rol:', this.idRol);
       this.obtenerMenus(this.idRol);
     } else if (changes['menuJerarquico'] && isPlatformBrowser(this.platformId)) {
-      console.log('ngOnChanges: Cambió menuJerarquico, actualizando menú activo.');
+      //console.log('ngOnChanges: Cambió menuJerarquico, actualizando menú activo.');
       this.updateActiveMenu(this.router.url);
     }
   }
@@ -92,7 +92,7 @@ export class MenuComponent implements OnInit, OnChanges {
                            .map(sub => ({...sub, icono: this.getIcon(sub.menu_icono ?? '')}))
         }));
 
-      console.log('Menús cargados, menuJerarquico:', JSON.parse(JSON.stringify(this.menuJerarquico.map(m => ({id: m.idMenu, ruta: m.menu_ruta, sub: m.submenus?.length})))));
+      //console.log('Menús cargados, menuJerarquico:', JSON.parse(JSON.stringify(this.menuJerarquico.map(m => ({id: m.idMenu, ruta: m.menu_ruta, sub: m.submenus?.length})))));
 
       if (isPlatformBrowser(this.platformId)) {
         this.updateActiveMenu(this.router.url);
@@ -105,7 +105,7 @@ export class MenuComponent implements OnInit, OnChanges {
 
   updateActiveMenu(currentUrl: string) {
     const normalizedUrl = currentUrl === '/' ? '/inicio' : currentUrl;
-    console.log(`Actualizando menú activo. URL actual: '${normalizedUrl}' (original: '${currentUrl}')`);
+    //console.log(`Actualizando menú activo. URL actual: '${normalizedUrl}' (original: '${currentUrl}')`);
 
     let bestMatch = { menuId: null as string | null, subMenuId: null as string | null, specificity: -1 };
 
@@ -118,7 +118,7 @@ export class MenuComponent implements OnInit, OnChanges {
         if (staticItem.route && normalizedUrl.startsWith(staticItem.route)) {
             let currentSpecificity = staticItem.route.length;
             if (normalizedUrl === staticItem.route) currentSpecificity += 1;
-            console.log(`Verificación estática: Elemento ${staticItem.id}, Ruta ${staticItem.route}, Especificidad ${currentSpecificity}`);
+            //console.log(`Verificación estática: Elemento ${staticItem.id}, Ruta ${staticItem.route}, Especificidad ${currentSpecificity}`);
             if (currentSpecificity > bestMatch.specificity) {
                 bestMatch = { menuId: staticItem.id, subMenuId: null, specificity: currentSpecificity };
             }
@@ -127,11 +127,11 @@ export class MenuComponent implements OnInit, OnChanges {
 
     for (const menuItem of this.menuJerarquico) {
         if (menuItem.menu_ruta) {
-            console.log(`Verificación de menú: Elemento ${menuItem.idMenu}, Ruta ${menuItem.menu_ruta}`);
+            //console.log(`Verificación de menú: Elemento ${menuItem.idMenu}, Ruta ${menuItem.menu_ruta}`);
             if (normalizedUrl.startsWith(menuItem.menu_ruta)) {
                 let currentSpecificity = menuItem.menu_ruta.length;
                 if (normalizedUrl === menuItem.menu_ruta) currentSpecificity += 1;
-                console.log(`  Coincidencia encontrada para ${menuItem.idMenu}. Especificidad: ${currentSpecificity}`);
+                //console.log(`  Coincidencia encontrada para ${menuItem.idMenu}. Especificidad: ${currentSpecificity}`);
                 if (currentSpecificity > bestMatch.specificity) {
                     bestMatch = { menuId: menuItem.idMenu, subMenuId: null, specificity: currentSpecificity };
                 }
@@ -141,11 +141,11 @@ export class MenuComponent implements OnInit, OnChanges {
         if (menuItem.submenus && menuItem.submenus.length > 0) {
             for (const subMenuItem of menuItem.submenus) {
                 if (subMenuItem.menu_ruta) {
-                    console.log(`  Verificación de submenú: Elemento ${subMenuItem.idMenu} (padre ${menuItem.idMenu}), Ruta ${subMenuItem.menu_ruta}`);
+                    //console.log(`  Verificación de submenú: Elemento ${subMenuItem.idMenu} (padre ${menuItem.idMenu}), Ruta ${subMenuItem.menu_ruta}`);
                     if (normalizedUrl.startsWith(subMenuItem.menu_ruta)) {
                         let currentSpecificity = subMenuItem.menu_ruta.length;
                         if (normalizedUrl === subMenuItem.menu_ruta) currentSpecificity += 1;
-                        console.log(`    Coincidencia encontrada para submenú ${subMenuItem.idMenu}. Especificidad: ${currentSpecificity}`);
+                        //console.log(`    Coincidencia encontrada para submenú ${subMenuItem.idMenu}. Especificidad: ${currentSpecificity}`);
                         if (currentSpecificity > bestMatch.specificity) {
                             bestMatch = { menuId: menuItem.idMenu, subMenuId: subMenuItem.idMenu, specificity: currentSpecificity };
                         }
@@ -160,11 +160,11 @@ export class MenuComponent implements OnInit, OnChanges {
     if (this.activeMenuId !== bestMatch.menuId || this.activeSubMenuId !== bestMatch.subMenuId) {
       this.activeMenuId = bestMatch.menuId;
       this.activeSubMenuId = bestMatch.subMenuId;
-      console.log('IDs activos establecidos: activeMenuId =', this.activeMenuId, ', activeSubMenuId =', this.activeSubMenuId);
+      //console.log('IDs activos establecidos: activeMenuId =', this.activeMenuId, ', activeSubMenuId =', this.activeSubMenuId);
 
       if (this.activeMenuId && this.activeSubMenuId && !this.menuCerrado) {
         if (!this.subMenuOpen[this.activeMenuId]) {
-          console.log('Abriendo submenú padre para elemento activo:', this.activeMenuId);
+          //console.log('Abriendo submenú padre para elemento activo:', this.activeMenuId);
           this.subMenuOpen[this.activeMenuId] = true;
         }
       }

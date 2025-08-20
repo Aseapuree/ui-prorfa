@@ -5,4 +5,6 @@ export class Usuario {
     apellidopaterno?: string;
     apellidomaterno?: string;
     idtipodoc?: string;
+    nombreusuario?: string;
+    rol?: string;
 }

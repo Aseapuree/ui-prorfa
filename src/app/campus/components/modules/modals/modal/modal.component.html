@@ -1,86 +1,149 @@
-<div>
+<div class="bg-gray-900 dark:bg-gray-900 text-gray-100 dark:text-gray-100 p-6">
   <div mat-dialog-title>
-    <h1 class="text-xl font-bold">{{ getTitle() }}</h1>
+    <h1 class="text-2xl font-semibold mb-6 text-gray-100 dark:text-gray-100">
+      {{ getTitle() }}
+    </h1>
   </div>
   <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
-    <div mat-dialog-content class="content">
+    <div
+      mat-dialog-content
+      class="content border border-gray-700 dark:border-gray-700 rounded-lg p-6 space-y-6"
+    >
       <div class="row">
         <mat-form-field class="w-full" appearance="outline">
-          <mat-label>Nombre</mat-label>
+          <mat-label class="text-gray-400 dark:text-gray-400">Nombre</mat-label>
           <input
             matInput
             type="text"
             formControlName="nombre"
             [readonly]="isReadOnly"
-            [ngClass]="{'readonly-field': isReadOnly}"
+            [ngClass]="{ 'readonly-field': isReadOnly }"
+            class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
             (input)="onInputChange($event, 'nombre')"
+          />
+          <mat-error
+            *ngIf="
+              contactForm.get('nombre')?.hasError('required') && !isReadOnly
+            "
           >
-          <mat-error *ngIf="contactForm.get('nombre')?.hasError('required') && !isReadOnly">
             Nombre es requerido
           </mat-error>
-          <mat-error *ngIf="contactForm.get('nombre')?.hasError('invalidFormat') && !isReadOnly">
+          <mat-error
+            *ngIf="
+              contactForm.get('nombre')?.hasError('invalidFormat') &&
+              !isReadOnly
+            "
+          >
             Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
           </mat-error>
         </mat-form-field>
       </div>
       <div class="row">
         <mat-form-field class="w-full" appearance="outline">
-          <mat-label>Abreviatura</mat-label>
+          <mat-label class="text-gray-400 dark:text-gray-400"
+            >Abreviatura</mat-label
+          >
           <input
             matInput
             type="text"
             formControlName="abreviatura"
             [readonly]="isReadOnly"
-            [ngClass]="{'readonly-field': isReadOnly}"
+            [ngClass]="{ 'readonly-field': isReadOnly }"
+            class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
             (input)="onInputChange($event, 'abreviatura')"
+          />
+          <mat-error
+            *ngIf="
+              contactForm.get('abreviatura')?.hasError('required') &&
+              !isReadOnly
+            "
           >
-          <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('required') && !isReadOnly">
             Abreviatura es requerida
           </mat-error>
-          <mat-error *ngIf="contactForm.get('abreviatura')?.hasError('invalidFormat') && !isReadOnly">
+          <mat-error
+            *ngIf="
+              contactForm.get('abreviatura')?.hasError('invalidFormat') &&
+              !isReadOnly
+            "
+          >
             Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
           </mat-error>
         </mat-form-field>
       </div>
       <div class="row">
         <mat-form-field class="w-full" appearance="outline">
-          <mat-label>Descripción</mat-label>
+          <mat-label class="text-gray-400 dark:text-gray-400"
+            >Descripción</mat-label
+          >
           <input
             matInput
             type="text"
             formControlName="descripcion"
             [readonly]="isReadOnly"
-            [ngClass]="{'readonly-field': isReadOnly}"
+            [ngClass]="{ 'readonly-field': isReadOnly }"
+            class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
             (input)="onInputChange($event, 'descripcion')"
+          />
+          <mat-error
+            *ngIf="
+              contactForm.get('descripcion')?.hasError('required') &&
+              !isReadOnly
+            "
           >
-          <mat-error *ngIf="contactForm.get('descripcion')?.hasError('required') && !isReadOnly">
             Descripción es requerida
           </mat-error>
-          <mat-error *ngIf="contactForm.get('descripcion')?.hasError('invalidFormat') && !isReadOnly">
+          <mat-error
+            *ngIf="
+              contactForm.get('descripcion')?.hasError('invalidFormat') &&
+              !isReadOnly
+            "
+          >
             Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
           </mat-error>
         </mat-form-field>
       </div>
       <!-- Competencias -->
       <div class="row">
-        <h3 class="text-lg font-medium mb-2">Competencias</h3>
+        <h3 class="text-lg font-medium mb-2 text-gray-100 dark:text-gray-100">
+          Competencias
+        </h3>
         <div formArrayName="competencias">
-          <div *ngFor="let competencia of competencias.controls; let i=index" class="flex items-center mb-2" [formGroupName]="i">
+          <div
+            *ngFor="let competencia of competencias.controls; let i = index"
+            class="flex items-center mb-2"
+            [formGroupName]="i"
+          >
             <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Competencia {{i + 1}}</mat-label>
+              <mat-label class="text-gray-400 dark:text-gray-400"
+                >Competencia {{ i + 1 }}</mat-label
+              >
               <input
                 matInput
                 type="text"
                 formControlName="nombre"
                 [readonly]="isReadOnly"
-                [ngClass]="{'readonly-field': isReadOnly}"
+                [ngClass]="{ 'readonly-field': isReadOnly }"
+                class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100"
                 (input)="onInputChange($event, 'competencias', i)"
+              />
+              <mat-error
+                *ngIf="
+                  competencias.controls[i]
+                    .get('nombre')
+                    ?.hasError('required') && !isReadOnly
+                "
               >
-              <mat-error *ngIf="competencias.controls[i].get('nombre')?.hasError('required') && !isReadOnly">
                 Competencia es requerida
               </mat-error>
-              <mat-error *ngIf="competencias.controls[i].get('nombre')?.hasError('invalidFormat') && !isReadOnly">
-                Solo se permiten letras, acentos, ñ y un solo espacio entre palabras
+              <mat-error
+                *ngIf="
+                  competencias.controls[i]
+                    .get('nombre')
+                    ?.hasError('invalidFormat') && !isReadOnly
+                "
+              >
+                Solo se permiten letras, acentos, ñ y un solo espacio entre
+                palabras
               </mat-error>
             </mat-form-field>
             <button
@@ -88,13 +151,19 @@
               mat-icon-button
               type="button"
               (click)="removeCompetencia(i)"
-              class="ml-2 text-red-600 hover:text-red-700"
+              class="ml-2 text-gray-100 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-600"
             >
               <fa-icon [icon]="['fas', 'trash']"></fa-icon>
             </button>
           </div>
           <!-- Mostrar error si no hay competencias -->
-          <mat-error *ngIf="contactForm.get('competencias')?.hasError('minCompetencias') && !isReadOnly" class="text-red-600 text-sm">
+          <mat-error
+            *ngIf="
+              contactForm.get('competencias')?.hasError('minCompetencias') &&
+              !isReadOnly
+            "
+            class="text-red-600 text-sm"
+          >
             Se requiere al menos una competencia
           </mat-error>
         </div>
@@ -103,29 +172,31 @@
           mat-stroked-button
           type="button"
           (click)="addCompetencia()"
-          class="w-full mt-2 bg-blue-100 hover:bg-blue-200 text-blue-700"
+          class="w-full mt-2 bg-gray-700 dark:bg-gray-700 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-800 rounded-md transition-colors duration-300"
         >
           <fa-icon [icon]="['fas', 'plus']" class="mr-2"></fa-icon>
           Agregar Competencia
         </button>
       </div>
     </div>
-    <div mat-dialog-actions class="flex justify-end space-x-2">
+    <div
+      mat-dialog-actions
+      class="flex justify-end space-x-2 bg-gray-900 dark:bg-gray-900 p-6 border-t border-gray-700 dark:border-gray-700"
+    >
       <button
-        mat-raised-button
+        mat-button
         [mat-dialog-close]="false"
         type="button"
-        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        class="px-4 py-2 bg-gray-800 dark:bg-write text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-gray-800 dark:hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300"
       >
-        {{ isReadOnly ? 'Cerrar' : 'Cancelar' }}
+        {{ isReadOnly ? "Cerrar" : "Cancelar" }}
       </button>
       <button
         *ngIf="!isReadOnly"
         [disabled]="!contactForm.valid"
         mat-raised-button
-        color="primary"
         type="submit"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        class="px-4 py-2 bg-gray-800 dark:bg-gray-800 text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-gray-800 dark:hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300"
       >
         {{ getTitle() }}
       </button>

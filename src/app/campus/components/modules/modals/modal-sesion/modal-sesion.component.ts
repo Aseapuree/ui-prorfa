@@ -47,75 +47,90 @@ export class ModalSesionComponent implements OnInit{
   }
 
   private _buildForm(): void {
-    this.sesionForm = this.fb.group({
-      titulo: ['', Validators.required],
-      descripcion: ['', Validators.required],
-      fechaAsignada: ['', Validators.required]
-    });
+  this.sesionForm = this.fb.group({
+    idSesion: ['', this.data.isEditing ? [Validators.required] : []],
+    titulo: ['', Validators.required],
+    descripcion: ['', Validators.required],
+    fechaAsignada: ['', Validators.required]
+  });
 
-    // Limpiar el mensaje de error cuando el usuario cambie el título
-    this.sesionForm.get('titulo')?.valueChanges.subscribe(() => {
-      this.titleError = null;
+  // Limpiar el mensaje de error cuando el usuario cambie el título
+  this.sesionForm.get('titulo')?.valueChanges.subscribe(() => {
+    this.titleError = null;
+  });
+
+  // Cargar idSesion en modo edición
+  if (this.data.isEditing && this.data.sesion) {
+    this.sesionForm.patchValue({
+      idSesion: this.data.sesion.idSesion,
+      titulo: this.data.sesion.titulo,
+      descripcion: this.data.sesion.descripcion,
+      fechaAsignada: this.data.sesion.fechaAsignada ? new Date(this.data.sesion.fechaAsignada) : null
     });
   }
+}
 
   onSubmit(): void {
-    if (this.sesionForm.invalid) {
-      let errorMessages: string[] = [];
-      if (this.sesionForm.get('titulo')?.hasError('required')) {
-        errorMessages.push('El título es requerido');
-      }
-      if (this.sesionForm.get('descripcion')?.hasError('required')) {
-        errorMessages.push('La descripción es requerida');
-      }
-      if (this.sesionForm.get('fechaAsignada')?.hasError('required')) {
-        errorMessages.push('La fecha asignada es requerida');
-      }
-      this.notificationService.showNotification(errorMessages.join(' y '), 'error');
+  if (this.sesionForm.invalid) {
+    let errorMessages: string[] = [];
+    if (this.sesionForm.get('titulo')?.hasError('required')) {
+      errorMessages.push('El título es requerido');
+    }
+    if (this.sesionForm.get('descripcion')?.hasError('required')) {
+      errorMessages.push('La descripción es requerida');
+    }
+    if (this.sesionForm.get('fechaAsignada')?.hasError('required')) {
+      errorMessages.push('La fecha asignada es requerida');
+    }
+    this.notificationService.showNotification(errorMessages.join(' y '), 'error');
+    return;
+  }
+
+  const sesionData: Sesion = {
+    ...this.sesionForm.value,
+    idSesion: this.data.isEditing ? this.data.sesion.idSesion : undefined,
+    profesorGuardar: this.data.idProfesorCurso,
+    fechaAsignada: this.formatDate(this.sesionForm.get('fechaAsignada')?.value)
+  };
+
+  if (this.data.isEditing) {
+    if (!sesionData.idSesion) {
+      this.notificationService.showNotification('El ID de la sesión es requerido para la edición', 'error');
       return;
     }
-
-    const sesionData: Sesion = {
-      ...this.sesionForm.value,
-      idSesion: this.data.isEditing ? this.data.sesion.idSesion : undefined,
-      profesorGuardar: this.data.idProfesorCurso,
-      fechaAsignada: this.formatDate(this.sesionForm.get('fechaAsignada')?.value)
-    };
-
-    if (this.data.isEditing) {
-      this.sesionService.editarSesion(this.data.sesion.idSesion, sesionData).subscribe({
-        next: (response) => {
-          this.notificationService.showNotification('Sesión actualizada con éxito', 'success');
-          this.dialogRef.close(true);
-        },
-        error: (err) => {
-          const errorMessage = err.error?.message || 'Error al editar la sesión';
-          if (errorMessage.includes('Ya existe una sesión con el título')) {
-            this.titleError = errorMessage;
-          } else {
-            this.notificationService.showNotification(errorMessage, 'error');
-          }
-          console.error('Error al editar sesión:', err);
-        },
-      });
-    } else {
-      this.sesionService.agregarSesion(sesionData).subscribe({
-        next: (response) => {
-          this.notificationService.showNotification('Sesión agregada con éxito', 'success');
-          this.dialogRef.close(true);
-        },
-        error: (err) => {
-          const errorMessage = err.error?.message || 'Error al agregar la sesión';
-          if (errorMessage.includes('Ya existe una sesión con el título')) {
-            this.titleError = errorMessage;
-          } else {
-            this.notificationService.showNotification(errorMessage, 'error');
-          }
-          console.error('Error al agregar sesión:', err);
-        },
-      });
-    }
+    this.sesionService.editarSesion(sesionData).subscribe({
+      next: (response) => {
+        this.notificationService.showNotification('Sesión actualizada con éxito', 'success');
+        this.dialogRef.close(true);
+      },
+      error: (err) => {
+        const errorMessage = err.error?.message || 'Error al editar la sesión';
+        if (errorMessage.includes('Ya existe una sesión con el título')) {
+          this.titleError = errorMessage;
+        } else {
+          this.notificationService.showNotification(errorMessage, 'error');
+        }
+        console.error('Error al editar sesión:', err);
+      },
+    });
+  } else {
+    this.sesionService.agregarSesion(sesionData).subscribe({
+      next: (response) => {
+        this.notificationService.showNotification('Sesión agregada con éxito', 'success');
+        this.dialogRef.close(true);
+      },
+      error: (err) => {
+        const errorMessage = err.error?.message || 'Error al agregar la sesión';
+        if (errorMessage.includes('Ya existe una sesión con el título')) {
+          this.titleError = errorMessage;
+        } else {
+          this.notificationService.showNotification(errorMessage, 'error');
+        }
+        console.error('Error al agregar sesión:', err);
+      },
+    });
   }
+}
 
   formatDate(date: Date): string {
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';

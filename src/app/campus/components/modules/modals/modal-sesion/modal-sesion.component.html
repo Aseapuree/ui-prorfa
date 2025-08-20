@@ -39,23 +39,21 @@
       </mat-form-field>
     </div>
     <div class="flex justify-end space-x-2 mt-4">
-      <button
-        mat-button
-        type="button"
-        (click)="dialogRef.close()"
-        class="text-white dark:text-white hover:bg-gray-700 dark:hover:bg-gray-700"
-      >
-        Cancelar
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        type="submit"
-        [disabled]="sesionForm.invalid"
-        class="bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-700 text-white dark:text-white"
-      >
-        {{ data.isEditing ? 'Guardar Cambios' : 'Agregar' }}
-      </button>
-    </div>
+  <button
+    mat-button
+    type="button"
+    (click)="dialogRef.close()"
+  >
+    Cancelar
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    [disabled]="sesionForm.invalid"
+  >
+    {{ data.isEditing ? 'Guardar Cambios' : 'Agregar' }}
+  </button>
+</div>
   </form>
 </div>

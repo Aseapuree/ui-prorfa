@@ -8,7 +8,7 @@
             <tr>
               <!-- Encabezados de la tabla -->
               <th *ngFor="let column of columns"
-                class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-table-header-text max-w-[{{column.maxWidth}}px]"
+                class="py-3.5 px-4 md:px-2 text-sm font-normal text-center text-table-header-text max-w-[{{column.maxWidth}}px]"
                 [class.cursor-pointer]="column.sortable"
                 (click)="column.sortable && onSort(column.field)"
               >
@@ -22,7 +22,7 @@
               </th>
               <!-- Columna de acciones -->
               <th *ngIf="enableActions && actions.length > 0"
-                class="py-3.5 px-4 md:px-2 text-sm font-normal text-left text-table-header-text max-w-[100px]"
+                class="py-3.5 px-4 md:px-2 text-sm font-normal text-center text-table-header-text max-w-[100px]"
               >
                 ACCIONES
               </th>

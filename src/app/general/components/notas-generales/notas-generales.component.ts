@@ -8,7 +8,6 @@ import { NotasService } from '../../../campus/services/notas.service';
 import { catchError, map, throwError } from 'rxjs';
 import { PaginationComponent } from '../pagination/pagination.component';
 
-
 @Component({
   selector: 'app-notas-generales',
   standalone: true,
@@ -18,7 +17,7 @@ import { PaginationComponent } from '../pagination/pagination.component';
 })
 export class NotasGeneralesComponent implements OnInit {
   notas: DTONotaResponse[] = [];
-  alumnosNotas: LocalAlumnoNotas[] = []; // Cambiado a LocalAlumnoNotas
+  alumnosNotas: LocalAlumnoNotas[] = [];
   expandedRows: Set<string> = new Set();
   isLoading: boolean = false;
   isDataLoaded: boolean = false;
@@ -30,6 +29,7 @@ export class NotasGeneralesComponent implements OnInit {
   filterActivity: string = '';
   filterSession: string = '';
   filterNotaMin: number | null = null;
+  filterNotaType: string = '';
   availableActivities: string[] = [];
   availableSessions: string[] = [];
 
@@ -64,12 +64,12 @@ export class NotasGeneralesComponent implements OnInit {
           const notas: DTONotaResponse[] = [];
           const sesiones = response.data.sesiones || [];
           sesiones.forEach(sesion => {
-            const titulo = sesion.sesion?.titulo || ''; // Obtenemos el título de la sesión
+            const titulo = sesion.sesion?.titulo || '';
             const infoCurso = sesion.sesion?.infoCurso || {};
             const notasSesion = sesion.notas || [];
             notasSesion.forEach(nota => {
               notas.push({
-                idNota: titulo, // Cambiamos idNota por el título de la sesión
+                idNota: titulo,
                 idAlumno: nota.idAlumno || '',
                 nombre: nota.nombre || '',
                 apellidos: nota.apellidos || '',
@@ -103,7 +103,7 @@ export class NotasGeneralesComponent implements OnInit {
     ).subscribe(notas => {
       this.notas = notas;
       this.availableActivities = [...new Set(this.notas.map(nota => nota.nombreActividad))];
-      this.availableSessions = [...new Set(this.notas.map(nota => nota.idNota))]; // Esto ahora usará los títulos
+      this.availableSessions = [...new Set(this.notas.map(nota => nota.idNota))];
       this.agruparNotasPorAlumno();
       this.isLoading = false;
       this.isDataLoaded = true;
@@ -158,8 +158,10 @@ export class NotasGeneralesComponent implements OnInit {
       notasFiltradas = notasFiltradas.filter(nota => nota.idNota === this.filterSession);
     }
 
-    if (this.filterNotaMin !== null) {
-      notasFiltradas = notasFiltradas.filter(nota => (nota.nota ?? 0) >= this.filterNotaMin!);
+    if (this.filterNotaType === 'aprobatoria') {
+      notasFiltradas = notasFiltradas.filter(nota => (nota.nota ?? 0) > 12);
+    } else if (this.filterNotaType === 'desaprobatoria') {
+      notasFiltradas = notasFiltradas.filter(nota => (nota.nota ?? 0) <= 12);
     }
 
     return notasFiltradas;
@@ -173,6 +175,11 @@ export class NotasGeneralesComponent implements OnInit {
     this.router.navigate(['/campus-vista'], {
       queryParams: { grado: this.grado, seccion: this.seccion, nivel: this.nivel }
     });
+  }
+
+  imprimirBoleta(): void {
+    // Placeholder para la funcionalidad de impresión
+    console.log('Funcionalidad de impresión de boleta aún no implementada.');
   }
 }
 

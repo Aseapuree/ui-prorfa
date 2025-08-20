@@ -68,51 +68,6 @@
     }
   }
 
-  .filters {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-
-    .filter-group {
-      display: flex;
-      align-items: center;
-      background-color: var(--secondary-dark, #2a3448);
-      padding: 8px 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-
-      .filter-label {
-        color: var(--accent-color, #7dd3fc);
-        font-weight: 500;
-        margin-right: 8px;
-      }
-
-      .filter-select,
-      .filter-input {
-        padding: 6px 10px;
-        background-color: var(--primary-dark, #1a2330);
-        color: var(--text-color, #e0e7ff);
-        border: 1px solid var(--border-color, #4b5e8a);
-        border-radius: 4px;
-        font-size: 0.9rem;
-        outline: none;
-        transition: border-color 0.3s;
-
-        &:focus {
-          border-color: var(--accent-color, #7dd3fc);
-        }
-      }
-
-      .filter-input {
-        width: 80px;
-        text-align: center;
-      }
-    }
-  }
-
   .no-data {
     text-align: center;
     padding: 20px;
@@ -143,7 +98,6 @@
       th {
         background-color: var(--secondary-dark, #2a3448);
         font-weight: 600;
-        /* Cambio: Color más visible para los encabezados */
         color: #a3e4ff; /* Azul claro brillante para mejor contraste */
         /* Comentario: Puedes mover este color a una variable CSS (ej. --header-color) en :root de tu archivo global si quieres personalizarlo más adelante */
         position: sticky;
@@ -156,51 +110,9 @@
         color: var(--text-color, #e0e7ff);
       }
 
-      tr.summary-row:hover {
+      tr:hover {
         background-color: var(--primary-hover, #2a3448);
         transition: background-color 0.3s;
-      }
-
-      .details-row {
-        background-color: var(--secondary-dark, #2a3448);
-
-        .details-container {
-          padding: 10px;
-
-          .details-table {
-            width: 100%;
-            border-collapse: collapse;
-
-            th,
-            td {
-              padding: 8px;
-              border: 1px solid var(--border-color, #4b5e8a);
-            }
-
-            th {
-              background-color: var(--primary-dark, #1a2330);
-              /* Cambio: Color más visible para los encabezados de detalles */
-              color: #a3e4ff; /* Azul claro brillante para mejor contraste */
-              /* Comentario: Puedes mover este color a una variable CSS (ej. --header-detail-color) en :root de tu archivo global si quieres personalizarlo más adelante */
-            }
-
-            td {
-              background-color: var(--secondary-hover, #1e2a38);
-            }
-
-            tr:hover td {
-              background-color: var(--primary-hover, #2a3448);
-            }
-
-            .file-link {
-              color: var(--accent-color, #7dd3fc);
-
-              &:hover {
-                text-decoration: underline;
-              }
-            }
-          }
-        }
       }
     }
   }
@@ -258,15 +170,6 @@
 
       p {
         font-size: 0.9rem;
-      }
-    }
-
-    .filters {
-      flex-direction: column;
-      gap: 10px;
-
-      .filter-group {
-        width: 100%;
       }
     }
 

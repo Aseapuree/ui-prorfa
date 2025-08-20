@@ -1,26 +1,39 @@
-<div>
+<div class="bg-gray-800 dark:bg-gray-800 text-gray-100 dark:text-gray-100 p-6">
   <div mat-dialog-title>
-    <h1 class="text-xl font-bold">Competencias del Curso</h1>
+    <h1 class="text-2xl font-semibold mb-6 text-gray-100 dark:text-gray-100">
+      Competencias del Curso
+    </h1>
   </div>
-  <div mat-dialog-content class="content">
+  <div
+    mat-dialog-content
+    class="content border border-gray-700 dark:border-gray-700 rounded-lg p-6 space-y-6"
+  >
     <div class="row">
-      <h3 class="text-lg font-medium mb-2">Lista de Competencias</h3>
+      <h3 class="text-lg font-medium mb-2 text-gray-100 dark:text-gray-100">
+        Lista de Competencias
+      </h3>
       <ul class="list-disc pl-5">
-        <li *ngFor="let competencia of data.competencias" class="mb-2">
+        <li *ngFor="let competencia of data.competencias" class="mb-2 text-gray-100 dark:text-gray-100">
           {{ competencia.nombre }}
         </li>
       </ul>
-      <p *ngIf="!data.competencias || data.competencias.length === 0" class="text-gray-500">
+      <p
+        *ngIf="!data.competencias || data.competencias.length === 0"
+        class="text-gray-400 dark:text-gray-400"
+      >
         No hay competencias asociadas.
       </p>
     </div>
   </div>
-  <div mat-dialog-actions class="flex justify-end">
+  <div
+    mat-dialog-actions
+    class="flex justify-end space-x-2 bg-gray-800 dark:bg-gray-800 p-6 border-t border-gray-700 dark:border-gray-700"
+  >
     <button
-      mat-raised-button
+      mat-button
       [mat-dialog-close]="false"
       type="button"
-      class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+      class="px-4 py-2 bg-gray-800 dark:bg-gray-800 text-white dark:text-white border border-gray-600 dark:border-gray-600 hover:bg-purple-600 dark:hover:bg-purple-600 hover:shadow-lg hover:-translate-y-0.5 rounded-md transition-all duration-300"
     >
       Cerrar
     </button>

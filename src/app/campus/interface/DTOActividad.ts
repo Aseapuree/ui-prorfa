@@ -11,6 +11,7 @@ export interface DTOActividad {
     descripcion?: string;
   };
   competencia?: { nombre: string } | null; // Nuevo campo para competencia
+  actividadTipo?: string; // Debe ser 'introduccion', 'material' o 'actividad'
 }
 
 export interface DTOActividadesSesion {

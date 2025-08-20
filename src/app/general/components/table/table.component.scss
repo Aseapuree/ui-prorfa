@@ -1,13 +1,24 @@
 .table-container {
-    width: 100%;
-    overflow-x: auto;
-  }
+  width: 100%;
+  overflow-x: auto;
+}
 
-  table {
-    width: 100%;
-    table-layout: auto;
-  }
+table {
+  width: 100%;
+  table-layout: auto;
+}
 
-  th{
-    text-align: center !important;
-  }
+th,
+td {
+  text-align: center !important;
+}
+
+th .flex.items-center {
+  justify-content: center;
+}
+
+/* Center the icons in the actions column */
+td .flex.items-center {
+  justify-content: center;
+  gap: 1rem; /* Adjust gap if needed for spacing between icons */
+}
