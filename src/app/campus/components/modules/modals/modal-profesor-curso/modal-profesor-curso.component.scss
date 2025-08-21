@@ -1,23 +1,125 @@
-.noBorder {
-  border-color: coral;
-  outline: none;
-  width: 600px;
+:host ::ng-deep .mat-mdc-dialog-container .mdc-dialog .mdc-dialog__title {
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-mat-form-field {
-  width: 100%;
-}
-
-mat-select {
-  width: 100%;
+:host ::ng-deep .bg-gray-800 {
+  padding-top: 0 !important;
+  padding-bottom: 6px !important;
 }
 
 .content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .row {
+  margin-bottom: 1rem;
+}
+
+.w-full {
   width: 100%;
+}
+
+/* Estilo para mensajes de error */
+mat-error {
+  font-size: 12px;
+  color: #dc2626; /* Rojo-600 para mensajes de error */
+}
+
+/* Sobrescritura de estilos de Angular Material */
+::ng-deep mat-form-field {
+  .mat-mdc-select-value {
+    color: #ffffff !important; /* Texto blanco */
+  }
+
+  .mat-mdc-form-field-required-marker {
+    color: #9ca3af !important; /* Gris-400 para el marcador de campo requerido */
+  }
+
+  .mat-mdc-form-field-input-control {
+    color: #ffffff !important; /* Texto blanco para el contenido del input */
+    caret-color: #60a5fa !important; /* Cursor azul claro (blue-400) */
+  }
+}
+
+/* Estilo para el panel desplegable del mat-select */
+::ng-deep .mat-mdc-select-panel {
+  background-color: #1f2937 !important; /* Gris-800 para el fondo del panel */
+  color: #ffffff !important; /* Texto blanco */
+}
+
+/* Estilo para las opciones del mat-select */
+::ng-deep .mat-mdc-option {
+  color: #ffffff !important; /* Texto blanco para las opciones */
+  background-color: #111827 !important; /* Gris-800 para el fondo de las opciones */
+}
+
+::ng-deep .mat-mdc-option:hover,
+::ng-deep .mat-mdc-option:focus,
+::ng-deep .mat-mdc-option.mat-mdc-option-active {
+  background-color: #1f2937 !important; /* Morado-600 al pasar el ratón o seleccionar */
+  color: #ffffff !important; /* Mantener texto blanco para contraste */
+}
+
+/* Estilo para opciones deshabilitadas */
+::ng-deep .mat-mdc-option.mat-mdc-option-disabled {
+  color: #4b5563 !important; /* Gris-600 para opciones deshabilitadas */
+  background-color: #1f2937 !important; /* Mantener fondo gris-800 */
+}
+
+/* Estilo para botones con íconos */
+::ng-deep .mat-mdc-icon-button {
+  color: #ffffff !important; /* Ícono blanco por defecto */
+}
+
+::ng-deep .mat-mdc-icon-button:hover {
+  color: #1f2937 !important; /* Morado-600 al pasar el ratón */
+}
+
+/* Estilo para botones con borde */
+button[mat-stroked-button] {
+  color: #ffffff !important; /* Texto blanco */
+}
+
+button[mat-stroked-button] fa-icon {
+  color: #ffffff !important; /* Ícono blanco */
+}
+
+button[mat-stroked-button]:hover {
+  color: #ffffff !important; /* Texto blanco al pasar el ratón */
+}
+
+button[mat-stroked-button]:hover fa-icon {
+  color: #ffffff !important; /* Ícono blanco al pasar el ratón */
+}
+
+/* Estilo para botones estándar (como Cancelar) */
+button[mat-button] {
+  color: #ffffff !important; /* Texto blanco */
+}
+
+button[mat-button] fa-icon {
+  color: #ffffff !important; /* Ícono blanco */
+}
+
+/* Estilo para botones elevados (como el botón de submit) */
+button[mat-raised-button] {
+  color: #ffffff !important; /* Texto blanco */
+  background-color: #1f2937 !important; /* Fondo gris-800 */
+  opacity: 1 !important; /* Completamente visible */
+  cursor: pointer !important; /* Cursor de puntero */
+}
+
+button[mat-raised-button]:hover {
+  background-color: #1f2937 !important; /* Morado-600 al pasar el ratón */
+  color: #ffffff !important; /* Texto blanco para contraste */
+}
+
+/* Estilo para botones elevados deshabilitados */
+button[mat-raised-button][disabled] {
+  color: #ffffff !important; /* Texto blanco */
+  background-color: #4b5563 !important; /* Gris-600 para deshabilitado */
+  opacity: 0.5 !important; /* Semi-transparente */
+  cursor: not-allowed !important; /* Cursor de no permitido */
 }

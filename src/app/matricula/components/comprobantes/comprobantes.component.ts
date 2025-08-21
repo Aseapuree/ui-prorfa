@@ -95,8 +95,12 @@ export class ComprobanteComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.idMatricula = params['idMatricula'];
       this.nivel = params['nivel'] || null;
+      /**INICIO */
+      const refresh = params['refresh']; // Nuevo parámetro
+      /*FIN*/
       if (this.idMatricula) {
-        this.loadComprobanteDetails(this.idMatricula);
+        //this.loadComprobanteDetails(this.idMatricula);
+        this.loadComprobanteDetails(this.idMatricula, !!refresh); // Forzar recarga si hay `refresh`
       } else {
         this.error = 'No se proporcionó un ID de matrícula.';
         this.isLoading = false;
@@ -104,7 +108,11 @@ export class ComprobanteComponent implements OnInit {
     });
   }
 
-  loadComprobanteDetails(idMatricula: string): void {
+  //loadComprobanteDetails(idMatricula: string): void {
+  /** INICIO */
+  loadComprobanteDetails(idMatricula: string, forceRefresh: boolean = false): void {
+  if (!forceRefresh && this.comprobante) return; // Omitir si no se fuerza recarga
+  /*FIN */
     this.isLoading = true;
     this.error = null;
     this.ComprobanteService.obtenerComprobantePorIdMatricula(idMatricula).subscribe({

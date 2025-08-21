@@ -1,0 +1,48 @@
+<div class="main-container">
+        <h2>Editar Datos del Colegio</h2>
+        <form id="editForm">
+            <!-- Campo: Nombre del Colegio -->
+            <div class="form-group">
+                <label for="nombre">Nombre del Colegio</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-building input-icon"></i>
+                    <input type="text" id="nombre" name="nombre" value="Colegio San Ignacio de Loyola" required>
+                </div>
+            </div>
+
+            <!-- Campo: Dirección -->
+            <div class="form-group">
+                <label for="direccion">Dirección</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-map-marker-alt input-icon"></i>
+                    <input type="text" id="direccion" name="direccion" value="Av. La Marina 123, Lima" required>
+                </div>
+            </div>
+
+            <!-- Campo: Teléfono -->
+            <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-phone input-icon"></i>
+                    <input type="tel" id="telefono" name="telefono" value="+51 123 456 789" required>
+                </div>
+            </div>
+
+            <!-- Campo: Correo Electrónico -->
+            <div class="form-group">
+                <label for="email">Correo Electrónico</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" id="email" name="email" value="contacto@colegiosil.edu.pe" required>
+                </div>
+            </div>
+
+            <!-- Contenedor de botones para guardar y cancelar -->
+            <div class="button-container">
+                <button type="button" class="btn btn-secondary">EDITAR</button>
+            </div>
+
+            <!-- Mensaje de estado -->
+            <div id="statusMessage" class="status-message"></div>
+        </form>
+    </div>
