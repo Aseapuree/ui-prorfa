@@ -138,6 +138,23 @@
       }
     }
   }
+
+  .btn-ver-boleta { /* Nuevo estilo para el botón Ver Boleta */
+    padding: 6px 12px;
+    background-color: var(--accent-color, #7dd3fc);
+    color: var(--text-color, #1a2330);
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      background-color: var(--primary-hover, #93c5fd);
+      transform: translateY(-1px);
+    }
+  }
 }
 
 @keyframes fade-in {
@@ -192,6 +209,11 @@
         padding: 8px 16px;
         font-size: 0.9rem;
       }
+    }
+
+    .btn-ver-boleta {
+      padding: 4px 8px;
+      font-size: 0.8rem;
     }
   }
 }
