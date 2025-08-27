@@ -1,4 +1,3 @@
-// Archivo: entidad.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -23,7 +22,7 @@ export class EntidadComponent implements OnInit {
     private route: ActivatedRoute
   ) { }
 
-  ngOnInit(): void {
+  /*ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -36,5 +35,22 @@ export class EntidadComponent implements OnInit {
 
   obtenerDatosEntidad(id: string): void {
     this.entidad$ = this.entidadService.obtenerEntidad(id);
+  }*/
+
+  ngOnInit(): void {
+    // Se obtiene el ID del usuario directamente desde el localStorage.
+    const idUsuario = localStorage.getItem('IDUSER');
+
+    // Se verifica si el ID existe antes de llamar al servicio.
+    if (idUsuario) {
+      this.obtenerDatosEntidadPorUsuario(idUsuario);
+    } else {
+      console.error('ID de usuario no encontrado en el localStorage.');
+    }
+  }
+
+  obtenerDatosEntidadPorUsuario(id: string): void {
+    this.entidad$ = this.entidadService.obtenerEntidadPorUsuario(id);
   }
 }
+
