@@ -4,18 +4,21 @@ import { ActivatedRoute } from '@angular/router';
 import { EntidadService } from '../../services/entidad.service';
 import { Entidad } from '../../interfaces/DTOEntidad';
 import { HttpClientModule } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
+import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-entidad',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, GeneralLoadingSpinnerComponent],
   templateUrl: './entidad.component.html',
   styleUrls: ['./entidad.component.scss']
 })
 export class EntidadComponent implements OnInit {
 
   entidad$: Observable<Entidad> | undefined;
+  loading = false;
+  spinnerMessage: string = 'Cargando datos...';
 
   constructor(
     private entidadService: EntidadService,
@@ -50,7 +53,17 @@ export class EntidadComponent implements OnInit {
   }
 
   obtenerDatosEntidadPorUsuario(id: string): void {
-    this.entidad$ = this.entidadService.obtenerEntidadPorUsuario(id);
+    this.loading = true;
+   this.entidadService.obtenerEntidadPorUsuario(id).pipe(
+      finalize(() => {
+        this.loading = false;
+      })
+    ).subscribe(entidad => {
+      this.entidad$ = new Observable(observer => {
+        observer.next(entidad);
+        observer.complete();
+      });
+    });
   }
 }
 

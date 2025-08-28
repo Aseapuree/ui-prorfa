@@ -1,3 +1,4 @@
+<app-general-loading-spinner [visible]="loading" [message]="spinnerMessage"></app-general-loading-spinner>
 <div class="main-container">
   <!-- Encabezado con logo y nombre del colegio, cargados dinámicamente -->
   <div class="header">
@@ -104,15 +105,18 @@
         <!-- Sección de Datos de Niveles -->
         <div class="info-section">
           <h3><i class="fas fa-clipboard-list"></i> Datos Niveles</h3>
-          <div class="grade-grid">
+          <div class="grade-grid-wrapper">
             <ng-container *ngFor="let nivel of (entidad$ | async)?.datosngs?.niveles">
-              <div class="grade-card" *ngFor="let grado of nivel.grados">
-                <h5>{{ grado.nombre }}</h5>
-                <span>Secciones:
-                  <ng-container *ngFor="let seccion of grado.secciones; last as isLast">
-                    {{ seccion.nombre }} ({{ seccion.vacantes }})<span *ngIf="!isLast">, </span>
-                  </ng-container>
-                </span>
+              <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
+              <div class="grade-grid">
+                <div class="grade-card" *ngFor="let grado of nivel.grados">
+                  <h5>{{ grado.nombre }}</h5>
+                  <span>Secciones:
+                    <ng-container *ngFor="let seccion of grado.secciones; last as isLast">
+                      {{ seccion.nombre }} ({{ seccion.vacantes }})<span *ngIf="!isLast">, </span>
+                    </ng-container>
+                  </span>
+                </div>
               </div>
             </ng-container>
           </div>
