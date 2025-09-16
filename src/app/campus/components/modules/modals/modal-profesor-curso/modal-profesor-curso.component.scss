@@ -58,7 +58,7 @@ mat-error {
 ::ng-deep .mat-mdc-option:hover,
 ::ng-deep .mat-mdc-option:focus,
 ::ng-deep .mat-mdc-option.mat-mdc-option-active {
-  background-color: #1f2937 !important; /* Morado-600 al pasar el ratón o seleccionar */
+  background-color: #1f2937 !important; /*  al pasar el ratón o seleccionar */
   color: #ffffff !important; /* Mantener texto blanco para contraste */
 }
 
@@ -94,32 +94,51 @@ button[mat-stroked-button]:hover fa-icon {
   color: #ffffff !important; /* Ícono blanco al pasar el ratón */
 }
 
-/* Estilo para botones estándar (como Cancelar) */
+/* estilos para los botones de Angular Material */
+button[mat-button], button[mat-raised-button] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px 16px !important; /* Ajusta el padding para un mejor centrado */
+  line-height: 1.5 !important; /* Asegura una altura de línea adecuada */
+  height: 40px !important; /* Altura fija para consistencia */
+  box-sizing: border-box !important; /* Evita que el padding afecte el tamaño */
+}
+
+/* boton cancelar */
 button[mat-button] {
-  color: #ffffff !important; /* Texto blanco */
+  color: #ffffff !important; /* Blanco para el texto */
+  background-color: red;
 }
 
 button[mat-button] fa-icon {
-  color: #ffffff !important; /* Ícono blanco */
+  color: #ffffff !important; /* Blanco para el ícono si lo hay */
 }
 
-/* Estilo para botones elevados (como el botón de submit) */
-button[mat-raised-button] {
-  color: #ffffff !important; /* Texto blanco */
-  background-color: #1f2937 !important; /* Fondo gris-800 */
-  opacity: 1 !important; /* Completamente visible */
-  cursor: pointer !important; /* Cursor de puntero */
-}
-
-button[mat-raised-button]:hover {
-  background-color: #1f2937 !important; /* Morado-600 al pasar el ratón */
-  color: #ffffff !important; /* Texto blanco para contraste */
-}
-
-/* Estilo para botones elevados deshabilitados */
+/* boton agregar deshabilitado (opaco) */
 button[mat-raised-button][disabled] {
-  color: #ffffff !important; /* Texto blanco */
-  background-color: #4b5563 !important; /* Gris-600 para deshabilitado */
-  opacity: 0.5 !important; /* Semi-transparente */
-  cursor: not-allowed !important; /* Cursor de no permitido */
+  color: #ffffff !important; /* Blanco opaco para el texto */
+  background-color: #4b5563 !important; /* Gris oscuro opaco (gray-600) */
+  opacity: 0.5 !important; /* Efecto opaco */
+  cursor: not-allowed !important; /* Cursor que indica deshabilitado */
+}
+
+/* boton agregar habilitado (blanco y activo) */
+button[mat-raised-button]:not([disabled]) {
+  color: #ffffff !important; /* Blanco para el texto */
+  background-color: #7CFC00 !important; /* Verde claro (lightgreen) */
+  opacity: 1 !important; /* Completamente visible */
+  cursor: pointer !important; /* Cursor que indica habilitado */
+}
+
+/* Efecto hover para el botón "Agregar Curso" habilitado */
+button[mat-raised-button]:not([disabled]):hover {
+  background-color: #66CC00 !important; /* Verde más oscuro (darkgreen) al pasar el ratón */
+  color: #ffffff !important; /* Blanco para mantener contraste */
+}
+
+::ng-deep .mat-mdc-form-field .mdc-notched-outline__leading,
+::ng-deep .mat-mdc-form-field .mdc-notched-outline__notch,
+::ng-deep .mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: #ffffff !important; /* Bordes blancos */
 }

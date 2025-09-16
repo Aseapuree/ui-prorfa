@@ -46,7 +46,7 @@ mat-error {
 
   
   .mat-mdc-form-field-required-marker {
-    color: #9ca3af !important; /* text-gray-400 */
+    color: #ffffff !important; /* text-gray-400 */
   }
 
   /* Texto dentro del input */
@@ -71,6 +71,7 @@ mat-error {
 /* Asegura que el texto y el ícono del botón sean blancos */
 button[mat-stroked-button] {
   color: #ffffff !important; /* Blanco para el texto */
+  
 }
 
 button[mat-stroked-button] fa-icon {
@@ -86,9 +87,22 @@ button[mat-stroked-button]:hover fa-icon {
   color: #ffffff !important; /* Mantener el ícono blanco al pasar el ratón */
 }
 
+
+/* Centrar el texto de los botones de Angular Material */
+button[mat-button], button[mat-raised-button] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px 16px !important; /* Ajusta el padding para un mejor centrado */
+  line-height: 1.5 !important; /* Asegura una altura de línea adecuada */
+  height: 40px !important; /* Altura fija para consistencia */
+  box-sizing: border-box !important; /* Evita que el padding afecte el tamaño */
+}
+
 /* Asegura que el botón "Cancelar" sea siempre blanco */
 button[mat-button] {
   color: #ffffff !important; /* Blanco para el texto */
+  background-color: red;
 }
 
 button[mat-button] fa-icon {
@@ -106,17 +120,21 @@ button[mat-raised-button][disabled] {
 /* Estilo para el botón "Agregar Curso" habilitado (blanco y activo) */
 button[mat-raised-button]:not([disabled]) {
   color: #ffffff !important; /* Blanco para el texto */
-  background-color: #1f2937 !important; /* Gris oscuro base (gray-800) */
+  background-color: #7CFC00 !important; /* Verde claro (lightgreen) */
   opacity: 1 !important; /* Completamente visible */
   cursor: pointer !important; /* Cursor que indica habilitado */
 }
 
 /* Efecto hover para el botón "Agregar Curso" habilitado */
 button[mat-raised-button]:not([disabled]):hover {
-  background-color: #1f2937  !important; /* Gris oscuro (gray-800) al pasar el ratón */
+  background-color: #66CC00 !important; /* Verde más oscuro (darkgreen) al pasar el ratón */
   color: #ffffff !important; /* Blanco para mantener contraste */
 }
 
 
-
+::ng-deep .mat-mdc-form-field .mdc-notched-outline__leading,
+::ng-deep .mat-mdc-form-field .mdc-notched-outline__notch,
+::ng-deep .mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: #ffffff !important; /* Bordes blancos */
+}
 

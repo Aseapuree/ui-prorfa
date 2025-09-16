@@ -261,7 +261,6 @@
     [(ngModel)]="filters.fechaFin"
     (ngModelChange)="onDateChange($event, 'fechaFin')"
     [max]="maxDate"
-    [min]="filters.fechaInicio"
     class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
     [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
   />

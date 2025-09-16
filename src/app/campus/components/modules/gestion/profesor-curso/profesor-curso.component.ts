@@ -271,12 +271,12 @@ export class ProfesorCursoComponent implements OnInit {
     this.filters[field] = '';
     if (field === 'fechaInicio') {
       this.isValidFechaInicio = true;
-      this.filters.fechaFin = '';
+      this.filters.fechaFin = ''; // Limpia fechaFin cuando se cambia fechaInicio
       this.isValidFechaFin = true;
     } else {
       this.isValidFechaFin = true;
     }
-    return; // No se necesita cdr.detectChanges()
+    return;
   }
 
   if (!this.isValidDateFormat(value)) {
@@ -300,7 +300,8 @@ export class ProfesorCursoComponent implements OnInit {
     return;
   }
 
-  if (field === 'fechaFin' && this.filters.fechaInicio) {
+  // Solo valida fechaFin contra fechaInicio si fechaFin tiene un valor
+  if (field === 'fechaFin' && this.filters.fechaInicio && value) {
     const startDate = new Date(this.filters.fechaInicio);
     const endDate = new Date(value);
     if (endDate < startDate) {
