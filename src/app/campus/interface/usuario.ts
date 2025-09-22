@@ -1,10 +1,15 @@
-export class Usuario {
-    idusuario?: string;
-    idusuariorol?: string;
-    nombre?: string;
-    apellidopaterno?: string;
-    apellidomaterno?: string;
-    idtipodoc?: string;
-    nombreusuario?: string;
-    rol?: string;
+export interface Usuario {
+  idusuario?: string;
+  rol?: {
+    idRol?: string;
+    nombreRol?: string;
+    descripcion?: string;
+    fechacreacion?: Date;
+    fechaactualizacion?: Date;
+  };
+  nombre?: string;
+  apellidopaterno?: string;
+  apellidomaterno?: string;
+  idtipodoc?: string;
+  perfilurl?: string;
 }

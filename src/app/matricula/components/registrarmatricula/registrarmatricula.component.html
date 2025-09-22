@@ -62,7 +62,7 @@
             <span *ngIf="formMatricula.get('apoderado.numeroDocumento')?.hasError('invalidFormat')">
               <ng-container [ngSwitch]="formMatricula.get('apoderado.idtipodoc')?.value">
                 <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
+                <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 12 dígitos.</span>
                 <span *ngSwitchDefault>Formato inválido.</span>
               </ng-container>
             </span>
@@ -384,7 +384,7 @@
                   <span *ngIf="formMatricula.get('alumno.numeroDocumento')?.hasError('invalidFormat')">
                     <ng-container [ngSwitch]="formMatricula.get('alumno.idtipodoc')?.value">
                       <span *ngSwitchCase="'29c2c5c3-2fc9-4410-ab24-52a8111f9c05'">* El DNI debe tener 8 dígitos.</span>
-                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 9 dígitos.</span>
+                      <span *ngSwitchCase="'fa65a599-60fd-43e1-85e2-7a95f3cf072e'">* El Carnet Extranjería debe tener hasta 12 dígitos.</span>
                       <span *ngSwitchDefault>Formato inválido.</span>
                     </ng-container>
                   </span>
@@ -605,7 +605,7 @@
 
     <div class="form-footer-pause button-container-centered" *ngIf="currentView !== 'search'">
         <button type="button" class="button-pause" (click)="onPauseAndSaveProgress()" [disabled]="isSubmitting || seccion === 'SIN VACANTE' || seccion === 'ERROR'">
-            <fa-icon [icon]="faPauseCircle"></fa-icon> Pausar Trámite (En Proceso)
+            <fa-icon [icon]="faPauseCircle"></fa-icon> Pausar Trámite
         </button>
     </div>
 

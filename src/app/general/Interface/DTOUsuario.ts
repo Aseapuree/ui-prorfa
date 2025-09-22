@@ -7,4 +7,5 @@ export class DTOUsuario {
     apellidomaterno?: string;
     perfilurl?: string;
     rol?: DTORoles;//DTORoles ya contiene las misma propiedades que estaban anteriormente
+    relacionentidad?: string;
   }
