@@ -271,11 +271,13 @@ export class ProfesorCursoComponent implements OnInit {
     this.filters[field] = '';
     if (field === 'fechaInicio') {
       this.isValidFechaInicio = true;
-      this.filters.fechaFin = ''; // Limpia fechaFin cuando se cambia fechaInicio
+      // Reset fechaFin if fechaInicio is cleared
+      this.filters.fechaFin = '';
       this.isValidFechaFin = true;
     } else {
       this.isValidFechaFin = true;
     }
+    this.cdr.detectChanges();
     return;
   }
 
@@ -286,6 +288,7 @@ export class ProfesorCursoComponent implements OnInit {
     );
     this.filters[field] = '';
     this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+    this.cdr.detectChanges();
     return;
   }
 
@@ -297,10 +300,11 @@ export class ProfesorCursoComponent implements OnInit {
     );
     this.filters[field] = '';
     this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+    this.cdr.detectChanges();
     return;
   }
 
-  // Solo valida fechaFin contra fechaInicio si fechaFin tiene un valor
+  // Validate fechaFin against fechaInicio
   if (field === 'fechaFin' && this.filters.fechaInicio && value) {
     const startDate = new Date(this.filters.fechaInicio);
     const endDate = new Date(value);
@@ -311,12 +315,30 @@ export class ProfesorCursoComponent implements OnInit {
       );
       this.filters.fechaFin = '';
       this.isValidFechaFin = false;
+      this.cdr.detectChanges();
+      return;
+    }
+  }
+
+  // If fechaInicio changes, validate and potentially reset fechaFin
+  if (field === 'fechaInicio' && this.filters.fechaFin) {
+    const startDate = new Date(value);
+    const endDate = new Date(this.filters.fechaFin);
+    if (endDate < startDate) {
+      this.notificationService.showNotification(
+        DATE_VALIDATION_MESSAGES.END_BEFORE_START,
+        'error'
+      );
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+      this.cdr.detectChanges();
       return;
     }
   }
 
   this.filters[field] = value;
   this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = true;
+  this.cdr.detectChanges();
 }
 
   isFormValid(): boolean {
