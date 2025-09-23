@@ -342,13 +342,28 @@ export class ProfesorCursoComponent implements OnInit {
 }
 
   isFormValid(): boolean {
-  const isValid =
+  // Verificar si algún filtro está aplicado
+  const isAnyFilterApplied =
+    !!this.filters.profesorId.trim() ||
+    !!this.filters.cursoId.trim() ||
+    !!this.filters.nivel ||
+    !!this.filters.grado ||
+    !!this.filters.seccion ||
+    !!this.filters.fechaInicio ||
+    !!this.filters.fechaFin ||
+    this.filters.fechaTipo !== 'asignacion';
+
+  // Validar los campos
+  const isValidInputs =
     this.isValidFechaInicio &&
     this.isValidFechaFin &&
     (!this.filters.profesorId || this.isKeywordValid(this.filters.profesorId)) &&
     (!this.filters.cursoId || this.isKeywordValid(this.filters.cursoId));
 
+  const isValid = isAnyFilterApplied && isValidInputs;
+
   console.log(`isFormValid: ${isValid}`, {
+    isAnyFilterApplied,
     fechaInicio: this.filters.fechaInicio,
     fechaFin: this.filters.fechaFin,
     isValidFechaInicio: this.isValidFechaInicio,
