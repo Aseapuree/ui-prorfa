@@ -12,7 +12,7 @@
       <div class="row">
         <mat-form-field class="w-full" appearance="outline">
           <mat-label class="text-gray-400 dark:text-gray-400">Profesor</mat-label>
-          <mat-select formControlName="usuario" required class="gray-900 dark:gray-900 text-gray-100 dark:text-gray-100">
+          <mat-select formControlName="usuario" required class="gray-900 dark:gray-900">
             <mat-option [value]="null" disabled>Seleccionar profesor</mat-option>
             <mat-option *ngFor="let usuario of usuarios" [value]="usuario">
               {{ usuario.nombre }} {{ usuario.apellidopaterno }}

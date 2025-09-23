@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Entidad } from '../interfaces/DTOEntidad';
-
+import { DTOResponse } from '../../general/Interface/DTOResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -16,15 +16,30 @@ export class EntidadService {
 
   private handleError(error: HttpErrorResponse) {
     if (error.error instanceof ErrorEvent) {
-      console.error('An error occurred:', error.error.message);
+      console.error('Ocurrió un error:', error.error.message);
     } else {
       console.error(
         `Backend returned code ${error.status}, ` +
         `body was: ${JSON.stringify(error.error)}`);
     }
-    return throwError(() => new Error('Something bad happened; please try again later.'));
+    return throwError(() => new Error('Ocurrió un error inesperado; por favor, inténtelo de nuevo más tarde.'));
   }
 
+  // Nuevo servicio para obtener datos de la entidad por el ID del usuario
+  obtenerEntidadPorUsuario(id: string): Observable<Entidad> {
+    return this.http.get<DTOResponse<Entidad>>(`${this.urlBase}/usuario/${id}`, { withCredentials: true })
+      .pipe(
+        map(response => {
+          if (response && response.data) {
+            return response.data;
+          } else {
+            console.error('Estructura de respuesta inesperada para obtenerEntidadPorUsuario', response);
+            throw new Error('No se pudieron recuperar los datos de la entidad para el usuario');
+          }
+        }),
+        catchError(this.handleError)
+      );
+  }
 
   obtenerEntidadList(): Observable<Entidad[]> {
     return this.http.get<any>(`${this.urlBase}/listar`, { withCredentials: true })
@@ -33,7 +48,7 @@ export class EntidadService {
           if (response && response.data && response.data.content) {
             return response.data.content as Entidad[];
           } else {
-            console.error('Unexpected response structure for obtenerEntidadList', response);
+            console.error('Estructura de respuesta inesperada para obtenerEntidadList', response);
             return [];
           }
         }),
@@ -48,8 +63,8 @@ export class EntidadService {
            if (response && response.data) {
             return response.data as Entidad;
           } else {
-            console.error('Unexpected response structure for obtenerEntidad', response);
-            throw new Error('Could not retrieve entity data');
+            console.error('Estructura de respuesta inesperada para obtenerEntidad', response);
+            throw new Error('No se pudieron recuperar los datos de la entidad');
           }
         }),
         catchError(this.handleError)

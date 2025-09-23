@@ -271,12 +271,14 @@ export class ProfesorCursoComponent implements OnInit {
     this.filters[field] = '';
     if (field === 'fechaInicio') {
       this.isValidFechaInicio = true;
+      // Reset fechaFin if fechaInicio is cleared
       this.filters.fechaFin = '';
       this.isValidFechaFin = true;
     } else {
       this.isValidFechaFin = true;
     }
-    return; // No se necesita cdr.detectChanges()
+    this.cdr.detectChanges();
+    return;
   }
 
   if (!this.isValidDateFormat(value)) {
@@ -286,6 +288,7 @@ export class ProfesorCursoComponent implements OnInit {
     );
     this.filters[field] = '';
     this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+    this.cdr.detectChanges();
     return;
   }
 
@@ -297,10 +300,12 @@ export class ProfesorCursoComponent implements OnInit {
     );
     this.filters[field] = '';
     this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+    this.cdr.detectChanges();
     return;
   }
 
-  if (field === 'fechaFin' && this.filters.fechaInicio) {
+  // Validate fechaFin against fechaInicio
+  if (field === 'fechaFin' && this.filters.fechaInicio && value) {
     const startDate = new Date(this.filters.fechaInicio);
     const endDate = new Date(value);
     if (endDate < startDate) {
@@ -310,22 +315,55 @@ export class ProfesorCursoComponent implements OnInit {
       );
       this.filters.fechaFin = '';
       this.isValidFechaFin = false;
+      this.cdr.detectChanges();
+      return;
+    }
+  }
+
+  // If fechaInicio changes, validate and potentially reset fechaFin
+  if (field === 'fechaInicio' && this.filters.fechaFin) {
+    const startDate = new Date(value);
+    const endDate = new Date(this.filters.fechaFin);
+    if (endDate < startDate) {
+      this.notificationService.showNotification(
+        DATE_VALIDATION_MESSAGES.END_BEFORE_START,
+        'error'
+      );
+      this.filters.fechaFin = '';
+      this.isValidFechaFin = false;
+      this.cdr.detectChanges();
       return;
     }
   }
 
   this.filters[field] = value;
   this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = true;
+  this.cdr.detectChanges();
 }
 
   isFormValid(): boolean {
-  const isValid =
+  // Verificar si algún filtro está aplicado
+  const isAnyFilterApplied =
+    !!this.filters.profesorId.trim() ||
+    !!this.filters.cursoId.trim() ||
+    !!this.filters.nivel ||
+    !!this.filters.grado ||
+    !!this.filters.seccion ||
+    !!this.filters.fechaInicio ||
+    !!this.filters.fechaFin ||
+    this.filters.fechaTipo !== 'asignacion';
+
+  // Validar los campos
+  const isValidInputs =
     this.isValidFechaInicio &&
     this.isValidFechaFin &&
     (!this.filters.profesorId || this.isKeywordValid(this.filters.profesorId)) &&
     (!this.filters.cursoId || this.isKeywordValid(this.filters.cursoId));
 
+  const isValid = isAnyFilterApplied && isValidInputs;
+
   console.log(`isFormValid: ${isValid}`, {
+    isAnyFilterApplied,
     fechaInicio: this.filters.fechaInicio,
     fechaFin: this.filters.fechaFin,
     isValidFechaInicio: this.isValidFechaInicio,

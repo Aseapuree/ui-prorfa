@@ -260,8 +260,8 @@
     id="fechaFin"
     [(ngModel)]="filters.fechaFin"
     (ngModelChange)="onDateChange($event, 'fechaFin')"
+    [min]="filters.fechaInicio || null"
     [max]="maxDate"
-    [min]="filters.fechaInicio"
     class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white text-gray-900"
     [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
   />
@@ -300,15 +300,15 @@
       <div class="flex flex-wrap items-center gap-2">
         <!-- Botón Buscar -->
         <app-tooltip tooltipText="Buscar asignaciones">
-          <button
-            (click)="buscarAsignaciones()"
-            [disabled]="!isFormValid()"
-            class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <fa-icon [icon]="['fas', 'search']"></fa-icon>
-            <span>Buscar</span>
-          </button>
-        </app-tooltip>
+  <button
+    (click)="buscarAsignaciones()"
+    [disabled]="!isFormValid()"
+    class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    <fa-icon [icon]="['fas', 'search']"></fa-icon>
+    <span>Buscar</span>
+  </button>
+</app-tooltip>
         <app-tooltip tooltipText="Agregar nueva asignación">
           <button
             (click)="openAddModal()"
