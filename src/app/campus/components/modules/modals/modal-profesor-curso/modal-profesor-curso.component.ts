@@ -12,12 +12,11 @@ import { Usuario } from '../../../../interface/usuario';
 import { CourseService } from '../../../../services/course.service';
 import { ProfesorCursoService } from '../../../../services/profesor-curso.service';
 import { UsuarioService } from '../../../../services/usuario.service';
-import { DatosNGS, Entidad, SeccionVacantes } from '../../../../../matricula/interfaces/DTOEntidad';
+import { DatosNGS, SeccionVacantes } from '../../../../../matricula/interfaces/DTOEntidad';
 import { EntidadService } from '../../../../../matricula/services/entidad.service';
 import { NotificationComponent } from '../../../shared/notificaciones/notification.component';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
 import { forkJoin } from 'rxjs';
-
 
 const MATERIAL_MODULES = [
   MatDialogModule,
@@ -68,27 +67,31 @@ export class ModalProfesorCursoComponent implements OnInit {
       seccion: ['', Validators.required]
     });
 
-    // Actualizar grados cuando cambia el nivel
     this.contactForm.get('nivel')?.valueChanges.subscribe(nivel => {
       this.onNivelChange(nivel);
     });
 
-    // Actualizar secciones cuando cambia el grado
     this.contactForm.get('grado')?.valueChanges.subscribe(grado => {
       this.onGradoChange(grado);
     });
   }
 
   private loadData(): void {
-    // Combinar las tres llamadas asíncronas
     forkJoin({
       usuarios: this._usuarioService.obtenerListaUsuario(),
       cursos: this._courseService.obtenerListaCursos(1, 100, 'nombre', 'asc'),
       entidades: this._entidadService.obtenerEntidadList()
     }).subscribe({
       next: ({ usuarios, cursos, entidades }) => {
-        // Cargar usuarios
-        this.usuarios = usuarios;
+        // Filtrar usuarios para incluir solo aquellos con rol "Profesor"
+        this.usuarios = usuarios.filter(usuario => usuario.rol?.nombreRol?.toLowerCase() === 'profesor');
+
+        if (this.usuarios.length === 0) {
+          this._notificationService.showNotification(
+            'No se encontraron usuarios con el rol de Profesor',
+            'info'
+          );
+        }
 
         // Cargar cursos
         this.cursos = cursos.content;
@@ -129,22 +132,24 @@ export class ModalProfesorCursoComponent implements OnInit {
 
   private loadEditData(): void {
     if (this._matDialog.isEditing) {
-      // Inicializar formulario con idProfesorCurso
       this.contactForm.patchValue({
         idProfesorCurso: this._matDialog.idProfesorCurso
       });
 
-      // Cargar usuario
       if (this._matDialog.usuario) {
         const usuarioSeleccionado = this.usuarios.find(
           u => u.idusuario === this._matDialog.usuario.idusuario
         );
         if (usuarioSeleccionado) {
           this.contactForm.patchValue({ usuario: usuarioSeleccionado });
+        } else {
+          this._notificationService.showNotification(
+            'El usuario seleccionado no está disponible o no tiene el rol de Profesor',
+            'error'
+          );
         }
       }
 
-      // Cargar curso
       if (this._matDialog.curso) {
         const cursoSeleccionado = this.cursos.find(
           c => c.idCurso === this._matDialog.curso.idCurso
@@ -154,18 +159,13 @@ export class ModalProfesorCursoComponent implements OnInit {
         }
       }
 
-      // Cargar nivel, grado y sección
       if (this._matDialog.nivel) {
         this.contactForm.patchValue({ nivel: this._matDialog.nivel });
-        // Forzar la actualización de grados
         this.onNivelChange(this._matDialog.nivel);
-        // Esperar a que grados esté poblado antes de establecer grado
         setTimeout(() => {
           if (this._matDialog.grado) {
             this.contactForm.patchValue({ grado: this._matDialog.grado });
-            // Forzar la actualización de secciones
             this.onGradoChange(this._matDialog.grado);
-            // Esperar a que secciones esté poblado antes de establecer sección
             setTimeout(() => {
               if (this._matDialog.seccion) {
                 this.contactForm.patchValue({ seccion: this._matDialog.seccion });
@@ -204,45 +204,45 @@ export class ModalProfesorCursoComponent implements OnInit {
   }
 
   async onSubmit() {
-  if (this.contactForm.invalid) {
-    this.contactForm.markAllAsTouched();
-    this._notificationService.showNotification('Por favor, corrige los errores en el formulario.', 'error');
-    return;
-  }
+    if (this.contactForm.invalid) {
+      this.contactForm.markAllAsTouched();
+      this._notificationService.showNotification('Por favor, corrige los errores en el formulario.', 'error');
+      return;
+    }
 
-  const asignacion: ProfesorCurso = {
-    idProfesorCurso: this.contactForm.get('idProfesorCurso')?.value,
-    usuario: this.contactForm.get('usuario')?.value,
-    curso: this.contactForm.get('curso')?.value,
-    nivel: this.contactForm.get('nivel')?.value,
-    grado: this.contactForm.get('grado')?.value,
-    seccion: this.contactForm.get('seccion')?.value
-  };
+    const asignacion: ProfesorCurso = {
+      idProfesorCurso: this.contactForm.get('idProfesorCurso')?.value,
+      usuario: this.contactForm.get('usuario')?.value,
+      curso: this.contactForm.get('curso')?.value,
+      nivel: this.contactForm.get('nivel')?.value,
+      grado: this.contactForm.get('grado')?.value,
+      seccion: this.contactForm.get('seccion')?.value
+    };
 
-  if (this._matDialog.isEditing && asignacion.idProfesorCurso) {
-    this._profesorCursoService.editarCurso(asignacion).subscribe({
-      next: (asignacionActualizada) => {
-        this._notificationService.showNotification('Asignación actualizada con éxito', 'success');
-        this._dialogRef.close(asignacionActualizada);
-      },
-      error: (err) => {
-        console.error('Error al actualizar asignación:', err);
-        this._notificationService.showNotification('Error al actualizar asignación: ' + err.message, 'error');
-      }
-    });
-  } else {
-    this._profesorCursoService.agregarCurso(asignacion).subscribe({
-      next: (asignacionAgregada) => {
-        this._notificationService.showNotification('Asignación agregada con éxito', 'success');
-        this._dialogRef.close(asignacionAgregada);
-      },
-      error: (err) => {
-        console.error('Error al agregar asignación:', err);
-        this._notificationService.showNotification('Error al agregar asignación: ' + err.message, 'error');
-      }
-    });
+    if (this._matDialog.isEditing && asignacion.idProfesorCurso) {
+      this._profesorCursoService.editarCurso(asignacion).subscribe({
+        next: (asignacionActualizada) => {
+          this._notificationService.showNotification('Asignación actualizada con éxito', 'success');
+          this._dialogRef.close(asignacionActualizada);
+        },
+        error: (err) => {
+          console.error('Error al actualizar asignación:', err);
+          this._notificationService.showNotification('Error al actualizar asignación: ' + err.message, 'error');
+        }
+      });
+    } else {
+      this._profesorCursoService.agregarCurso(asignacion).subscribe({
+        next: (asignacionAgregada) => {
+          this._notificationService.showNotification('Asignación agregada con éxito', 'success');
+          this._dialogRef.close(asignacionAgregada);
+        },
+        error: (err) => {
+          console.error('Error al agregar asignación:', err);
+          this._notificationService.showNotification('Error al agregar asignación: ' + err.message, 'error');
+        }
+      });
+    }
   }
-}
 
   getTitle(): string {
     return this._matDialog.isEditing ? 'Editar Asignación' : 'Agregar Asignación';
