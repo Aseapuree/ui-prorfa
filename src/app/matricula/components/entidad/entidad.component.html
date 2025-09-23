@@ -1,132 +1,328 @@
-<app-general-loading-spinner [visible]="loading" [message]="spinnerMessage"></app-general-loading-spinner>
-<div class="main-container">
-  <!-- Encabezado con logo y nombre del colegio, cargados dinámicamente -->
+<app-general-loading-spinner [visible]="loading || isSaving" [message]="spinnerMessage"></app-general-loading-spinner>
+
+<!-- Vista de Solo Lectura -->
+<div class="main-container" *ngIf="!isEditing && entidad && !loading">
   <div class="header">
-    <h2>{{ (entidad$ | async)?.nombreColegio }}</h2>
+    <h2>{{ entidad.nombreColegio }}</h2>
     <div class="form-group logo-container">
-      <img [src]="(entidad$ | async)?.logoColegio" alt="Logo del Colegio">
+      <img [src]="entidad.logoColegio" alt="Logo del Colegio">
     </div>
   </div>
 
-  <form id="editForm">
-    <div class="form-columns">
-      <!-- Columna 1: Datos de contacto y documentos -->
-      <div class="column">
-        <!-- Campo: RUC del Colegio -->
-        <div class="form-group">
-          <label for="ruc">RUC del Colegio</label>
-          <div class="input-with-icon">
-            <i class="fas fa-id-card input-icon"></i>
-            <input type="text" id="ruc" name="ruc" [value]="(entidad$ | async)?.rucColegio" required>
-          </div>
-        </div>
-
-        <!-- Campo: Razón Social -->
-        <div class="form-group">
-          <label for="razon-social">Razón Social</label>
-          <div class="input-with-icon">
-            <i class="fas fa-signature input-icon"></i>
-            <input type="text" id="razon-social" name="razon-social" [value]="(entidad$ | async)?.razonSocial" required>
-          </div>
-        </div>
-
-        <!-- Sección de Documentos -->
-        <div class="info-section">
-          <h3><i class="fas fa-file-alt"></i> Documentos</h3>
-          <!-- Documentos Necesarios -->
-          <div class="info-group" *ngIf="(entidad$ | async)?.documentos?.necesarios">
-            <h4>Necesarios</h4>
-            <ul class="info-list">
-              <li *ngIf="(entidad$ | async)?.documentos?.necesarios?.documento1">
-                <span>{{ (entidad$ | async)?.documentos?.necesarios?.documento1 }}</span>
-              </li>
-              <li *ngIf="(entidad$ | async)?.documentos?.necesarios?.documento2">
-                <span>{{ (entidad$ | async)?.documentos?.necesarios?.documento2 }}</span>
-              </li>
-            </ul>
-          </div>
-          <!-- Documentos Adicionales -->
-          <div class="info-group" *ngIf="(entidad$ | async)?.documentos?.adicionales">
-            <h4>Adicionales</h4>
-            <ul class="info-list">
-              <li *ngIf="(entidad$ | async)?.documentos?.adicionales?.intercambio">
-                <h5>Intercambio</h5>
-                <ul>
-                  <li *ngIf="(entidad$ | async)?.documentos?.adicionales?.intercambio?.documento1">
-                    <span>{{ (entidad$ | async)?.documentos?.adicionales?.intercambio?.documento1 }}</span>
-                  </li>
-                  <li *ngIf="(entidad$ | async)?.documentos?.adicionales?.intercambio?.documento2">
-                    <span>{{ (entidad$ | async)?.documentos?.adicionales?.intercambio?.documento2 }}</span>
-                  </li>
-                </ul>
-              </li>
-              <li *ngIf="(entidad$ | async)?.documentos?.adicionales?.discapacidad">
-                <h5>Discapacidad</h5>
-                <ul>
-                  <li *ngIf="(entidad$ | async)?.documentos?.adicionales?.discapacidad?.documento1">
-                    <span>{{ (entidad$ | async)?.documentos?.adicionales?.discapacidad?.documento1 }}</span>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </div>
+  <div class="form-columns">
+    <!-- Columna 1: Datos de contacto y documentos -->
+    <div class="column">
+      <div class="form-group">
+        <label>RUC del Colegio</label>
+        <div class="input-with-icon">
+          <i class="fas fa-id-card input-icon"></i>
+          <input type="text" [value]="entidad.rucColegio" disabled>
         </div>
       </div>
-
-      <!-- Columna 2: Dirección, Teléfono, Correo y Niveles -->
-      <div class="column">
-        <!-- Campo: Dirección -->
-        <div class="form-group">
-          <label for="direccion">Dirección</label>
-          <div class="input-with-icon">
-            <i class="fas fa-map-marker-alt input-icon"></i>
-            <input type="text" id="direccion" name="direccion" [value]="(entidad$ | async)?.direccionColegio" required>
-          </div>
+      <div class="form-group">
+        <label>Razón Social</label>
+        <div class="input-with-icon">
+          <i class="fas fa-signature input-icon"></i>
+          <input type="text" [value]="entidad.razonSocial" disabled>
         </div>
-
-        <!-- Campo: Teléfono -->
-        <div class="form-group">
-          <label for="telefono">Teléfono</label>
-          <div class="input-with-icon">
-            <i class="fas fa-phone input-icon"></i>
-            <input type="tel" id="telefono" name="telefono" [value]="(entidad$ | async)?.telefonoColegio" required>
-          </div>
+      </div>
+      <div class="info-section">
+        <h3><i class="fas fa-file-alt"></i> Documentos Requeridos</h3>
+        <div class="info-group" *ngIf="entidad.documentos?.necesarios">
+          <h4>Necesarios</h4>
+          <ul class="info-list">
+            <li><span>{{ entidad.documentos?.necesarios?.documento1 }}</span></li>
+            <li><span>{{ entidad.documentos?.necesarios?.documento2 }}</span></li>
+          </ul>
         </div>
-
-        <!-- Campo: Correo Electrónico -->
-        <div class="form-group">
-          <label for="email">Correo Electrónico</label>
-          <div class="input-with-icon">
-            <i class="fas fa-envelope input-icon"></i>
-            <input type="email" id="email" name="email" [value]="(entidad$ | async)?.correoColegio" required>
-          </div>
-        </div>
-
-        <!-- Sección de Datos de Niveles -->
-        <div class="info-section">
-          <h3><i class="fas fa-clipboard-list"></i> Datos Niveles</h3>
-          <div class="grade-grid-wrapper">
-            <ng-container *ngFor="let nivel of (entidad$ | async)?.datosngs?.niveles">
-              <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
-              <div class="grade-grid">
-                <div class="grade-card" *ngFor="let grado of nivel.grados">
-                  <h5>{{ grado.nombre }}</h5>
-                  <span>Secciones:
-                    <ng-container *ngFor="let seccion of grado.secciones; last as isLast">
-                      {{ seccion.nombre }} ({{ seccion.vacantes }})<span *ngIf="!isLast">, </span>
-                    </ng-container>
-                  </span>
-                </div>
-              </div>
-            </ng-container>
-          </div>
+        <div class="info-group" *ngIf="entidad.documentos?.adicionales">
+          <h4>Adicionales</h4>
+          <ul class="info-list">
+            <li *ngIf="entidad.documentos?.adicionales?.intercambio">
+              <h5>Intercambio</h5>
+              <ul>
+                <li><span>{{ entidad.documentos?.adicionales?.intercambio?.documento1 }}</span></li>
+                <li><span>{{ entidad.documentos?.adicionales?.intercambio?.documento2 }}</span></li>
+              </ul>
+            </li>
+            <li *ngIf="entidad.documentos?.adicionales?.discapacidad">
+              <h5>Discapacidad</h5>
+              <ul>
+                <li><span>{{ entidad.documentos?.adicionales?.discapacidad?.documento1 }}</span></li>
+              </ul>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
-  </form>
-
-  <!-- Contenedor de botones -->
+    <!-- Columna 2: Dirección, Teléfono, Correo y Niveles -->
+    <div class="column">
+      <div class="form-group">
+        <label>Dirección</label>
+        <div class="input-with-icon">
+          <i class="fas fa-map-marker-alt input-icon"></i>
+          <input type="text" [value]="entidad.direccionColegio" disabled>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <div class="input-with-icon">
+          <i class="fas fa-phone input-icon"></i>
+          <input type="tel" [value]="entidad.telefonoColegio" disabled>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Correo Electrónico</label>
+        <div class="input-with-icon">
+          <i class="fas fa-envelope input-icon"></i>
+          <input type="email" [value]="entidad.correoColegio" disabled>
+        </div>
+      </div>
+      <div class="info-section">
+        <h3><i class="fas fa-clipboard-list"></i> Niveles, Grados y Secciones</h3>
+        <div class="grade-grid-wrapper">
+          <ng-container *ngFor="let nivel of entidad.datosngs?.niveles">
+            <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
+            <div class="grade-grid">
+              <div class="grade-card" *ngFor="let grado of nivel.grados">
+                <h5>Grado: {{ grado.nombre }}</h5>
+                <span>Secciones:
+                  <ng-container *ngFor="let seccion of grado.secciones; last as isLast">
+                    {{ seccion.nombre }} ({{ seccion.vacantes }} vac.)<span *ngIf="!isLast">, </span>
+                  </ng-container>
+                </span>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="button-container">
-    <button type="submit" class="btn btn-primary" id="editButton">EDITAR</button>
+    <button type="button" class="btn btn-primary" (click)="iniciarEdicion()">EDITAR</button>
   </div>
 </div>
+
+<!-- Modal de Edición -->
+<div class="edit-modal-overlay" *ngIf="isEditing">
+  <div class="edit-modal-container">
+    <form [formGroup]="entidadForm" (ngSubmit)="guardarCambios()" novalidate>
+      <h2 class="edit-modal-title">Editar Datos de la Entidad</h2>
+
+      <div class="form-columns">
+        <!-- Columna 1 -->
+        <div class="column">
+          <h4>Datos Generales</h4>
+          <!-- Nombre Colegio -->
+          <div class="form-group">
+            <label for="nombreColegio">Nombre del Colegio</label>
+            <input id="nombreColegio" type="text" formControlName="nombreColegio" class="form-control">
+            <div *ngIf="entidadForm.get('nombreColegio')?.invalid && entidadForm.get('nombreColegio')?.touched" class="error-message">
+              El nombre es requerido.
+            </div>
+          </div>
+          <!-- RUC -->
+          <div class="form-group">
+            <label for="rucColegio">RUC</label>
+            <input id="rucColegio" type="text" formControlName="rucColegio" class="form-control" maxlength="11">
+            <div *ngIf="entidadForm.get('rucColegio')?.invalid && entidadForm.get('rucColegio')?.touched" class="error-message">
+              <span *ngIf="entidadForm.get('rucColegio')?.errors?.['required']">RUC es requerido.</span>
+              <span *ngIf="entidadForm.get('rucColegio')?.errors?.['pattern']">RUC debe tener 11 dígitos numéricos.</span>
+            </div>
+          </div>
+          <!-- Razón Social -->
+          <div class="form-group">
+            <label for="razonSocial">Razón Social</label>
+            <input id="razonSocial" type="text" formControlName="razonSocial" class="form-control">
+            <div *ngIf="entidadForm.get('razonSocial')?.invalid && entidadForm.get('razonSocial')?.touched" class="error-message">
+              La razón social es requerida.
+            </div>
+          </div>
+          <!-- Logo URL -->
+          <div class="form-group">
+            <label for="logoColegio">URL del Logo</label>
+            <input id="logoColegio" type="url" formControlName="logoColegio" class="form-control" placeholder="https://ejemplo.com/logo.png">
+            <div *ngIf="entidadForm.get('logoColegio')?.invalid && entidadForm.get('logoColegio')?.touched" class="error-message">
+              <span *ngIf="entidadForm.get('logoColegio')?.errors?.['required']">La URL del logo es requerida.</span>
+              <span *ngIf="entidadForm.get('logoColegio')?.errors?.['invalidUrl']">Ingrese una URL válida.</span>
+            </div>
+          </div>
+        </div>
+        <!-- Columna 2 -->
+        <div class="column">
+          <h4>Datos de Contacto</h4>
+          <!-- Dirección -->
+          <div class="form-group">
+            <label for="direccionColegio">Dirección</label>
+            <input id="direccionColegio" type="text" formControlName="direccionColegio" class="form-control">
+            <div *ngIf="entidadForm.get('direccionColegio')?.invalid && entidadForm.get('direccionColegio')?.touched" class="error-message">
+              La dirección es requerida.
+            </div>
+          </div>
+          <!-- Teléfono -->
+          <div class="form-group">
+            <label for="telefonoColegio">Teléfono</label>
+            <input id="telefonoColegio" type="tel" formControlName="telefonoColegio" class="form-control" maxlength="8">
+            <div *ngIf="entidadForm.get('telefonoColegio')?.invalid && entidadForm.get('telefonoColegio')?.touched" class="error-message">
+              <span *ngIf="entidadForm.get('telefonoColegio')?.errors?.['required']">El teléfono es requerido.</span>
+              <span *ngIf="entidadForm.get('telefonoColegio')?.errors?.['pattern']">Debe tener 7 u 8 dígitos numéricos.</span>
+            </div>
+          </div>
+          <!-- Correo -->
+          <div class="form-group">
+            <label for="correoColegio">Correo Electrónico</label>
+            <input id="correoColegio" type="email" formControlName="correoColegio" class="form-control">
+            <div *ngIf="entidadForm.get('correoColegio')?.invalid && entidadForm.get('correoColegio')?.touched" class="error-message">
+              <span *ngIf="entidadForm.get('correoColegio')?.errors?.['required']">El correo es requerido.</span>
+              <span *ngIf="entidadForm.get('correoColegio')?.errors?.['email']">Ingrese un correo válido.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-divider">
+
+      <!-- Sección Documentos -->
+      <div formGroupName="documentos">
+        <h4>Documentos Requeridos</h4>
+        <div class="form-columns">
+          <div class="column" formGroupName="necesarios">
+            <h5>Necesarios</h5>
+            <div class="form-group">
+              <label>Doc. Identidad Alumno</label>
+              <input type="text" formControlName="documento1" class="form-control">
+              <div *ngIf="entidadForm.get('documentos.necesarios.documento1')?.invalid && entidadForm.get('documentos.necesarios.documento1')?.touched" class="error-message">
+                Este documento es requerido.
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Doc. Identidad Apoderado</label>
+              <input type="text" formControlName="documento2" class="form-control">
+              <div *ngIf="entidadForm.get('documentos.necesarios.documento2')?.invalid && entidadForm.get('documentos.necesarios.documento2')?.touched" class="error-message">
+                Este documento es requerido.
+              </div>
+            </div>
+          </div>
+          <div class="column" formGroupName="adicionales">
+            <h5>Adicionales</h5>
+            <div formGroupName="intercambio">
+              <h6>Intercambio</h6>
+              <div class="form-group">
+                <label>Certificado Estudios</label>
+                <input type="text" formControlName="documento1" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Boleta de Notas</label>
+                <input type="text" formControlName="documento2" class="form-control">
+              </div>
+            </div>
+            <div formGroupName="discapacidad">
+              <h6>Discapacidad</h6>
+              <div class="form-group">
+                <label>Certificado de Discapacidad</label>
+                <input type="text" formControlName="documento1" class="form-control">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-divider">
+
+      <!-- Sección Niveles, Grados y Secciones -->
+      <div formGroupName="datosngs">
+        <div class="dynamic-section-header">
+          <h4>Niveles Educativos</h4>
+          <button type="button" (click)="addNivel()" class="btn-add-small">
+            <i class="fas fa-plus"></i> Añadir Nivel
+          </button>
+        </div>
+        <div *ngIf="niveles().invalid && niveles().touched" class="error-message">
+          Debe haber al menos un nivel educativo.
+        </div>
+        <div formArrayName="niveles">
+          <div *ngFor="let nivelCtrl of niveles().controls; let i=index" [formGroupName]="i" class="nivel-container">
+            <div class="dynamic-item-header">
+              <div class="form-group">
+                <label>Nombre del Nivel</label>
+                <input type="text" formControlName="nombre" class="form-control">
+                <div *ngIf="niveles().at(i).get('nombre')?.invalid && niveles().at(i).get('nombre')?.touched" class="error-message">
+                  El nombre del nivel es requerido.
+                </div>
+              </div>
+              <button type="button" (click)="removeNivel(i)" class="btn-remove">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+
+            <div class="grado-section" formArrayName="grados">
+              <div class="dynamic-section-header-nested">
+                <h5>Grados</h5>
+                <button type="button" (click)="addGrado(i)" class="btn-add-small">
+                  <i class="fas fa-plus"></i> Añadir Grado
+                </button>
+              </div>
+              <div *ngIf="grados(i).invalid && grados(i).touched" class="error-message">
+                Debe haber al menos un grado.
+              </div>
+              <div *ngFor="let gradoCtrl of grados(i).controls; let j=index" [formGroupName]="j" class="grado-container">
+                <div class="dynamic-item-header">
+                  <div class="form-group">
+                    <label>Nombre del Grado</label>
+                    <input type="text" formControlName="nombre" class="form-control">
+                    <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
+                      El nombre del grado es requerido.
+                    </div>
+                  </div>
+                  <button type="button" (click)="removeGrado(i, j)" class="btn-remove">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+
+                <div class="seccion-section" formArrayName="secciones">
+                  <div class="dynamic-section-header-nested">
+                    <h6>Secciones</h6>
+                    <button type="button" (click)="addSeccion(i, j)" class="btn-add-small">
+                      <i class="fas fa-plus"></i> Añadir Sección
+                    </button>
+                  </div>
+                  <div *ngIf="secciones(i, j).invalid && secciones(i, j).touched" class="error-message">
+                    Debe haber al menos una sección.
+                  </div>
+                  <div *ngFor="let seccionCtrl of secciones(i, j).controls; let k=index" [formGroupName]="k" class="seccion-container">
+                    <div class="form-group">
+                      <label>Nombre Sección</label>
+                      <input type="text" formControlName="nombre" class="form-control">
+                      <div *ngIf="secciones(i, j).at(k).get('nombre')?.invalid && secciones(i, j).at(k).get('nombre')?.touched" class="error-message">
+                        El nombre de la sección es requerido.
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label>N° Vacantes</label>
+                      <input type="number" formControlName="vacantes" class="form-control">
+                      <div *ngIf="secciones(i, j).at(k).get('vacantes')?.invalid && secciones(i, j).at(k).get('vacantes')?.touched" class="error-message">
+                        <span *ngIf="secciones(i, j).at(k).get('vacantes')?.errors?.['required']">Las vacantes son requeridas.</span>
+                        <span *ngIf="secciones(i, j).at(k).get('vacantes')?.errors?.['min']">Debe ser al menos 0.</span>
+                      </div>
+                    </div>
+                    <button type="button" (click)="removeSeccion(i, j, k)" class="btn-remove">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones del Modal -->
+      <div class="edit-modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<app-notification></app-notification>
