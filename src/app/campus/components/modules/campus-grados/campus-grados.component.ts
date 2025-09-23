@@ -10,18 +10,17 @@ import { CommonModule, SlicePipe } from '@angular/common';
 import { GeneralLoadingSpinnerComponent } from '../../../../general/components/spinner/spinner.component';
 import { PaginationComponent } from '../../../../general/components/pagination/pagination.component';
 
-
 @Component({
   selector: 'app-campus-grados',
   standalone: true,
   imports: [
-  RouterModule,
-  CardComponent,
-  CommonModule,
-  PaginationComponent,
-  GeneralLoadingSpinnerComponent,
-  SlicePipe, // Add SlicePipe
-],
+    RouterModule,
+    CardComponent,
+    CommonModule,
+    PaginationComponent,
+    GeneralLoadingSpinnerComponent,
+    SlicePipe,
+  ],
   templateUrl: './campus-grados.component.html',
   styleUrl: './campus-grados.component.scss',
 })
@@ -185,7 +184,7 @@ export class CampusGradosComponent implements OnInit {
       localStorage.setItem('nombreCurso', nombreCurso);
       localStorage.setItem('idProfesor', idProfesor);
       this.router.navigate(['/campus-vista'], {
-        queryParams: { idProfesorCurso, grado, seccion, nivel },
+        queryParams: { idProfesorCourse: idProfesorCurso, grado, seccion, nivel },
       });
     } else {
       console.error('Datos incompletos para el curso:', {
@@ -215,6 +214,19 @@ export class CampusGradosComponent implements OnInit {
     if (page >= 1 && page <= this.totalPages) {
       console.log(`Cambiando a página: ${page}`);
       this.page = page;
+    }
+  }
+
+  // Nuevo método para navegar a Notas Bimestrales
+  navigateToNotasBimestrales(): void {
+    const usuarioId = localStorage.getItem('usuarioId');
+    const nivel = this.nivel; // Usar el nivel actual (e.g., "Primaria")
+    if (usuarioId && nivel) {
+      this.router.navigate(['/app-lista-alumnos'], {
+        queryParams: { usuarioId, nivel } // Pasar usuarioId y nivel como query params
+      });
+    } else {
+      console.error('No se encontró usuarioId o nivel en el contexto.');
     }
   }
 }
