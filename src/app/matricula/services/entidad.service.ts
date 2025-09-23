@@ -57,7 +57,7 @@ export class EntidadService {
   }
 
   obtenerEntidad(id: string): Observable<Entidad> {
-    return this.http.get<any>(`${this.urlBase}/listar/${id}`, { withCredentials: true })
+    return this.http.get<DTOResponse<Entidad>>(`${this.urlBase}/listar/${id}`, { withCredentials: true })
       .pipe(
         map(response => {
            if (response && response.data) {
@@ -72,28 +72,39 @@ export class EntidadService {
   }
 
   agregarEntidad(entidad: Entidad): Observable<Entidad> {
-    return this.http.post<Entidad>(`${this.urlBase}/agregar`, entidad, { withCredentials: true })
+    return this.http.post<DTOResponse<Entidad>>(`${this.urlBase}/agregar`, entidad, { withCredentials: true })
       .pipe(
         map(response => {
-           return response;
+           if (response && response.data) {
+            return response.data;
+          } else {
+            console.error('Estructura de respuesta inesperada para agregarEntidad', response);
+            throw new Error('No se pudo agregar la entidad');
+          }
         }),
         catchError(this.handleError)
       );
   }
 
-  editarEntidad(id: string, entidad: Entidad): Observable<Entidad> {
-    return this.http.put<Entidad>(`${this.urlBase}/editar/${id}`, entidad, { withCredentials: true })
+  editarEntidad(id: string, entidad: Partial<Entidad>): Observable<Entidad> {
+    return this.http.put<DTOResponse<Entidad>>(`${this.urlBase}/editar/${id}`, entidad, { withCredentials: true })
        .pipe(
         map(response => {
-           return response;
+           if (response && response.data) {
+            return response.data;
+          } else {
+            console.error('Estructura de respuesta inesperada para editarEntidad', response);
+            throw new Error('No se pudo editar la entidad');
+          }
         }),
         catchError(this.handleError)
       );
   }
 
   eliminarEntidad(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true })
+    return this.http.delete<DTOResponse<void>>(`${this.urlBase}/eliminar/${id}`, { withCredentials: true })
       .pipe(
+        map(() => void 0),
         catchError(this.handleError)
       );
   }
