@@ -33,6 +33,7 @@ body {
 }
 
 .logo-container {
+    position: relative;
     margin-top: 1rem;
     margin-bottom: 2rem;
 }
@@ -43,6 +44,40 @@ body {
     object-fit: contain;
     border-radius: 50%;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+}
+
+.logo-container:hover .upload-overlay {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.upload-circle {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #333;
+    border-radius: 50%;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .form-columns {
@@ -122,22 +157,28 @@ body {
 }
 
 .info-list {
-    list-style: none;
-    padding: 0;
+    list-style-type: disc;
+    padding-left: 20px;
     margin: 0;
-}
 
-.info-list li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #E2E8F0;
-}
+    li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #E2E8F0;
 
-.info-list li:last-child {
-    border-bottom: none;
-}
+        &:last-child {
+            border-bottom: none;
+        }
 
-.info-list li span {
-    font-weight: 500;
+        span {
+            font-weight: 500;
+        }
+
+        ul {
+            list-style-type: circle;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+    }
 }
 
 .info-group h5 {
@@ -167,7 +208,7 @@ body {
 
 .grade-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
 }
 
@@ -177,11 +218,29 @@ body {
     border-radius: 0.5rem;
     padding: 1rem;
     font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
 }
 
-.grade-card h5 {
-    font-weight: bold;
-    margin: 0 0 0.5rem 0;
+.grade-card-content {
+    flex-grow: 1;
+}
+
+.btn-edit-grade {
+    margin-top: 0.5rem;
+    align-self: center;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-grade:hover {
+    background-color: #0056b3;
 }
 
 .button-container {
@@ -232,13 +291,30 @@ body {
 .edit-modal-container {
     background-color: #fff;
     padding: 2.5rem;
-    border-radius: 1rem;
+    border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     width: 100%;
-    max-width: 90vw;
-    max-height: 90vh;
+    max-width: 600px;
+    max-height: 80vh;
     overflow-y: auto;
+    position: relative;
     animation: fadeIn 0.3s ease-out;
+}
+
+.close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.close-button:hover {
+    color: #dc3545;
 }
 
 @keyframes fadeIn {
@@ -279,34 +355,34 @@ body {
 }
 
 h4 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #343a40;
-  margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 1rem;
 }
 h5 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #495057;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
 }
 h6 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #6c757d;
-  margin-top: 0.75rem;
-  margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .form-divider {
-  margin: 2rem 0;
-  border-color: #e9ecef;
+    margin: 2rem 0;
+    border-color: #e9ecef;
 }
 .error-message {
-  color: #dc3545;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
 }
 /* Estilos para secciones dinámicas (Niveles, Grados, Secciones) */
 .dynamic-section-header, .dynamic-section-header-nested {
@@ -378,3 +454,54 @@ h6 {
     flex-grow: 1;
 }
 
+/* Nuevos estilos para mantener el diseño en edición de niveles */
+.level-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.level-input {
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #343a40;
+  width: 100%;
+  max-width: 300px;
+}
+
+.level-input:focus {
+  border-color: #80bdff;
+  outline: none;
+}
+
+.grade-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.grade-input {
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+  width: 100%;
+  max-width: 200px;
+}
+
+.grade-input:focus {
+  border-color: #80bdff;
+  outline: none;
+}
+
+.info-list li span {
+  word-break: break-all;
+  hyphens: auto;
+}
