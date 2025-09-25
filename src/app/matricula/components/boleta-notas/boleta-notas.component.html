@@ -1,0 +1,53 @@
+<app-general-loading-spinner [visible]="isLoading" [message]="'Cargando boleta de notas...'"></app-general-loading-spinner>
+<div class="notas-container printable" *ngIf="!isLoading">
+  <!-- Navegación -->
+  <div class="nav">
+    <a href="javascript:void(0)" (click)="regresar()" class="nav-item">
+      <i class="fas fa-chevron-left mr-2"></i>Lista de Alumnos
+    </a>
+    <span class="nav-info">
+      <i class="fas fa-file-alt mr-2"></i>Boleta de {{ nombreAlumno }} - {{ grado }} {{ nivel }} - Sección {{ seccion }}
+    </span>
+  </div>
+
+  <!-- Encabezado -->
+  <div class="header">
+    <h1 class="text-3xl font-extrabold text-[--text-color] flex items-center justify-center animate-fade-in">
+      <i class="fas fa-file-invoice mr-4 text-[--accent-color] text-4xl"></i>Boleta de Notas
+    </h1>
+    <p class="text-[--text-color] opacity-80 text-center mt-2">Notas del alumno por curso y bimestre</p>
+  </div>
+
+  <!-- Tabla de notas -->
+  <div class="table-container" *ngIf="notas.cursos.length > 0">
+    <table class="notas-table w-full">
+      <thead>
+        <tr>
+          <th class="p-3">Curso</th>
+          <th *ngFor="let bimestre of notas.ciclos" class="p-3">{{ bimestre }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let curso of notas.cursos" class="hover:bg-[--primary-hover] transition-colors">
+          <td class="p-3">{{ curso.nombre }}</td>
+          <td *ngFor="let nota of curso.notasPorCiclo" class="p-3 text-center">{{ nota }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mensaje si no hay datos -->
+  <div class="no-data" *ngIf="notas.cursos.length === 0">
+    <p class="text-[--text-color] opacity-70">No hay notas disponibles para este alumno.</p>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="actions mt-6 text-center flex justify-center gap-4">
+    <button class="btn-regresar flex items-center justify-center" (click)="regresar()">
+      <i class="fas fa-arrow-left mr-2"></i>Regresar
+    </button>
+    <button class="btn-imprimir flex items-center justify-center" (click)="imprimir()">
+      <i class="fas fa-print mr-2"></i>Imprimir
+    </button>
+  </div>
+</div>
