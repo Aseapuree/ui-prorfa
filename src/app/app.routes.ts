@@ -18,7 +18,6 @@ import { ProfesorCursoComponent } from './campus/components/modules/gestion/prof
 import { NotasGeneralesComponent } from './general/components/notas-generales/notas-generales.component';
 import { CampusVistaComponent } from './general/components/campus-vista/campus-vista.component';
 import { AdminUsersComponent } from './general/components/admin-users/admin-users.component';
-import { NotasBimestralesComponent } from './matricula/components/notas-bimestrales/notas-bimestrales.component';
 import { ListaAlumnosComponent } from './matricula/components/lista-alumnos/lista-alumnos.component';
 import { EntidadComponent } from './matricula/components/entidad/entidad.component';
 import { BoletaNotasComponent } from './matricula/components/boleta-notas/boleta-notas.component';
@@ -50,7 +49,7 @@ export const routes: Routes = [
           { path: 'users', component: AdminUsersComponent, canActivate: [AuthGuard] },
           {path:'notas',component:NotasGeneralesComponent,canActivate:[AuthGuard]},
           { path: 'campus-vista', component: CampusVistaComponent, canActivate: [AuthGuard] },
-          { path: 'capp-notas-bimestrales', component: NotasBimestralesComponent, canActivate: [AuthGuard] },
+        
           { path: 'app-lista-alumnos', component: ListaAlumnosComponent, canActivate: [AuthGuard] },
           { path: 'app-boleta-notas', component: BoletaNotasComponent, canActivate: [AuthGuard] },
           //{ path: 'comprobante/:type/:idMatricula', component: ComprobanteComponent, canActivate: [AuthGuard] },
