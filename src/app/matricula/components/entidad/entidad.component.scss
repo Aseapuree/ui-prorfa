@@ -22,8 +22,15 @@ body {
 .header {
     display: flex;
     flex-direction: column;
-    align-items: center;
     margin-bottom: 2rem;
+}
+
+.center-aligned {
+    align-items: center;
+}
+
+.left-aligned {
+    align-items: flex-start;
 }
 
 .header h2 {
@@ -208,7 +215,7 @@ body {
 
 .grade-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
 }
 
@@ -220,6 +227,8 @@ body {
     font-size: 0.9rem;
     display: flex;
     flex-direction: column;
+    width: auto;
+    flex: 0 0 150px; /* Ancho fijo para las tarjetas en el carrusel */
 }
 
 .grade-card-content {
@@ -227,16 +236,18 @@ body {
 }
 
 .btn-edit-grade {
-    margin-top: 0.5rem;
-    align-self: center;
-    padding: 0.5rem 1.5rem;
+    padding: 0.4rem 0.6rem;
     font-size: 0.9rem;
     background-color: #007bff;
     color: #fff;
     border: none;
-    border-radius: 9999px;
+    border-radius: 0.3rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-edit-grade:hover {
@@ -272,7 +283,53 @@ body {
     background-color: #5a6268;
 }
 
-/* Nuevos estilos para el Modal de Edición */
+/* Estilos para el carrusel de grados */
+.grade-carousel-container {
+    position: relative;
+    width: calc(3 * 150px + 2 * 1rem);
+    padding: 0;
+}
+
+.carousel-viewport {
+    overflow: hidden;
+}
+
+.grade-carousel {
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+    gap: 1rem;
+}
+
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.carousel-arrow:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.left-arrow {
+    left: -20px;
+}
+
+.right-arrow {
+    right: -20px;
+}
+
+/* Estilos Modal de Edición */
 .edit-modal-overlay {
     position: fixed;
     top: 0;
@@ -290,10 +347,10 @@ body {
 
 .edit-modal-container {
     background-color: #fff;
-    padding: 2.5rem;
-    border-radius: 20px;
+    padding: 1rem;
+    border-radius: 0;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    width: 100%;
+    width: auto;
     max-width: 600px;
     max-height: 80vh;
     overflow-y: auto;
@@ -311,6 +368,7 @@ body {
     color: #6c757d;
     cursor: pointer;
     padding: 0.5rem;
+    z-index: 1001;
 }
 
 .close-button:hover {
@@ -325,7 +383,7 @@ body {
 .edit-modal-title {
     text-align: center;
     font-size: 1.75rem;
-    margin-bottom: 2rem;
+    margin-bottom: 0;
     color: #0056b3;
 }
 
@@ -348,9 +406,9 @@ body {
 .edit-modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
     border-top: 1px solid #e9ecef;
 }
 
@@ -360,6 +418,7 @@ h4 {
     color: #343a40;
     margin-bottom: 1rem;
 }
+
 h5 {
     font-size: 1.1rem;
     font-weight: 600;
@@ -367,6 +426,7 @@ h5 {
     margin-top: 1rem;
     margin-bottom: 0.5rem;
 }
+
 h6 {
     font-size: 1rem;
     font-weight: 600;
@@ -379,23 +439,27 @@ h6 {
     margin: 2rem 0;
     border-color: #e9ecef;
 }
+
 .error-message {
     color: #dc3545;
     font-size: 0.85rem;
     margin-top: 0.25rem;
 }
-/* Estilos para secciones dinámicas (Niveles, Grados, Secciones) */
+
+/* Estilos para secciones */
 .dynamic-section-header, .dynamic-section-header-nested {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
 }
+
 .dynamic-section-header-nested {
     margin-top: 1rem;
 }
+
 .btn-add-small {
-    padding: 0.4rem 0.8rem;
+    padding: 0.4rem 0.6rem;
     font-size: 0.9rem;
     background-color: #28a745;
     color: white;
@@ -404,11 +468,14 @@ h6 {
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    justify-content: center;
+    line-height: 1;
 }
+
 .btn-add-small:hover {
     background-color: #218838;
 }
+
 .btn-remove {
     padding: 0.4rem 0.6rem;
     font-size: 0.9rem;
@@ -418,10 +485,15 @@ h6 {
     border-radius: 0.3rem;
     cursor: pointer;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 .btn-remove:hover {
     background-color: #c82333;
 }
+
 .nivel-container {
     background-color: #f8f9fa;
     padding: 1.5rem;
@@ -429,6 +501,7 @@ h6 {
     margin-bottom: 1rem;
     border: 1px solid #e9ecef;
 }
+
 .grado-container {
     background-color: #ffffff;
     padding: 1rem;
@@ -436,72 +509,118 @@ h6 {
     border-left: 3px solid #007bff;
     margin-bottom: 1rem;
 }
+
 .seccion-container {
     display: flex;
-    gap: 1rem;
-    align-items: flex-end;
-    padding: 0.5rem;
+    gap: 0.25rem;
+    align-items: center;
+    padding: 0.25rem;
     margin-left: 2rem;
-    border-left: 2px solid #ced4da;
+    border-left: none;
+    margin-bottom: 0.25rem;
 }
+
 .dynamic-item-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
 }
+
 .dynamic-item-header .form-group {
     flex-grow: 1;
 }
 
-/* Nuevos estilos para mantener el diseño en edición de niveles */
+/* Estilos edición de niveles */
 .level-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
 }
 
 .level-input {
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #343a40;
-  width: 100%;
-  max-width: 300px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #343a40;
+    width: 100%;
+    max-width: 300px;
+    line-height: 1.5;
 }
 
 .level-input:focus {
-  border-color: #80bdff;
-  outline: none;
+    border-color: #80bdff;
+    outline: none;
 }
 
 .grade-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
 }
 
 .grade-input {
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #495057;
-  width: 100%;
-  max-width: 200px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #495057;
+    width: 100%;
+    max-width: 200px;
+    line-height: 1.5;
 }
 
 .grade-input:focus {
-  border-color: #80bdff;
-  outline: none;
+    border-color: #80bdff;
+    outline: none;
 }
 
 .info-list li span {
-  word-break: break-all;
-  hyphens: auto;
+    word-break: break-all;
+    hyphens: auto;
+}
+
+.logo-info {
+    margin-left: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+    align-self: center;
+}
+
+.nombre-colegio-group {
+    width: 100%;
+    max-width: 100%;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.seccion-container .form-group input {
+    width: auto;
+    max-width: 150px;
+}
+
+.seccion-container .form-group:nth-child(2) input {
+    max-width: 100px;
+}
+
+.edit-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    gap: 0;
+}
+
+.btn-add-spaced {
+    margin-left: 2rem;
 }
