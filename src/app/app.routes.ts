@@ -21,6 +21,7 @@ import { AdminUsersComponent } from './general/components/admin-users/admin-user
 import { ListaAlumnosComponent } from './matricula/components/lista-alumnos/lista-alumnos.component';
 import { EntidadComponent } from './matricula/components/entidad/entidad.component';
 import { BoletaNotasComponent } from './matricula/components/boleta-notas/boleta-notas.component';
+import { AuditComponent } from './campus/components/modules/audit/audit.component';
 
 export const routes: Routes = [
     {
@@ -28,6 +29,7 @@ export const routes: Routes = [
         component: LayoutComponent,
         children: [
           { path: 'campus', component: CampusComponent, canActivate: [AuthGuard] },
+          { path: 'audit', component: AuditComponent, canActivate: [AuthGuard] },
           { path: 'campus/grados/:nivel', component: CampusGradosComponent, canActivate: [AuthGuard] },
           { path: 'gestion/cursos', component: CampusCursosComponent, canActivate: [AuthGuard] },
           { path: 'gestion/profesor-curso', component: ProfesorCursoComponent, canActivate: [AuthGuard] },
