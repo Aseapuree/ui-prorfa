@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { EntidadService } from '../../services/entidad.service';
@@ -31,6 +31,13 @@ export class EntidadComponent implements OnInit {
   isSaving = false;
   spinnerMessage: string = 'Cargando datos...';
   entidadForm!: FormGroup;
+  showSectionsModal = false;
+  selectedNivelIndex?: number;
+  selectedGradoIndex?: number;
+  sectionsForm!: FormGroup;
+  logoPreview: string = '';
+  selectedLogoFile: File | null = null;
+  @ViewChild('logoInput') logoInput?: ElementRef<HTMLInputElement>;
 
   constructor(
     private entidadService: EntidadService,
@@ -70,10 +77,13 @@ export class EntidadComponent implements OnInit {
 
   iniciarEdicion(): void {
     this.isEditing = true;
+    this.logoPreview = this.entidad?.logoColegio || '';
   }
 
   cancelarEdicion(): void {
     this.isEditing = false;
+    this.selectedLogoFile = null;
+    this.logoPreview = '';
     if (this.entidad) {
       this.crearFormularioDeEntidad(this.entidad);
     }
@@ -93,11 +103,9 @@ export class EntidadComponent implements OnInit {
     const patch = this.getDirtyValues(this.entidadForm);
     if (Object.keys(patch).length === 0) {
       this.notificationService.showNotification('No hay cambios para guardar.', 'info');
-      this.isEditing = false;
       return;
     }
 
-    // Convertir vacantes a número si están presentes en el patch
     if (patch.datosngs && patch.datosngs.niveles) {
       patch.datosngs.niveles.forEach((nivel: any) => {
         if (nivel.grados) {
@@ -143,7 +151,6 @@ export class EntidadComponent implements OnInit {
     } else if (control instanceof FormArray) {
       return control.controls.every(child => this.isDirtyValid(child));
     } else {
-      // FormControl
       if (control.dirty) {
         return control.valid;
       } else {
@@ -172,7 +179,6 @@ export class EntidadComponent implements OnInit {
         }
       });
     }
-    // No manejar FormArray directamente aquí, ya que se maneja en FormGroup
     return patch;
   }
 
@@ -203,10 +209,11 @@ export class EntidadComponent implements OnInit {
   }
 
   urlValidator(control: any): { [key: string]: boolean } | null {
-    if (control.value && !/^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(control.value)) {
-      return { 'invalidUrl': true };
-    }
-    return null;
+    const value = control.value;
+    if (!value) return null;
+    if (value.startsWith('data:image/')) return null;
+    if (/^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(value)) return null;
+    return { 'invalidUrl': true };
   }
 
   crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
@@ -287,15 +294,6 @@ export class EntidadComponent implements OnInit {
     this.grados(nivelIndex).markAsDirty();
   }
 
-  addSeccion(nivelIndex: number, gradoIndex: number): void {
-    const nuevaSeccion = this.fb.group({
-      nombre: ['', Validators.required],
-      vacantes: [0, [Validators.required, Validators.min(0)]]
-    });
-    this.secciones(nivelIndex, gradoIndex).push(nuevaSeccion);
-    this.secciones(nivelIndex, gradoIndex).markAsDirty();
-  }
-
   removeNivel(nivelIndex: number): void {
     this.niveles().removeAt(nivelIndex);
     this.niveles().markAsDirty();
@@ -306,8 +304,102 @@ export class EntidadComponent implements OnInit {
     this.grados(nivelIndex).markAsDirty();
   }
 
-  removeSeccion(nivelIndex: number, gradoIndex: number, seccionIndex: number): void {
-    this.secciones(nivelIndex, gradoIndex).removeAt(seccionIndex);
-    this.secciones(nivelIndex, gradoIndex).markAsDirty();
+  openSectionsModal(nivelIndex: number, gradoIndex: number): void {
+    this.selectedNivelIndex = nivelIndex;
+    this.selectedGradoIndex = gradoIndex;
+    let secciones: SeccionVacantes[];
+    if (this.isEditing) {
+      secciones = this.secciones(nivelIndex, gradoIndex).value;
+    } else {
+      secciones = this.entidad?.datosngs?.niveles?.[nivelIndex]?.grados?.[gradoIndex]?.secciones ?? [];
+    }
+    this.sectionsForm = this.fb.group({
+      secciones: this.fb.array(secciones.map((s: SeccionVacantes) => this.crearFormGroupSeccion(s)))
+    });
+    this.showSectionsModal = true;
+  }
+
+  closeSectionsModal(): void {
+    this.showSectionsModal = false;
+  }
+
+  addSeccion(): void {
+    const nuevaSeccion = this.crearFormGroupSeccion({ nombre: '', vacantes: 0 });
+    this.sections().push(nuevaSeccion);
+  }
+
+  removeSeccion(seccionIndex: number): void {
+    this.sections().removeAt(seccionIndex);
+  }
+
+  sections(): FormArray {
+    return this.sectionsForm.get('secciones') as FormArray;
+  }
+
+  saveSections(): void {
+    if (!this.sectionsForm.valid) {
+      this.sectionsForm.markAllAsTouched();
+      this.notificationService.showNotification('Por favor, complete todos los campos requeridos.', 'error');
+      return;
+    }
+
+    if (!this.entidad || !this.entidad.identidad) {
+      this.notificationService.showNotification('Error: No se puede identificar la entidad a actualizar.', 'error');
+      return;
+    }
+
+    const newSecciones = this.sectionsForm.value.secciones.map((s: any) => ({ ...s, vacantes: Number(s.vacantes) }));
+
+    if (this.isEditing) {
+      const seccionesCtrl = this.secciones(this.selectedNivelIndex!, this.selectedGradoIndex!);
+      seccionesCtrl.clear();
+      newSecciones.forEach((s: SeccionVacantes) => seccionesCtrl.push(this.crearFormGroupSeccion(s)));
+      seccionesCtrl.markAsDirty();
+      this.notificationService.showNotification('Secciones actualizadas. Recuerde guardar los cambios generales.', 'success');
+    } else {
+      const nivelesLength = this.entidad?.datosngs?.niveles?.length ?? 0;
+      const gradosLength = this.entidad?.datosngs?.niveles?.[this.selectedNivelIndex!]?.grados?.length ?? 0;
+      const nivelesPatch = Array(nivelesLength).fill(undefined);
+      const gradosPatch = Array(gradosLength).fill(undefined);
+      gradosPatch[this.selectedGradoIndex!] = { secciones: newSecciones };
+      nivelesPatch[this.selectedNivelIndex!] = { grados: gradosPatch };
+      const patch = { datosngs: { niveles: nivelesPatch } };
+
+      this.loading = true;
+      this.spinnerMessage = 'Guardando secciones...';
+      this.entidadService.editarEntidad(this.entidad.identidad, patch).pipe(
+        finalize(() => {
+          this.loading = false;
+          this.spinnerMessage = 'Cargando datos...';
+        })
+      ).subscribe({
+        next: entidadActualizada => {
+          this.entidad = entidadActualizada;
+          this.notificationService.showNotification('Secciones actualizadas correctamente.', 'success');
+        },
+        error: err => {
+          this.notificationService.showNotification(`Error al guardar las secciones: ${err.message}`, 'error');
+        }
+      });
+    }
+    this.showSectionsModal = false;
+  }
+
+  triggerFileInput(): void {
+    this.logoInput?.nativeElement.click();
+  }
+
+  onLogoChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.selectedLogoFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.logoPreview = e.target?.result as string;
+        this.entidadForm.patchValue({ logoColegio: this.logoPreview });
+        this.entidadForm.get('logoColegio')?.markAsDirty();
+      };
+      reader.readAsDataURL(this.selectedLogoFile);
+    }
   }
 }
