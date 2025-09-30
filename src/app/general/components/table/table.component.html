@@ -15,23 +15,11 @@
       *ngFor="let column of columns"
       class="py-3.5 px-4 md:px-2 text-sm font-normal text-center text-table-header-text max-w-[{{ column.maxWidth }}px] relative"
       [ngClass]="{
-        'pr-8 md:pr-4': column.sortable,
         'cursor-pointer': column.sortable
       }"
       (click)="column.sortable && onSort(column.field)"
     >
       {{ column.header }}
-      <fa-icon
-        *ngIf="column.sortable"
-        [icon]="
-          sortBy === column.field
-            ? sortDir === 'asc'
-              ? ['fas', 'arrow-up']
-              : ['fas', 'arrow-down']
-            : ['fas', 'sort']
-        "
-        class="absolute top-1/2 right-2 md:right-1 -translate-y-1/2 h-3 w-3 text-gray-500 hover:text-primary-hover dark:text-gray-400 dark:hover:text-primary-hover"
-      ></fa-icon>
     </th>
     <!-- Columna de acciones -->
     <th

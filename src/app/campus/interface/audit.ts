@@ -1,19 +1,13 @@
-export interface AuditProrfa {
-  id?: string;
-  ipAddress?: string;
-  userId?: string;
-  idRol?: string;
-  userAgent?: string;
-  bandeja?: string;
-  accion?: string;
-  payload?: any; // Object for JSON
-  fechaCreacion?: string;
-}
+import { Usuario } from "./usuario";
 
-export interface AuditFilter {
-  bandeja?: string;
-  accion?: string;
-  userId?: string;
-  fechaInicio?: string;
-  fechaFin?: string;
+export interface AuditProrfa {
+    id?: string;
+    userName?: string;
+    rolName?: string;
+    ipAddress?: string;
+    userAgent?: string;
+    bandeja?: string;
+    accion?: string;
+    payload?: any;
+    fechaCreacion?: Date;
 }

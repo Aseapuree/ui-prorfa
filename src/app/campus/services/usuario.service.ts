@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Usuario } from '../interface/usuario'; 
-import { map, Observable, pipe } from 'rxjs';
+import { catchError, map, Observable, pipe, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -29,4 +29,14 @@ export class UsuarioService {
         })
       );
   }
+
+  buscarUsuariosPorNombre(nombre: string): Observable<Usuario[]> {
+  return this.clienteHttp.get<Usuario[]>(`${this.urlBase}/buscar?nombre=${encodeURIComponent(nombre)}`, { withCredentials: true })
+    .pipe(
+      catchError(error => {
+        console.error('Error al buscar usuarios por nombre:', error);
+        return throwError(() => new Error('Error al buscar usuarios'));
+      })
+    );
+}
 }
