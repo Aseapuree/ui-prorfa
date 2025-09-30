@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { DTOResponse } from '../interface/DTOResponse';
-import { DTONota, AlumnoNotas, DTONotaResponse } from '../interface/DTONota';
+import { DTONota, AlumnoNotas, DTONotaResponse, DTOAlumnoNotas } from '../interface/DTONota';
 
 // Interfaz para la respuesta del endpoint /alumnByNumDoc
 interface DTOAlumno {
@@ -45,6 +45,9 @@ interface DTOCursoNotas {
     notas: DTONotaResponse[]; // Ajusta si el backend devuelve un formato diferente
   }[];
 }
+
+// Interfaz para la respuesta completa de notas por alumno
+
 
 @Injectable({
   providedIn: 'root'
@@ -175,6 +178,25 @@ export class NotasService {
       catchError(error => {
         console.error('Error al editar la nota:', error);
         return throwError(() => new Error('Error al editar la nota: ' + (error.error?.message || error.message)));
+      })
+    );
+  }
+
+  // Método para obtener las notas de un alumno por su ID
+  obtenerNotasPorAlumno(idAlumno: string): Observable<DTOResponse<DTOAlumnoNotas>> {
+    console.log('Obteniendo notas para el alumno:', idAlumno);
+    return this.clienteHttp.get<DTOResponse<DTOAlumnoNotas>>(`${this.urlBase}/alumno/${idAlumno}`, { withCredentials: true }).pipe(
+      map(response => {
+        console.log('Respuesta del servidor (obtenerNotasPorAlumno):', response);
+        if (response.code === 200 && response.data) {
+          return response;
+        } else {
+          throw new Error('No se encontraron notas para el alumno');
+        }
+      }),
+      catchError(error => {
+        console.error('Error al obtener las notas del alumno:', error);
+        return throwError(() => new Error('Error al obtener las notas: ' + (error.message || error)));
       })
     );
   }
