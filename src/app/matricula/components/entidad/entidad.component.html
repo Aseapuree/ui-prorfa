@@ -1,8 +1,8 @@
-<app-general-loading-spinner [visible]="loading || isSaving" [message]="spinnerMessage"></app-general-loading-spinner>
+<app-general-loading-spinner [visible]="cargando || guardando" [message]="mensajeSpinner"></app-general-loading-spinner>
 
 <!-- Vista de Solo Lectura -->
-<div class="main-container" *ngIf="!isEditing && entidad && !loading">
-  <div class="header">
+<div class="main-container" *ngIf="!editando && entidad && !cargando">
+  <div class="header center-aligned">
     <h2>{{ entidad.nombreColegio }}</h2>
     <div class="logo-container">
       <img [src]="entidad.logoColegio" alt="Logo del Colegio">
@@ -83,17 +83,31 @@
         <div class="grade-grid-wrapper">
           <ng-container *ngFor="let nivel of entidad.datosngs?.niveles; let nivelIndex = index">
             <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
-            <div class="grade-grid">
-              <div class="grade-card" *ngFor="let grado of nivel.grados; let gradoIndex = index">
-                <h5>Grado: {{ grado.nombre }}</h5>
-                <div>Secciones:</div>
-                <ul class="info-list">
-                  <li *ngFor="let seccion of grado.secciones">
-                    <span>{{ seccion.nombre }} ({{ seccion.vacantes }} vac.)</span>
-                  </li>
-                </ul>
-                <button class="btn-edit-grade" (click)="openSectionsModal(nivelIndex, gradoIndex)">EDITAR</button>
+            <div class="grade-carousel-container">
+              <button *ngIf="mostrarFlechaIzquierda(nivelIndex)" class="carousel-arrow left-arrow" (click)="moverIzquierda(nivelIndex)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div class="carousel-viewport">
+                <div class="grade-carousel" #carousel [ngStyle]="{'transform': 'translateX(' + getTranslateX(nivelIndex) + 'px)'}">
+                  <div class="grade-card" *ngFor="let grado of nivel.grados; let gradoIndex = index">
+                    <div class="grade-header">
+                      <h5>Grado: {{ grado.nombre }}°</h5>
+                      <app-tooltip [tooltipText]="'Editar'">
+                        <button class="btn-edit-grade" (click)="abrirModalSecciones(nivelIndex, gradoIndex)"><i class="fas fa-pencil-alt"></i></button>
+                      </app-tooltip>
+                    </div>
+                    <div>Secciones:</div>
+                    <ul class="info-list">
+                      <li *ngFor="let seccion of grado.secciones">
+                        <span>{{ seccion.nombre }} ({{ seccion.vacantes }} vac.)</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
+              <button *ngIf="mostrarFlechaDerecha(nivelIndex)" class="carousel-arrow right-arrow" (click)="moverDerecha(nivelIndex)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
             </div>
           </ng-container>
         </div>
@@ -106,25 +120,30 @@
 </div>
 
 <!-- Vista de Edición -->
-<div class="main-container" *ngIf="isEditing && entidad && !loading">
-  <form [formGroup]="entidadForm" (ngSubmit)="guardarCambios()" novalidate>
-    <div class="header">
-      <div class="form-group">
+<div class="main-container" *ngIf="editando && entidad && !cargando">
+  <form [formGroup]="formularioEntidad" (ngSubmit)="guardarCambios()" novalidate>
+    <div class="header left-aligned">
+      <div class="form-group nombre-colegio-group">
         <label for="nombreColegio">Nombre del Colegio</label>
         <input id="nombreColegio" type="text" formControlName="nombreColegio" class="form-control">
-        <div *ngIf="entidadForm.get('nombreColegio')?.invalid && entidadForm.get('nombreColegio')?.touched" class="error-message">
+        <div *ngIf="formularioEntidad.get('nombreColegio')?.invalid && formularioEntidad.get('nombreColegio')?.touched" class="error-message">
           El nombre es requerido.
         </div>
       </div>
-      <div class="logo-container">
-        <img [src]="logoPreview" alt="Logo del Colegio">
-        <div class="upload-overlay">
-          <div class="upload-circle" (click)="triggerFileInput()">SELECCIONAR IMAGEN</div>
+      <div class="logo-section">
+        <div class="logo-container">
+          <img [src]="vistaPreviaLogo || 'assets/placeholder.png'" alt="Logo del Colegio">
+          <div class="upload-overlay">
+            <div class="upload-circle" (click)="activarInputArchivo()">SELECCIONAR IMAGEN</div>
+          </div>
+          <input type="file" #logoInput hidden (change)="alCambiarLogo($event)" accept="image/*">
+          <div *ngIf="formularioEntidad.get('logoColegio')?.invalid && formularioEntidad.get('logoColegio')?.touched" class="error-message">
+            <span *ngIf="formularioEntidad.get('logoColegio')?.errors?.['required']">El logo es requerido.</span>
+            <span *ngIf="formularioEntidad.get('logoColegio')?.errors?.['invalidUrl']">Formato de logo inválido.</span>
+          </div>
         </div>
-        <input type="file" #logoInput hidden (change)="onLogoChange($event)" accept="image/*">
-        <div *ngIf="entidadForm.get('logoColegio')?.invalid && entidadForm.get('logoColegio')?.touched" class="error-message">
-          <span *ngIf="entidadForm.get('logoColegio')?.errors?.['required']">El logo es requerido.</span>
-          <span *ngIf="entidadForm.get('logoColegio')?.errors?.['invalidUrl']">Formato de logo inválido.</span>
+        <div class="logo-info">
+          Solo se permite formato PNG, JPG y JPEG y el archivo no debe pesar más de 2MB.
         </div>
       </div>
     </div>
@@ -137,16 +156,16 @@
         <div class="form-group">
           <label for="rucColegio">RUC</label>
           <input id="rucColegio" type="text" formControlName="rucColegio" class="form-control" maxlength="11">
-          <div *ngIf="entidadForm.get('rucColegio')?.invalid && entidadForm.get('rucColegio')?.touched" class="error-message">
-            <span *ngIf="entidadForm.get('rucColegio')?.errors?.['required']">RUC es requerido.</span>
-            <span *ngIf="entidadForm.get('rucColegio')?.errors?.['pattern']">RUC debe tener 11 dígitos numéricos.</span>
+          <div *ngIf="formularioEntidad.get('rucColegio')?.invalid && formularioEntidad.get('rucColegio')?.touched" class="error-message">
+            <span *ngIf="formularioEntidad.get('rucColegio')?.errors?.['required']">RUC es requerido.</span>
+            <span *ngIf="formularioEntidad.get('rucColegio')?.errors?.['pattern']">RUC debe tener 11 dígitos numéricos.</span>
           </div>
         </div>
         <!-- Razón Social -->
         <div class="form-group">
           <label for="razonSocial">Razón Social</label>
           <input id="razonSocial" type="text" formControlName="razonSocial" class="form-control">
-          <div *ngIf="entidadForm.get('razonSocial')?.invalid && entidadForm.get('razonSocial')?.touched" class="error-message">
+          <div *ngIf="formularioEntidad.get('razonSocial')?.invalid && formularioEntidad.get('razonSocial')?.touched" class="error-message">
             La razón social es requerida.
           </div>
         </div>
@@ -158,7 +177,7 @@
         <div class="form-group">
           <label for="direccionColegio">Dirección</label>
           <input id="direccionColegio" type="text" formControlName="direccionColegio" class="form-control">
-          <div *ngIf="entidadForm.get('direccionColegio')?.invalid && entidadForm.get('direccionColegio')?.touched" class="error-message">
+          <div *ngIf="formularioEntidad.get('direccionColegio')?.invalid && formularioEntidad.get('direccionColegio')?.touched" class="error-message">
             La dirección es requerida.
           </div>
         </div>
@@ -166,18 +185,18 @@
         <div class="form-group">
           <label for="telefonoColegio">Teléfono</label>
           <input id="telefonoColegio" type="tel" formControlName="telefonoColegio" class="form-control" maxlength="8">
-          <div *ngIf="entidadForm.get('telefonoColegio')?.invalid && entidadForm.get('telefonoColegio')?.touched" class="error-message">
-            <span *ngIf="entidadForm.get('telefonoColegio')?.errors?.['required']">El teléfono es requerido.</span>
-            <span *ngIf="entidadForm.get('telefonoColegio')?.errors?.['pattern']">Debe tener 7 u 8 dígitos numéricos.</span>
+          <div *ngIf="formularioEntidad.get('telefonoColegio')?.invalid && formularioEntidad.get('telefonoColegio')?.touched" class="error-message">
+            <span *ngIf="formularioEntidad.get('telefonoColegio')?.errors?.['required']">El teléfono es requerido.</span>
+            <span *ngIf="formularioEntidad.get('telefonoColegio')?.errors?.['pattern']">Debe tener 7 u 8 dígitos numéricos.</span>
           </div>
         </div>
         <!-- Correo -->
         <div class="form-group">
           <label for="correoColegio">Correo Electrónico</label>
           <input id="correoColegio" type="email" formControlName="correoColegio" class="form-control">
-          <div *ngIf="entidadForm.get('correoColegio')?.invalid && entidadForm.get('correoColegio')?.touched" class="error-message">
-            <span *ngIf="entidadForm.get('correoColegio')?.errors?.['required']">El correo es requerido.</span>
-            <span *ngIf="entidadForm.get('correoColegio')?.errors?.['email']">Ingrese un correo válido.</span>
+          <div *ngIf="formularioEntidad.get('correoColegio')?.invalid && formularioEntidad.get('correoColegio')?.touched" class="error-message">
+            <span *ngIf="formularioEntidad.get('correoColegio')?.errors?.['required']">El correo es requerido.</span>
+            <span *ngIf="formularioEntidad.get('correoColegio')?.errors?.['email']">Ingrese un correo válido.</span>
           </div>
         </div>
       </div>
@@ -190,42 +209,58 @@
       <h4>Documentos Requeridos</h4>
       <div class="form-columns">
         <div class="column" formGroupName="necesarios">
-          <h5>Necesarios</h5>
-          <div class="form-group">
-            <label>Doc. Identidad Alumno</label>
-            <input type="text" formControlName="documento1" class="form-control">
-            <div *ngIf="entidadForm.get('documentos.necesarios.documento1')?.invalid && entidadForm.get('documentos.necesarios.documento1')?.touched" class="error-message">
-              Este documento es requerido.
-            </div>
+          <div class="dynamic-section-header">
+            <h5>Necesarios</h5>
+            <app-tooltip [tooltipText]="'Agregar'">
+              <button type="button" (click)="agregarDocumentoNecesario()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+            </app-tooltip>
           </div>
-          <div class="form-group">
-            <label>Doc. Identidad Apoderado</label>
-            <input type="text" formControlName="documento2" class="form-control">
-            <div *ngIf="entidadForm.get('documentos.necesarios.documento2')?.invalid && entidadForm.get('documentos.necesarios.documento2')?.touched" class="error-message">
-              Este documento es requerido.
+          <ng-container *ngFor="let key of keysNecesarios; let i = index">
+            <div class="seccion-container">
+              <div class="form-group">
+                <label>Documento {{i + 1}}</label>
+                <input type="text" [formControlName]="key" class="form-control">
+                <div *ngIf="formularioEntidad.get('documentos.necesarios.' + key)?.invalid && formularioEntidad.get('documentos.necesarios.' + key)?.touched" class="error-message">
+                  Este documento es requerido.
+                </div>
+              </div>
+              <app-tooltip [tooltipText]="'Eliminar'">
+                <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+              </app-tooltip>
             </div>
-          </div>
+          </ng-container>
         </div>
         <div class="column" formGroupName="adicionales">
-          <h5>Adicionales</h5>
-          <div formGroupName="intercambio">
-            <h6>Intercambio</h6>
-            <div class="form-group">
-              <label>Certificado Estudios</label>
-              <input type="text" formControlName="documento1" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Boleta de Notas</label>
-              <input type="text" formControlName="documento2" class="form-control">
-            </div>
+          <div class="dynamic-section-header">
+            <h5>Adicionales</h5>
+            <app-tooltip [tooltipText]="'Agregar Categoría'">
+              <button type="button" (click)="agregarCategoriaAdicional()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+            </app-tooltip>
           </div>
-          <div formGroupName="discapacidad">
-            <h6>Discapacidad</h6>
-            <div class="form-group">
-              <label>Certificado de Discapacidad</label>
-              <input type="text" formControlName="documento1" class="form-control">
+          <ng-container *ngFor="let catKey of keysAdicionales; let catIndex = index">
+            <div formGroupName="{{catKey}}">
+              <div class="dynamic-section-header">
+                <h6><input type="text" formControlName="nombre" class="form-control" placeholder="Nombre de Categoría"></h6>
+                <app-tooltip [tooltipText]="'Agregar Documento'">
+                  <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
+                </app-tooltip>
+                <app-tooltip [tooltipText]="'Eliminar Categoría'">
+                  <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                </app-tooltip>
+              </div>
+              <ng-container *ngFor="let docKey of keysDocumentosAdicionales(catKey); let docIndex = index">
+                <div class="seccion-container">
+                  <div class="form-group">
+                    <label>Documento {{docIndex + 1}}</label>
+                    <input type="text" [formControlName]="docKey" class="form-control">
+                  </div>
+                  <app-tooltip [tooltipText]="'Eliminar'">
+                    <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                  </app-tooltip>
+                </div>
+              </ng-container>
             </div>
-          </div>
+          </ng-container>
         </div>
       </div>
     </div>
@@ -237,9 +272,9 @@
       <div class="info-section">
         <div class="dynamic-section-header">
           <h3><i class="fas fa-clipboard-list"></i> Datos Niveles</h3>
-          <button type="button" (click)="addNivel()" class="btn-add-small">
-            <i class="fas fa-plus"></i> Añadir Nivel
-          </button>
+          <app-tooltip [tooltipText]="'Agregar'">
+            <button type="button" (click)="agregarNivel()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+          </app-tooltip>
         </div>
         <div *ngIf="niveles().invalid && niveles().touched" class="error-message">
           Debe haber al menos un nivel educativo.
@@ -250,17 +285,15 @@
               <h4 class="level-name">
                 <b><input type="text" formControlName="nombre" class="level-input"></b>
               </h4>
-              <button type="button" (click)="removeNivel(i)" class="btn-remove">
-                <i class="fas fa-trash-alt"></i>
-              </button>
+              <app-tooltip [tooltipText]="'Eliminar'">
+                <button type="button" (click)="eliminarNivel(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+              </app-tooltip>
+              <app-tooltip [tooltipText]="'Agregar'">
+                <button type="button" (click)="agregarGrado(i)" class="btn-add-small"><i class="fas fa-plus"></i></button>
+              </app-tooltip>
             </div>
             <div *ngIf="niveles().at(i).get('nombre')?.invalid && niveles().at(i).get('nombre')?.touched" class="error-message">
               El nombre del nivel es requerido.
-            </div>
-            <div class="dynamic-section-header-nested">
-              <button type="button" (click)="addGrado(i)" class="btn-add-small">
-                <i class="fas fa-plus"></i> Añadir Grado
-              </button>
             </div>
             <div *ngIf="grados(i).invalid && grados(i).touched" class="error-message">
               Debe haber al menos un grado.
@@ -270,9 +303,12 @@
                 <div class="grade-card">
                   <div class="grade-header">
                     <h5>Grado: <input type="text" formControlName="nombre" class="grade-input"></h5>
-                    <button type="button" (click)="removeGrado(i, j)" class="btn-remove">
-                      <i class="fas fa-trash-alt"></i>
-                    </button>
+                    <app-tooltip [tooltipText]="'Editar'">
+                      <button class="btn-edit-grade" (click)="abrirModalSecciones(i, j)"><i class="fas fa-pencil-alt"></i></button>
+                    </app-tooltip>
+                    <app-tooltip [tooltipText]="'Eliminar'">
+                      <button type="button" (click)="eliminarGrado(i, j)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                    </app-tooltip>
                   </div>
                   <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
                     El nombre del grado es requerido.
@@ -283,7 +319,6 @@
                       <span>{{ seccion.nombre }} ({{ seccion.vacantes }} vac.)</span>
                     </li>
                   </ul>
-                  <button class="btn-edit-grade" (click)="openSectionsModal(i, j)">EDITAR</button>
                 </div>
               </ng-container>
             </div>
@@ -293,7 +328,7 @@
     </div>
 
     <!-- Botones de Edición -->
-    <div class="edit-modal-footer">
+    <div class="button-container">
       <button type="button" class="btn btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
       <button type="submit" class="btn btn-primary">Guardar Cambios</button>
     </div>
@@ -301,42 +336,44 @@
 </div>
 
 <!-- Modal de Edición de Secciones -->
-<div class="edit-modal-overlay" *ngIf="showSectionsModal">
+<div class="edit-modal-overlay" *ngIf="mostrarModalSecciones">
   <div class="edit-modal-container">
-    <button class="close-button" (click)="closeSectionsModal()"><i class="fas fa-times"></i></button>
-    <form [formGroup]="sectionsForm" novalidate>
-      <h2 class="edit-modal-title">Editar Secciones</h2>
+    <button class="close-button" (click)="cerrarModalSecciones()"><i class="fas fa-times"></i></button>
+    <form [formGroup]="formularioSecciones" novalidate>
+      <div class="edit-modal-header">
+        <h2 class="edit-modal-title">GRADO: {{ nombreGradoSeleccionado }}°</h2>
+        <app-tooltip [tooltipText]="'Agregar'">
+          <button type="button" (click)="agregarSeccion()" class="btn-add-small btn-add-spaced"><i class="fas fa-plus"></i></button>
+        </app-tooltip>
+      </div>
       <div formArrayName="secciones">
-        <div *ngFor="let seccionCtrl of sections().controls; let k=index" [formGroupName]="k" class="seccion-container">
+        <div *ngFor="let seccionCtrl of secciones().controls; let k=index" [formGroupName]="k" class="seccion-container">
           <div class="form-group">
             <label>Nombre Sección</label>
             <input type="text" formControlName="nombre" class="form-control">
-            <div *ngIf="sections().at(k).get('nombre')?.invalid && sections().at(k).get('nombre')?.touched" class="error-message">
+            <div *ngIf="secciones().at(k).get('nombre')?.invalid && secciones().at(k).get('nombre')?.touched" class="error-message">
               El nombre de la sección es requerido.
             </div>
           </div>
           <div class="form-group">
             <label>N° Vacantes</label>
             <input type="number" formControlName="vacantes" class="form-control">
-            <div *ngIf="sections().at(k).get('vacantes')?.invalid && sections().at(k).get('vacantes')?.touched" class="error-message">
-              <span *ngIf="sections().at(k).get('vacantes')?.errors?.['required']">Las vacantes son requeridas.</span>
-              <span *ngIf="sections().at(k).get('vacantes')?.errors?.['min']">Debe ser al menos 0.</span>
+            <div *ngIf="secciones().at(k).get('vacantes')?.invalid && secciones().at(k).get('vacantes')?.touched" class="error-message">
+              <span *ngIf="secciones().at(k).get('vacantes')?.errors?.['required']">Las vacantes son requeridas.</span>
+              <span *ngIf="secciones().at(k).get('vacantes')?.errors?.['min']">Debe ser al menos 0.</span>
             </div>
           </div>
-          <button type="button" (click)="removeSeccion(k)" class="btn-remove">
-            <i class="fas fa-trash-alt"></i>
-          </button>
+          <app-tooltip [tooltipText]="'Eliminar'">
+            <button type="button" (click)="eliminarSeccion(k)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+          </app-tooltip>
         </div>
       </div>
-      <div class="dynamic-section-header">
-        <button type="button" (click)="addSeccion()" class="btn-add-small">
-          <i class="fas fa-plus"></i> Añadir Sección
-        </button>
-      </div>
       <div class="edit-modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeSectionsModal()">Cancelar</button>
-        <button type="button" class="btn btn-primary" (click)="saveSections()">Guardar Cambios</button>
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalSecciones()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarSecciones()">Guardar Cambios</button>
       </div>
     </form>
   </div>
 </div>
+
+<app-notification></app-notification>

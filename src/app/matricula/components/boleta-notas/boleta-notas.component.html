@@ -30,7 +30,7 @@
       <tbody>
         <tr *ngFor="let curso of notas.cursos" class="hover:bg-[--primary-hover] transition-colors">
           <td class="p-3">{{ curso.nombre }}</td>
-          <td *ngFor="let nota of curso.notasPorCiclo" class="p-3 text-center">{{ nota }}</td>
+          <td *ngFor="let nota of curso.notasPorCiclo" class="p-3 text-center">{{ formatNota(nota) }}</td>
         </tr>
       </tbody>
     </table>
