@@ -23,6 +23,8 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NotificationComponent } from '../../shared/notificaciones/notification.component';
+import { RolesService } from '../../../services/roles.service';
+import { Role } from '../../../interface/role';
 
 interface AuditFilters {
   userName: string;
@@ -32,7 +34,6 @@ interface AuditFilters {
   userAgent: string;
   fechaInicio: string;
   fechaFin: string;
-  palabraClave: string;
   [key: string]: string | undefined;
 }
 
@@ -55,7 +56,7 @@ interface AuditFilters {
     MatInputModule,
     MatNativeDateModule,
   ],
-  providers: [AuditService, UsuarioService],
+  providers: [AuditService, UsuarioService, RolesService],
   templateUrl: './audit.component.html',
   styleUrl: './audit.component.scss'
 })
@@ -81,17 +82,19 @@ export class AuditComponent implements OnInit {
     rolName: '',
     ipAddress: '',
     bandeja: '',
-    accion: '',
     userAgent: '',
     fechaInicio: '',
     fechaFin: '',
-    palabraClave: '',
   };
 
   // Autocomplete Usuario
   searchUserTerm: string = '';
   showUserDropdown: boolean = false;
   userSearchResults: Usuario[] = [];
+  selectedUserId: string | null = null;
+
+  // Roles cargados (sin autocomplete)
+  roles: Role[] = [];
 
   tableColumns: ColumnConfig[] = [
     { field: 'userName', header: 'USUARIO', maxWidth: 150, sortable: true, type: 'text' },
@@ -113,6 +116,7 @@ export class AuditComponent implements OnInit {
 
   constructor(
     private auditService: AuditService,
+    private rolesService: RolesService,
     private usuarioService: UsuarioService,
     private cdr: ChangeDetectorRef,
     private notificationService: NotificationService
@@ -127,6 +131,7 @@ export class AuditComponent implements OnInit {
     }
     this.cargarConteoAuditorias();
     this.cargarAuditorias();
+    this.loadRoles();
     this.updateMaxDate();
   }
 
@@ -213,8 +218,7 @@ export class AuditComponent implements OnInit {
       !!this.filters.bandeja.trim() ||
       !!this.filters.userAgent.trim() ||
       !!this.filters.fechaInicio ||
-      !!this.filters.fechaFin ||
-      !!this.filters.palabraClave.trim();
+      !!this.filters.fechaFin;
 
     const isValidInputs =
       this.isValidFechaInicio &&
@@ -267,29 +271,37 @@ export class AuditComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  onUserSearch(event: any): void {
-    const term = event.target.value.trim();
-    this.searchUserTerm = term;
-    if (term.length >= 2) {
-      this.usuarioService.buscarUsuariosPorNombre(term).subscribe({
-        next: (results) => {
-          this.userSearchResults = results;
-          this.showUserDropdown = true;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.userSearchResults = [];
-          this.showUserDropdown = false;
-        }
-      });
-    } else {
+  performUserSearch(): void {
+    const term = this.searchUserTerm.trim();
+    if (term.length < 2) {
       this.userSearchResults = [];
       this.showUserDropdown = false;
+      this.notificationService.showNotification('Ingresa al menos 2 caracteres para buscar usuarios.', 'info');
+      return;
     }
+
+    this.showUserDropdown = true;
+    this.usuarioService.buscarUsuariosPorNombre(term).subscribe({
+      next: (results) => {
+        this.userSearchResults = results;
+        if (this.userSearchResults.length === 0) {
+          this.showUserDropdown = false;
+          this.notificationService.showNotification('No se encontraron usuarios con ese término.', 'info');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error en búsqueda de usuarios:', err);
+        this.userSearchResults = [];
+        this.showUserDropdown = false;
+        this.notificationService.showNotification('Error al buscar usuarios.', 'error');
+      }
+    });
   }
 
   selectUser(user: Usuario): void {
-    this.filters.userName = `${user.nombre} ${user.apellidopaterno} ${user.apellidomaterno}`.trim();
+    this.selectedUserId = user.idusuario || null;
+    this.filters.userName = `${user.nombre || ''} ${user.apellidopaterno || ''} ${user.apellidomaterno || ''}`.trim();
     this.searchUserTerm = this.filters.userName;
     this.showUserDropdown = false;
     this.userSearchResults = [];
@@ -300,6 +312,18 @@ export class AuditComponent implements OnInit {
     setTimeout(() => {
       this.showUserDropdown = false;
     }, 200);
+  }
+
+  loadRoles(): void {
+    this.rolesService.getRoles().subscribe({
+      next: (roles) => {
+        this.roles = roles;
+      },
+      error: (err) => {
+        console.error('Error al cargar roles:', err);
+        this.notificationService.showNotification('Error al cargar roles para el filtro', 'error');
+      }
+    });
   }
 
   private updatePageSizeOptions(): void {
@@ -428,9 +452,9 @@ export class AuditComponent implements OnInit {
         userAgent: '',
         fechaInicio: '',
         fechaFin: '',
-        palabraClave: '',
       };
       this.searchUserTerm = '';
+      this.selectedUserId = null;
       this.appliedFilters = null;
       this.page = 1;
       this.isValidFechaInicio = true;
@@ -452,7 +476,7 @@ export class AuditComponent implements OnInit {
 
     this.isLoading = true;
 
-    const filters: any = {
+    const filtersToSend: any = {
       userName: this.filters.userName ? this.filters.userName.trim() : undefined,
       rolName: this.filters.rolName ? this.filters.rolName.trim().toLowerCase() : undefined,
       ipAddress: this.filters.ipAddress ? this.filters.ipAddress.trim() : undefined,
@@ -460,12 +484,12 @@ export class AuditComponent implements OnInit {
       userAgent: this.filters.userAgent ? this.filters.userAgent.trim() : undefined,
       fechaInicio: this.filters.fechaInicio || undefined,
       fechaFin: this.filters.fechaFin || undefined,
-      palabraClave: this.filters.palabraClave ? this.filters.palabraClave.trim() : undefined,
+      userId: this.selectedUserId || undefined,
     };
 
-    this.appliedFilters = filters;
+    this.appliedFilters = filtersToSend;
 
-    this.auditService.buscarAuditorias(filters, this.page, this.itemsPerPage, this.sortBy, this.sortDir).subscribe({
+    this.auditService.buscarAuditorias(filtersToSend, this.page, this.itemsPerPage, this.sortBy, this.sortDir).subscribe({
       next: (resultado) => {
         this.auditorias = this.transformarDatos(resultado.content || []);
         this.totalAuditorias = resultado.totalElements;
