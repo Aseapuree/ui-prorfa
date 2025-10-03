@@ -27,6 +27,7 @@ import { NotificationComponent } from '../../../campus/components/shared/notific
   styleUrls: ['./entidad.component.scss']
 })
 export class EntidadComponent implements OnInit {
+  isDarkMode: boolean = true; // Controla el modo oscuro globalmente
   entidad: Entidad | null = null;
   cargando = false;
   editando = false;
@@ -66,6 +67,21 @@ export class EntidadComponent implements OnInit {
     } else {
       this.notificationService.showNotification('Error: No se pudo identificar al usuario.', 'error');
     }
+    this.updateDarkMode();/*MODO OSCURO */
+  }
+
+  ngAfterViewInit(): void {
+    this.updateDarkMode();/*MODO OSCURO */
+  }
+
+  private updateDarkMode(): void {
+    // Agregar o quitar clase 'dark' en <html>
+    if (this.isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    this.cdRef.detectChanges();
   }
 
   // Inicializa las posiciones del carrusel

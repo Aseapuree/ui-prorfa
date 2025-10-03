@@ -4,20 +4,28 @@
 
   <!-- Tooltip -->
   <p
-    class="absolute flex items-center justify-center w-48 p-3 text-gray-600 bg-white rounded-lg shadow-lg -left-[9.5rem] -top-16 shadow-gray-200 dark:shadow-none dark:bg-white dark:text-gray-600 transition-opacity duration-200 text-sm"
+    #tooltip
+    [class]="fixedClasses"
     [ngClass]="{
+      'opacity-100 visible': isVisible,
       'opacity-0 invisible': !isVisible,
-      'opacity-100 visible': isVisible
+      'bg-white text-gray-600': !isDarkMode,
+      'bg-gray-800 text-gray-200': isDarkMode
     }"
+    [ngStyle]="tooltipStyle"
   >
-    <span class="truncate">{{ tooltipText }}</span>
+    {{ tooltipText }}
     <svg
+      class="absolute w-6 h-6 fill-current stroke-current"
+      [ngClass]="{
+        'text-white': !isDarkMode,
+        'text-gray-800': isDarkMode
+      }"
+      [ngStyle]="arrowStyle"
       xmlns="http://www.w3.org/2000/svg"
-      class="absolute w-6 h-6 rotate-45 right-4 bottom-0.5 -mb-3 text-white fill-current"
-      stroke="currentColor"
       viewBox="0 0 24 24"
     >
-      <path d="M20 3H4a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z"></path>
+      <path d="M0 0 L24 12 L0 24 Z"></path>
     </svg>
   </p>
 </div>
