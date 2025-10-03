@@ -1,84 +1,209 @@
-<!-- audit-list.component.html -->
+<!-- audit-prorfa.component.html -->
 <section class="container px-4 mx-auto">
-  <!-- Spinner de carga -->
-  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando auditorías...'"></app-general-loading-spinner>
+  <app-general-loading-spinner
+    [visible]="isLoading"
+    [message]="'Cargando auditorías...'"
+  ></app-general-loading-spinner>
   <div class="mt-6 md:flex md:items-center md:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Auditorías</h2>
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">
+          Auditorías
+        </h2>
         <span
           class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400"
         >
-          {{ totalAuditorias }} Registros
+          {{ totalAuditorias }} Auditorías
         </span>
       </div>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">
-        Registro de acciones del sistema
+        Registro de actividades del sistema
       </p>
     </div>
+  </div>
 
-    <!-- Buscador simple -->
-    <div class="relative flex items-center mt-4 md:mt-0">
-      <input
-        [(ngModel)]="keyword"
-        (input)="onInputChange($event)"
-        (keyup.enter)="buscarAuditorias()"
-        type="text"
-        placeholder="Buscar auditorías..."
-        class="block w-full py-1.5 pr-10 pl-4 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40"
-      />
-      <span
-        (click)="buscarAuditorias()"
-        [class.cursor-not-allowed]="!isKeywordValid()"
-        [class.text-gray-400]="isKeywordValid()"
-        [class.text-gray-600]="!isKeywordValid()"
-        class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer hover:text-blue-600 dark:text-gray-600 dark:hover:text-blue-300"
-      >
-        <fa-icon [icon]="['fas', 'magnifying-glass']" class="w-5 h-5"></fa-icon>
-      </span>
+  <!-- Filtros -->
+  <div class="mt-4 flex flex-col gap-4 w-full">
+    <div class="flex flex-wrap gap-4 sm:gap-6">
+      <!-- Filtro de Usuario con Autocomplete -->
+<div class="w-60 relative space-y-3">
+  <label for="userName" class="block text-sm font-medium text-gray-700 dark:text-white">Usuario</label>
+  <div class="relative">
+    <input
+      type="text"
+      id="userName"
+      [(ngModel)]="searchUserTerm"
+      (blur)="onUserBlur()"
+      placeholder="Buscar usuario"
+      class="py-2.5 px-4 pr-10 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-white border-gray-300 text-gray-900"
+    />
+    <fa-icon 
+      [icon]="['fas', 'search']" 
+      (click)="performUserSearch()"
+      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-blue-500"
+    ></fa-icon>
+  </div>
+  <!-- Dropdown de usuarios -->
+  <div *ngIf="showUserDropdown && userSearchResults.length > 0" class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto mt-1">
+    <div *ngFor="let user of userSearchResults" (click)="selectUser(user)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
+      {{ user.nombre }} {{ user.apellidopaterno }} {{ user.apellidomaterno }}
+    </div>
+  </div>
+</div>
+
+      <!-- Filtro de Rol con Select -->
+      <div class="w-60 space-y-3">
+        <label for="rolName" class="block text-sm font-medium text-gray-700 dark:text-white">Rol</label>
+        <select
+          id="rolName"
+          [(ngModel)]="filters.rolName"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-white border-gray-300 text-gray-900"
+        >
+          <option value="">Seleccionar rol</option>
+          <option *ngFor="let rol of roles" [value]="rol.nombreRol">{{ rol.nombreRol }}</option>
+        </select>
+      </div>
+
+      <!-- Filtro de IP -->
+      <div class="w-60 space-y-3">
+        <label for="ipAddress" class="block text-sm font-medium text-gray-700 dark:text-white">IP</label>
+        <input
+          type="text"
+          id="ipAddress"
+          [(ngModel)]="filters.ipAddress"
+          (input)="onInputChange($event, 'ipAddress')"
+          placeholder="Dirección IP"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <!-- Filtro de Bandeja -->
+      <div class="w-60 space-y-3">
+        <label for="bandeja" class="block text-sm font-medium text-gray-700 dark:text-white">Bandeja</label>
+        <input
+          type="text"
+          id="bandeja"
+          [(ngModel)]="filters.bandeja"
+          (input)="onInputChange($event, 'bandeja')"
+          placeholder="Bandeja"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <!-- Filtro de Agente -->
+      <div class="w-60 space-y-3">
+        <label for="userAgent" class="block text-sm font-medium text-gray-700 dark:text-white">Agente de Usuario</label>
+        <input
+          type="text"
+          id="userAgent"
+          [(ngModel)]="filters.userAgent"
+          (input)="onInputChange($event, 'userAgent')"
+          placeholder="User Agent"
+          class="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-white border-gray-300 text-gray-900"
+        />
+      </div>
+
+      <!-- Fecha Inicio -->
+      <div class="w-60 space-y-3">
+        <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Inicio</label>
+        <input
+          type="date"
+          id="fechaInicio"
+          [(ngModel)]="filters.fechaInicio"
+          (ngModelChange)="onDateChange($event, 'fechaInicio')"
+          [max]="maxDate"
+          class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          [ngClass]="{'border-red-500': !isValidFechaInicio, 'border-gray-300': isValidFechaInicio}"
+        />
+        <p *ngIf="!isValidFechaInicio && filters.fechaInicio" class="text-xs text-red-500 mt-1">
+          Fecha inválida. El año no puede ser mayor a {{ currentYear }}.
+        </p>
+      </div>
+
+      <!-- Fecha Fin -->
+      <div class="w-60 space-y-3">
+        <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-white">Fecha Fin</label>
+        <input
+          type="date"
+          id="fechaFin"
+          [(ngModel)]="filters.fechaFin"
+          (ngModelChange)="onDateChange($event, 'fechaFin')"
+          [min]="filters.fechaInicio || null"
+          [max]="maxDate"
+          class="py-2.5 px-4 block w-full border rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          [ngClass]="{'border-red-500': !isValidFechaFin, 'border-gray-300': isValidFechaFin}"
+        />
+        <p *ngIf="!isValidFechaFin && filters.fechaFin" class="text-xs text-red-500 mt-1">
+          Fecha inválida. El año no puede ser mayor a {{ currentYear }} o anterior a la fecha de inicio.
+        </p>
+      </div>
+    </div>
+
+    <!-- Selector y Botones -->
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center">
+        <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">Mostrar:</label>
+        <select
+          id="itemsPerPage"
+          [(ngModel)]="itemsPerPage"
+          (ngModelChange)="onItemsPerPageChange($event)"
+          class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
+        >
+          <option *ngFor="let option of pageSizeOptions" [value]="option">{{ option }}</option>
+        </select>
+        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          (click)="buscarAuditorias()"
+          [disabled]="!isFormValid()"
+          class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <fa-icon [icon]="['fas', 'search']"></fa-icon>
+          <span>Buscar</span>
+        </button>
+        <button
+          (click)="resetFilter('all')"
+          class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 dark:hover:bg-gray-800 dark:bg-gray-900 hover:bg-gray-100 dark:text-gray-200 dark:border-gray-700"
+        >
+          <fa-icon [icon]="['fas', 'broom']"></fa-icon>
+          <span>Limpiar</span>
+        </button>
+        <button
+          (click)="descargarExcel()"
+          [disabled]="isLoading"
+          class="flex items-center justify-center w-full sm:w-auto px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed gap-x-2"
+        >
+          <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
+          <span *ngIf="!isLoading">Exportar</span>
+          <span *ngIf="isLoading">Descargando...</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Selector de cantidad de datos por página -->
-  <div class="mt-4 flex items-center">
-    <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">
-      Mostrar:
-    </label>
-    <select
-      id="itemsPerPage"
-      [(ngModel)]="itemsPerPage"
-      (ngModelChange)="onItemsPerPageChange($event)"
-      class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
-    >
-      <option *ngFor="let option of pageSizeOptions" [value]="option">
-        {{ option }}
-      </option>
-    </select>
-    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
-  </div>
-
-  <!-- Tabla Reutilizable y Mensaje Condicional -->
   <div class="mt-6">
     <app-table
       *ngIf="auditorias.length > 0 || isLoading"
       [data]="auditorias"
       [columns]="tableColumns"
-      [sortBy]="sortBy"
-      [sortDir]="sortDir"
       [enableActions]="false"
       [actions]="[]"
+      [sortBy]="sortBy"
+      [sortDir]="sortDir"
       (sortChange)="onSortChange($event)"
     ></app-table>
 
-    <!-- Mensaje cuando no hay resultados -->
-    <div
-      *ngIf="auditorias.length === 0 && !isLoading"
-      class="text-center py-6 text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-    >
-      <fa-icon [icon]="['fas', 'info-circle']" class="text-gray-400 text-xl mr-2"></fa-icon>
-      No se encontraron auditorías con el criterio de búsqueda.
+    <div *ngIf="auditorias.length === 0 && !isLoading" class="text-center py-4 text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+      No se encontraron auditorías con los filtros aplicados.
     </div>
   </div>
-  <!-- Componente de notificaciones -->
+
+  <app-pagination
+    [page]="page"
+    [totalPages]="totalPages"
+    (pageChange)="onPageChange($event)"
+  ></app-pagination>
   <app-notification></app-notification>
 </section>
