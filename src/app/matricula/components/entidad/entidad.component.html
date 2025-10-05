@@ -209,42 +209,58 @@
       <h4>Documentos Requeridos</h4>
       <div class="form-columns">
         <div class="column" formGroupName="necesarios">
-          <h5>Necesarios</h5>
-          <div class="form-group">
-            <label>Doc. Identidad Alumno</label>
-            <input type="text" formControlName="documento1" class="form-control">
-            <div *ngIf="formularioEntidad.get('documentos.necesarios.documento1')?.invalid && formularioEntidad.get('documentos.necesarios.documento1')?.touched" class="error-message">
-              Este documento es requerido.
-            </div>
+          <div class="dynamic-section-header">
+            <h5>Necesarios</h5>
+            <app-tooltip [tooltipText]="'Agregar'">
+              <button type="button" (click)="agregarDocumentoNecesario()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+            </app-tooltip>
           </div>
-          <div class="form-group">
-            <label>Doc. Identidad Apoderado</label>
-            <input type="text" formControlName="documento2" class="form-control">
-            <div *ngIf="formularioEntidad.get('documentos.necesarios.documento2')?.invalid && formularioEntidad.get('documentos.necesarios.documento2')?.touched" class="error-message">
-              Este documento es requerido.
+          <ng-container *ngFor="let key of keysNecesarios; let i = index">
+            <div class="seccion-container">
+              <div class="form-group">
+                <label>Documento {{i + 1}}</label>
+                <input type="text" [formControlName]="key" class="form-control">
+                <div *ngIf="formularioEntidad.get('documentos.necesarios.' + key)?.invalid && formularioEntidad.get('documentos.necesarios.' + key)?.touched" class="error-message">
+                  Este documento es requerido.
+                </div>
+              </div>
+              <app-tooltip [tooltipText]="'Eliminar'">
+                <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+              </app-tooltip>
             </div>
-          </div>
+          </ng-container>
         </div>
         <div class="column" formGroupName="adicionales">
-          <h5>Adicionales</h5>
-          <div formGroupName="intercambio">
-            <h6>Intercambio</h6>
-            <div class="form-group">
-              <label>Certificado Estudios</label>
-              <input type="text" formControlName="documento1" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Boleta de Notas</label>
-              <input type="text" formControlName="documento2" class="form-control">
-            </div>
+          <div class="dynamic-section-header">
+            <h5>Adicionales</h5>
+            <app-tooltip [tooltipText]="'Agregar Categoría'">
+              <button type="button" (click)="agregarCategoriaAdicional()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+            </app-tooltip>
           </div>
-          <div formGroupName="discapacidad">
-            <h6>Discapacidad</h6>
-            <div class="form-group">
-              <label>Certificado de Discapacidad</label>
-              <input type="text" formControlName="documento1" class="form-control">
+          <ng-container *ngFor="let catKey of keysAdicionales; let catIndex = index">
+            <div formGroupName="{{catKey}}">
+              <div class="dynamic-section-header">
+                <h6><input type="text" formControlName="nombre" class="form-control" placeholder="Nombre de Categoría"></h6>
+                <app-tooltip [tooltipText]="'Agregar Documento'">
+                  <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
+                </app-tooltip>
+                <app-tooltip [tooltipText]="'Eliminar Categoría'">
+                  <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                </app-tooltip>
+              </div>
+              <ng-container *ngFor="let docKey of keysDocumentosAdicionales(catKey); let docIndex = index">
+                <div class="seccion-container">
+                  <div class="form-group">
+                    <label>Documento {{docIndex + 1}}</label>
+                    <input type="text" [formControlName]="docKey" class="form-control">
+                  </div>
+                  <app-tooltip [tooltipText]="'Eliminar'">
+                    <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                  </app-tooltip>
+                </div>
+              </ng-container>
             </div>
-          </div>
+          </ng-container>
         </div>
       </div>
     </div>

@@ -27,6 +27,7 @@ import { NotificationComponent } from '../../../campus/components/shared/notific
   styleUrls: ['./entidad.component.scss']
 })
 export class EntidadComponent implements OnInit {
+  isDarkMode: boolean = true; // Controla el modo oscuro globalmente
   entidad: Entidad | null = null;
   cargando = false;
   editando = false;
@@ -44,6 +45,12 @@ export class EntidadComponent implements OnInit {
   @ViewChildren('carousel') carouselElements!: QueryList<ElementRef>;
   carouselPositions: number[] = []; // Posición actual de cada carrusel por nivel
   cardWidth = 150 + 16; // Ancho de la tarjeta (150px) + gap (1rem = 16px)
+  keysNecesarios: string[] = ['documento1', 'documento2'];
+  keysAdicionales: string[] = ['intercambio', 'discapacidad'];
+  keysDocumentosAdicionalesMap: { [key: string]: string[] } = {
+    'intercambio': ['documento1', 'documento2'],
+    'discapacidad': ['documento1']
+  };
 
   constructor(
     private entidadService: EntidadService,
@@ -60,6 +67,21 @@ export class EntidadComponent implements OnInit {
     } else {
       this.notificationService.showNotification('Error: No se pudo identificar al usuario.', 'error');
     }
+    this.updateDarkMode();/*MODO OSCURO */
+  }
+
+  ngAfterViewInit(): void {
+    this.updateDarkMode();/*MODO OSCURO */
+  }
+
+  private updateDarkMode(): void {
+    // Agregar o quitar clase 'dark' en <html>
+    if (this.isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    this.cdRef.detectChanges();
   }
 
   // Inicializa las posiciones del carrusel
@@ -144,6 +166,12 @@ export class EntidadComponent implements OnInit {
     if (this.entidad) {
       this.crearFormularioDeEntidad(this.entidad);
     }
+    this.keysNecesarios = ['documento1', 'documento2'];
+    this.keysAdicionales = ['intercambio', 'discapacidad'];
+    this.keysDocumentosAdicionalesMap = {
+      'intercambio': ['documento1', 'documento2'],
+      'discapacidad': ['documento1']
+    };
   }
 
   guardarCambios(): void {
@@ -274,22 +302,85 @@ export class EntidadComponent implements OnInit {
     return { 'invalidUrl': true };
   }
 
-  crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
-    return this.fb.group({
-      necesarios: this.fb.group({
-        documento1: [documentos?.necesarios?.documento1 ?? '', Validators.required],
-        documento2: [documentos?.necesarios?.documento2 ?? '', Validators.required],
-      }),
-      adicionales: this.fb.group({
-        intercambio: this.fb.group({
-          documento1: [documentos?.adicionales?.intercambio?.documento1 ?? ''],
-          documento2: [documentos?.adicionales?.intercambio?.documento2 ?? ''],
-        }),
-        discapacidad: this.fb.group({
-          documento1: [documentos?.adicionales?.discapacidad?.documento1 ?? ''],
-        })
-      })
+        crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
+    const necesariosGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
+    this.keysNecesarios.forEach(key => {
+      necesariosGroup.addControl(key, this.fb.control((documentos?.necesarios as any)?.[key] ?? '', Validators.required));
     });
+
+    const adicionalesGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
+    this.keysAdicionales.forEach(catKey => {
+      const catGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({
+        nombre: this.fb.control((documentos?.adicionales as any)?.[catKey]?.nombre ?? catKey.charAt(0).toUpperCase() + catKey.slice(1))
+      });
+      this.keysDocumentosAdicionalesMap[catKey].forEach(docKey => {
+        catGroup.addControl(docKey, this.fb.control((documentos?.adicionales as any)?.[catKey]?.[docKey] ?? ''));
+      });
+      adicionalesGroup.addControl(catKey, catGroup);
+    });
+
+    return this.fb.group({
+      necesarios: necesariosGroup,
+      adicionales: adicionalesGroup
+    });
+  }
+
+  keysDocumentosAdicionales(catKey: string): string[] {
+    return this.keysDocumentosAdicionalesMap[catKey] || [];
+  }
+
+  agregarDocumentoNecesario(): void {
+    const necesarios = this.formularioEntidad.get('documentos.necesarios') as FormGroup;
+    const newKey = `documento${this.keysNecesarios.length + 1}`;
+    necesarios.addControl(newKey, this.fb.control('', Validators.required));
+    this.keysNecesarios.push(newKey);
+    this.cdRef.detectChanges();
+  }
+
+  eliminarDocumentoNecesario(i: number): void {
+    const necesarios = this.formularioEntidad.get('documentos.necesarios') as FormGroup;
+    const key = this.keysNecesarios[i];
+    necesarios.removeControl(key);
+    this.keysNecesarios.splice(i, 1);
+    this.cdRef.detectChanges();
+  }
+
+  agregarCategoriaAdicional(): void {
+    const adicionales = this.formularioEntidad.get('documentos.adicionales') as FormGroup;
+    const newKey = `categoria${this.keysAdicionales.length + 1}`;
+    const newGroup = this.fb.group({
+      nombre: ['', Validators.required],
+      documento1: ['']
+    });
+    adicionales.addControl(newKey, newGroup);
+    this.keysAdicionales.push(newKey);
+    this.keysDocumentosAdicionalesMap[newKey] = ['documento1'];
+    this.cdRef.detectChanges();
+  }
+
+  eliminarCategoriaAdicional(catIndex: number): void {
+    const adicionales = this.formularioEntidad.get('documentos.adicionales') as FormGroup;
+    const key = this.keysAdicionales[catIndex];
+    adicionales.removeControl(key);
+    this.keysAdicionales.splice(catIndex, 1);
+    delete this.keysDocumentosAdicionalesMap[key];
+    this.cdRef.detectChanges();
+  }
+
+  agregarDocumentoAdicional(catKey: string): void {
+    const categoria = this.formularioEntidad.get('documentos.adicionales.' + catKey) as FormGroup;
+    const newKey = `documento${this.keysDocumentosAdicionalesMap[catKey].length + 1}`;
+    categoria.addControl(newKey, this.fb.control(''));
+    this.keysDocumentosAdicionalesMap[catKey].push(newKey);
+    this.cdRef.detectChanges();
+  }
+
+  eliminarDocumentoAdicional(catKey: string, docIndex: number): void {
+    const categoria = this.formularioEntidad.get('documentos.adicionales.' + catKey) as FormGroup;
+    const docKey = this.keysDocumentosAdicionalesMap[catKey][docIndex];
+    categoria.removeControl(docKey);
+    this.keysDocumentosAdicionalesMap[catKey].splice(docIndex, 1);
+    this.cdRef.detectChanges();
   }
 
   crearFormGroupDatosNgs(datos?: DatosNGS): FormGroup {
