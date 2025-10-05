@@ -178,12 +178,10 @@ export class BoletaNotasComponent implements OnInit {
         console.error('No se pudo abrir la ventana de vista previa');
         return;
       }
-
       // Después de mostrarlo en la ventana, revocar el objeto URL
       ventanaPreview.onload = () => {
         window.URL.revokeObjectURL(url);
       };
-      
       console.log('Vista previa del PDF abierta');
     },
     (error) => {
