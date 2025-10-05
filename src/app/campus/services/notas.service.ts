@@ -200,4 +200,22 @@ export class NotasService {
       })
     );
   }
+
+
+ generarBoletaPdf(idAlumno: string): Observable<Blob> {
+    console.log('Generando boleta PDF para idAlumno:', idAlumno);
+    return this.clienteHttp.get(`${this.urlBase}/boleta-pdf/${idAlumno}`, {
+      responseType: 'blob', // Para descargar como binario (PDF)
+      withCredentials: true
+    }).pipe(
+      map(blob => {
+        console.log('PDF generado exitosamente (tamaño:', blob.size, 'bytes)');
+        return blob;
+      }),
+      catchError(error => {
+        console.error('Error al generar boleta PDF:', error);
+        return throwError(() => new Error('Error al generar boleta PDF: ' + (error.message || error)));
+      })
+    );
+  }
 }

@@ -163,6 +163,34 @@ export class BoletaNotasComponent implements OnInit {
   }
 
   imprimir(): void {
-    window.print();
+  if (!this.idAlumno) {
+    console.error('No se encontró idAlumno para generar PDF');
+    return;
   }
+
+  this.notasService.generarBoletaPdf(this.idAlumno).subscribe(
+    (blob: Blob) => {
+      const url = window.URL.createObjectURL(blob);
+      
+      // Abrir el archivo en una nueva ventana para vista previa
+      const ventanaPreview = window.open(url, '_blank');
+      if (!ventanaPreview) {
+        console.error('No se pudo abrir la ventana de vista previa');
+        return;
+      }
+
+      // Después de mostrarlo en la ventana, revocar el objeto URL
+      ventanaPreview.onload = () => {
+        window.URL.revokeObjectURL(url);
+      };
+      
+      console.log('Vista previa del PDF abierta');
+    },
+    (error) => {
+      console.error('Error al generar PDF:', error);
+      alert('Error al generar el PDF. Intenta de nuevo.');
+    }
+  );
+}
+
 }
