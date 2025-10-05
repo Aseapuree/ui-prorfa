@@ -201,7 +201,7 @@ export class NotasService {
     );
   }
 
-//generar boletas metodo
+//generar boletas metodo enpoitn
  generarBoletaPdf(idAlumno: string): Observable<Blob> {
     console.log('Generando boleta PDF para idAlumno:', idAlumno);
     return this.clienteHttp.get(`${this.urlBase}/boleta-pdf/${idAlumno}`, {
