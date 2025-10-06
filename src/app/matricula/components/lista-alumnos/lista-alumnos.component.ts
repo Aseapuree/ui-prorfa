@@ -124,20 +124,27 @@ export class ListaAlumnosComponent implements OnInit {
     processNext(0); // Iniciar el procesamiento
   }
 
-    verBoleta(idAlumno: string, nombreAlumno: string): void {
-    // Obtener los valores dinámicos desde el alumno seleccionado
-    const alumno = this.alumnos.find(a => a.id === idAlumno);
-    const grado = alumno?.grado || 'No especificado';
-    const seccion = alumno?.seccion || 'No especificado';
-    const nivel = this.nivel || 'Secundaria'; // Usar el nivel recibido
+  verBoleta(idAlumno: string, nombreAlumno: string): void {
+  const alumno = this.alumnos.find(a => a.id === idAlumno);
+  const grado = alumno?.grado || 'No especificado';
+  const seccion = alumno?.seccion || 'No especificado';
+  const nivel = this.nivel || 'Secundaria';
 
-    this.router.navigate(['/app-boleta-notas'], {
-      queryParams: { idAlumno, alumno: nombreAlumno, nivel, grado, seccion }
-    });
-  }
+  // Guardar los datos en localStorage
+  localStorage.setItem('idAlumno', idAlumno);
+  localStorage.setItem('nombreAlumno', nombreAlumno);
+  localStorage.setItem('grado', grado);
+  localStorage.setItem('seccion', seccion);
+  localStorage.setItem('nivel', nivel);
+
+  // Navegar sin queryParams
+  this.router.navigate(['/app-boleta-notas']);
+}
+
+
 
   regresar(): void {
-    this.router.navigate(['/campus-vista']);
+    this.router.navigate(['/app-campus-grados']);
   }
 }
 

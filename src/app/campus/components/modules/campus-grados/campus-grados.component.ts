@@ -218,15 +218,15 @@ export class CampusGradosComponent implements OnInit {
   }
 
   // Nuevo método para navegar a Notas Bimestrales
-  navigateToNotasBimestrales(): void {
-    const usuarioId = localStorage.getItem('usuarioId');
-    const nivel = this.nivel; // Usar el nivel actual (e.g., "Primaria")
-    if (usuarioId && nivel) {
-      this.router.navigate(['/app-lista-alumnos'], {
-        queryParams: { usuarioId, nivel } // Pasar usuarioId y nivel como query params
-      });
-    } else {
-      console.error('No se encontró usuarioId o nivel en el contexto.');
-    }
+navigateToNotasBimestrales(): void {
+  const usuarioId = localStorage.getItem('usuarioId');
+  const nivel = this.nivel; // Usar el nivel actual (e.g., "Primaria")
+  if (usuarioId && nivel) {
+    // Solo navega a la ruta sin queryParams
+    this.router.navigate(['/app-lista-alumnos']);
+  } else {
+    console.error('No se encontró usuarioId o nivel en el contexto.');
   }
+}
+
 }

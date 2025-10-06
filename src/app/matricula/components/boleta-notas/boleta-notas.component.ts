@@ -39,15 +39,28 @@ export class BoletaNotasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.idAlumno = params['idAlumno'] || '';
-      this.nombreAlumno = params['alumno'] || '';
-      this.grado = params['grado'] || 'No especificado';
-      this.seccion = params['seccion'] || 'No especificado';
-      this.nivel = params['nivel'] || 'Secundaria';
-      this.loadNotas();
-    });
+  this.idAlumno = localStorage.getItem('idAlumno') || '';
+  this.nombreAlumno = localStorage.getItem('nombreAlumno') || '';
+  this.grado = localStorage.getItem('grado') || 'No especificado';
+  this.seccion = localStorage.getItem('seccion') || 'No especificado';
+  this.nivel = localStorage.getItem('nivel') || 'Secundaria';
+
+  if (!this.idAlumno) {
+    console.error('No se encontró idAlumno');
+    return;
   }
+
+  console.log('Cargando boleta para:', {
+    idAlumno: this.idAlumno,
+    nombreAlumno: this.nombreAlumno,
+    grado: this.grado,
+    seccion: this.seccion,
+    nivel: this.nivel
+  });
+
+  this.loadNotas();
+}
+
 
   loadNotas(): void {
     this.isLoading = true;
@@ -157,7 +170,7 @@ export class BoletaNotasComponent implements OnInit {
   }
 
   regresar(): void {
-    this.router.navigate(['/lista-alumnos'], {
+    this.router.navigate(['/app-lista-alumnos'], {
       queryParams: { usuarioId: localStorage.getItem('usuarioId'), nivel: this.nivel }
     });
   }
