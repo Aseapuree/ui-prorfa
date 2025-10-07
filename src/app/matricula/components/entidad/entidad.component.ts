@@ -51,6 +51,13 @@ export class EntidadComponent implements OnInit {
     'intercambio': ['documento1', 'documento2'],
     'discapacidad': ['documento1']
   };
+  positionNecesarios: number = 0;
+  positionAdicionales: number = 0;
+  itemHeight = 100; // Altura aproximada de cada item (ajustar según diseño)
+  @ViewChild('necesariosViewport') necesariosViewport?: ElementRef;
+  @ViewChild('necesariosContent') necesariosContent?: ElementRef;
+  @ViewChild('adicionalesViewport') adicionalesViewport?: ElementRef;
+  @ViewChild('adicionalesContent') adicionalesContent?: ElementRef;
 
   constructor(
     private entidadService: EntidadService,
@@ -302,7 +309,7 @@ export class EntidadComponent implements OnInit {
     return { 'invalidUrl': true };
   }
 
-        crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
+  crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
     const necesariosGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
     this.keysNecesarios.forEach(key => {
       necesariosGroup.addControl(key, this.fb.control((documentos?.necesarios as any)?.[key] ?? '', Validators.required));
@@ -335,6 +342,7 @@ export class EntidadComponent implements OnInit {
     necesarios.addControl(newKey, this.fb.control('', Validators.required));
     this.keysNecesarios.push(newKey);
     this.cdRef.detectChanges();
+    this.positionNecesarios = this.getMaxScrollNecesarios();
   }
 
   eliminarDocumentoNecesario(i: number): void {
@@ -343,6 +351,7 @@ export class EntidadComponent implements OnInit {
     necesarios.removeControl(key);
     this.keysNecesarios.splice(i, 1);
     this.cdRef.detectChanges();
+    this.positionNecesarios = Math.min(this.positionNecesarios, this.getMaxScrollNecesarios());
   }
 
   agregarCategoriaAdicional(): void {
@@ -356,6 +365,7 @@ export class EntidadComponent implements OnInit {
     this.keysAdicionales.push(newKey);
     this.keysDocumentosAdicionalesMap[newKey] = ['documento1'];
     this.cdRef.detectChanges();
+    this.positionAdicionales = this.getMaxScrollAdicionales();
   }
 
   eliminarCategoriaAdicional(catIndex: number): void {
@@ -365,6 +375,7 @@ export class EntidadComponent implements OnInit {
     this.keysAdicionales.splice(catIndex, 1);
     delete this.keysDocumentosAdicionalesMap[key];
     this.cdRef.detectChanges();
+    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
   }
 
   agregarDocumentoAdicional(catKey: string): void {
@@ -373,6 +384,7 @@ export class EntidadComponent implements OnInit {
     categoria.addControl(newKey, this.fb.control(''));
     this.keysDocumentosAdicionalesMap[catKey].push(newKey);
     this.cdRef.detectChanges();
+    this.positionAdicionales = this.getMaxScrollAdicionales();
   }
 
   eliminarDocumentoAdicional(catKey: string, docIndex: number): void {
@@ -381,6 +393,7 @@ export class EntidadComponent implements OnInit {
     categoria.removeControl(docKey);
     this.keysDocumentosAdicionalesMap[catKey].splice(docIndex, 1);
     this.cdRef.detectChanges();
+    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
   }
 
   crearFormGroupDatosNgs(datos?: DatosNGS): FormGroup {
@@ -598,5 +611,67 @@ export class EntidadComponent implements OnInit {
       };
       reader.readAsDataURL(this.archivoLogoSeleccionado);
     }
+  }
+
+  getMaxScrollNecesarios(): number {
+    if (this.necesariosContent && this.necesariosViewport) {
+      return this.necesariosContent.nativeElement.scrollHeight - this.necesariosViewport.nativeElement.clientHeight;
+    }
+    return 0;
+  }
+
+  getMaxScrollAdicionales(): number {
+    if (this.adicionalesContent && this.adicionalesViewport) {
+      return this.adicionalesContent.nativeElement.scrollHeight - this.adicionalesViewport.nativeElement.clientHeight;
+    }
+    return 0;
+  }
+
+  moverArribaNecesarios(): void {
+    this.positionNecesarios -= this.itemHeight;
+    this.positionNecesarios = Math.max(0, this.positionNecesarios);
+    this.cdRef.detectChanges();
+  }
+
+  moverAbajoNecesarios(): void {
+    this.positionNecesarios += this.itemHeight;
+    this.positionNecesarios = Math.min(this.positionNecesarios, this.getMaxScrollNecesarios());
+    this.cdRef.detectChanges();
+  }
+
+  mostrarFlechaArribaNecesarios(): boolean {
+    return this.positionNecesarios > 0;
+  }
+
+  mostrarFlechaAbajoNecesarios(): boolean {
+    return this.getMaxScrollNecesarios() > 0 && this.positionNecesarios < this.getMaxScrollNecesarios();
+  }
+
+  getTranslateYNecesarios(): number {
+    return -this.positionNecesarios;
+  }
+
+  moverArribaAdicionales(): void {
+    this.positionAdicionales -= this.itemHeight;
+    this.positionAdicionales = Math.max(0, this.positionAdicionales);
+    this.cdRef.detectChanges();
+  }
+
+  moverAbajoAdicionales(): void {
+    this.positionAdicionales += this.itemHeight;
+    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
+    this.cdRef.detectChanges();
+  }
+
+  mostrarFlechaArribaAdicionales(): boolean {
+    return this.positionAdicionales > 0;
+  }
+
+  mostrarFlechaAbajoAdicionales(): boolean {
+    return this.getMaxScrollAdicionales() > 0 && this.positionAdicionales < this.getMaxScrollAdicionales();
+  }
+
+  getTranslateYAdicionales(): number {
+    return -this.positionAdicionales;
   }
 }

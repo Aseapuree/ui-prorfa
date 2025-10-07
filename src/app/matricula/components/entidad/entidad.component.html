@@ -215,20 +215,32 @@
               <button type="button" (click)="agregarDocumentoNecesario()" class="btn-add-small"><i class="fas fa-plus"></i></button>
             </app-tooltip>
           </div>
-          <ng-container *ngFor="let key of keysNecesarios; let i = index">
-            <div class="seccion-container">
-              <div class="form-group">
-                <label>Documento {{i + 1}}</label>
-                <input type="text" [formControlName]="key" class="form-control">
-                <div *ngIf="formularioEntidad.get('documentos.necesarios.' + key)?.invalid && formularioEntidad.get('documentos.necesarios.' + key)?.touched" class="error-message">
-                  Este documento es requerido.
-                </div>
+          <div class="carousel-vertical-container">
+            <button *ngIf="mostrarFlechaArribaNecesarios()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaNecesarios()">
+              <i class="fas fa-chevron-up"></i>
+            </button>
+            <div class="carousel-viewport-vertical" #necesariosViewport>
+              <div class="carousel-vertical" #necesariosContent [ngStyle]="{'transform': 'translateY(' + getTranslateYNecesarios() + 'px)'}">
+                <ng-container *ngFor="let key of keysNecesarios; let i = index">
+                  <div class="seccion-container">
+                    <div class="form-group">
+                      <label>Documento {{i + 1}}</label>
+                      <input type="text" [formControlName]="key" class="form-control">
+                      <div *ngIf="formularioEntidad.get('documentos.necesarios.' + key)?.invalid && formularioEntidad.get('documentos.necesarios.' + key)?.touched" class="error-message">
+                        Este documento es requerido.
+                      </div>
+                    </div>
+                    <app-tooltip [tooltipText]="'Eliminar'">
+                      <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                    </app-tooltip>
+                  </div>
+                </ng-container>
               </div>
-              <app-tooltip [tooltipText]="'Eliminar'">
-                <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-              </app-tooltip>
             </div>
-          </ng-container>
+            <button *ngIf="mostrarFlechaAbajoNecesarios()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoNecesarios()">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
         </div>
         <div class="column" formGroupName="adicionales">
           <div class="dynamic-section-header">
@@ -237,30 +249,42 @@
               <button type="button" (click)="agregarCategoriaAdicional()" class="btn-add-small"><i class="fas fa-plus"></i></button>
             </app-tooltip>
           </div>
-          <ng-container *ngFor="let catKey of keysAdicionales; let catIndex = index">
-            <div formGroupName="{{catKey}}">
-              <div class="dynamic-section-header">
-                <h6><input type="text" formControlName="nombre" class="form-control" placeholder="Nombre de Categoría"></h6>
-                <app-tooltip [tooltipText]="'Agregar Documento'">
-                  <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
-                </app-tooltip>
-                <app-tooltip [tooltipText]="'Eliminar Categoría'">
-                  <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-                </app-tooltip>
-              </div>
-              <ng-container *ngFor="let docKey of keysDocumentosAdicionales(catKey); let docIndex = index">
-                <div class="seccion-container">
-                  <div class="form-group">
-                    <label>Documento {{docIndex + 1}}</label>
-                    <input type="text" [formControlName]="docKey" class="form-control">
+          <div class="carousel-vertical-container">
+            <button *ngIf="mostrarFlechaArribaAdicionales()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaAdicionales()">
+              <i class="fas fa-chevron-up"></i>
+            </button>
+            <div class="carousel-viewport-vertical" #adicionalesViewport>
+              <div class="carousel-vertical" #adicionalesContent [ngStyle]="{'transform': 'translateY(' + getTranslateYAdicionales() + 'px)'}">
+                <ng-container *ngFor="let catKey of keysAdicionales; let catIndex = index">
+                  <div formGroupName="{{catKey}}">
+                    <div class="dynamic-section-header">
+                      <h6><input type="text" formControlName="nombre" class="form-control" placeholder="Nombre de Categoría"></h6>
+                      <app-tooltip [tooltipText]="'Agregar Documento'">
+                        <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
+                      </app-tooltip>
+                      <app-tooltip [tooltipText]="'Eliminar Categoría'">
+                        <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                      </app-tooltip>
+                    </div>
+                    <ng-container *ngFor="let docKey of keysDocumentosAdicionales(catKey); let docIndex = index">
+                      <div class="seccion-container">
+                        <div class="form-group">
+                          <label>Documento {{docIndex + 1}}</label>
+                          <input type="text" [formControlName]="docKey" class="form-control">
+                        </div>
+                        <app-tooltip [tooltipText]="'Eliminar'">
+                          <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                        </app-tooltip>
+                      </div>
+                    </ng-container>
                   </div>
-                  <app-tooltip [tooltipText]="'Eliminar'">
-                    <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-                  </app-tooltip>
-                </div>
-              </ng-container>
+                </ng-container>
+              </div>
             </div>
-          </ng-container>
+            <button *ngIf="mostrarFlechaAbajoAdicionales()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoAdicionales()">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
