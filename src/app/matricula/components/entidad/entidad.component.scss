@@ -298,6 +298,10 @@ body {
     padding: 0;
 }
 
+.grade-carousel-container.edit-mode {
+    width: calc(6 * 150px + 5 * 1rem);
+}
+
 .carousel-viewport {
     overflow: hidden;
 }

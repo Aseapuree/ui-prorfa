@@ -84,7 +84,7 @@
           <ng-container *ngFor="let nivel of entidad.datosngs?.niveles; let nivelIndex = index">
             <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
             <div class="grade-carousel-container">
-              <button *ngIf="mostrarFlechaIzquierda(nivelIndex)" class="carousel-arrow left-arrow" (click)="moverIzquierda(nivelIndex)">
+              <button type="button" *ngIf="mostrarFlechaIzquierda(nivelIndex)" class="carousel-arrow left-arrow" (click)="moverIzquierda(nivelIndex)">
                 <i class="fas fa-chevron-left"></i>
               </button>
               <div class="carousel-viewport">
@@ -93,7 +93,7 @@
                     <div class="grade-header">
                       <h5>Grado: {{ grado.nombre }}°</h5>
                       <app-tooltip [tooltipText]="'Editar'">
-                        <button class="btn-edit-grade" (click)="abrirModalSecciones(nivelIndex, gradoIndex)"><i class="fas fa-pencil-alt"></i></button>
+                        <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(nivelIndex, gradoIndex)"><i class="fas fa-pencil-alt"></i></button>
                       </app-tooltip>
                     </div>
                     <div>Secciones:</div>
@@ -105,7 +105,7 @@
                   </div>
                 </div>
               </div>
-              <button *ngIf="mostrarFlechaDerecha(nivelIndex)" class="carousel-arrow right-arrow" (click)="moverDerecha(nivelIndex)">
+              <button type="button" *ngIf="mostrarFlechaDerecha(nivelIndex)" class="carousel-arrow right-arrow" (click)="moverDerecha(nivelIndex)">
                 <i class="fas fa-chevron-right"></i>
               </button>
             </div>
@@ -216,7 +216,7 @@
             </app-tooltip>
           </div>
           <div class="carousel-vertical-container">
-            <button *ngIf="mostrarFlechaArribaNecesarios()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaNecesarios()">
+            <button type="button" *ngIf="mostrarFlechaArribaNecesarios()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaNecesarios()">
               <i class="fas fa-chevron-up"></i>
             </button>
             <div class="carousel-viewport-vertical" #necesariosViewport>
@@ -237,7 +237,7 @@
                 </ng-container>
               </div>
             </div>
-            <button *ngIf="mostrarFlechaAbajoNecesarios()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoNecesarios()">
+            <button type="button" *ngIf="mostrarFlechaAbajoNecesarios()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoNecesarios()">
               <i class="fas fa-chevron-down"></i>
             </button>
           </div>
@@ -250,7 +250,7 @@
             </app-tooltip>
           </div>
           <div class="carousel-vertical-container">
-            <button *ngIf="mostrarFlechaArribaAdicionales()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaAdicionales()">
+            <button type="button" *ngIf="mostrarFlechaArribaAdicionales()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaAdicionales()">
               <i class="fas fa-chevron-up"></i>
             </button>
             <div class="carousel-viewport-vertical" #adicionalesViewport>
@@ -281,7 +281,7 @@
                 </ng-container>
               </div>
             </div>
-            <button *ngIf="mostrarFlechaAbajoAdicionales()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoAdicionales()">
+            <button type="button" *ngIf="mostrarFlechaAbajoAdicionales()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoAdicionales()">
               <i class="fas fa-chevron-down"></i>
             </button>
           </div>
@@ -322,29 +322,39 @@
             <div *ngIf="grados(i).invalid && grados(i).touched" class="error-message">
               Debe haber al menos un grado.
             </div>
-            <div class="grade-grid" formArrayName="grados">
-              <ng-container *ngFor="let gradoCtrl of grados(i).controls; let j=index" [formGroupName]="j">
-                <div class="grade-card">
-                  <div class="grade-header">
-                    <h5>Grado: <input type="text" formControlName="nombre" class="grade-input"></h5>
-                    <app-tooltip [tooltipText]="'Editar'">
-                      <button class="btn-edit-grade" (click)="abrirModalSecciones(i, j)"><i class="fas fa-pencil-alt"></i></button>
-                    </app-tooltip>
-                    <app-tooltip [tooltipText]="'Eliminar'">
-                      <button type="button" (click)="eliminarGrado(i, j)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-                    </app-tooltip>
-                  </div>
-                  <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
-                    El nombre del grado es requerido.
-                  </div>
-                  <div>Secciones:</div>
-                  <ul class="info-list">
-                    <li *ngFor="let seccion of grados(i).at(j).get('secciones')?.value">
-                      <span>{{ seccion.nombre }} ({{ seccion.vacantes }} vac.)</span>
-                    </li>
-                  </ul>
+            <div class="grade-carousel-container edit-mode" formArrayName="grados">
+              <button type="button" *ngIf="mostrarFlechaIzquierda(i)" class="carousel-arrow left-arrow" (click)="moverIzquierda(i)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div class="carousel-viewport">
+                <div class="grade-carousel" [ngStyle]="{'transform': 'translateX(' + getTranslateX(i) + 'px)'}">
+                  <ng-container *ngFor="let gradoCtrl of grados(i).controls; let j=index" [formGroupName]="j">
+                    <div class="grade-card">
+                      <div class="grade-header">
+                        <h5>Grado: <input type="text" formControlName="nombre" class="grade-input"></h5>
+                        <app-tooltip [tooltipText]="'Editar'">
+                          <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(i, j)"><i class="fas fa-pencil-alt"></i></button>
+                        </app-tooltip>
+                        <app-tooltip [tooltipText]="'Eliminar'">
+                          <button type="button" (click)="eliminarGrado(i, j)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                        </app-tooltip>
+                      </div>
+                      <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
+                        El nombre del grado es requerido.
+                      </div>
+                      <div>Secciones:</div>
+                      <ul class="info-list">
+                        <li *ngFor="let seccion of grados(i).at(j).get('secciones')?.value">
+                          <span>{{ seccion.nombre }} ({{ seccion.vacantes }} vac.)</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </ng-container>
                 </div>
-              </ng-container>
+              </div>
+              <button type="button" *ngIf="mostrarFlechaDerecha(i)" class="carousel-arrow right-arrow" (click)="moverDerecha(i)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
             </div>
           </ng-container>
         </div>
@@ -362,7 +372,7 @@
 <!-- Modal de Edición de Secciones -->
 <div class="edit-modal-overlay" *ngIf="mostrarModalSecciones">
   <div class="edit-modal-container">
-    <button class="close-button" (click)="cerrarModalSecciones()"><i class="fas fa-times"></i></button>
+    <button type="button" class="close-button" (click)="cerrarModalSecciones()"><i class="fas fa-times"></i></button>
     <form [formGroup]="formularioSecciones" novalidate>
       <div class="edit-modal-header">
         <h2 class="edit-modal-title">GRADO: {{ nombreGradoSeleccionado }}°</h2>

@@ -113,11 +113,17 @@ export class EntidadComponent implements OnInit {
 
   // Determina si mostrar la flecha derecha
   mostrarFlechaDerecha(nivelIndex: number): boolean {
-    if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
-      return false;
+    let numGrados = 0;
+    let visibleCards = this.editando ? 6 : 3;
+    if (this.editando) {
+      numGrados = this.grados(nivelIndex).length;
+    } else {
+      if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
+        return false;
+      }
+      numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
     }
-    const numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
-    return numGrados > 3 && this.carouselPositions[nivelIndex] < Math.max(0, numGrados - 3);
+    return numGrados > visibleCards && this.carouselPositions[nivelIndex] < Math.max(0, numGrados - visibleCards);
   }
 
   // Mueve el carrusel a la izquierda
@@ -130,11 +136,17 @@ export class EntidadComponent implements OnInit {
 
   // Mueve el carrusel a la derecha
   moverDerecha(nivelIndex: number): void {
-    if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
-      return;
+    let numGrados = 0;
+    let visibleCards = this.editando ? 6 : 3;
+    if (this.editando) {
+      numGrados = this.grados(nivelIndex).length;
+    } else {
+      if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
+        return;
+      }
+      numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
     }
-    const numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
-    const maxPosition = Math.max(0, numGrados - 3); // Mostrar 3 tarjetas a la vez
+    const maxPosition = Math.max(0, numGrados - visibleCards);
     if (this.carouselPositions[nivelIndex] < maxPosition) {
       this.carouselPositions[nivelIndex]++;
       this.cdRef.detectChanges();
@@ -164,6 +176,7 @@ export class EntidadComponent implements OnInit {
   iniciarEdicion(): void {
     this.editando = true;
     this.vistaPreviaLogo = this.entidad?.logoColegio || '';
+    this.carouselPositions = new Array(this.carouselPositions.length).fill(0);
   }
 
   cancelarEdicion(): void {
@@ -179,6 +192,7 @@ export class EntidadComponent implements OnInit {
       'intercambio': ['documento1', 'documento2'],
       'discapacidad': ['documento1']
     };
+    this.carouselPositions = new Array(this.carouselPositions.length).fill(0);
   }
 
   guardarCambios(): void {
@@ -480,7 +494,7 @@ export class EntidadComponent implements OnInit {
     // Reinicia la posición del carrusel si es necesario
     if (this.carouselPositions[nivelIndex] > 0) {
       const numGrados = this.grados(nivelIndex).length;
-      const maxPosition = Math.max(0, numGrados - 3);
+      const maxPosition = Math.max(0, numGrados - 6);
       this.carouselPositions[nivelIndex] = Math.min(this.carouselPositions[nivelIndex], maxPosition);
       this.cdRef.detectChanges();
     }
