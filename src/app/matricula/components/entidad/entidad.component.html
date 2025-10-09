@@ -83,12 +83,12 @@
         <div class="grade-grid-wrapper">
           <ng-container *ngFor="let nivel of entidad.datosngs?.niveles; let nivelIndex = index">
             <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
-            <div class="grade-carousel-container">
+            <div class="grade-carousel-container-normal">
               <button type="button" *ngIf="mostrarFlechaIzquierda(nivelIndex)" class="carousel-arrow left-arrow" (click)="moverIzquierda(nivelIndex)">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <div class="carousel-viewport">
-                <div class="grade-carousel" #carousel [ngStyle]="{'transform': 'translateX(' + getTranslateX(nivelIndex) + 'px)'}">
+              <div class="carousel-viewport" #carouselViewport>
+                <div class="grade-carousel" [ngStyle]="{'transform': 'translateX(' + getTranslateX(nivelIndex) + 'px)'}">
                   <div class="grade-card" *ngFor="let grado of nivel.grados; let gradoIndex = index">
                     <div class="grade-header">
                       <h5>Grado: {{ grado.nombre }}°</h5>
@@ -322,11 +322,11 @@
             <div *ngIf="grados(i).invalid && grados(i).touched" class="error-message">
               Debe haber al menos un grado.
             </div>
-            <div class="grade-carousel-container edit-mode" formArrayName="grados">
+            <div class="grade-carousel-container-edit" formArrayName="grados">
               <button type="button" *ngIf="mostrarFlechaIzquierda(i)" class="carousel-arrow left-arrow" (click)="moverIzquierda(i)">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <div class="carousel-viewport">
+              <div class="carousel-viewport" #carouselViewport>
                 <div class="grade-carousel" [ngStyle]="{'transform': 'translateX(' + getTranslateX(i) + 'px)'}">
                   <ng-container *ngFor="let gradoCtrl of grados(i).controls; let j=index" [formGroupName]="j">
                     <div class="grade-card">
