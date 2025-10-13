@@ -160,9 +160,10 @@ export class BoletaNotasComponent implements OnInit {
       suma += valorNota * peso;
       console.log(`Nota: ${valorNota}, Peso: ${peso}, Suma parcial: ${suma}`);
     });
-    const promedio = Number((suma / notasBimestre.length).toFixed(2));
-    console.log(`Promedio final: ${promedio}`);
-    return promedio;
+    //ajustar para redondear al entero más cercano
+      const promedio = Math.round(suma / notasBimestre.length);
+      console.log(`Promedio final: ${promedio}`);
+      return promedio;
   }
 
   formatNota(nota: number | string): string {
