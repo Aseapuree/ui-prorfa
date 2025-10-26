@@ -1,0 +1,70 @@
+<div
+  class="fixed inset-0 flex items-center justify-center z-50"
+  (click)="onClose()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-labelledby]="titleId"
+>
+  <div
+    class="bg-white dark:bg-gray-900 rounded-lg p-6 w-full mx-4 max-h-[80vh] overflow-y-auto relative shadow-xl {{ modalSizeClass }} {{ customClass }}"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h3
+        class="text-lg font-medium leading-6 text-gray-800 dark:text-white"
+        [id]="titleId"
+      >
+        {{ title }}
+      </h3>
+      <button
+        *ngIf="showCloseButton"
+        (click)="onClose()"
+        class="text-gray-400 hover:text-gray-600 ml-4 focus:outline-none"
+        aria-label="Cerrar modal"
+      >
+        <fa-icon [icon]="['fas', 'times']" class="h-6 w-6"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Contenido -->
+    <div class="mt-2 mb-6">
+      <ng-container [ngSwitch]="contentType">
+        <pre
+          *ngSwitchCase="'json'"
+          class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto max-h-96"
+        >{{ formattedData }}</pre>
+        <div
+          *ngSwitchCase="'html'"
+          class="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-4 rounded"
+          [innerHTML]="formattedData"
+        ></div>
+        <p
+          *ngSwitchDefault
+          class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-4 rounded"
+        >
+          {{ formattedData }}
+        </p>
+      </ng-container>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2">
+      <button
+        *ngFor="let button of buttons"
+        (click)="button.action()"
+        [ngClass]="button.styleClass || 'px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors'"
+        [disabled]="button.disabled"
+      >
+        {{ button.label }}
+      </button>
+      <button
+        *ngIf="showCloseButton && !buttons.length"
+        (click)="onClose()"
+        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

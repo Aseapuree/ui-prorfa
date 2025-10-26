@@ -77,7 +77,7 @@
       [enableActions]="true"
       [actions]="tableActions"
       (sortChange)="onSortChange($event)"
-      (competenciasClick)="openCompetenciasModal($event)"
+      (previewClick)="onPreviewClick($event)"
     ></app-table>
 
     <!-- Mensaje cuando no hay resultados -->
@@ -92,10 +92,22 @@
 
   <!-- Paginación -->
   <app-pagination
-  [page]="page"
-  [totalPages]="totalPages"
-  (pageChange)="onPageChange($event)"
-></app-pagination>
+    [page]="page"
+    [totalPages]="totalPages"
+    (pageChange)="onPageChange($event)"
+  ></app-pagination>
+
+  <!-- Modal reutilizable para mostrar competencias -->
+  <app-auditmodal
+  *ngIf="showModal"
+  [title]="selectedField === 'competencias' ? 'Competencias' : 'Descripción'"
+  [data]="selectedField === 'competencias' ? formattedCompetencias : selectedCurso?.descripcion"
+  [contentType]="'text'"
+  [maxWidth]="'lg'"
+  [showCloseButton]="true"
+  (close)="showModal = false"
+></app-auditmodal>
+
   <!-- Componente de notificaciones -->
   <app-notification></app-notification>
 </section>
