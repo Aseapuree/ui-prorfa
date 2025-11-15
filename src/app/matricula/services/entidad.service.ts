@@ -27,19 +27,19 @@ export class EntidadService {
 
   // Nuevo servicio para obtener datos de la entidad por el ID del usuario
   obtenerEntidadPorUsuario(id: string): Observable<Entidad> {
-    return this.http.get<DTOResponse<Entidad>>(`${this.urlBase}/usuario/${id}`, { withCredentials: true })
-      .pipe(
-        map(response => {
-          if (response && response.data) {
-            return response.data;
-          } else {
-            console.error('Estructura de respuesta inesperada para obtenerEntidadPorUsuario', response);
-            throw new Error('No se pudieron recuperar los datos de la entidad para el usuario');
-          }
-        }),
-        catchError(this.handleError)
-      );
-  }
+  return this.http.get<DTOResponse<Entidad>>(`${this.urlBase}/usuario/${id}`, { withCredentials: true })
+    .pipe(
+      map(response => {
+        if (response && response.data) {
+          return response.data;
+        } else {
+          console.error('Estructura de respuesta inesperada para obtenerEntidadPorUsuario', response);
+          throw new Error('No se pudieron recuperar los datos de la entidad para el usuario');
+        }
+      }),
+      catchError(this.handleError)
+    );
+}
 
   obtenerEntidadList(): Observable<Entidad[]> {
     return this.http.get<any>(`${this.urlBase}/listar`, { withCredentials: true })
@@ -108,4 +108,22 @@ export class EntidadService {
         catchError(this.handleError)
       );
   }
+
+  subirLogo(id: string, file: File): Observable<Entidad> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return this.http.post<DTOResponse<Entidad>>(`${this.urlBase}/subir-logo/${id}`, formData, { withCredentials: true })
+    .pipe(
+      map(response => {
+        if (response && response.data) {
+          return response.data;
+        } else {
+          console.error('Estructura de respuesta inesperada para subirLogo', response);
+          throw new Error('No se pudo subir el logo');
+        }
+      }),
+      catchError(this.handleError)
+    );
+}
 }

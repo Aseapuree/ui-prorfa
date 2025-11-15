@@ -5,7 +5,7 @@
   <div class="header center-aligned">
     <h2>{{ entidad.nombreColegio }}</h2>
     <div class="logo-container">
-      <img [src]="entidad.logoColegio" alt="Logo del Colegio">
+      <img [src]="entidad.logoColegio" alt="Logo del Colegio" referrerpolicy="strict-origin-when-cross-origin">
     </div>
   </div>
 
@@ -132,7 +132,7 @@
       </div>
       <div class="logo-section">
         <div class="logo-container">
-          <img [src]="vistaPreviaLogo || 'assets/placeholder.png'" alt="Logo del Colegio">
+          <img [src]="vistaPreviaLogo || 'assets/placeholder.png'" alt="Logo del Colegio" referrerpolicy="no-referrer">
           <div class="upload-overlay">
             <div class="upload-circle" (click)="activarInputArchivo()">SELECCIONAR IMAGEN</div>
           </div>
@@ -184,10 +184,10 @@
         <!-- Teléfono -->
         <div class="form-group">
           <label for="telefonoColegio">Teléfono</label>
-          <input id="telefonoColegio" type="tel" formControlName="telefonoColegio" class="form-control" maxlength="8">
+          <input id="telefonoColegio" type="tel" formControlName="telefonoColegio" class="form-control" maxlength="15">
           <div *ngIf="formularioEntidad.get('telefonoColegio')?.invalid && formularioEntidad.get('telefonoColegio')?.touched" class="error-message">
             <span *ngIf="formularioEntidad.get('telefonoColegio')?.errors?.['required']">El teléfono es requerido.</span>
-            <span *ngIf="formularioEntidad.get('telefonoColegio')?.errors?.['pattern']">Debe tener 7 u 8 dígitos numéricos.</span>
+            <span *ngIf="formularioEntidad.get('telefonoColegio')?.errors?.['pattern']">Formato inválido. Debe ser 7-9 dígitos o en formato 074 - XXXXXX.</span>
           </div>
         </div>
         <!-- Correo -->
@@ -225,7 +225,7 @@
                   <div class="seccion-container">
                     <div class="form-group">
                       <label>Documento {{i + 1}}</label>
-                      <input type="text" [formControlName]="key" class="form-control">
+                      <input type="text" [formControlName]="key" class="form-control ellipsis-input" (input)="convertirAMayusculas($event, 'documentos.necesarios.' + key)">
                       <div *ngIf="formularioEntidad.get('documentos.necesarios.' + key)?.invalid && formularioEntidad.get('documentos.necesarios.' + key)?.touched" class="error-message">
                         Este documento es requerido.
                       </div>
@@ -256,9 +256,14 @@
             <div class="carousel-viewport-vertical" #adicionalesViewport>
               <div class="carousel-vertical" #adicionalesContent [ngStyle]="{'transform': 'translateY(' + getTranslateYAdicionales() + 'px)'}">
                 <ng-container *ngFor="let catKey of keysAdicionales; let catIndex = index">
-                  <div formGroupName="{{catKey}}">
+                  <div formGroupName="{{catKey}}" class="categoria-container">
                     <div class="dynamic-section-header">
-                      <h6><input type="text" formControlName="nombre" class="form-control" placeholder="Nombre de Categoría"></h6>
+                      <h6>
+                        <div class="cat-input-container">
+                          <span class="cat-prefix">CAT.</span>
+                          <input type="text" formControlName="nombre" class="form-control ellipsis-input has-cat-prefix" placeholder="Nombre de Categoría" (input)="convertirAMayusculas($event, 'documentos.adicionales.' + catKey + '.nombre')">
+                        </div>
+                      </h6>
                       <app-tooltip [tooltipText]="'Agregar Documento'">
                         <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
                       </app-tooltip>
@@ -270,7 +275,7 @@
                       <div class="seccion-container">
                         <div class="form-group">
                           <label>Documento {{docIndex + 1}}</label>
-                          <input type="text" [formControlName]="docKey" class="form-control">
+                          <input type="text" [formControlName]="docKey" class="form-control ellipsis-input" (input)="convertirAMayusculas($event, 'documentos.adicionales.' + catKey + '.' + docKey)">
                         </div>
                         <app-tooltip [tooltipText]="'Eliminar'">
                           <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
@@ -300,7 +305,7 @@
             <button type="button" (click)="agregarNivel()" class="btn-add-small"><i class="fas fa-plus"></i></button>
           </app-tooltip>
         </div>
-        <div *ngIf="niveles().invalid && niveles().touched" class="error-message">
+        <div *ngIf="niveles().invalid && niveles().touched && niveles().errors?.['minlength']" class="error-message">
           Debe haber al menos un nivel educativo.
         </div>
         <div class="grade-grid-wrapper" formArrayName="niveles">
@@ -317,9 +322,10 @@
               </app-tooltip>
             </div>
             <div *ngIf="niveles().at(i).get('nombre')?.invalid && niveles().at(i).get('nombre')?.touched" class="error-message">
-              El nombre del nivel es requerido.
+              <span *ngIf="niveles().at(i).get('nombre')?.errors?.['required']">El nombre del nivel es requerido.</span>
+              <span *ngIf="niveles().at(i).get('nombre')?.errors?.['duplicateNivel']">El nivel ya existe.</span>
             </div>
-            <div *ngIf="grados(i).invalid && grados(i).touched" class="error-message">
+            <div *ngIf="grados(i).invalid && grados(i).touched && grados(i).errors?.['minlength']" class="error-message">
               Debe haber al menos un grado.
             </div>
             <div class="grade-carousel-container-edit" formArrayName="grados">
@@ -340,7 +346,8 @@
                         </app-tooltip>
                       </div>
                       <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
-                        El nombre del grado es requerido.
+                        <span *ngIf="grados(i).at(j).get('nombre')?.errors?.['required']">El nombre del grado es requerido.</span>
+                        <span *ngIf="grados(i).at(j).get('nombre')?.errors?.['duplicateGrado']">El grado ya existe en este nivel.</span>
                       </div>
                       <div>Secciones:</div>
                       <ul class="info-list">
@@ -386,12 +393,13 @@
             <label>Nombre Sección</label>
             <input type="text" formControlName="nombre" class="form-control">
             <div *ngIf="secciones().at(k).get('nombre')?.invalid && secciones().at(k).get('nombre')?.touched" class="error-message">
-              El nombre de la sección es requerido.
+              <span *ngIf="secciones().at(k).get('nombre')?.errors?.['required']">El nombre de la sección es requerido.</span>
+              <span *ngIf="secciones().at(k).get('nombre')?.errors?.['duplicateSeccion']">La sección ya existe en este grado.</span>
             </div>
           </div>
           <div class="form-group">
             <label>N° Vacantes</label>
-            <input type="number" formControlName="vacantes" class="form-control">
+            <input type="number" formControlName="vacantes" class="form-control" (focus)="onFocusVacantes(secciones().at(k).get('vacantes')!)">
             <div *ngIf="secciones().at(k).get('vacantes')?.invalid && secciones().at(k).get('vacantes')?.touched" class="error-message">
               <span *ngIf="secciones().at(k).get('vacantes')?.errors?.['required']">Las vacantes son requeridas.</span>
               <span *ngIf="secciones().at(k).get('vacantes')?.errors?.['min']">Debe ser al menos 0.</span>

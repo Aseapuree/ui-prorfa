@@ -7,7 +7,7 @@ import { Entidad, DatosNGS, DocumentoEntidad, Nivel, Grado, SeccionVacantes } fr
 import { HttpClientModule } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, AbstractControl } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { NotificationService } from '../../../campus/components/shared/notificaciones/notification.service';
 import { NotificationComponent } from '../../../campus/components/shared/notificaciones/notification.component';
 
@@ -54,7 +54,7 @@ export class EntidadComponent implements OnInit {
   };
   positionNecesarios: number = 0;
   positionAdicionales: number = 0;
-  itemHeight = 100; // Altura aproximada de cada item (ajustar según diseño)
+  itemHeight = 100; // Altura aproximada de cada item
   @ViewChild('necesariosViewport') necesariosViewport?: ElementRef;
   @ViewChild('necesariosContent') necesariosContent?: ElementRef;
   @ViewChild('adicionalesViewport') adicionalesViewport?: ElementRef;
@@ -85,7 +85,7 @@ export class EntidadComponent implements OnInit {
   }
 
   private updateDarkMode(): void {
-    // Agregar o quitar clase 'dark' en <html>
+    // Agregar o quitar clase 'dark'
     if (this.isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -219,58 +219,74 @@ export class EntidadComponent implements OnInit {
   }
 
   guardarCambios(): void {
-    if (!this.esValidoModificado(this.formularioEntidad)) {
-      this.marcarModificadosComoTocados(this.formularioEntidad);
-      this.notificationService.showNotification('Por favor, complete todos los campos requeridos que ha editado.', 'error');
-      return;
-    }
-    if (!this.entidad || !this.entidad.identidad) {
-      this.notificationService.showNotification('Error: No se puede identificar la entidad a actualizar.', 'error');
-      return;
-    }
+  if (!this.esValidoModificado(this.formularioEntidad)) {
+    this.marcarModificadosComoTocados(this.formularioEntidad);
+    this.notificationService.showNotification('Por favor, complete todos los campos requeridos que ha editado.', 'error');
+    return;
+  }
 
-    const cambios = this.obtenerValoresModificados(this.formularioEntidad);
-    if (Object.keys(cambios).length === 0) {
-      this.notificationService.showNotification('No hay cambios para guardar.', 'info');
-      return;
-    }
+  // Verificar que entidad no sea null y que tenga identidad
+  if (!this.entidad || !this.entidad.identidad) {
+    this.notificationService.showNotification('Error: No se puede identificar la entidad a actualizar.', 'error');
+    return;
+  }
 
-    if (cambios.datosngs && cambios.datosngs.niveles) {
-      cambios.datosngs.niveles.forEach((nivel: any) => {
-        if (nivel.grados) {
-          nivel.grados.forEach((grado: any) => {
-            if (grado.secciones) {
-              grado.secciones.forEach((seccion: any) => {
-                if (seccion.vacantes !== undefined) {
-                  seccion.vacantes = Number(seccion.vacantes);
-                }
-              });
-            }
-          });
+  this.guardando = true;
+  this.mensajeSpinner = 'Guardando cambios...';
+
+  // Primero subir el logo si es necesario
+  this.subirLogoSiEsNecesario()
+    .then(() => {
+      // Después de subir el logo (si era necesario), continuar con el guardado normal
+      const cambios = this.obtenerValoresModificados(this.formularioEntidad);
+
+      // Asegurarse de que siempre se incluya la identidad
+      if (!cambios.identidad && this.entidad?.identidad) {
+        cambios.identidad = this.entidad.identidad;
+      }
+
+      if (cambios.datosngs && cambios.datosngs.niveles) {
+        cambios.datosngs.niveles.forEach((nivel: any) => {
+          if (nivel.grados) {
+            nivel.grados.forEach((grado: any) => {
+              if (grado.secciones) {
+                grado.secciones.forEach((seccion: any) => {
+                  if (seccion.vacantes !== undefined) {
+                    seccion.vacantes = Number(seccion.vacantes);
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+
+      // Usamos una variable local con aserción de tipo para evitar el error de TypeScript
+      const entidadId: string = this.entidad!.identidad!;
+
+      this.entidadService.editarEntidad(entidadId, cambios).pipe(
+        finalize(() => {
+          this.guardando = false;
+          this.mensajeSpinner = 'Cargando datos...';
+        })
+      ).subscribe({
+        next: entidadActualizada => {
+          this.entidad = entidadActualizada;
+          this.editando = false;
+          this.crearFormularioDeEntidad(entidadActualizada);
+          this.inicializarCarruseles();
+          this.notificationService.showNotification('Entidad actualizada correctamente.', 'success');
+        },
+        error: err => {
+          this.notificationService.showNotification(`Error al guardar los cambios: ${err.message}`, 'error');
         }
       });
-    }
-
-    this.guardando = true;
-    this.mensajeSpinner = 'Guardando cambios...';
-    this.entidadService.editarEntidad(this.entidad.identidad, cambios).pipe(
-      finalize(() => {
-        this.guardando = false;
-        this.mensajeSpinner = 'Cargando datos...';
-      })
-    ).subscribe({
-      next: entidadActualizada => {
-        this.entidad = entidadActualizada;
-        this.editando = false;
-        this.crearFormularioDeEntidad(entidadActualizada);
-        this.inicializarCarruseles(); // Reinicializa los carruseles después de guardar
-        this.notificationService.showNotification('Entidad actualizada correctamente.', 'success');
-      },
-      error: err => {
-        this.notificationService.showNotification(`Error al guardar los cambios: ${err.message}`, 'error');
-      }
+    })
+    .catch(err => {
+      this.guardando = false;
+      this.mensajeSpinner = 'Cargando datos...';
     });
-  }
+}
 
   private esValidoModificado(control: AbstractControl): boolean {
     if (control instanceof FormGroup) {
@@ -290,27 +306,25 @@ export class EntidadComponent implements OnInit {
   }
 
   private obtenerValoresModificados(control: AbstractControl): any {
-    const cambios: any = {};
+  const cambios: any = {};
 
-    if (control instanceof FormGroup) {
-      Object.keys(control.controls).forEach(key => {
-        const child = control.get(key)!;
-        if (child.dirty) {
-          if (child instanceof FormGroup) {
-            const subCambios = this.obtenerValoresModificados(child);
-            if (Object.keys(subCambios).length > 0) {
-              cambios[key] = subCambios;
-            }
-          } else if (child instanceof FormArray) {
-            cambios[key] = child.value;
-          } else {
-            cambios[key] = child.value;
-          }
+  if (control instanceof FormGroup) {
+    Object.keys(control.controls).forEach(key => {
+      const child = control.get(key)!;
+      if (child.dirty) {
+        if (child instanceof FormGroup) {
+          // Enviar el objeto completo si algún campo del formulario anidado está modificado
+          cambios[key] = child.value;
+        } else if (child instanceof FormArray) {
+          cambios[key] = child.value;
+        } else {
+          cambios[key] = child.value;
         }
-      });
-    }
-    return cambios;
+      }
+    });
   }
+  return cambios;
+}
 
   private marcarModificadosComoTocados(control: AbstractControl): void {
     if (control instanceof FormGroup) {
@@ -330,7 +344,7 @@ export class EntidadComponent implements OnInit {
       direccionColegio: [entidad.direccionColegio ?? '', Validators.required],
       rucColegio: [entidad.rucColegio ?? '', [Validators.required, Validators.pattern(/^\d{11}$/)]],
       razonSocial: [entidad.razonSocial ?? '', Validators.required],
-      telefonoColegio: [entidad.telefonoColegio ?? '', [Validators.required, Validators.pattern(/^\d{7,8}$/)]],
+      telefonoColegio: [entidad.telefonoColegio ?? '', [Validators.required, Validators.pattern(/^(\d{7,9}|074\s*-\s*\d{6})$/)]],
       correoColegio: [entidad.correoColegio ?? '', [Validators.required, Validators.email]],
       logoColegio: [entidad.logoColegio ?? '', [Validators.required, this.validadorUrl]],
       documentos: this.crearFormGroupDocumentos(entidad.documentos),
@@ -349,16 +363,16 @@ export class EntidadComponent implements OnInit {
   crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
     const necesariosGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
     this.keysNecesarios.forEach(key => {
-      necesariosGroup.addControl(key, this.fb.control((documentos?.necesarios as any)?.[key] ?? '', Validators.required));
+      necesariosGroup.addControl(key, this.fb.control(((documentos?.necesarios as any)?.[key] ?? '').toUpperCase(), Validators.required));
     });
 
     const adicionalesGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
     this.keysAdicionales.forEach(catKey => {
       const catGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({
-        nombre: this.fb.control((documentos?.adicionales as any)?.[catKey]?.nombre ?? catKey.charAt(0).toUpperCase() + catKey.slice(1))
+        nombre: this.fb.control(((documentos?.adicionales as any)?.[catKey]?.nombre ?? catKey.charAt(0).toUpperCase() + catKey.slice(1)).toUpperCase())
       });
       this.keysDocumentosAdicionalesMap[catKey].forEach(docKey => {
-        catGroup.addControl(docKey, this.fb.control((documentos?.adicionales as any)?.[catKey]?.[docKey] ?? ''));
+        catGroup.addControl(docKey, this.fb.control(((documentos?.adicionales as any)?.[catKey]?.[docKey] ?? '').toUpperCase()));
       });
       adicionalesGroup.addControl(catKey, catGroup);
     });
@@ -379,7 +393,7 @@ export class EntidadComponent implements OnInit {
     necesarios.addControl(newKey, this.fb.control('', Validators.required));
     this.keysNecesarios.push(newKey);
     this.cdRef.detectChanges();
-    this.positionNecesarios = this.getMaxScrollNecesarios();
+    this.positionNecesarios = 0;
   }
 
   eliminarDocumentoNecesario(i: number): void {
@@ -402,7 +416,7 @@ export class EntidadComponent implements OnInit {
     this.keysAdicionales.push(newKey);
     this.keysDocumentosAdicionalesMap[newKey] = ['documento1'];
     this.cdRef.detectChanges();
-    this.positionAdicionales = this.getMaxScrollAdicionales();
+    this.positionAdicionales = 0;
   }
 
   eliminarCategoriaAdicional(catIndex: number): void {
@@ -421,7 +435,7 @@ export class EntidadComponent implements OnInit {
     categoria.addControl(newKey, this.fb.control(''));
     this.keysDocumentosAdicionalesMap[catKey].push(newKey);
     this.cdRef.detectChanges();
-    this.positionAdicionales = this.getMaxScrollAdicionales();
+    this.positionAdicionales = 0;
   }
 
   eliminarDocumentoAdicional(catKey: string, docIndex: number): void {
@@ -435,15 +449,16 @@ export class EntidadComponent implements OnInit {
 
   crearFormGroupDatosNgs(datos?: DatosNGS): FormGroup {
     const nivelesArray = datos?.niveles?.map(nivel => this.crearFormGroupNivel(nivel)) || [];
-    return this.fb.group({
+    const formGroup = this.fb.group({
       niveles: this.fb.array(nivelesArray, Validators.minLength(1))
     });
+    return formGroup;
   }
 
   crearFormGroupNivel(nivel: Nivel): FormGroup {
     const gradosArray = nivel.grados?.map(grado => this.crearFormGroupGrado(grado)) || [];
     return this.fb.group({
-      nombre: [nivel.nombre ?? '', Validators.required],
+      nombre: [nivel.nombre ?? '', [Validators.required, this.uniqueNivelNameValidator()]],
       grados: this.fb.array(gradosArray, Validators.minLength(1))
     });
   }
@@ -451,16 +466,64 @@ export class EntidadComponent implements OnInit {
   crearFormGroupGrado(grado: Grado): FormGroup {
     const seccionesArray = grado.secciones?.map(seccion => this.crearFormGroupSeccion(seccion)) || [];
     return this.fb.group({
-      nombre: [grado.nombre ?? '', Validators.required],
+      nombre: [grado.nombre ?? '', [Validators.required, this.uniqueGradoNameValidator()]],
       secciones: this.fb.array(seccionesArray, Validators.minLength(1))
     });
   }
 
   crearFormGroupSeccion(seccion: SeccionVacantes): FormGroup {
     return this.fb.group({
-      nombre: [seccion.nombre ?? '', Validators.required],
+      nombre: [seccion.nombre ?? '', [Validators.required, this.uniqueSeccionNameValidator()]],
       vacantes: [seccion.vacantes ?? 0, [Validators.required, Validators.min(0)]]
     });
+  }
+
+  uniqueNivelNameValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value || !control.parent) return null;
+      const currentNombre = control.value.toLowerCase();
+      const nivelesArray = control.parent.parent as FormArray;
+      let count = 0;
+      for (const nivelCtrl of nivelesArray.controls) {
+        const nombreCtrl = nivelCtrl.get('nombre');
+        if (nombreCtrl && nombreCtrl.value.toLowerCase() === currentNombre) {
+          count++;
+        }
+      }
+      return count > 1 ? { duplicateNivel: true } : null;
+    };
+  }
+
+  uniqueGradoNameValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value || !control.parent) return null;
+      const currentNombre = control.value.toLowerCase();
+      const gradosArray = control.parent.parent as FormArray;
+      let count = 0;
+      for (const gradoCtrl of gradosArray.controls) {
+        const nombreCtrl = gradoCtrl.get('nombre');
+        if (nombreCtrl && nombreCtrl.value.toLowerCase() === currentNombre) {
+          count++;
+        }
+      }
+      return count > 1 ? { duplicateGrado: true } : null;
+    };
+  }
+
+  uniqueSeccionNameValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value || !control.parent) return null;
+      const currentNombre = control.value.toLowerCase();
+      const seccionesArray = control.parent.parent as FormArray;
+      let count = 0;
+      for (const seccionCtrl of seccionesArray.controls) {
+        const nombreCtrl = seccionCtrl.get('nombre');
+        if (nombreCtrl && nombreCtrl.value.toLowerCase() === currentNombre) {
+          count++;
+        }
+      }
+      return count > 1 ? { duplicateSeccion: true } : null;
+    };
   }
 
   niveles(): FormArray {
@@ -477,7 +540,7 @@ export class EntidadComponent implements OnInit {
 
   agregarNivel(): void {
     const nuevoNivel = this.fb.group({
-      nombre: ['', Validators.required],
+      nombre: ['', [Validators.required, this.uniqueNivelNameValidator()]],
       grados: this.fb.array([], Validators.minLength(1))
     });
     this.niveles().push(nuevoNivel);
@@ -490,7 +553,7 @@ export class EntidadComponent implements OnInit {
 
   agregarGrado(nivelIndex: number): void {
     const nuevoGrado = this.fb.group({
-      nombre: ['', Validators.required],
+      nombre: ['', [Validators.required, this.uniqueGradoNameValidator()]],
       secciones: this.fb.array([], Validators.minLength(1))
     });
     this.grados(nivelIndex).push(nuevoGrado);
@@ -573,90 +636,102 @@ export class EntidadComponent implements OnInit {
 
   guardarSecciones(): void {
     if (!this.formularioSecciones.valid) {
-      this.formularioSecciones.markAllAsTouched();
-      this.notificationService.showNotification('Por favor, complete todos los campos requeridos.', 'error');
-      return;
+        this.formularioSecciones.markAllAsTouched();
+        this.notificationService.showNotification('Por favor, complete todos los campos requeridos.', 'error');
+        return;
     }
 
     if (!this.entidad || !this.entidad.identidad) {
-      this.notificationService.showNotification('Error: No se puede identificar la entidad a actualizar.', 'error');
-      return;
+        this.notificationService.showNotification('Error: No se puede identificar la entidad a actualizar.', 'error');
+        return;
     }
 
-    const newSecciones = this.formularioSecciones.value.secciones.map((s: any) => ({ ...s, vacantes: Number(s.vacantes) }));
+    const nuevasSecciones = this.formularioSecciones.value.secciones.map((s: any) => ({ ...s, vacantes: Number(s.vacantes) }));
 
     if (this.editando) {
-      const seccionesCtrl = this.seccion(this.indiceNivelSeleccionado!, this.indiceGradoSeleccionado!);
-      seccionesCtrl.clear();
-      newSecciones.forEach((s: SeccionVacantes) => seccionesCtrl.push(this.crearFormGroupSeccion(s)));
-      seccionesCtrl.markAsDirty();
-      this.notificationService.showNotification('Secciones actualizadas. Recuerde guardar los cambios generales.', 'success');
-      this.updateVisibleCards();
+        const seccionesCtrl = this.seccion(this.indiceNivelSeleccionado!, this.indiceGradoSeleccionado!);
+        seccionesCtrl.clear();
+        nuevasSecciones.forEach((s: SeccionVacantes) => seccionesCtrl.push(this.crearFormGroupSeccion(s)));
+        seccionesCtrl.markAsDirty();
+        this.notificationService.showNotification('Secciones actualizadas. Recuerde guardar los cambios generales.', 'success');
+        this.updateVisibleCards();
     } else {
-      const nivelesLength = this.entidad?.datosngs?.niveles?.length || 0;
-      const gradosLength = this.entidad?.datosngs?.niveles?.[this.indiceNivelSeleccionado!]?.grados?.length || 0;
-      const nivelesPatch = Array(nivelesLength).fill(undefined);
-      const gradosPatch = Array(gradosLength).fill(undefined);
-      gradosPatch[this.indiceGradoSeleccionado!] = { secciones: newSecciones };
-      nivelesPatch[this.indiceNivelSeleccionado!] = { grados: gradosPatch };
-      const cambios = { datosngs: { niveles: nivelesPatch } };
-
-      this.cargando = true;
-      this.mensajeSpinner = 'Guardando secciones...';
-      this.entidadService.editarEntidad(this.entidad.identidad, cambios).pipe(
-        finalize(() => {
-          this.cargando = false;
-          this.mensajeSpinner = 'Cargando datos...';
-        })
-      ).subscribe({
-        next: entidadActualizada => {
-          this.entidad = entidadActualizada;
-          this.inicializarCarruseles(); // Reinicializa los carruseles después de actualizar
-          this.notificationService.showNotification('Secciones actualizadas correctamente.', 'success');
-        },
-        error: err => {
-          this.notificationService.showNotification(`Error al guardar las secciones: ${err.message}`, 'error');
-        }
-      });
+        const seccionesFormArray = this.seccion(this.indiceNivelSeleccionado!, this.indiceGradoSeleccionado!);
+        seccionesFormArray.clear();
+        nuevasSecciones.forEach((s: SeccionVacantes) => {
+            seccionesFormArray.push(this.crearFormGroupSeccion(s));
+        });
+        seccionesFormArray.markAsDirty();
+        const gradosFormArray = this.grados(this.indiceNivelSeleccionado!);
+        gradosFormArray.markAsDirty();
+        this.niveles().markAsDirty();
+        this.guardarCambios();
     }
     this.mostrarModalSecciones = false;
     this.cdRef.detectChanges();
-  }
+}
 
   activarInputArchivo(): void {
     this.inputLogo?.nativeElement.click();
   }
 
   alCambiarLogo(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const validFormats = ['image/png', 'image/jpeg', 'image/jpg'];
-      const maxSize = 2.1 * 1024 * 1024;
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const validFormats = ['image/png', 'image/jpeg', 'image/jpg'];
+    const maxSize = 2.1 * 1024 * 1024;
 
-      if (!validFormats.includes(file.type)) {
-        this.notificationService.showNotification('El archivo no es válido. Debe ser PNG, JPG o JPEG.', 'error');
-        input.value = '';
-        return;
-      }
-
-      if (file.size > maxSize) {
-        this.notificationService.showNotification('El archivo excede el tamaño máximo de 2MB.', 'error');
-        input.value = '';
-        return;
-      }
-
-      this.archivoLogoSeleccionado = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.vistaPreviaLogo = e.target?.result as string;
-        this.formularioEntidad.patchValue({ logoColegio: this.vistaPreviaLogo });
-        this.formularioEntidad.get('logoColegio')?.markAsDirty();
-        this.cdRef.detectChanges();
-      };
-      reader.readAsDataURL(this.archivoLogoSeleccionado);
+    if (!validFormats.includes(file.type)) {
+      this.notificationService.showNotification('El archivo no es válido. Debe ser PNG, JPG o JPEG.', 'error');
+      input.value = '';
+      return;
     }
+
+    if (file.size > maxSize) {
+      this.notificationService.showNotification('El archivo excede el tamaño máximo de 2MB.', 'error');
+      input.value = '';
+      return;
+    }
+
+    this.archivoLogoSeleccionado = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.vistaPreviaLogo = e.target?.result as string;
+      this.formularioEntidad.patchValue({ logoColegio: this.vistaPreviaLogo });
+      this.formularioEntidad.get('logoColegio')?.markAsDirty();
+      this.cdRef.detectChanges();
+    };
+    reader.readAsDataURL(this.archivoLogoSeleccionado);
   }
+}
+
+  private subirLogoSiEsNecesario(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (this.archivoLogoSeleccionado && this.entidad?.identidad) {
+      // Usamos una variable local con aserción de tipo para evitar el error de TypeScript
+      const entidadId: string = this.entidad!.identidad!;
+
+      this.entidadService.subirLogo(entidadId, this.archivoLogoSeleccionado)
+        .subscribe({
+          next: entidadActualizada => {
+            this.entidad = entidadActualizada;
+            this.formularioEntidad.patchValue({ logoColegio: entidadActualizada.logoColegio });
+            this.vistaPreviaLogo = entidadActualizada.logoColegio || '';
+            this.archivoLogoSeleccionado = null;
+            resolve();
+          },
+          error: err => {
+            this.notificationService.showNotification(`Error al subir el logo: ${err.message}`, 'error');
+            reject(err);
+          }
+        });
+    } else {
+      resolve();
+    }
+  });
+}
+
 
   getMaxScrollNecesarios(): number {
     if (this.necesariosContent && this.necesariosViewport) {
@@ -718,5 +793,18 @@ export class EntidadComponent implements OnInit {
 
   getTranslateYAdicionales(): number {
     return -this.positionAdicionales;
+  }
+
+  convertirAMayusculas(event: Event, controlPath: string): void {
+    const input = event.target as HTMLInputElement;
+    const upperValue = input.value.toUpperCase();
+    input.value = upperValue;
+    this.formularioEntidad.get(controlPath)?.patchValue(upperValue);
+  }
+
+  onFocusVacantes(control: AbstractControl): void {
+    if (control.value === 0 || control.value === '0') {
+      control.patchValue('');
+    }
   }
 }

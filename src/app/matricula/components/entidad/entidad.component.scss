@@ -178,6 +178,11 @@ body {
 
         span {
             font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            max-width: 100%;
         }
 
         ul {
@@ -691,4 +696,41 @@ h6 {
 
 .bottom-arrow {
     bottom: -20px;
+}
+
+.cat-input-container {
+  position: relative;
+}
+
+.cat-prefix {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #e9ecef;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  pointer-events: none;
+  color: #6c757d;
+  font-weight: bold;
+}
+
+.has-cat-prefix {
+  padding-left: 4rem !important;
+}
+
+.ellipsis-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.categoria-container {
+  border: 1px solid #ced4da;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
