@@ -6,6 +6,7 @@ import { NotasService } from '../../../campus/services/notas.service';
 import { DTOResponse } from '../../../campus/interface/DTOResponse';
 import { DTOAlumnoNotas, DTOSesionNotas, DTONotaResponse } from '../../../campus/interface/DTONota';
 import { catchError, of } from 'rxjs';
+import {  EntidadService } from '../../services/entidad.service';
 
 interface CursoNota {
   nombre: string;
@@ -35,7 +36,8 @@ export class BoletaNotasComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private notasService: NotasService
+    private notasService: NotasService,
+    private entidadService: EntidadService,
   ) {}
 
   ngOnInit(): void {
@@ -160,9 +162,10 @@ export class BoletaNotasComponent implements OnInit {
       suma += valorNota * peso;
       console.log(`Nota: ${valorNota}, Peso: ${peso}, Suma parcial: ${suma}`);
     });
-    const promedio = Number((suma / notasBimestre.length).toFixed(2));
-    console.log(`Promedio final: ${promedio}`);
-    return promedio;
+    //ajustar para redondear al entero más cercano
+      const promedio = Math.round(suma / notasBimestre.length);
+      console.log(`Promedio final: ${promedio}`);
+      return promedio;
   }
 
   formatNota(nota: number | string): string {
@@ -181,27 +184,55 @@ export class BoletaNotasComponent implements OnInit {
     return;
   }
 
-  this.notasService.generarBoletaPdf(this.idAlumno).subscribe(
-    (blob: Blob) => {
-      const url = window.URL.createObjectURL(blob);
-      
-      // Abrir el archivo en una nueva ventana para vista previa
-      const ventanaPreview = window.open(url, '_blank');
-      if (!ventanaPreview) {
-        console.error('No se pudo abrir la ventana de vista previa');
-        return;
-      }
-      // Después de mostrarlo en la ventana, revocar el objeto URL
-      ventanaPreview.onload = () => {
-        window.URL.revokeObjectURL(url);
-      };
-      console.log('Vista previa del PDF abierta');
-    },
-    (error) => {
-      console.error('Error al generar PDF:', error);
-      alert('Error al generar el PDF. Intenta de nuevo.');
-    }
-  );
-}
+  const userId = localStorage.getItem('usuarioId');
+  if (!userId) {
+    console.error('No se encontró usuarioId');
+    return;
+  }
 
+  this.entidadService.obtenerEntidadPorUsuario(userId).subscribe({
+    next: (entidad) => {
+      console.log('Entidad obtenida para boleta:', entidad);
+      this.notasService.generarBoletaPdfConEntidad(this.idAlumno, entidad).subscribe({
+        next: (blob) => {
+          // FIX: Descarga directa en lugar de window.open (evita bloqueo pop-up)
+          const url = window.URL.createObjectURL(blob);
+          // Abrir el PDF en una nueva pestaña
+          window.open(url, '_blank');
+          // Si quieres, puedes mostrar un mensaje o habilitar el botón de descarga
+          console.log('PDF abierto en nueva pestaña para visualización');
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error al generar PDF con entidad:', error);
+          alert('Error al generar el PDF. Intenta de nuevo.');
+          this.isLoading = false;
+        }
+      });
+    },
+    error: (error) => {
+      console.error('Error al obtener entidad:', error);
+      alert('Error al obtener datos del colegio. Generando boleta básica.');
+      // Fallback a GET original
+      /*this.notasService.generarBoletaPdf(this.idAlumno).subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `boleta-notas-${this.idAlumno}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          console.log('PDF básico descargado');
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error fallback PDF:', error);
+          this.isLoading = false;
+        }
+      });*/
+    }
+  });
+}
 }
