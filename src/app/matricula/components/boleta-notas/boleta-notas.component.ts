@@ -6,6 +6,7 @@ import { NotasService } from '../../../campus/services/notas.service';
 import { DTOResponse } from '../../../campus/interface/DTOResponse';
 import { DTOAlumnoNotas, DTOSesionNotas, DTONotaResponse } from '../../../campus/interface/DTONota';
 import { catchError, of } from 'rxjs';
+import {  EntidadService } from '../../services/entidad.service';
 
 interface CursoNota {
   nombre: string;
@@ -35,19 +36,33 @@ export class BoletaNotasComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private notasService: NotasService
+    private notasService: NotasService,
+    private entidadService: EntidadService,
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.idAlumno = params['idAlumno'] || '';
-      this.nombreAlumno = params['alumno'] || '';
-      this.grado = params['grado'] || 'No especificado';
-      this.seccion = params['seccion'] || 'No especificado';
-      this.nivel = params['nivel'] || 'Secundaria';
-      this.loadNotas();
-    });
+  this.idAlumno = localStorage.getItem('idAlumno') || '';
+  this.nombreAlumno = localStorage.getItem('nombreAlumno') || '';
+  this.grado = localStorage.getItem('grado') || 'No especificado';
+  this.seccion = localStorage.getItem('seccion') || 'No especificado';
+  this.nivel = localStorage.getItem('nivel') || 'Secundaria';
+
+  if (!this.idAlumno) {
+    console.error('No se encontró idAlumno');
+    return;
   }
+
+  console.log('Cargando boleta para:', {
+    idAlumno: this.idAlumno,
+    nombreAlumno: this.nombreAlumno,
+    grado: this.grado,
+    seccion: this.seccion,
+    nivel: this.nivel
+  });
+
+  this.loadNotas();
+}
+
 
   loadNotas(): void {
     this.isLoading = true;
@@ -147,9 +162,10 @@ export class BoletaNotasComponent implements OnInit {
       suma += valorNota * peso;
       console.log(`Nota: ${valorNota}, Peso: ${peso}, Suma parcial: ${suma}`);
     });
-    const promedio = Number((suma / notasBimestre.length).toFixed(2));
-    console.log(`Promedio final: ${promedio}`);
-    return promedio;
+    //ajustar para redondear al entero más cercano
+      const promedio = Math.round(suma / notasBimestre.length);
+      console.log(`Promedio final: ${promedio}`);
+      return promedio;
   }
 
   formatNota(nota: number | string): string {
@@ -157,12 +173,66 @@ export class BoletaNotasComponent implements OnInit {
   }
 
   regresar(): void {
-    this.router.navigate(['/lista-alumnos'], {
+    this.router.navigate(['/app-lista-alumnos'], {
       queryParams: { usuarioId: localStorage.getItem('usuarioId'), nivel: this.nivel }
     });
   }
 
   imprimir(): void {
-    window.print();
+  if (!this.idAlumno) {
+    console.error('No se encontró idAlumno para generar PDF');
+    return;
   }
+
+  const userId = localStorage.getItem('usuarioId');
+  if (!userId) {
+    console.error('No se encontró usuarioId');
+    return;
+  }
+
+  this.entidadService.obtenerEntidadPorUsuario(userId).subscribe({
+    next: (entidad) => {
+      console.log('Entidad obtenida para boleta:', entidad);
+      this.notasService.generarBoletaPdfConEntidad(this.idAlumno, entidad).subscribe({
+        next: (blob) => {
+          // FIX: Descarga directa en lugar de window.open (evita bloqueo pop-up)
+          const url = window.URL.createObjectURL(blob);
+          // Abrir el PDF en una nueva pestaña
+          window.open(url, '_blank');
+          // Si quieres, puedes mostrar un mensaje o habilitar el botón de descarga
+          console.log('PDF abierto en nueva pestaña para visualización');
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error al generar PDF con entidad:', error);
+          alert('Error al generar el PDF. Intenta de nuevo.');
+          this.isLoading = false;
+        }
+      });
+    },
+    error: (error) => {
+      console.error('Error al obtener entidad:', error);
+      alert('Error al obtener datos del colegio. Generando boleta básica.');
+      // Fallback a GET original
+      /*this.notasService.generarBoletaPdf(this.idAlumno).subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `boleta-notas-${this.idAlumno}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          console.log('PDF básico descargado');
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error fallback PDF:', error);
+          this.isLoading = false;
+        }
+      });*/
+    }
+  });
+}
 }

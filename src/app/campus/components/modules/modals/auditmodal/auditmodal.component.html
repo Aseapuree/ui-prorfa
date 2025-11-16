@@ -1,5 +1,5 @@
 <div
-  class="fixed inset-0 flex items-center justify-center z-50"
+  class="fixed inset-0 flex items-center justify-center z-50 bg-black/50"
   (click)="onClose()"
   role="dialog"
   aria-modal="true"
@@ -7,6 +7,11 @@
 >
   <div
     class="bg-white dark:bg-gray-900 rounded-lg p-6 w-full mx-4 max-h-[80vh] overflow-y-auto relative shadow-xl {{ modalSizeClass }} {{ customClass }}"
+    [class.max-w-lg]="maxWidth === 'lg'"
+    [class.max-w-md]="maxWidth === 'md'"
+    [class.max-w-sm]="maxWidth === 'sm'"
+    [class.max-w-xl]="maxWidth === 'xl'"
+    [class.max-w-2xl]="maxWidth === '2xl'"
     (click)="$event.stopPropagation()"
   >
     <!-- Header -->
@@ -17,35 +22,26 @@
       >
         {{ title }}
       </h3>
-      <button
-        *ngIf="showCloseButton"
-        (click)="onClose()"
-        class="text-gray-400 hover:text-gray-600 ml-4 focus:outline-none"
-        aria-label="Cerrar modal"
-      >
-        <fa-icon [icon]="['fas', 'times']" class="h-6 w-6"></fa-icon>
-      </button>
     </div>
 
-    <!-- Contenido -->
+    <!-- Contenido dinámico -->
     <div class="mt-2 mb-6">
-      <ng-container [ngSwitch]="contentType">
+      <ng-content></ng-content>
+      
+      <div *ngIf="data !== undefined && data !== null">
         <pre
-          *ngSwitchCase="'json'"
-          class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto max-h-96"
-        >{{ formattedData }}</pre>
-        <div
-          *ngSwitchCase="'html'"
-          class="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-4 rounded"
-          [innerHTML]="formattedData"
-        ></div>
-        <p
-          *ngSwitchDefault
-          class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-4 rounded"
+          *ngIf="contentType === 'json'"
+          class="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded overflow-x-auto font-mono"
         >
-          {{ formattedData }}
+          {{ data | json }}
+        </pre>
+        <p
+          *ngIf="contentType === 'text'"
+          class="text-sm text-gray-700 dark:text-gray-300 break-all"
+        >
+          {{ data }}
         </p>
-      </ng-container>
+      </div>
     </div>
 
     <!-- Footer -->

@@ -5,7 +5,7 @@ export class Curso {
     abreviatura?: string;
     fechaCreacion?: string;
     fechaActualizacion?: string | null;
-    competencias?: Competencia[];
+    competencias: Competencia[] = [];  // OBLIGATORIO + valor por defecto
 }
 
 export interface Competencia {

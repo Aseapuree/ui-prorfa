@@ -42,8 +42,9 @@ export class EntidadComponent implements OnInit {
   vistaPreviaLogo: string = '';
   archivoLogoSeleccionado: File | null = null;
   @ViewChild('logoInput') inputLogo?: ElementRef<HTMLInputElement>;
-  @ViewChildren('carousel') carouselElements!: QueryList<ElementRef>;
+  @ViewChildren('carouselViewport') carouselViewports!: QueryList<ElementRef>;
   carouselPositions: number[] = []; // Posición actual de cada carrusel por nivel
+  visibleCards: number[] = []; // Número de tarjetas visibles por nivel
   cardWidth = 150 + 16; // Ancho de la tarjeta (150px) + gap (1rem = 16px)
   keysNecesarios: string[] = ['documento1', 'documento2'];
   keysAdicionales: string[] = ['intercambio', 'discapacidad'];
@@ -51,6 +52,13 @@ export class EntidadComponent implements OnInit {
     'intercambio': ['documento1', 'documento2'],
     'discapacidad': ['documento1']
   };
+  positionNecesarios: number = 0;
+  positionAdicionales: number = 0;
+  itemHeight = 100; // Altura aproximada de cada item (ajustar según diseño)
+  @ViewChild('necesariosViewport') necesariosViewport?: ElementRef;
+  @ViewChild('necesariosContent') necesariosContent?: ElementRef;
+  @ViewChild('adicionalesViewport') adicionalesViewport?: ElementRef;
+  @ViewChild('adicionalesContent') adicionalesContent?: ElementRef;
 
   constructor(
     private entidadService: EntidadService,
@@ -72,6 +80,8 @@ export class EntidadComponent implements OnInit {
 
   ngAfterViewInit(): void {
     this.updateDarkMode();/*MODO OSCURO */
+    this.carouselViewports.changes.subscribe(() => this.updateVisibleCards());
+    this.updateVisibleCards();
   }
 
   private updateDarkMode(): void {
@@ -84,13 +94,29 @@ export class EntidadComponent implements OnInit {
     this.cdRef.detectChanges();
   }
 
+  private updateVisibleCards(): void {
+    if (this.carouselViewports) {
+      this.visibleCards = this.carouselViewports.toArray().map(el => {
+        const vw = el.nativeElement.clientWidth;
+        const gap = 16;
+        const cardW = 150;
+        const step = cardW + gap;
+        return Math.max(1, Math.floor((vw + gap / 2) / step));
+      });
+      this.cdRef.detectChanges();
+    }
+  }
+
   // Inicializa las posiciones del carrusel
   private inicializarCarruseles(): void {
     if (this.entidad?.datosngs?.niveles) {
       this.carouselPositions = new Array(this.entidad.datosngs.niveles.length).fill(0);
+      this.visibleCards = new Array(this.entidad.datosngs.niveles.length).fill(0);
       this.cdRef.detectChanges(); // Asegura que la UI se actualice
+      this.updateVisibleCards();
     } else {
       this.carouselPositions = [];
+      this.visibleCards = [];
     }
   }
 
@@ -106,11 +132,17 @@ export class EntidadComponent implements OnInit {
 
   // Determina si mostrar la flecha derecha
   mostrarFlechaDerecha(nivelIndex: number): boolean {
-    if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
-      return false;
+    let numGrados = 0;
+    const visible = this.visibleCards[nivelIndex] || (this.editando ? 6 : 3);
+    if (this.editando) {
+      numGrados = this.grados(nivelIndex).length;
+    } else {
+      if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
+        return false;
+      }
+      numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
     }
-    const numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
-    return numGrados > 3 && this.carouselPositions[nivelIndex] < Math.max(0, numGrados - 3);
+    return numGrados > visible && this.carouselPositions[nivelIndex] < Math.max(0, numGrados - visible);
   }
 
   // Mueve el carrusel a la izquierda
@@ -123,11 +155,17 @@ export class EntidadComponent implements OnInit {
 
   // Mueve el carrusel a la derecha
   moverDerecha(nivelIndex: number): void {
-    if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
-      return;
+    let numGrados = 0;
+    const visible = this.visibleCards[nivelIndex] || (this.editando ? 6 : 3);
+    if (this.editando) {
+      numGrados = this.grados(nivelIndex).length;
+    } else {
+      if (!this.entidad || !this.entidad.datosngs || !this.entidad.datosngs.niveles || !this.entidad.datosngs.niveles[nivelIndex]) {
+        return;
+      }
+      numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
     }
-    const numGrados = this.entidad.datosngs.niveles[nivelIndex].grados?.length || 0;
-    const maxPosition = Math.max(0, numGrados - 3); // Mostrar 3 tarjetas a la vez
+    const maxPosition = Math.max(0, numGrados - visible);
     if (this.carouselPositions[nivelIndex] < maxPosition) {
       this.carouselPositions[nivelIndex]++;
       this.cdRef.detectChanges();
@@ -157,6 +195,9 @@ export class EntidadComponent implements OnInit {
   iniciarEdicion(): void {
     this.editando = true;
     this.vistaPreviaLogo = this.entidad?.logoColegio || '';
+    this.carouselPositions = new Array(this.carouselPositions.length).fill(0);
+    this.cdRef.detectChanges();
+    this.updateVisibleCards();
   }
 
   cancelarEdicion(): void {
@@ -172,6 +213,9 @@ export class EntidadComponent implements OnInit {
       'intercambio': ['documento1', 'documento2'],
       'discapacidad': ['documento1']
     };
+    this.carouselPositions = new Array(this.carouselPositions.length).fill(0);
+    this.cdRef.detectChanges();
+    this.updateVisibleCards();
   }
 
   guardarCambios(): void {
@@ -302,7 +346,7 @@ export class EntidadComponent implements OnInit {
     return { 'invalidUrl': true };
   }
 
-        crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
+  crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
     const necesariosGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
     this.keysNecesarios.forEach(key => {
       necesariosGroup.addControl(key, this.fb.control((documentos?.necesarios as any)?.[key] ?? '', Validators.required));
@@ -335,6 +379,7 @@ export class EntidadComponent implements OnInit {
     necesarios.addControl(newKey, this.fb.control('', Validators.required));
     this.keysNecesarios.push(newKey);
     this.cdRef.detectChanges();
+    this.positionNecesarios = this.getMaxScrollNecesarios();
   }
 
   eliminarDocumentoNecesario(i: number): void {
@@ -343,6 +388,7 @@ export class EntidadComponent implements OnInit {
     necesarios.removeControl(key);
     this.keysNecesarios.splice(i, 1);
     this.cdRef.detectChanges();
+    this.positionNecesarios = Math.min(this.positionNecesarios, this.getMaxScrollNecesarios());
   }
 
   agregarCategoriaAdicional(): void {
@@ -356,6 +402,7 @@ export class EntidadComponent implements OnInit {
     this.keysAdicionales.push(newKey);
     this.keysDocumentosAdicionalesMap[newKey] = ['documento1'];
     this.cdRef.detectChanges();
+    this.positionAdicionales = this.getMaxScrollAdicionales();
   }
 
   eliminarCategoriaAdicional(catIndex: number): void {
@@ -365,6 +412,7 @@ export class EntidadComponent implements OnInit {
     this.keysAdicionales.splice(catIndex, 1);
     delete this.keysDocumentosAdicionalesMap[key];
     this.cdRef.detectChanges();
+    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
   }
 
   agregarDocumentoAdicional(catKey: string): void {
@@ -373,6 +421,7 @@ export class EntidadComponent implements OnInit {
     categoria.addControl(newKey, this.fb.control(''));
     this.keysDocumentosAdicionalesMap[catKey].push(newKey);
     this.cdRef.detectChanges();
+    this.positionAdicionales = this.getMaxScrollAdicionales();
   }
 
   eliminarDocumentoAdicional(catKey: string, docIndex: number): void {
@@ -381,6 +430,7 @@ export class EntidadComponent implements OnInit {
     categoria.removeControl(docKey);
     this.keysDocumentosAdicionalesMap[catKey].splice(docIndex, 1);
     this.cdRef.detectChanges();
+    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
   }
 
   crearFormGroupDatosNgs(datos?: DatosNGS): FormGroup {
@@ -433,7 +483,9 @@ export class EntidadComponent implements OnInit {
     this.niveles().push(nuevoNivel);
     this.niveles().markAsDirty();
     this.carouselPositions.push(0); // Añade posición inicial para el nuevo nivel
+    this.visibleCards.push(0);
     this.cdRef.detectChanges();
+    this.updateVisibleCards();
   }
 
   agregarGrado(nivelIndex: number): void {
@@ -452,13 +504,16 @@ export class EntidadComponent implements OnInit {
     });
     this.mostrarModalSecciones = true;
     this.cdRef.detectChanges();
+    this.updateVisibleCards();
   }
 
   eliminarNivel(nivelIndex: number): void {
     this.niveles().removeAt(nivelIndex);
     this.niveles().markAsDirty();
     this.carouselPositions.splice(nivelIndex, 1); // Actualiza las posiciones del carrusel
+    this.visibleCards.splice(nivelIndex, 1);
     this.cdRef.detectChanges();
+    this.updateVisibleCards();
   }
 
   eliminarGrado(nivelIndex: number, gradoIndex: number): void {
@@ -467,10 +522,12 @@ export class EntidadComponent implements OnInit {
     // Reinicia la posición del carrusel si es necesario
     if (this.carouselPositions[nivelIndex] > 0) {
       const numGrados = this.grados(nivelIndex).length;
-      const maxPosition = Math.max(0, numGrados - 3);
+      const visible = this.visibleCards[nivelIndex] || (this.editando ? 6 : 3);
+      const maxPosition = Math.max(0, numGrados - visible);
       this.carouselPositions[nivelIndex] = Math.min(this.carouselPositions[nivelIndex], maxPosition);
       this.cdRef.detectChanges();
     }
+    this.updateVisibleCards();
   }
 
   abrirModalSecciones(nivelIndex: number, gradoIndex: number): void {
@@ -534,6 +591,7 @@ export class EntidadComponent implements OnInit {
       newSecciones.forEach((s: SeccionVacantes) => seccionesCtrl.push(this.crearFormGroupSeccion(s)));
       seccionesCtrl.markAsDirty();
       this.notificationService.showNotification('Secciones actualizadas. Recuerde guardar los cambios generales.', 'success');
+      this.updateVisibleCards();
     } else {
       const nivelesLength = this.entidad?.datosngs?.niveles?.length || 0;
       const gradosLength = this.entidad?.datosngs?.niveles?.[this.indiceNivelSeleccionado!]?.grados?.length || 0;
@@ -598,5 +656,67 @@ export class EntidadComponent implements OnInit {
       };
       reader.readAsDataURL(this.archivoLogoSeleccionado);
     }
+  }
+
+  getMaxScrollNecesarios(): number {
+    if (this.necesariosContent && this.necesariosViewport) {
+      return this.necesariosContent.nativeElement.scrollHeight - this.necesariosViewport.nativeElement.clientHeight;
+    }
+    return 0;
+  }
+
+  getMaxScrollAdicionales(): number {
+    if (this.adicionalesContent && this.adicionalesViewport) {
+      return this.adicionalesContent.nativeElement.scrollHeight - this.adicionalesViewport.nativeElement.clientHeight;
+    }
+    return 0;
+  }
+
+  moverArribaNecesarios(): void {
+    this.positionNecesarios -= this.itemHeight;
+    this.positionNecesarios = Math.max(0, this.positionNecesarios);
+    this.cdRef.detectChanges();
+  }
+
+  moverAbajoNecesarios(): void {
+    this.positionNecesarios += this.itemHeight;
+    this.positionNecesarios = Math.min(this.positionNecesarios, this.getMaxScrollNecesarios());
+    this.cdRef.detectChanges();
+  }
+
+  mostrarFlechaArribaNecesarios(): boolean {
+    return this.positionNecesarios > 0;
+  }
+
+  mostrarFlechaAbajoNecesarios(): boolean {
+    return this.getMaxScrollNecesarios() > 0 && this.positionNecesarios < this.getMaxScrollNecesarios();
+  }
+
+  getTranslateYNecesarios(): number {
+    return -this.positionNecesarios;
+  }
+
+  moverArribaAdicionales(): void {
+    this.positionAdicionales -= this.itemHeight;
+    this.positionAdicionales = Math.max(0, this.positionAdicionales);
+    this.cdRef.detectChanges();
+  }
+
+  moverAbajoAdicionales(): void {
+    this.positionAdicionales += this.itemHeight;
+    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
+    this.cdRef.detectChanges();
+  }
+
+  mostrarFlechaArribaAdicionales(): boolean {
+    return this.positionAdicionales > 0;
+  }
+
+  mostrarFlechaAbajoAdicionales(): boolean {
+    return this.getMaxScrollAdicionales() > 0 && this.positionAdicionales < this.getMaxScrollAdicionales();
+  }
+
+  getTranslateYAdicionales(): number {
+    return -this.positionAdicionales;
   }
 }

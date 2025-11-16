@@ -1,10 +1,15 @@
 <section class="container px-4 mx-auto">
   <!-- Spinner de carga -->
-  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando cursos...'"></app-general-loading-spinner>
+  <app-general-loading-spinner
+    [visible]="isLoading"
+    [message]="'Cargando cursos...'"
+  ></app-general-loading-spinner>
   <div class="mt-6 md:flex md:items-center md:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Cursos</h2>
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">
+          Cursos
+        </h2>
         <span
           class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400"
         >
@@ -50,7 +55,10 @@
 
   <!-- Selector de cantidad de datos por página -->
   <div class="mt-4 flex items-center">
-    <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">
+    <label
+      for="itemsPerPage"
+      class="text-sm text-gray-500 dark:text-gray-400 mr-2"
+    >
       Mostrar:
     </label>
     <select
@@ -63,7 +71,9 @@
         {{ option }}
       </option>
     </select>
-    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
+    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400"
+      >registros por página</span
+    >
   </div>
 
   <!-- Tabla Reutilizable y Mensaje Condicional -->
@@ -85,7 +95,10 @@
       *ngIf="cursos.length === 0 && !isLoading"
       class="text-center py-6 text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
     >
-      <fa-icon [icon]="['fas', 'info-circle']" class="text-gray-400 text-xl mr-2"></fa-icon>
+      <fa-icon
+        [icon]="['fas', 'info-circle']"
+        class="text-gray-400 text-xl mr-2"
+      ></fa-icon>
       No se encontraron cursos con el criterio de búsqueda.
     </div>
   </div>
@@ -98,15 +111,37 @@
   ></app-pagination>
 
   <!-- Modal reutilizable para mostrar competencias -->
+  <!-- MODAL GENERAL -->
   <app-auditmodal
-  *ngIf="showModal"
-  [title]="selectedField === 'competencias' ? 'Competencias' : 'Descripción'"
-  [data]="selectedField === 'competencias' ? formattedCompetencias : selectedCurso?.descripcion"
-  [contentType]="'text'"
-  [maxWidth]="'lg'"
-  [showCloseButton]="true"
-  (close)="showModal = false"
-></app-auditmodal>
+  *ngIf="modal.open"
+  [title]="modal.title"
+  [modalSizeClass]="modal.size || 'max-w-lg'"
+  [buttons]="modal.buttons"
+  (close)="closeModal()"
+>
+  <!-- Formulario -->
+  <app-curso-form
+    *ngIf="modal.type === 'form'"
+    [curso]="modal.data!"
+    [isReadOnly]="modal.isReadOnly"
+    (submit)="onFormSubmit($event)"
+    (cancel)="closeModal()"
+  ></app-curso-form>
+
+  <!-- Confirmación -->
+  <app-confirm-delete
+    *ngIf="modal.type === 'confirm'"
+    (confirm)="onConfirmDelete()"
+    (cancel)="closeModal()"
+  ></app-confirm-delete>
+
+  <!-- Vista previa -->
+  <app-preview-content
+    *ngIf="modal.type === 'preview'"
+    [data]="modal.data"
+    (close)="closeModal()"
+  ></app-preview-content>
+</app-auditmodal>
 
   <!-- Componente de notificaciones -->
   <app-notification></app-notification>

@@ -83,17 +83,17 @@
         <div class="grade-grid-wrapper">
           <ng-container *ngFor="let nivel of entidad.datosngs?.niveles; let nivelIndex = index">
             <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
-            <div class="grade-carousel-container">
-              <button *ngIf="mostrarFlechaIzquierda(nivelIndex)" class="carousel-arrow left-arrow" (click)="moverIzquierda(nivelIndex)">
+            <div class="grade-carousel-container-normal">
+              <button type="button" *ngIf="mostrarFlechaIzquierda(nivelIndex)" class="carousel-arrow left-arrow" (click)="moverIzquierda(nivelIndex)">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <div class="carousel-viewport">
-                <div class="grade-carousel" #carousel [ngStyle]="{'transform': 'translateX(' + getTranslateX(nivelIndex) + 'px)'}">
+              <div class="carousel-viewport" #carouselViewport>
+                <div class="grade-carousel" [ngStyle]="{'transform': 'translateX(' + getTranslateX(nivelIndex) + 'px)'}">
                   <div class="grade-card" *ngFor="let grado of nivel.grados; let gradoIndex = index">
                     <div class="grade-header">
                       <h5>Grado: {{ grado.nombre }}°</h5>
                       <app-tooltip [tooltipText]="'Editar'">
-                        <button class="btn-edit-grade" (click)="abrirModalSecciones(nivelIndex, gradoIndex)"><i class="fas fa-pencil-alt"></i></button>
+                        <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(nivelIndex, gradoIndex)"><i class="fas fa-pencil-alt"></i></button>
                       </app-tooltip>
                     </div>
                     <div>Secciones:</div>
@@ -105,7 +105,7 @@
                   </div>
                 </div>
               </div>
-              <button *ngIf="mostrarFlechaDerecha(nivelIndex)" class="carousel-arrow right-arrow" (click)="moverDerecha(nivelIndex)">
+              <button type="button" *ngIf="mostrarFlechaDerecha(nivelIndex)" class="carousel-arrow right-arrow" (click)="moverDerecha(nivelIndex)">
                 <i class="fas fa-chevron-right"></i>
               </button>
             </div>
@@ -215,20 +215,32 @@
               <button type="button" (click)="agregarDocumentoNecesario()" class="btn-add-small"><i class="fas fa-plus"></i></button>
             </app-tooltip>
           </div>
-          <ng-container *ngFor="let key of keysNecesarios; let i = index">
-            <div class="seccion-container">
-              <div class="form-group">
-                <label>Documento {{i + 1}}</label>
-                <input type="text" [formControlName]="key" class="form-control">
-                <div *ngIf="formularioEntidad.get('documentos.necesarios.' + key)?.invalid && formularioEntidad.get('documentos.necesarios.' + key)?.touched" class="error-message">
-                  Este documento es requerido.
-                </div>
+          <div class="carousel-vertical-container">
+            <button type="button" *ngIf="mostrarFlechaArribaNecesarios()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaNecesarios()">
+              <i class="fas fa-chevron-up"></i>
+            </button>
+            <div class="carousel-viewport-vertical" #necesariosViewport>
+              <div class="carousel-vertical" #necesariosContent [ngStyle]="{'transform': 'translateY(' + getTranslateYNecesarios() + 'px)'}">
+                <ng-container *ngFor="let key of keysNecesarios; let i = index">
+                  <div class="seccion-container">
+                    <div class="form-group">
+                      <label>Documento {{i + 1}}</label>
+                      <input type="text" [formControlName]="key" class="form-control">
+                      <div *ngIf="formularioEntidad.get('documentos.necesarios.' + key)?.invalid && formularioEntidad.get('documentos.necesarios.' + key)?.touched" class="error-message">
+                        Este documento es requerido.
+                      </div>
+                    </div>
+                    <app-tooltip [tooltipText]="'Eliminar'">
+                      <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                    </app-tooltip>
+                  </div>
+                </ng-container>
               </div>
-              <app-tooltip [tooltipText]="'Eliminar'">
-                <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-              </app-tooltip>
             </div>
-          </ng-container>
+            <button type="button" *ngIf="mostrarFlechaAbajoNecesarios()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoNecesarios()">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
         </div>
         <div class="column" formGroupName="adicionales">
           <div class="dynamic-section-header">
@@ -237,30 +249,42 @@
               <button type="button" (click)="agregarCategoriaAdicional()" class="btn-add-small"><i class="fas fa-plus"></i></button>
             </app-tooltip>
           </div>
-          <ng-container *ngFor="let catKey of keysAdicionales; let catIndex = index">
-            <div formGroupName="{{catKey}}">
-              <div class="dynamic-section-header">
-                <h6><input type="text" formControlName="nombre" class="form-control" placeholder="Nombre de Categoría"></h6>
-                <app-tooltip [tooltipText]="'Agregar Documento'">
-                  <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
-                </app-tooltip>
-                <app-tooltip [tooltipText]="'Eliminar Categoría'">
-                  <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-                </app-tooltip>
-              </div>
-              <ng-container *ngFor="let docKey of keysDocumentosAdicionales(catKey); let docIndex = index">
-                <div class="seccion-container">
-                  <div class="form-group">
-                    <label>Documento {{docIndex + 1}}</label>
-                    <input type="text" [formControlName]="docKey" class="form-control">
+          <div class="carousel-vertical-container">
+            <button type="button" *ngIf="mostrarFlechaArribaAdicionales()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaAdicionales()">
+              <i class="fas fa-chevron-up"></i>
+            </button>
+            <div class="carousel-viewport-vertical" #adicionalesViewport>
+              <div class="carousel-vertical" #adicionalesContent [ngStyle]="{'transform': 'translateY(' + getTranslateYAdicionales() + 'px)'}">
+                <ng-container *ngFor="let catKey of keysAdicionales; let catIndex = index">
+                  <div formGroupName="{{catKey}}">
+                    <div class="dynamic-section-header">
+                      <h6><input type="text" formControlName="nombre" class="form-control" placeholder="Nombre de Categoría"></h6>
+                      <app-tooltip [tooltipText]="'Agregar Documento'">
+                        <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
+                      </app-tooltip>
+                      <app-tooltip [tooltipText]="'Eliminar Categoría'">
+                        <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                      </app-tooltip>
+                    </div>
+                    <ng-container *ngFor="let docKey of keysDocumentosAdicionales(catKey); let docIndex = index">
+                      <div class="seccion-container">
+                        <div class="form-group">
+                          <label>Documento {{docIndex + 1}}</label>
+                          <input type="text" [formControlName]="docKey" class="form-control">
+                        </div>
+                        <app-tooltip [tooltipText]="'Eliminar'">
+                          <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                        </app-tooltip>
+                      </div>
+                    </ng-container>
                   </div>
-                  <app-tooltip [tooltipText]="'Eliminar'">
-                    <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-                  </app-tooltip>
-                </div>
-              </ng-container>
+                </ng-container>
+              </div>
             </div>
-          </ng-container>
+            <button type="button" *ngIf="mostrarFlechaAbajoAdicionales()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoAdicionales()">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -298,29 +322,39 @@
             <div *ngIf="grados(i).invalid && grados(i).touched" class="error-message">
               Debe haber al menos un grado.
             </div>
-            <div class="grade-grid" formArrayName="grados">
-              <ng-container *ngFor="let gradoCtrl of grados(i).controls; let j=index" [formGroupName]="j">
-                <div class="grade-card">
-                  <div class="grade-header">
-                    <h5>Grado: <input type="text" formControlName="nombre" class="grade-input"></h5>
-                    <app-tooltip [tooltipText]="'Editar'">
-                      <button class="btn-edit-grade" (click)="abrirModalSecciones(i, j)"><i class="fas fa-pencil-alt"></i></button>
-                    </app-tooltip>
-                    <app-tooltip [tooltipText]="'Eliminar'">
-                      <button type="button" (click)="eliminarGrado(i, j)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
-                    </app-tooltip>
-                  </div>
-                  <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
-                    El nombre del grado es requerido.
-                  </div>
-                  <div>Secciones:</div>
-                  <ul class="info-list">
-                    <li *ngFor="let seccion of grados(i).at(j).get('secciones')?.value">
-                      <span>{{ seccion.nombre }} ({{ seccion.vacantes }} vac.)</span>
-                    </li>
-                  </ul>
+            <div class="grade-carousel-container-edit" formArrayName="grados">
+              <button type="button" *ngIf="mostrarFlechaIzquierda(i)" class="carousel-arrow left-arrow" (click)="moverIzquierda(i)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div class="carousel-viewport" #carouselViewport>
+                <div class="grade-carousel" [ngStyle]="{'transform': 'translateX(' + getTranslateX(i) + 'px)'}">
+                  <ng-container *ngFor="let gradoCtrl of grados(i).controls; let j=index" [formGroupName]="j">
+                    <div class="grade-card">
+                      <div class="grade-header">
+                        <h5>Grado: <input type="text" formControlName="nombre" class="grade-input"></h5>
+                        <app-tooltip [tooltipText]="'Editar'">
+                          <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(i, j)"><i class="fas fa-pencil-alt"></i></button>
+                        </app-tooltip>
+                        <app-tooltip [tooltipText]="'Eliminar'">
+                          <button type="button" (click)="eliminarGrado(i, j)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                        </app-tooltip>
+                      </div>
+                      <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
+                        El nombre del grado es requerido.
+                      </div>
+                      <div>Secciones:</div>
+                      <ul class="info-list">
+                        <li *ngFor="let seccion of grados(i).at(j).get('secciones')?.value">
+                          <span>{{ seccion.nombre }} ({{ seccion.vacantes }} vac.)</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </ng-container>
                 </div>
-              </ng-container>
+              </div>
+              <button type="button" *ngIf="mostrarFlechaDerecha(i)" class="carousel-arrow right-arrow" (click)="moverDerecha(i)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
             </div>
           </ng-container>
         </div>
@@ -338,7 +372,7 @@
 <!-- Modal de Edición de Secciones -->
 <div class="edit-modal-overlay" *ngIf="mostrarModalSecciones">
   <div class="edit-modal-container">
-    <button class="close-button" (click)="cerrarModalSecciones()"><i class="fas fa-times"></i></button>
+    <button type="button" class="close-button" (click)="cerrarModalSecciones()"><i class="fas fa-times"></i></button>
     <form [formGroup]="formularioSecciones" novalidate>
       <div class="edit-modal-header">
         <h2 class="edit-modal-title">GRADO: {{ nombreGradoSeleccionado }}°</h2>

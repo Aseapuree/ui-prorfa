@@ -200,4 +200,39 @@ export class NotasService {
       })
     );
   }
+
+//generar boletas metodo enpoitn
+ /*generarBoletaPdf(idAlumno: string): Observable<Blob> {
+    console.log('Generando boleta PDF para idAlumno:', idAlumno);
+    return this.clienteHttp.get(`${this.urlBase}/boleta-pdf/${idAlumno}`, {
+      responseType: 'blob', // Para descargar como binario (PDF)
+      withCredentials: true
+    }).pipe(
+      map(blob => {
+        console.log('PDF generado exitosamente (tamaño:', blob.size, 'bytes)');
+        return blob;
+      }),
+      catchError(error => {
+        console.error('Error al generar boleta PDF:', error);
+        return throwError(() => new Error('Error al generar boleta PDF: ' + (error.message || error)));
+      })
+    );
+  }*/
+//generar boletas metodo enpoitn
+  generarBoletaPdfConEntidad(idAlumno: string, entidad: any): Observable<Blob> {  // 'any' para DTOEntidad
+  console.log('Generando boleta con entidad:', entidad);
+  return this.clienteHttp.post(`${this.urlBase}/boleta-pdf`, { idAlumno, entidad }, {
+    responseType: 'blob',
+    withCredentials: true
+  }).pipe(
+    map(blob => {
+      console.log('PDF generado con entidad (tamaño:', blob.size, 'bytes)');
+      return blob;
+    }),
+    catchError(error => {
+      console.error('Error al generar boleta con entidad:', error);
+      return throwError(() => new Error('Error al generar boleta PDF: ' + (error.message || error)));
+    })
+  );
+}
 }

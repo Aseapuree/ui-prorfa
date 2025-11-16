@@ -1,5 +1,12 @@
 import { HttpClientModule } from '@angular/common/http';
-import { ChangeDetectorRef, Component, Inject, inject, OnInit, PLATFORM_ID } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  inject,
+  OnInit,
+  PLATFORM_ID,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CourseService } from '../../../../services/course.service';
 import { Competencia, Curso } from '../../../../interface/curso';
@@ -16,28 +23,51 @@ import { NotificationService } from '../../../shared/notificaciones/notification
 import { PaginationComponent } from '../../../../../general/components/pagination/pagination.component';
 import { TooltipComponent } from '../../../../../general/components/tooltip/tooltip.component';
 import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
-import { ActionConfig, ColumnConfig, TableComponent } from '../../../../../general/components/table/table.component';
+import { PreviewContentComponent } from '../../modals/preview-content/preview-content.component';
+import {
+  ActionConfig,
+  ColumnConfig,
+  TableComponent,
+} from '../../../../../general/components/table/table.component';
 import { ModalCompetenciasComponent } from '../../modals/modal-competencias/modal-competencias.component';
-import { SEARCH_INTERMEDIATE_REGEX, SEARCH_NO_NUMBERS_INTERMEDIATE_REGEX, SEARCH_NO_NUMBERS_REGEX, SEARCH_REGEX, SEARCH_VALIDATION_MESSAGES } from '../../../../../general/components/const/const';
-import { AuditmodalComponent } from '../../modals/auditmodal/auditmodal.component';
-
+import {
+  SEARCH_INTERMEDIATE_REGEX,
+  SEARCH_NO_NUMBERS_INTERMEDIATE_REGEX,
+  SEARCH_NO_NUMBERS_REGEX,
+  SEARCH_REGEX,
+  SEARCH_VALIDATION_MESSAGES,
+} from '../../../../../general/components/const/const';
+import {
+  AuditmodalComponent,
+  ModalButton,
+} from '../../modals/auditmodal/auditmodal.component';
+import { CursoFormComponent } from '../../modals/curso-form/curso-form.component';
+import { ConfirmDeleteComponent } from '../../modals/confirm-delete/confirm-delete.component'; // ← Crea este archivo
+import { log } from 'node:console';
 
 @Component({
   selector: 'app-campus-cursos',
   standalone: true,
   imports: [
     RouterModule,
+    PreviewContentComponent,
     TableComponent,
     GeneralLoadingSpinnerComponent,
-    TooltipComponent,PaginationComponent, 
-    HttpClientModule,CommonModule, 
-    NgxPaginationModule, FontAwesomeModule, 
+    TooltipComponent,
+    PaginationComponent,
+    HttpClientModule,
+    CommonModule,
+    NgxPaginationModule,
+    FontAwesomeModule,
     FormsModule,
     NotificationComponent,
-    AuditmodalComponent],
+    CursoFormComponent, // ← AÑADIR
+    ConfirmDeleteComponent, // ← AÑADIR
+    AuditmodalComponent,
+  ],
   providers: [CourseService],
   templateUrl: './campus-cursos.component.html',
-  styleUrl: './campus-cursos.component.scss'
+  styleUrl: './campus-cursos.component.scss',
 })
 export class CampusCursosComponent {
   public page: number = 1;
@@ -56,9 +86,160 @@ export class CampusCursosComponent {
   selectedField: string = '';
   formattedCompetencias: string = '';
 
+  // En tu componente
+  modal = {
+    open: false,
+    type: 'form' as 'form' | 'confirm' | 'preview', // ← AÑADIMOS 'preview'
+    title: '',
+    data: null as any,
+    isReadOnly: false,
+    size: '',
+    buttons: [] as ModalButton[],
+  };
+
+  openAddModal() {
+    this.modal = {
+      open: true,
+      type: 'form',
+      title: 'Agregar Curso',
+      data: {
+        nombre: '',
+        abreviatura: '',
+        descripcion: '',
+        competencias: [],
+      },
+      isReadOnly: false,
+      size: 'max-w-xl',
+      buttons: [], // ← Deja vacío, el formulario maneja los botones
+    };
+  }
+
+  openEditModal(curso: Curso) {
+    this.modal = {
+      open: true,
+      type: 'form',
+      title: 'Editar Curso',
+      data: {
+        ...curso,
+        competencias: Array.isArray(curso.competencias)
+          ? curso.competencias
+          : [],
+      },
+      isReadOnly: false,
+      size: 'max-w-xl',
+      buttons: [],
+    };
+  }
+
+  openDeleteModal(curso: Curso) {
+    this.selectedCurso = curso;
+    this.modal = {
+      open: true,
+      type: 'confirm',
+      title: 'Confirmar eliminación',
+      data: null,
+      isReadOnly: false,
+      size: 'max-w-md',
+      buttons: [],
+    };
+  }
+
+  onFormSubmit(curso: Curso) {
+    console.log('Formulario enviado (1 sola vez):', curso);
+
+    // ASEGURAR QUE COMPETENCIAS EXISTA Y SEA ARRAY
+    const competencias = (curso.competencias || [])
+      .map((c) => ({ ...c, nombre: c.nombre?.trim() || '' }))
+      .filter((c) => c.nombre.length > 0);
+
+    curso.competencias = competencias;
+
+    if (curso.idCurso) {
+      this.courseService.actualizarCurso(curso).subscribe({
+        next: () => {
+          this.closeModal();
+          this.cargarCursos();
+          this.notificationService.showNotification(
+            'Curso actualizado',
+            'success'
+          );
+        },
+        error: (err) => {
+          this.notificationService.showNotification(
+            'Error: ' + err.message,
+            'error'
+          );
+        },
+      });
+    } else {
+      this.courseService.agregarCurso(curso).subscribe({
+        next: () => {
+          this.closeModal();
+          this.cargarCursos();
+          this.notificationService.showNotification(
+            'Curso agregado',
+            'success'
+          );
+        },
+        error: (err) => {
+          this.notificationService.showNotification(
+            'Error: ' + err.message,
+            'error'
+          );
+        },
+      });
+    }
+  }
+
+  onConfirmDelete() {
+    if (this.selectedCurso?.idCurso) {
+      this.courseService.eliminarCurso(this.selectedCurso.idCurso).subscribe({
+        next: () => {
+          this.closeModal();
+          this.cargarCursos();
+          this.cargarConteoCursos();
+          this.notificationService.showNotification(
+            'Curso eliminado con éxito',
+            'success'
+          );
+        },
+        error: (err) => {
+          this.notificationService.showNotification(
+            'Error al eliminar: ' + err.message,
+            'error'
+          );
+        },
+      });
+    }
+  }
+
+  closeModal() {
+    this.modal = {
+      open: false,
+      type: 'form',
+      title: '',
+      data: null,
+      isReadOnly: false,
+      size: '',
+      buttons: [],
+    };
+  }
+
   tableColumns: ColumnConfig[] = [
-    { field: 'nombre', header: 'Nombre', maxWidth: 150, sortable: true, type: 'text' },
-    { field: 'abreviatura', header: 'Abreviatura', maxWidth: 100, sortable: false, type: 'text' },
+    {
+      field: 'nombre',
+      header: 'Nombre',
+      maxWidth: 150,
+      sortable: true,
+      type: 'text',
+    },
+    {
+      field: 'abreviatura',
+      header: 'Abreviatura',
+      maxWidth: 100,
+      sortable: false,
+      type: 'text',
+    },
     {
       field: 'descripcion',
       header: 'Descripción',
@@ -78,38 +259,40 @@ export class CampusCursosComponent {
       maxWidth: 250,
       sortable: false,
       type: 'text',
-      preview: true, // Habilitar vista previa con ícono de ojo
+      preview: true,
       transform: (value: Competencia[] | undefined) => {
-        if (!value || value.length === 0) return '';
-        const firstCompetencia = value[0].nombre;
-        const truncated = firstCompetencia.length > 10 ? `${firstCompetencia.substring(0, 10)}...` : firstCompetencia;
-        return value.length > 1 || firstCompetencia.length > 10 ? truncated : firstCompetencia;
+        if (!value || value.length === 0) return 'Sin competencias';
+        return value[0].nombre?.substring(0, 18) + '...';
       },
     },
-    { field: 'fechaCreacion', header: 'Fecha de Creación', maxWidth: 120, sortable: true, type: 'date' },
-    { field: 'fechaActualizacion', header: 'Fecha Actualización', maxWidth: 120, sortable: true, type: 'date' },
+    {
+      field: 'fechaCreacion',
+      header: 'Fecha de Creación',
+      maxWidth: 120,
+      sortable: true,
+      type: 'date',
+    },
+    {
+      field: 'fechaActualizacion',
+      header: 'Fecha Actualización',
+      maxWidth: 120,
+      sortable: true,
+      type: 'date',
+    },
   ];
 
   tableActions: ActionConfig[] = [
     {
       name: 'Editar',
       icon: ['fas', 'pencil'],
-      tooltip: 'Editar',
+      tooltip: 'Editar curso', // ← AÑADIR
       action: (curso: Curso) => this.openEditModal(curso),
-      hoverColor: 'table-action-edit-hover',
     },
     {
       name: 'Eliminar',
       icon: ['fas', 'trash'],
-      tooltip: 'Eliminar',
-      action: (curso: Curso) => {
-        if (curso.idCurso) {
-          this.eliminarCurso(curso.idCurso);
-        } else {
-          this.notificationService.showNotification('El curso no tiene un ID válido', 'error');
-        }
-      },
-      hoverColor: 'table-action-delete-hover',
+      tooltip: 'Eliminar curso', // ← AÑADIR
+      action: (curso: Curso) => this.openDeleteModal(curso),
     },
   ];
 
@@ -133,22 +316,44 @@ export class CampusCursosComponent {
     this.cargarCursos();
   }
 
-
   // Manejar el clic en el ícono de ojo para mostrar el modal
-onPreviewClick(event: { item: Curso; field: string }): void {
-  this.selectedCurso = event.item;
-  this.selectedField = event.field;
+  // Actualiza onPreviewClick
+  onPreviewClick(event: { item: Curso; field: string }): void {
+    const curso = event.item;
+    const field = event.field;
 
-  if (this.selectedField === 'competencias') {
-    const competencias = this.selectedCurso?.competencias;
-    this.formattedCompetencias = competencias && competencias.length > 0
-      ? competencias.map(comp => `• ${comp.nombre || 'Sin nombre'}`).join('\n')
-      : 'No hay competencias definidas.';
+    let title = '';
+    let data: any = null;
+    let size = 'max-w-lg';
+
+    if (field === 'descripcion') {
+      title = 'Descripción completa';
+      data = {
+        field: 'descripcion',
+        content: curso.descripcion || 'Sin descripción',
+      };
+      size = 'max-w-2xl';
+    }
+
+    if (field === 'competencias') {
+      title = `Competencias del curso: ${curso.nombre}`;
+      data = {
+        field: 'competencias',
+        curso: curso,
+      };
+      size = 'max-w-xl';
+    }
+
+    this.modal = {
+      open: true,
+      type: 'preview',
+      title,
+      data,
+      isReadOnly: true,
+      size,
+      buttons: [],
+    };
   }
-
-  this.showModal = true;
-  this.cdr.detectChanges();
-}
 
   private updatePageSizeOptions(): void {
     const previousItemsPerPage = this.itemsPerPage;
@@ -164,12 +369,17 @@ onPreviewClick(event: { item: Curso; field: string }): void {
           .filter((option) => option <= this.totalCursos)
           .reduce(
             (prev, curr) =>
-              Math.abs(curr - this.itemsPerPage) < Math.abs(prev - this.itemsPerPage) ? curr : prev,
+              Math.abs(curr - this.itemsPerPage) <
+              Math.abs(prev - this.itemsPerPage)
+                ? curr
+                : prev,
             this.pageSizeOptions[0]
           );
         this.itemsPerPage = validOption;
         localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-        console.log(`itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage}`);
+        console.log(
+          `itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage}`
+        );
       }
     } else {
       this.pageSizeOptions = [5];
@@ -199,7 +409,10 @@ onPreviewClick(event: { item: Curso; field: string }): void {
     if (newValue.startsWith(' ')) {
       input.value = this.lastValidKeyword;
       this.keyword = this.lastValidKeyword;
-      this.notificationService.showNotification(SEARCH_VALIDATION_MESSAGES.NO_LEADING_SPACE, 'info');
+      this.notificationService.showNotification(
+        SEARCH_VALIDATION_MESSAGES.NO_LEADING_SPACE,
+        'info'
+      );
       this.cdr.detectChanges();
       return;
     }
@@ -251,7 +464,10 @@ onPreviewClick(event: { item: Curso; field: string }): void {
         this.pageSizeOptions = [5];
         this.itemsPerPage = 5;
         localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-        this.notificationService.showNotification('Error al cargar el conteo de cursos: ' + err.message, 'error');
+        this.notificationService.showNotification(
+          'Error al cargar el conteo de cursos: ' + err.message,
+          'error'
+        );
         console.error('Error al cargar conteo:', err);
       },
     });
@@ -264,7 +480,12 @@ onPreviewClick(event: { item: Curso; field: string }): void {
       this.buscarCursos();
     } else {
       this.courseService
-        .obtenerListaCursos(this.page, this.itemsPerPage, this.sortBy, this.sortDir)
+        .obtenerListaCursos(
+          this.page,
+          this.itemsPerPage,
+          this.sortBy,
+          this.sortDir
+        )
         .subscribe({
           next: (response) => {
             this.cursos = response.content || [];
@@ -282,7 +503,10 @@ onPreviewClick(event: { item: Curso; field: string }): void {
           error: (err) => {
             this.cursos = [];
             this.totalPages = 1;
-            this.notificationService.showNotification('Error al cargar cursos: ' + err.message, 'error');
+            this.notificationService.showNotification(
+              'Error al cargar cursos: ' + err.message,
+              'error'
+            );
             this.cdr.detectChanges();
             this.isLoading = false;
           },
@@ -295,65 +519,6 @@ onPreviewClick(event: { item: Curso; field: string }): void {
       this.page = page;
       this.cargarCursos();
     }
-  }
-
-  openAddModal(): void {
-    const dialogRef = this.dialog.open(ModalComponent, {
-      width: '600px',
-      data: { isEditing: false },
-    });
-
-    dialogRef.afterClosed().subscribe((cursoAgregado: Curso) => {
-      if (cursoAgregado) {
-        this.cargarCursos();
-        this.cargarConteoCursos();
-        this.notificationService.showNotification('Curso agregado con éxito', 'success');
-      }
-    });
-  }
-
-  openEditModal(curso: Curso): void {
-    if (!curso.idCurso) {
-      this.notificationService.showNotification('El curso no tiene un ID válido', 'error');
-      return;
-    }
-
-    const dialogRef = this.dialog.open(ModalComponent, {
-      width: '600px',
-      data: { ...curso, isEditing: true },
-    });
-
-    dialogRef.afterClosed().subscribe((cursoActualizado: Curso) => {
-      if (cursoActualizado) {
-        this.cargarCursos();
-        this.cargarConteoCursos();
-        this.notificationService.showNotification('Curso actualizado con éxito', 'success');
-      }
-    });
-  }
-
-  eliminarCurso(idCurso: string): void {
-    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '1px',
-      height: '1px',
-      data: { message: '¿Estás seguro de que quieres eliminar este curso?' },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.courseService.eliminarCurso(idCurso).subscribe({
-          next: () => {
-            this.cargarCursos();
-            this.cargarConteoCursos();
-            this.notificationService.showNotification('Curso eliminado con éxito', 'success');
-          },
-          error: (err) => {
-            this.notificationService.showNotification('Error al eliminar curso: ' + err.message, 'error');
-            console.error('Error al eliminar curso:', err);
-          },
-        });
-      }
-    });
   }
 
   buscarCursos(): void {
@@ -372,43 +537,60 @@ onPreviewClick(event: { item: Curso; field: string }): void {
 
     this.isLoading = true;
 
-    this.courseService.buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir).subscribe({
-      next: (resultado) => {
-        this.totalCursos = resultado.length;
-        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
-        const startIndex = (this.page - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        this.cursos = resultado.slice(startIndex, endIndex);
+    this.courseService
+      .buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir)
+      .subscribe({
+        next: (resultado) => {
+          this.totalCursos = resultado.length;
+          this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
+          const startIndex = (this.page - 1) * this.itemsPerPage;
+          const endIndex = startIndex + this.itemsPerPage;
+          this.cursos = resultado.slice(startIndex, endIndex);
 
-        if (resultado.length === 0) {
+          if (resultado.length === 0) {
+            this.notificationService.showNotification(
+              'No se encontraron cursos con el criterio de búsqueda.',
+              'info'
+            );
+          }
+
+          this.updatePageSizeOptions();
+          if (this.page > this.totalPages && this.totalPages > 0) {
+            this.page = 1;
+            this.buscarCursos();
+            return;
+          }
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.cursos = [];
+          this.totalCursos = 0;
+          this.totalPages = 1;
           this.notificationService.showNotification(
-            'No se encontraron cursos con el criterio de búsqueda.',
-            'info'
+            'Error al buscar cursos: ' + err.message,
+            'error'
           );
-        }
+          console.error('Error en la búsqueda:', err);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        complete: () => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
 
-        this.updatePageSizeOptions();
-        if (this.page > this.totalPages && this.totalPages > 0) {
-          this.page = 1;
-          this.buscarCursos();
-          return;
-        }
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.cursos = [];
-        this.totalCursos = 0;
-        this.totalPages = 1;
-        this.notificationService.showNotification('Error al buscar cursos: ' + err.message, 'error');
-        console.error('Error en la búsqueda:', err);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      complete: () => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
+  openViewModal(curso: Curso) {
+    this.modal = {
+      open: true,
+      type: 'form',
+      title: 'Detalle del Curso',
+      data: { ...curso, competencias: curso.competencias || [] },
+      isReadOnly: true, // ← MODO SOLO LECTURA
+      size: 'max-w-2xl',
+      buttons: [], // El formulario pone "Cancelar" solo
+    };
   }
 }
