@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NotificationService } from '../../../shared/notificaciones/notification.service';
 
 @Component({
   selector: 'app-profesor-curso-form',
@@ -28,6 +29,8 @@ export class ProfesorCursoFormComponent {
   @Output() submit = new EventEmitter<any>();
   @Output() cancel = new EventEmitter<void>();
 
+  constructor(private notificationService: NotificationService) {}
+
   onNivelChange() {
     this.asignacion.grado = '';
     this.asignacion.seccion = '';
@@ -44,5 +47,17 @@ export class ProfesorCursoFormComponent {
 
 compareCurso(o1: any, o2: any): boolean {
   return o1 && o2 ? o1.idCurso === o2.idCurso : o1 === o2;
+}
+
+submitForm() {
+  if (!this.asignacion.usuario || !this.asignacion.curso) {
+    this.notificationService.showNotification('Debe seleccionar profesor y curso', 'error');
+    return;
+  }
+  if (!this.asignacion.nivel || !this.asignacion.grado || !this.asignacion.seccion) {
+    this.notificationService.showNotification('Complete todos los campos', 'error');
+    return;
+  }
+  this.submit.emit(this.asignacion);
 }
 }

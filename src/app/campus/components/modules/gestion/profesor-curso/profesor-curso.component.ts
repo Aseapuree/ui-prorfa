@@ -84,175 +84,22 @@ export class ProfesorCursoComponent implements OnInit {
   selectedAsignacion: any = null;
 
   modal: {
-  open: boolean;
-  type: 'form' | 'confirm' | 'preview';
-  title: string;
-  data: any;
-  isReadOnly: boolean;
-  size: string;
-  buttons: ModalButton[];
-} = {
-  open: false,
-  type: 'form',
-  title: '',
-  data: null,
-  isReadOnly: false,
-  size: '',
-  buttons: []
-};
-
-  //
-  openAddModal() {
-  if (this.profesores.length === 0 || this.cursos.length === 0) {
-    this.notificationService.showNotification('Cargando datos, por favor espera...', 'info');
-    return;
-  }
-
-  this.modal = {
-    open: true,
-    type: 'form',
-    title: 'Agregar Asignación',
-    data: {
-      idProfesorCurso: null,
-      usuario: null,
-      curso: null,
-      nivel: '',
-      grado: '',
-      seccion: ''
-    },
-    isReadOnly: false,
-    size: 'max-w-xl',
-    buttons: []
-  };
-}
-
-  openEditModal(asignacion: any) {
-  this.modal = {
-    open: true,
-    type: 'form',
-    title: 'Editar Asignación',
-    data: {
-      idProfesorCurso: asignacion.idProfesorCurso,
-      usuario: asignacion.usuario,        // ← objeto completo
-      curso: asignacion.cursoObj,         // ← objeto completo
-      nivel: asignacion.nivel,
-      grado: asignacion.grado,
-      seccion: asignacion.seccion
-    },
-    isReadOnly: false,
-    size: 'max-w-xl',
-    buttons: []
-  };
-}
-
-  openDeleteModal(asignacion: any) {
-  this.selectedAsignacion = asignacion;
-  this.modal = {
-    open: true,
-    type: 'confirm',
-    title: 'Eliminar asignación',
-    data: null,
-    isReadOnly: true,
-    size: 'max-w-md',
-    buttons: []
-  };
-}
-
-  onFormSubmit(asignacion: any) {
-  // Validar que usuario y curso no sean null
-  if (!asignacion.usuario?.idusuario) {
-    this.notificationService.showNotification('Debe seleccionar un profesor', 'error');
-    return;
-  }
-  if (!asignacion.curso?.idCurso) {
-    this.notificationService.showNotification('Debe seleccionar un curso', 'error');
-    return;
-  }
-
-  const payload = {
-    idProfesorCurso: asignacion.idProfesorCurso,
-    idUsuario: asignacion.usuario.idusuario,
-    idCurso: asignacion.curso.idCurso,
-    nivel: asignacion.nivel,
-    grado: asignacion.grado,
-    seccion: asignacion.seccion
-  };
-
-  if (asignacion.idProfesorCurso) {
-    this.profesorCursoService.editarCurso(payload).subscribe({
-      next: () => {
-        this.closeModal();
-        this.cargarAsignaciones();
-        this.notificationService.showNotification('Asignación actualizada', 'success');
-      },
-      error: (err) => {
-        console.error('Error al actualizar:', err);
-        this.notificationService.showNotification('Error al actualizar: ' + (err.error?.message || err.message), 'error');
-      }
-    });
-  } else {
-    this.profesorCursoService.agregarCurso(payload).subscribe({
-      next: () => {
-        this.closeModal();
-        this.cargarAsignaciones();
-        this.notificationService.showNotification('Asignación agregada', 'success');
-      },
-      error: (err) => {
-        console.error('Error al agregar:', err);
-        this.notificationService.showNotification('Error al agregar: ' + (err.error?.message || err.message), 'error');
-      }
-    });
-  }
-}
-
-  onConfirmDelete() {
-  if (this.selectedAsignacion?.idProfesorCurso) {
-    this.profesorCursoService
-      .eliminarCurso(this.selectedAsignacion.idProfesorCurso)
-      .subscribe({
-        next: () => {
-          this.closeModal();
-          this.cargarAsignaciones();
-          this.notificationService.showNotification(
-            'Asignación eliminada',
-            'success'
-          );
-        },
-        error: (err) => {
-          this.notificationService.showNotification(
-            'Error al eliminar: ' + err.message,
-            'error'
-          );
-        }
-      });
-  }
-}
-
-  closeModal() {
-  this.modal = {
+    open: boolean;
+    type: 'form' | 'confirm' | 'preview';
+    title: string;
+    data: any;
+    isReadOnly: boolean;
+    size: string;
+    buttons: ModalButton[];
+  } = {
     open: false,
     type: 'form',
     title: '',
     data: null,
     isReadOnly: false,
     size: '',
-    buttons: []
+    buttons: [],
   };
-  this.selectedAsignacion = null;
-}
-
-  getGradosForNivel(nivel: string): string[] {
-    if (!nivel || !this.datosNGS) return [];
-    const n = this.datosNGS.niveles?.find((n) => n.nombre === nivel);
-    return n?.grados?.map((g) => g.nombre) || [];
-  }
-
-  getSeccionesForGrado(nivel: string, grado: string): any[] {
-    if (!nivel || !grado || !this.datosNGS) return [];
-    const n = this.datosNGS.niveles?.find((n) => n.nombre === nivel);
-    const g = n?.grados?.find((g) => g.nombre === grado);
-    return g?.secciones || [];
-  }
 
   // Variables de filtros
   profesores: Usuario[] = [];
@@ -275,9 +122,6 @@ export class ProfesorCursoComponent implements OnInit {
     { value: 'asignacion', label: 'Fecha Asignación' },
     { value: 'actualizacion', label: 'Fecha Actualización' },
   ];
-
-  // Fecha máxima
-  maxDate!: string;
 
   // Configuración de columnas para la tabla
   tableColumns: ColumnConfig[] = [
@@ -371,6 +215,406 @@ export class ProfesorCursoComponent implements OnInit {
     this.cargarEntidadData();
     this.updateMaxDate();
   }
+
+  // === MODALES ===
+  openAddModal() {
+    if (this.profesores.length === 0 || this.cursos.length === 0) {
+      this.notificationService.showNotification(
+        'Cargando datos, por favor espera...',
+        'info'
+      );
+      return;
+    }
+
+    this.modal = {
+      open: true,
+      type: 'form',
+      title: 'Agregar Asignación',
+      data: {
+        idProfesorCurso: null,
+        usuario: null,
+        curso: null,
+        nivel: '',
+        grado: '',
+        seccion: '',
+      },
+      isReadOnly: false,
+      size: 'max-w-xl',
+      buttons: [],
+    };
+  }
+
+  openEditModal(asignacion: any) {
+    // ← AQUÍ ESTÁ EL PROBLEMA Y LA SOLUCIÓN
+    const profesorEncontrado = this.profesores.find(
+      (p) => p.idusuario === asignacion.usuario.idusuario
+    );
+
+    const cursoEncontrado = this.cursos.find(
+      (c) => c.idCurso === asignacion.cursoObj.idCurso // o asignacion.curso?.idCurso
+    );
+
+    this.modal = {
+      open: true,
+      type: 'form',
+      title: 'Editar Asignación',
+      data: {
+        idProfesorCurso: asignacion.idProfesorCurso,
+        usuario: profesorEncontrado || asignacion.usuario, // ← referencia exacta
+        curso: cursoEncontrado || asignacion.cursoObj, // ← referencia exacta
+        nivel: asignacion.nivel,
+        grado: asignacion.grado,
+        seccion: asignacion.seccion,
+      },
+      isReadOnly: false,
+      size: 'max-w-xl',
+      buttons: [],
+    };
+  }
+
+  openDeleteModal(asignacion: any) {
+    this.selectedAsignacion = asignacion;
+    this.modal = {
+      open: true,
+      type: 'confirm',
+      title: 'Eliminar asignación',
+      data: null,
+      isReadOnly: true,
+      size: 'max-w-md',
+      buttons: [],
+    };
+  }
+
+  closeModal() {
+    this.modal = {
+      open: false,
+      type: 'form',
+      title: '',
+      data: null,
+      isReadOnly: false,
+      size: '',
+      buttons: [],
+    };
+    this.selectedAsignacion = null;
+  }
+
+  // === ACCIONES CRUD ===
+  onFormSubmit(asignacion: any) {
+    // ENVIAR OBJETOS COMPLETOS, NO SOLO IDs
+    const payload: ProfesorCurso = {
+      idProfesorCurso: asignacion.idProfesorCurso,
+      usuario: asignacion.usuario,
+      curso: asignacion.curso,
+      nivel: asignacion.nivel,
+      grado: asignacion.grado,
+      seccion: asignacion.seccion,
+    };
+
+    if (asignacion.idProfesorCurso) {
+      this.profesorCursoService.editarCurso(payload).subscribe({
+        next: () => {
+          this.closeModal();
+          this.cargarAsignaciones();
+          this.notificationService.showNotification(
+            'Asignación actualizada',
+            'success'
+          );
+        },
+        error: (err) => {
+          console.error('Error al actualizar:', err);
+          this.notificationService.showNotification(
+            'Error al actualizar: ' + (err.error?.message || err.message),
+            'error'
+          );
+        },
+      });
+    } else {
+      this.profesorCursoService.agregarCurso(payload).subscribe({
+        next: () => {
+          this.closeModal();
+          this.cargarAsignaciones();
+          this.notificationService.showNotification(
+            'Asignación agregada',
+            'success'
+          );
+        },
+        error: (err) => {
+          console.error('Error al agregar:', err);
+          this.notificationService.showNotification(
+            'Error al agregar: ' + (err.error?.message || err.message),
+            'error'
+          );
+        },
+      });
+    }
+  }
+
+  onConfirmDelete() {
+    if (this.selectedAsignacion?.idProfesorCurso) {
+      this.profesorCursoService
+        .eliminarCurso(this.selectedAsignacion.idProfesorCurso)
+        .subscribe({
+          next: () => {
+            this.closeModal();
+            this.cargarAsignaciones();
+            this.notificationService.showNotification(
+              'Asignación eliminada',
+              'success'
+            );
+          },
+          error: (err) => {
+            this.notificationService.showNotification(
+              'Error al eliminar: ' + err.message,
+              'error'
+            );
+          },
+        });
+    }
+  }
+  // === FILTROS Y BÚSQUEDA ===
+
+  buscarAsignaciones(): void {
+    console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
+
+    // Validar filtros de profesorId y cursoId
+    if (
+      this.filters.profesorId &&
+      !this.isKeywordValid(this.filters.profesorId)
+    ) {
+      this.notificationService.showNotification(
+        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+        'error'
+      );
+      console.log('Nombre de profesor inválido');
+      return;
+    }
+
+    if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
+      this.notificationService.showNotification(
+        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+        'error'
+      );
+      console.log('Nombre de curso inválido');
+      return;
+    }
+
+    // Confiar en los estados de validación de fechas
+    if (!this.isValidFechaInicio || !this.isValidFechaFin) {
+      this.notificationService.showNotification(
+        'Por favor, corrige las fechas inválidas antes de buscar.',
+        'error'
+      );
+      console.log('Fechas inválidas, deteniendo búsqueda');
+      return;
+    }
+
+    // Activar el spinner
+    this.isLoading = true;
+
+    // Preparar los filtros para enviar al backend
+    const filters: {
+      profesorId?: string;
+      cursoId?: string;
+      grado?: string;
+      seccion?: string;
+      nivel?: string;
+      fechaInicio?: string;
+      fechaFin?: string;
+      fechaTipo?: string;
+    } = {
+      profesorId: this.filters.profesorId
+        ? this.filters.profesorId.trim()
+        : undefined,
+      cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
+      grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
+      seccion: this.filters.seccion
+        ? this.filters.seccion.toLowerCase()
+        : undefined,
+      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+      fechaInicio: this.filters.fechaInicio || undefined,
+      fechaFin: this.filters.fechaFin || undefined,
+      fechaTipo: this.filters.fechaTipo || undefined,
+    };
+
+    console.log('Filtros aplicados:', filters);
+    this.appliedFilters = filters;
+
+    // Realizar la solicitud al backend
+    this.profesorCursoService
+      .buscarAsignaciones(
+        filters,
+        this.page,
+        this.itemsPerPage,
+        this.sortBy,
+        this.sortDir
+      )
+      .subscribe({
+        next: (resultado) => {
+          console.log('Resultados recibidos:', resultado);
+          this.asignaciones = this.transformarDatos(resultado.content || []);
+          this.totalAsignaciones = resultado.totalElements;
+          this.totalPages = Math.ceil(
+            this.totalAsignaciones / this.itemsPerPage
+          );
+
+          if (this.totalAsignaciones === 0) {
+            this.notificationService.showNotification(
+              'No se encontraron asignaciones con los filtros aplicados.',
+              'info'
+            );
+          }
+
+          this.updatePageSizeOptions();
+          if (this.page > this.totalPages && this.totalPages > 0) {
+            this.page = 1;
+            this.buscarAsignaciones();
+            return;
+          }
+
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda:', err);
+          this.notificationService.showNotification(
+            'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
+            'error'
+          );
+          this.asignaciones = [];
+          this.totalAsignaciones = 0;
+          this.totalPages = 1;
+          this.updatePageSizeOptions();
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        complete: () => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+  // === CARGA DE DATOS ===
+  cargarAsignaciones(): void {
+    this.isLoading = true;
+    console.log('Cargando asignaciones con:', {
+      page: this.page,
+      itemsPerPage: this.itemsPerPage,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir,
+      filters: this.appliedFilters,
+    });
+
+    if (this.appliedFilters) {
+      this.profesorCursoService
+        .buscarAsignaciones(
+          this.appliedFilters,
+          this.page,
+          this.itemsPerPage,
+          this.sortBy,
+          this.sortDir
+        )
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de buscarAsignaciones:', response);
+            this.asignaciones = this.transformarDatos(response.content || []);
+            this.totalAsignaciones = response.totalElements;
+            this.totalPages = Math.ceil(
+              this.totalAsignaciones / this.itemsPerPage
+            );
+            this.updatePageSizeOptions();
+            if (this.page > this.totalPages) {
+              this.page = 1;
+              this.cargarAsignaciones();
+              return;
+            }
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            console.error('Error en buscarAsignaciones:', err);
+            this.asignaciones = [];
+            this.totalPages = 1;
+            this.notificationService.showNotification(
+              'Error al cargar asignaciones: ' + err.message,
+              'error'
+            );
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+        });
+    } else {
+      this.profesorCursoService
+        .obtenerCourseList(
+          this.page,
+          this.itemsPerPage,
+          this.sortBy,
+          this.sortDir
+        )
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de obtenerCourseList:', response);
+            this.asignaciones = this.transformarDatos(response.content || []);
+            this.totalAsignaciones = response.totalElements;
+            this.totalPages = Math.ceil(
+              this.totalAsignaciones / this.itemsPerPage
+            );
+            this.updatePageSizeOptions();
+            if (this.page > this.totalPages) {
+              this.page = 1;
+              this.cargarAsignaciones();
+              return;
+            }
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            console.error('Error en obtenerCourseList:', err);
+            this.asignaciones = [];
+            this.totalPages = 1;
+            this.notificationService.showNotification(
+              'Error al cargar asignaciones: ' + err.message,
+              'error'
+            );
+            this.cdr.detectChanges();
+            this.isLoading = false;
+          },
+        });
+    }
+  }
+
+  private transformarDatos(asignaciones: ProfesorCurso[]): any[] {
+    return asignaciones.map((a) => ({
+      idProfesorCurso: a.idProfesorCurso,
+      usuario: a.usuario,
+      cursoObj: a.curso, // objeto completo
+      curso: a.curso?.nombre, // solo para mostrar
+      profesor: `${a.usuario?.nombre || ''} ${
+        a.usuario?.apellidopaterno || ''
+      } ${a.usuario?.apellidomaterno || ''}`.trim(),
+      nivel: a.nivel || '',
+      grado: a.grado || '',
+      seccion: a.seccion || '',
+      fechaAsignacion: a.fechaAsignacion,
+      fechaActualizacion: a.fechaActualizacion,
+    }));
+  }
+  // === UTILIDADES ===
+
+  getGradosForNivel(nivel: string): string[] {
+    if (!nivel || !this.datosNGS) return [];
+    const n = this.datosNGS.niveles?.find((n) => n.nombre === nivel);
+    return n?.grados?.map((g) => g.nombre) || [];
+  }
+
+  getSeccionesForGrado(nivel: string, grado: string): any[] {
+    if (!nivel || !grado || !this.datosNGS) return [];
+    const n = this.datosNGS.niveles?.find((n) => n.nombre === nivel);
+    const g = n?.grados?.find((g) => g.nombre === grado);
+    return g?.secciones || [];
+  }
+
+  // Fecha máxima
+  maxDate!: string;
 
   descargarExcel(): void {
     this.isLoading = true;
@@ -505,42 +749,26 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   isFormValid(): boolean {
-    // Verificar si algún filtro está aplicado
-    const isAnyFilterApplied =
-      !!this.filters.profesorId.trim() ||
-      !!this.filters.cursoId.trim() ||
-      !!this.filters.nivel ||
-      !!this.filters.grado ||
-      !!this.filters.seccion ||
-      !!this.filters.fechaInicio ||
-      !!this.filters.fechaFin ||
-      this.filters.fechaTipo !== 'asignacion';
+  // Verificar si algún filtro está aplicado
+  const isAnyFilterApplied =
+    !!this.filters.profesorId.trim() ||
+    !!this.filters.cursoId.trim() ||
+    !!this.filters.nivel ||
+    !!this.filters.grado ||
+    !!this.filters.seccion ||
+    !!this.filters.fechaInicio ||
+    !!this.filters.fechaFin ||
+    this.filters.fechaTipo !== 'asignacion';
 
-    // Validar los campos
-    const isValidInputs =
-      this.isValidFechaInicio &&
-      this.isValidFechaFin &&
-      (!this.filters.profesorId ||
-        this.isKeywordValid(this.filters.profesorId)) &&
-      (!this.filters.cursoId || this.isKeywordValid(this.filters.cursoId));
+  // Validar los campos
+  const isValidInputs =
+    this.isValidFechaInicio &&
+    this.isValidFechaFin &&
+    (!this.filters.profesorId || this.isKeywordValid(this.filters.profesorId)) &&
+    (!this.filters.cursoId || this.isKeywordValid(this.filters.cursoId));
 
-    const isValid = isAnyFilterApplied && isValidInputs;
-
-    console.log(`isFormValid: ${isValid}`, {
-      isAnyFilterApplied,
-      fechaInicio: this.filters.fechaInicio,
-      fechaFin: this.filters.fechaFin,
-      isValidFechaInicio: this.isValidFechaInicio,
-      isValidFechaFin: this.isValidFechaFin,
-      profesorIdValid:
-        !this.filters.profesorId ||
-        this.isKeywordValid(this.filters.profesorId),
-      cursoIdValid:
-        !this.filters.cursoId || this.isKeywordValid(this.filters.cursoId),
-    });
-
-    return isValid;
-  }
+  return isAnyFilterApplied && isValidInputs;
+}
 
   private cargarEntidadData(): void {
     this.entidadService.obtenerEntidadList().subscribe({
@@ -619,22 +847,22 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   cargarProfesores(): void {
-  this.usuarioService.obtenerListaUsuario().subscribe({
-    next: (usuarios) => {
-      // FILTRAR SOLO USUARIOS CON ROL "profesor"
-      this.profesores = usuarios.filter(u => 
-        u.rol?.nombreRol?.toLowerCase() === 'profesor'
-      );
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      this.notificationService.showNotification(
-        'Error al cargar profesores',
-        'error'
-      );
-    },
-  });
-}
+    this.usuarioService.obtenerListaUsuario().subscribe({
+      next: (usuarios) => {
+        // FILTRAR SOLO USUARIOS CON ROL "profesor"
+        this.profesores = usuarios.filter(
+          (u) => u.rol?.nombreRol?.toLowerCase() === 'profesor'
+        );
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.notificationService.showNotification(
+          'Error al cargar profesores',
+          'error'
+        );
+      },
+    });
+  }
 
   cargarCursos(): void {
     this.courseService.obtenerListaCursos(1, 100, 'nombre', 'asc').subscribe({
@@ -801,109 +1029,6 @@ export class ProfesorCursoComponent implements OnInit {
     });
   }
 
-  cargarAsignaciones(): void {
-    this.isLoading = true;
-    console.log('Cargando asignaciones con:', {
-      page: this.page,
-      itemsPerPage: this.itemsPerPage,
-      sortBy: this.sortBy,
-      sortDir: this.sortDir,
-      filters: this.appliedFilters,
-    });
-
-    if (this.appliedFilters) {
-      this.profesorCursoService
-        .buscarAsignaciones(
-          this.appliedFilters,
-          this.page,
-          this.itemsPerPage,
-          this.sortBy,
-          this.sortDir
-        )
-        .subscribe({
-          next: (response) => {
-            console.log('Respuesta de buscarAsignaciones:', response);
-            this.asignaciones = this.transformarDatos(response.content || []);
-            this.totalAsignaciones = response.totalElements;
-            this.totalPages = Math.ceil(
-              this.totalAsignaciones / this.itemsPerPage
-            );
-            this.updatePageSizeOptions();
-            if (this.page > this.totalPages) {
-              this.page = 1;
-              this.cargarAsignaciones();
-              return;
-            }
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            console.error('Error en buscarAsignaciones:', err);
-            this.asignaciones = [];
-            this.totalPages = 1;
-            this.notificationService.showNotification(
-              'Error al cargar asignaciones: ' + err.message,
-              'error'
-            );
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-        });
-    } else {
-      this.profesorCursoService
-        .obtenerCourseList(
-          this.page,
-          this.itemsPerPage,
-          this.sortBy,
-          this.sortDir
-        )
-        .subscribe({
-          next: (response) => {
-            console.log('Respuesta de obtenerCourseList:', response);
-            this.asignaciones = this.transformarDatos(response.content || []);
-            this.totalAsignaciones = response.totalElements;
-            this.totalPages = Math.ceil(
-              this.totalAsignaciones / this.itemsPerPage
-            );
-            this.updatePageSizeOptions();
-            if (this.page > this.totalPages) {
-              this.page = 1;
-              this.cargarAsignaciones();
-              return;
-            }
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            console.error('Error en obtenerCourseList:', err);
-            this.asignaciones = [];
-            this.totalPages = 1;
-            this.notificationService.showNotification(
-              'Error al cargar asignaciones: ' + err.message,
-              'error'
-            );
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-        });
-    }
-  }
-
-  private transformarDatos(asignaciones: ProfesorCurso[]): any[] {
-  return asignaciones.map((a) => ({
-    idProfesorCurso: a.idProfesorCurso,
-    usuario: a.usuario,
-    cursoObj: a.curso,                    // objeto completo
-    curso: a.curso?.nombre,               // solo para mostrar
-    profesor: `${a.usuario?.nombre || ''} ${a.usuario?.apellidopaterno || ''} ${a.usuario?.apellidomaterno || ''}`.trim(),
-    nivel: a.nivel || '',
-    grado: a.grado || '',
-    seccion: a.seccion || '',
-    fechaAsignacion: a.fechaAsignacion,
-    fechaActualizacion: a.fechaActualizacion
-  }));
-}
-
   onPageChange(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       console.log(`onPageChange: Cambiando a página ${page}`);
@@ -920,127 +1045,4 @@ export class ProfesorCursoComponent implements OnInit {
     this.isValidFechaFin = true;
     this.cdr.detectChanges();
   }
-
-  buscarAsignaciones(): void {
-    console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
-
-    // Validar filtros de profesorId y cursoId
-    if (
-      this.filters.profesorId &&
-      !this.isKeywordValid(this.filters.profesorId)
-    ) {
-      this.notificationService.showNotification(
-        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      console.log('Nombre de profesor inválido');
-      return;
-    }
-
-    if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
-      this.notificationService.showNotification(
-        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      console.log('Nombre de curso inválido');
-      return;
-    }
-
-    // Confiar en los estados de validación de fechas
-    if (!this.isValidFechaInicio || !this.isValidFechaFin) {
-      this.notificationService.showNotification(
-        'Por favor, corrige las fechas inválidas antes de buscar.',
-        'error'
-      );
-      console.log('Fechas inválidas, deteniendo búsqueda');
-      return;
-    }
-
-    // Activar el spinner
-    this.isLoading = true;
-
-    // Preparar los filtros para enviar al backend
-    const filters: {
-      profesorId?: string;
-      cursoId?: string;
-      grado?: string;
-      seccion?: string;
-      nivel?: string;
-      fechaInicio?: string;
-      fechaFin?: string;
-      fechaTipo?: string;
-    } = {
-      profesorId: this.filters.profesorId
-        ? this.filters.profesorId.trim()
-        : undefined,
-      cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
-      grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
-      seccion: this.filters.seccion
-        ? this.filters.seccion.toLowerCase()
-        : undefined,
-      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
-      fechaInicio: this.filters.fechaInicio || undefined,
-      fechaFin: this.filters.fechaFin || undefined,
-      fechaTipo: this.filters.fechaTipo || undefined,
-    };
-
-    console.log('Filtros aplicados:', filters);
-    this.appliedFilters = filters;
-
-    // Realizar la solicitud al backend
-    this.profesorCursoService
-      .buscarAsignaciones(
-        filters,
-        this.page,
-        this.itemsPerPage,
-        this.sortBy,
-        this.sortDir
-      )
-      .subscribe({
-        next: (resultado) => {
-          console.log('Resultados recibidos:', resultado);
-          this.asignaciones = this.transformarDatos(resultado.content || []);
-          this.totalAsignaciones = resultado.totalElements;
-          this.totalPages = Math.ceil(
-            this.totalAsignaciones / this.itemsPerPage
-          );
-
-          if (this.totalAsignaciones === 0) {
-            this.notificationService.showNotification(
-              'No se encontraron asignaciones con los filtros aplicados.',
-              'info'
-            );
-          }
-
-          this.updatePageSizeOptions();
-          if (this.page > this.totalPages && this.totalPages > 0) {
-            this.page = 1;
-            this.buscarAsignaciones();
-            return;
-          }
-
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error en la búsqueda:', err);
-          this.notificationService.showNotification(
-            'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
-            'error'
-          );
-          this.asignaciones = [];
-          this.totalAsignaciones = 0;
-          this.totalPages = 1;
-          this.updatePageSizeOptions();
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        complete: () => {
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-      });
-  }
-
-  
 }
