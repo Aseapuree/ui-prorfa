@@ -29,7 +29,6 @@ import {
   ColumnConfig,
   TableComponent,
 } from '../../../../../general/components/table/table.component';
-import { ModalCompetenciasComponent } from '../../modals/modal-competencias/modal-competencias.component';
 import {
   SEARCH_INTERMEDIATE_REGEX,
   SEARCH_NO_NUMBERS_INTERMEDIATE_REGEX,
@@ -70,10 +69,6 @@ import { log } from 'node:console';
   styleUrl: './campus-cursos.component.scss',
 })
 export class CampusCursosComponent {
-  public page: number = 1;
-  public itemsPerPage: number = 5;
-  public pageSizeOptions: number[] = [];
-  totalPages: number = 1;
   cursos: Curso[] = [];
   keyword: string = '';
   totalCursos: number = 0;
@@ -85,6 +80,17 @@ export class CampusCursosComponent {
   selectedCurso: Curso | null = null;
   selectedField: string = '';
   formattedCompetencias: string = '';
+  page: number = 1;
+  itemsPerPage: number = 5;
+  totalPages: number = 1;
+
+  ngOnInit(): void {
+  if (isPlatformBrowser(this.platformId)) {
+    const saved = localStorage.getItem('itemsPerPageCursos');
+    this.itemsPerPage = saved ? parseInt(saved, 10) : 10;
+  }
+  this.cargarCursos();
+}
 
   // En tu componente
   modal = {
@@ -197,7 +203,6 @@ export class CampusCursosComponent {
         next: () => {
           this.closeModal();
           this.cargarCursos();
-          this.cargarConteoCursos();
           this.notificationService.showNotification(
             'Curso eliminado con éxito',
             'success'
@@ -305,16 +310,6 @@ export class CampusCursosComponent {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
-  ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const savedItemsPerPage = localStorage.getItem('itemsPerPage');
-      if (savedItemsPerPage) {
-        this.itemsPerPage = parseInt(savedItemsPerPage, 10);
-      }
-    }
-    this.cargarConteoCursos();
-    this.cargarCursos();
-  }
 
   // Manejar el clic en el ícono de ojo para mostrar el modal
   // Actualiza onPreviewClick
@@ -355,47 +350,16 @@ export class CampusCursosComponent {
     };
   }
 
-  private updatePageSizeOptions(): void {
-    const previousItemsPerPage = this.itemsPerPage;
-    this.pageSizeOptions = [];
-    const increment = 5;
-    for (let i = increment; i <= this.totalCursos; i += increment) {
-      this.pageSizeOptions.push(i);
-    }
+  onPageChange(page: number): void {
+  this.page = page;
+  this.cargarCursos();
+}
 
-    if (this.pageSizeOptions.length > 0) {
-      if (!this.pageSizeOptions.includes(this.itemsPerPage)) {
-        const validOption = this.pageSizeOptions
-          .filter((option) => option <= this.totalCursos)
-          .reduce(
-            (prev, curr) =>
-              Math.abs(curr - this.itemsPerPage) <
-              Math.abs(prev - this.itemsPerPage)
-                ? curr
-                : prev,
-            this.pageSizeOptions[0]
-          );
-        this.itemsPerPage = validOption;
-        localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-        console.log(
-          `itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage}`
-        );
-      }
-    } else {
-      this.pageSizeOptions = [5];
-      this.itemsPerPage = 5;
-      localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-      console.log(`itemsPerPage establecido a 5 porque no hay cursos`);
-    }
-  }
-
-  onItemsPerPageChange(newSize: number): void {
-    console.log(`onItemsPerPageChange: Cambiando itemsPerPage a ${newSize}`);
-    this.itemsPerPage = newSize;
-    localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-    this.page = 1;
-    this.cargarCursos();
-  }
+onItemsPerPageChange(newSize: number): void {
+  this.itemsPerPage = newSize;
+  this.page = 1;
+  this.cargarCursos();
+}
 
   isKeywordValid(): boolean {
     if (!this.keyword) return true;
@@ -447,21 +411,59 @@ export class CampusCursosComponent {
   onSortChange(event: { sortBy: string; sortDir: string }): void {
     this.sortBy = event.sortBy;
     this.sortDir = event.sortDir;
-    this.page = 1;
-    this.cargarCursos();
+
+    // Ordenar los datos localmente (sin llamar al backend)
+    this.sortCursosLocalmente();
+
+    // Solo si NO estás en búsqueda, reseteas a página 1
+    if (!this.keyword.trim()) {
+      this.page = 1;
+    }
   }
 
-  cargarConteoCursos(): void {
+  private sortCursosLocalmente(): void {
+    if (this.cursos.length === 0) return;
+
+    const direction = this.sortDir === 'asc' ? 1 : -1;
+
+    this.cursos = [...this.cursos].sort((a, b) => {
+      let aValue: any = a[this.sortBy as keyof Curso];
+      let bValue: any = b[this.sortBy as keyof Curso];
+
+      // Manejo especial para fechas
+      if (
+        this.sortBy === 'fechaCreacion' ||
+        this.sortBy === 'fechaActualizacion'
+      ) {
+        aValue = aValue ? new Date(aValue).getTime() : 0;
+        bValue = bValue ? new Date(bValue).getTime() : 0;
+      }
+
+      // Manejo para strings
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      // Manejo para valores nulos/undefined
+      if (aValue == null) aValue = '';
+      if (bValue == null) bValue = '';
+
+      if (aValue < bValue) return -1 * direction;
+      if (aValue > bValue) return 1 * direction;
+      return 0;
+    });
+  }
+
+  /*cargarConteoCursos(): void {
     this.courseService.obtenerConteoCursos().subscribe({
       next: (count) => {
         this.totalCursos = count;
-        this.updatePageSizeOptions();
         this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.totalCursos = 0;
-        this.pageSizeOptions = [5];
         this.itemsPerPage = 5;
         localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
         this.notificationService.showNotification(
@@ -471,116 +473,79 @@ export class CampusCursosComponent {
         console.error('Error al cargar conteo:', err);
       },
     });
-  }
+  }*/
 
   cargarCursos(): void {
-    this.isLoading = true;
+  this.isLoading = true;
 
-    if (this.keyword.trim()) {
-      this.buscarCursos();
-    } else {
-      this.courseService
-        .obtenerListaCursos(
-          this.page,
-          this.itemsPerPage,
-          this.sortBy,
-          this.sortDir
-        )
-        .subscribe({
-          next: (response) => {
-            this.cursos = response.content || [];
-            this.totalCursos = response.totalElements;
-            this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
-            this.updatePageSizeOptions();
-            if (this.page > this.totalPages) {
-              this.page = 1;
-              this.cargarCursos();
-              return;
-            }
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            this.cursos = [];
-            this.totalPages = 1;
-            this.notificationService.showNotification(
-              'Error al cargar cursos: ' + err.message,
-              'error'
-            );
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-        });
-    }
+  if (this.keyword.trim()) {
+    this.buscarCursos();
+    return;
   }
 
-  onPageChange(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.page = page;
-      this.cargarCursos();
-    }
+  this.courseService
+    .obtenerListaCursosSinOrden(this.page, this.itemsPerPage)
+    .subscribe({
+      next: (response) => {
+        this.cursos = response.content || [];
+        this.totalCursos = response.totalElements;
+        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.cursos = [];
+        this.totalCursos = 0;
+        this.notificationService.showNotification('Error al cargar cursos', 'error');
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   buscarCursos(): void {
-    if (!this.isKeywordValid()) {
-      this.notificationService.showNotification(
-        SEARCH_VALIDATION_MESSAGES.NO_NUMBERS_INVALID_FORMAT,
-        'info'
-      );
-      return;
-    }
-
-    if (!this.keyword.trim()) {
-      this.cargarCursos();
-      return;
-    }
-
-    this.isLoading = true;
-
-    this.courseService
-      .buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir)
-      .subscribe({
-        next: (resultado) => {
-          this.totalCursos = resultado.length;
-          this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
-          const startIndex = (this.page - 1) * this.itemsPerPage;
-          const endIndex = startIndex + this.itemsPerPage;
-          this.cursos = resultado.slice(startIndex, endIndex);
-
-          if (resultado.length === 0) {
-            this.notificationService.showNotification(
-              'No se encontraron cursos con el criterio de búsqueda.',
-              'info'
-            );
-          }
-
-          this.updatePageSizeOptions();
-          if (this.page > this.totalPages && this.totalPages > 0) {
-            this.page = 1;
-            this.buscarCursos();
-            return;
-          }
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.cursos = [];
-          this.totalCursos = 0;
-          this.totalPages = 1;
-          this.notificationService.showNotification(
-            'Error al buscar cursos: ' + err.message,
-            'error'
-          );
-          console.error('Error en la búsqueda:', err);
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        complete: () => {
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-      });
+  if (!this.isKeywordValid()) {
+    this.notificationService.showNotification(
+      SEARCH_VALIDATION_MESSAGES.NO_NUMBERS_INVALID_FORMAT,
+      'info'
+    );
+    return;
   }
+
+  if (!this.keyword.trim()) {
+    this.cargarCursos();
+    return;
+  }
+
+  this.isLoading = true;
+
+  this.courseService
+    .buscarCursos(this.keyword.trim(), this.sortBy, this.sortDir)
+    .subscribe({
+      next: (resultado) => {
+        this.cursos = resultado;
+        this.totalCursos = resultado.length;
+        this.totalPages = Math.ceil(this.totalCursos / this.itemsPerPage);
+
+        if (resultado.length === 0) {
+          this.notificationService.showNotification(
+            'No se encontraron cursos.',
+            'info'
+          );
+        }
+
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.cursos = [];
+        this.totalCursos = 0;
+        this.notificationService.showNotification('Error en búsqueda', 'error');
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+}
 
   openViewModal(curso: Curso) {
     this.modal = {

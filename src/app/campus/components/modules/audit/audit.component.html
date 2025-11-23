@@ -175,31 +175,6 @@
 
     <!-- Selector y Botones -->
     <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center">
-        <label
-          for="itemsPerPage"
-          class="text-sm text-gray-500 dark:text-gray-400 mr-2"
-          >Mostrar:</label
-        >
-        <select
-          id="itemsPerPage"
-          [(ngModel)]="itemsPerPage"
-          (ngModelChange)="onItemsPerPageChange($event)"
-          [disabled]="pageSizeOptions.length === 0"
-          class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
-        >
-          <option *ngFor="let option of pageSizeOptions" [value]="option">
-            {{ option }}
-          </option>
-          <option *ngIf="totalAuditorias === 0" disabled selected>
-            Sin datos
-          </option>
-        </select>
-        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400"
-          >registros por página</span
-        >
-      </div>
-
       <div class="flex flex-wrap items-center gap-2">
         <button
           (click)="buscarAuditorias()"
@@ -231,16 +206,18 @@
 
   <div class="mt-6">
     <app-table
-      *ngIf="auditorias.length > 0 || isLoading"
-      [data]="auditorias"
-      [columns]="tableColumns"
-      [enableActions]="false"
-      [actions]="[]"
-      [sortBy]="sortBy"
-      [sortDir]="sortDir"
-      (sortChange)="onSortChange($event)"
-      (previewClick)="onPreviewClick($event)"
-    ></app-table>
+  *ngIf="auditorias.length > 0 || isLoading"
+  [data]="auditorias"
+  [columns]="tableColumns"
+  [enableActions]="false"
+  [sortBy]="sortBy"
+  [sortDir]="sortDir"
+  (sortChange)="onSortChange($event)"
+  (previewClick)="onPreviewClick($event)"
+  [totalItems]="totalAuditorias"
+  [(itemsPerPage)]="itemsPerPage"
+  (itemsPerPageChange)="onItemsPerPageChange($event)"
+></app-table>
 
     <div
       *ngIf="auditorias.length === 0 && !isLoading"
@@ -256,15 +233,18 @@
     (pageChange)="onPageChange($event)"
   ></app-pagination>
 
+  <!-- MODAL GENERAL -->
   <app-auditmodal
-    *ngIf="showModal"
-  [title]="selectedField === 'userAgent' ? 'Agente' : 'Datos (Payload)'"
-  [data]="selectedField === 'payload' ? selectedItem?.payload : selectedItem?.userAgent"
-  [contentType]="selectedField === 'payload' ? 'json' : 'text'"
-  [maxWidth]="'lg'"
-  [showCloseButton]="true"
-  (close)="showModal = false"
-  >
-  </app-auditmodal>
+  *ngIf="modal.open"
+  [title]="modal.title"
+  [modalSizeClass]="modal.size || 'max-w-2xl'"
+  (close)="closeModal()"
+>
+  <app-preview-content
+    *ngIf="modal.type === 'preview'"
+    [data]="modal.data"
+    (close)="closeModal()"
+  ></app-preview-content>
+</app-auditmodal>
   <app-notification></app-notification>
 </section>
