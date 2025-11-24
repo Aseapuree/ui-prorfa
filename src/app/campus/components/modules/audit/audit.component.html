@@ -1,4 +1,3 @@
-<!-- audit-prorfa.component.html -->
 <section class="container px-4 mx-auto">
   <app-general-loading-spinner
     [visible]="isLoading"
@@ -8,7 +7,7 @@
     <div>
       <div class="flex items-center gap-x-3">
         <h2 class="text-lg font-medium text-gray-800 dark:text-white">
-          Auditorías
+          Auditoría
         </h2>
         <span
           class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400"
@@ -206,8 +205,8 @@
 
   <div class="mt-6">
     <app-table
-  *ngIf="auditorias.length > 0 || isLoading"
-  [data]="auditorias"
+  *ngIf="auditoriasOrdenadas.length > 0 || isLoading"
+  [data]="auditoriasOrdenadas"
   [columns]="tableColumns"
   [enableActions]="false"
   [sortBy]="sortBy"

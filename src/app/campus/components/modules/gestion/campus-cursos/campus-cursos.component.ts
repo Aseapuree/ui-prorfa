@@ -87,7 +87,7 @@ export class CampusCursosComponent {
   ngOnInit(): void {
   if (isPlatformBrowser(this.platformId)) {
     const saved = localStorage.getItem('itemsPerPageCursos');
-    this.itemsPerPage = saved ? parseInt(saved, 10) : 10;
+    this.itemsPerPage = saved ? parseInt(saved, 5) : 5;
   }
   this.cargarCursos();
 }
