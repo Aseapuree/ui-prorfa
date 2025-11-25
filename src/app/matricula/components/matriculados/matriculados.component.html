@@ -101,7 +101,7 @@
     </div>
 
     <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center">
+     <!--  <div class="flex items-center">
         <label for="itemsPerPage" class="text-sm font-medium text-gray-900 dark:text-gray-300 mr-2">Mostrar:</label>
         <select
           id="itemsPerPage"
@@ -111,7 +111,7 @@
           <option *ngFor="let option of [5, 10, 15]" [value]="option">{{ option }}</option>
         </select>
         <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">registros por página</span>
-      </div>
+      </div> -->
 
       <div class="flex flex-wrap items-center gap-2">
         <app-tooltip tooltipText="Buscar matrículas">
@@ -147,7 +147,7 @@
     </div>
   </div>
 
-  <app-table
+  <!--<app-table
     [data]="matriculados"
     [columns]="columns"
     [actions]="actions"
@@ -156,9 +156,18 @@
 
   <div *ngIf="!loading && matriculados.length === 0" class="text-center text-gray-500 dark:text-gray-400 mt-6 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md">
     No se encontraron datos con los filtros aplicados.
-  </div>
+  </div> -->
 
-  <div class="mt-6 flex items-center justify-between">
+  <app-table
+      *ngIf="matriculados.length > 0 || loading"
+      [data]="matriculados"
+      [columns]="columns"
+      [enableActions]="true"
+      [actions]="actions"
+      (sortChange)="onSearch($event)"
+    ></app-table>
+
+  <!--<div class="mt-6 flex items-center justify-between">
     <span *ngIf="!loading && totalPages > 0" class="text-sm text-gray-600 dark:text-gray-400">Página {{ currentPage }} de {{ totalPages }}</span>
     <app-pagination
       *ngIf="!loading && totalPages > 1"
@@ -166,7 +175,12 @@
       [totalPages]="totalPages"
       (pageChange)="onPageChange($event)"
     ></app-pagination>
-  </div>
+  </div>-->
+
+  <app-pagination
+      [totalPages]="totalPages"
+      (pageChange)="onPageChange($event)"
+    ></app-pagination>
 
   <app-general-loading-spinner [visible]="loading" [message]="spinnerMessage"></app-general-loading-spinner>
 

@@ -62,10 +62,7 @@ export class MatriculadosComponent implements OnInit {
   columns: ColumnConfig[] = [];
   actions: ActionConfig[] = [];
 
-  currentPage: number = 1;
   totalPages: number = 1;
-  pageSize: number = 5;
-  totalElements = 0;
 
   currentDate: string;
 
@@ -334,7 +331,6 @@ export class MatriculadosComponent implements OnInit {
 
     onEnterKey(event: any): void {
     if (event.key === 'Enter') {
-      this.currentPage = 1;
       this.onSearch();
     }
   }
@@ -342,10 +338,6 @@ export class MatriculadosComponent implements OnInit {
 
   // BÚSQUEDA CON BACKEND
   onSearch(sortEvent?: { sortBy: string, sortDir: string }): void {
-    // Solo reiniciamos página 1 cuando NO viene de paginación
-    if (!sortEvent) {
-      this.currentPage = 1;
-    }
 
     if (sortEvent) {
       this.currentSortField = sortEvent.sortBy;
@@ -365,11 +357,10 @@ export class MatriculadosComponent implements OnInit {
       fechaFin: this.filters.fechaFin || undefined,
     };
 
-    this.matriculaService.obtenerMatriculas(filters, this.currentPage - 1, this.pageSize)
+    this.matriculaService.obtenerMatriculas(filters)
       .pipe(
         switchMap((matriculas: Matricula[]) => {
           this.totalPages = this.matriculaService.totalPages || 1;
-          this.totalElements = this.matriculaService.totalElements || 0;
 
           if (!matriculas || matriculas.length === 0) {
             this.notificationService.showNotification('No se encontraron matrículas.', 'info');
@@ -457,8 +448,7 @@ export class MatriculadosComponent implements OnInit {
   }
 
     onPageChange(newPage: number): void {
-    if (newPage < 1 || newPage > this.totalPages || newPage === this.currentPage) return;
-    this.currentPage = newPage;
+    if (newPage < 1 || newPage > this.totalPages || newPage) return;
     this.onSearch();
   }
 
@@ -515,7 +505,6 @@ export class MatriculadosComponent implements OnInit {
     };
     this.gradosParaFiltro = [];
     this.seccionesParaFiltro = [];
-    this.currentPage = 1;
     this.currentSortField = null;
     this.currentSortDirection = null;
     this.onSearch();
