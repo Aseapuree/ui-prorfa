@@ -158,14 +158,27 @@
     No se encontraron datos con los filtros aplicados.
   </div> -->
 
-  <app-table
+  <!--<app-table
       *ngIf="matriculados.length > 0 || loading"
       [data]="matriculados"
       [columns]="columns"
       [enableActions]="true"
       [actions]="actions"
       (sortChange)="onSearch($event)"
-    ></app-table>
+    ></app-table>-->
+
+    <app-table
+    *ngIf="matriculados.length > 0 || loading"
+    [data]="matriculados"
+    [columns]="columns"
+    [enableActions]="true"
+    [actions]="actions"
+
+    [totalItems]="totalElements"
+    [itemsPerPage]="itemsPerPage"
+    (itemsPerPageChange)="onItemsPerPageChange($event)"
+
+    (sortChange)="onSearch($event)"></app-table>
 
   <!--<div class="mt-6 flex items-center justify-between">
     <span *ngIf="!loading && totalPages > 0" class="text-sm text-gray-600 dark:text-gray-400">Página {{ currentPage }} de {{ totalPages }}</span>
@@ -178,9 +191,10 @@
   </div>-->
 
   <app-pagination
-      [totalPages]="totalPages"
-      (pageChange)="onPageChange($event)"
-    ></app-pagination>
+  [page]="page"
+  [totalPages]="totalPages"
+  (pageChange)="onPageChange($event)"
+></app-pagination>
 
   <app-general-loading-spinner [visible]="loading" [message]="spinnerMessage"></app-general-loading-spinner>
 
