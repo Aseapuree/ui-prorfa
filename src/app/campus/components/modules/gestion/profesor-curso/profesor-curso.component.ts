@@ -66,7 +66,7 @@ import { ConfirmDeleteComponent } from '../../modals/confirm-delete/confirm-dele
 })
 export class ProfesorCursoComponent implements OnInit {
   public page: number = 1;
-  public itemsPerPage: number = 6;
+  public itemsPerPage: number = 5;
   totalPages: number = 1;
   asignaciones: any[] = [];
   keyword: string = '';
@@ -80,6 +80,10 @@ export class ProfesorCursoComponent implements OnInit {
   isValidFechaFin: boolean = true;
   currentYear: number = new Date().getFullYear();
   selectedAsignacion: any = null;
+  datosNGS: DatosNGS | null = null;
+nivelesParaFiltro: string[] = [];
+gradosParaFiltro: string[] = [];
+seccionesParaFiltro: SeccionVacantes[] = [];
 
   modal: {
     open: boolean;
@@ -115,7 +119,6 @@ export class ProfesorCursoComponent implements OnInit {
   niveles: string[] = [];
   grados: string[] = [];
   secciones: SeccionVacantes[] = [];
-  datosNGS: DatosNGS | null = null;
   fechaTipos = [
     { value: 'asignacion', label: 'Fecha Asignación' },
     { value: 'actualizacion', label: 'Fecha Actualización' },
@@ -209,8 +212,8 @@ export class ProfesorCursoComponent implements OnInit {
     this.cargarAsignaciones();
     this.cargarProfesores();
     this.cargarCursos();
-    this.cargarEntidadData();
     this.updateMaxDate();
+    this.cargarDatosEntidadParaFiltros();
   }
 
   // === MODALES ===
@@ -745,39 +748,43 @@ export class ProfesorCursoComponent implements OnInit {
     return isAnyFilterApplied && isValidInputs;
   }
 
-  private cargarEntidadData(): void {
-    this.entidadService.obtenerEntidadList().subscribe({
-      next: (entidades) => {
-        if (entidades.length > 0) {
-          const entidad = entidades[0];
-          if (entidad.datosngs) {
-            this.datosNGS = entidad.datosngs;
-            this.niveles =
-              this.datosNGS.niveles?.map((nivel) => nivel.nombre) || [];
-            this.onNivelChange();
-          } else {
-            this.notificationService.showNotification(
-              'No se encontraron datos de niveles, grados y secciones',
-              'info'
-            );
-          }
+  cargarDatosEntidadParaFiltros(): void {
+  const idUsuario = localStorage.getItem('IDUSER');
+  if (idUsuario) {
+    this.entidadService.obtenerEntidadPorUsuario(idUsuario).subscribe({
+      next: (entidad) => {
+        if (entidad && entidad.datosngs && entidad.datosngs.niveles) {
+          this.datosNGS = entidad.datosngs;
+
+          // Niveles
+          this.niveles = this.datosNGS.niveles!
+            .map(n => n.nombre)
+            .filter((nombre): nombre is string => !!nombre)
+            .sort();
+
+          this.notificationService.showNotification('Niveles cargados para los filtros.', 'success');
         } else {
-          this.notificationService.showNotification(
-            'No se encontraron entidades',
-            'info'
-          );
+          this.notificationService.showNotification('No se encontraron niveles en la entidad del usuario.', 'error');
+          this.niveles = [];
         }
-        this.cdr.detectChanges();
+        // Limpiar grados y secciones al cargar
+        this.gradosParaFiltro = [];
+        this.seccionesParaFiltro = [];
       },
       error: (err) => {
-        this.notificationService.showNotification(
-          'Error al cargar datos de entidad',
-          'error'
-        );
-        console.error('Error al cargar entidad:', err);
-      },
+        this.notificationService.showNotification('Error al cargar datos de entidad: ' + err.message, 'error');
+        this.niveles = [];
+        this.gradosParaFiltro = [];
+        this.seccionesParaFiltro = [];
+      }
     });
+  } else {
+    this.notificationService.showNotification('No se encontró el ID del usuario en localStorage.', 'error');
+    this.niveles = [];
+    this.gradosParaFiltro = [];
+    this.seccionesParaFiltro = [];
   }
+}
 
   onItemsPerPageChange(newSize: number): void {
     this.itemsPerPage = newSize;
@@ -820,37 +827,40 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   onNivelChange(): void {
-    this.grados = [];
-    this.secciones = [];
-    this.filters.grado = '';
-    this.filters.seccion = '';
+  this.filters.grado = '';
+  this.filters.seccion = '';
+  this.gradosParaFiltro = [];
+  this.seccionesParaFiltro = [];
 
-    if (this.filters.nivel && this.datosNGS) {
-      const selectedNivel = this.datosNGS.niveles?.find(
-        (n) => n.nombre === this.filters.nivel
-      );
-      this.grados = selectedNivel?.grados?.map((grado) => grado.nombre) || [];
+  if (this.filters.nivel && this.datosNGS?.niveles) {
+    const nivelSel = this.datosNGS.niveles.find(n => n.nombre === this.filters.nivel);
+    if (nivelSel?.grados) {
+      this.gradosParaFiltro = nivelSel.grados
+        .map(g => g.nombre)
+        .filter((nombre): nombre is string => !!nombre)
+        .sort((a, b) => {
+          const numA = parseInt(a, 10);
+          const numB = parseInt(b, 10);
+          return (isNaN(numA) || isNaN(numB)) ? a.localeCompare(b) : numA - numB;
+        });
     }
-    this.cdr.detectChanges();
   }
+}
 
   onGradoChange(): void {
-    this.secciones = [];
-    this.filters.seccion = '';
+  this.filters.seccion = '';
+  this.seccionesParaFiltro = [];
 
-    if (this.filters.nivel && this.filters.grado && this.datosNGS) {
-      const selectedNivel = this.datosNGS.niveles?.find(
-        (n) => n.nombre === this.filters.nivel
+  if (this.filters.nivel && this.filters.grado && this.datosNGS?.niveles) {
+    const nivelSel = this.datosNGS.niveles.find(n => n.nombre === this.filters.nivel);
+    const gradoSel = nivelSel?.grados?.find(g => g.nombre === this.filters.grado);
+    if (gradoSel?.secciones) {
+      this.seccionesParaFiltro = [...gradoSel.secciones].sort((a, b) => 
+        a.nombre.localeCompare(b.nombre)
       );
-      if (selectedNivel) {
-        const selectedGrado = selectedNivel.grados?.find(
-          (g) => g.nombre === this.filters.grado
-        );
-        this.secciones = selectedGrado?.secciones || [];
-      }
     }
-    this.cdr.detectChanges();
   }
+}
 
   resetFilter(filter: string): void {
     if (filter === 'all') {

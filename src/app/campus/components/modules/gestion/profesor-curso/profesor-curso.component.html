@@ -78,9 +78,7 @@
             }"
           >
             <option value="">Seleccionar nivel</option>
-            <option *ngFor="let nivel of niveles" [value]="nivel">
-              {{ nivel }}
-            </option>
+            <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
           </select>
           <div
             class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
@@ -125,9 +123,7 @@
             }"
           >
             <option value="">Seleccionar grado</option>
-            <option *ngFor="let grado of grados" [value]="grado">
-              {{ grado }}
-            </option>
+            <option *ngFor="let grado of gradosParaFiltro" [value]="grado">{{ grado }}</option>
           </select>
           <div
             class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
@@ -171,9 +167,9 @@
             }"
           >
             <option value="">Seleccionar sección</option>
-            <option *ngFor="let seccion of secciones" [value]="seccion.nombre">
-              {{ seccion.nombre }}
-            </option>
+            <option *ngFor="let seccion of seccionesParaFiltro" [value]="seccion.nombre">
+  {{ seccion.nombre }}
+</option>
             <!-- Se agrego .nombre para manejar la nueva estructura de entidad-->
           </select>
           <div

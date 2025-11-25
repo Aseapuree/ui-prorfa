@@ -70,7 +70,7 @@ interface AuditFilters {
 })
 export class AuditComponent implements OnInit {
   public page: number = 1;
-  public itemsPerPage: number = 10;
+  public itemsPerPage: number = 5;
   totalPages: number = 1;
 
   // Datos originales desde el backend
