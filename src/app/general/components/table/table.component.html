@@ -9,27 +9,29 @@
         >
           <!-- Sección de encabezado de la tabla -->
           <thead class="bg-table-header-bg">
-  <tr>
-    <!-- Encabezados de la tabla -->
-    <th
-      *ngFor="let column of columns"
-      class="py-3.5 px-4 md:px-2 text-sm font-normal text-center text-table-header-text max-w-[{{ column.maxWidth }}px] relative"
-      [ngClass]="{
-        'cursor-pointer': column.sortable
-      }"
-      (click)="column.sortable && onSort(column.field)"
-    >
-      {{ column.header }}
-    </th>
-    <!-- Columna de acciones -->
-    <th
-      *ngIf="enableActions && actions.length > 0"
-      class="py-3.5 px-4 md:px-2 text-sm font-normal text-center text-table-header-text max-w-[100px] relative"
-    >
-      ACCIONES
-    </th>
-  </tr>
-</thead>
+            <tr>
+              <!-- Encabezados de la tabla -->
+              <th
+                *ngFor="let column of columns"
+                class="py-3.5 px-4 md:px-2 text-sm font-normal text-center text-table-header-text max-w-[{{
+                  column.maxWidth
+                }}px] relative"
+                [ngClass]="{
+                  'cursor-pointer': column.sortable
+                }"
+                (click)="column.sortable && onSort(column.field)"
+              >
+                {{ column.header }}
+              </th>
+              <!-- Columna de acciones -->
+              <th
+                *ngIf="enableActions && actions.length > 0"
+                class="py-3.5 px-4 md:px-2 text-sm font-normal text-center text-table-header-text max-w-[100px] relative"
+              >
+                ACCIONES
+              </th>
+            </tr>
+          </thead>
           <!-- Sección de datos de la tabla -->
           <tbody
             class="bg-table-row-bg divide-y divide-gray-200 dark:divide-gray-700 dark:bg-table-row-bg"
@@ -42,12 +44,29 @@
                   column.maxWidth
                 }}px] truncate"
               >
-                <ng-container
-                  *ngIf="column.type === 'date'; else defaultContent"
-                >
-                  {{ item[column.field] | date : "yyyy-MM-dd HH:mm" }}
+                <ng-container *ngIf="column.preview; else existingContent">
+                  <div class="relative group cursor-default">
+                    <span class="block truncate pr-8">
+                      <ng-container
+                        *ngIf="column.transform; else simpleTextPreview"
+                      >
+                        {{ column.transform(item[column.field]) }}
+                      </ng-container>
+                      <ng-template #simpleTextPreview>
+                        {{ truncateText(item[column.field]) }}
+                      </ng-template>
+                    </span>
+                    <fa-icon
+                      [icon]="['fas', 'eye']"
+                      class="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500 cursor-pointer h-4 w-4"
+                      (click)="
+                        onPreviewClick(item, column.field);
+                        $event.stopPropagation()
+                      "
+                    ></fa-icon>
+                  </div>
                 </ng-container>
-                <ng-template #defaultContent>
+                <ng-template #existingContent>
                   <ng-container *ngIf="column.transform; else simpleText">
                     <ng-container
                       *ngIf="

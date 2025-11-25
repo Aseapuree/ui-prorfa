@@ -11,7 +11,6 @@ export class Entidad {
   datosngs?: DatosNGS;
 }
 
-
 export interface DatosNGS {
   niveles?: Nivel[];
 }
@@ -31,27 +30,17 @@ export interface SeccionVacantes {
   vacantes: number;
 }
 
-
-export class DocumentoEntidad {
-  necesarios?: Necesarios;
-  adicionales?: Adicionales;
+export interface DocumentoEntidad {
+  categorias?: CategoriaDocumento[];
 }
 
-export class Necesarios {
-  documento1?: string; // DOCUMENTO QUE ACREDITA IDENTIDAD ALUMNO
-  documento2?: string; // DOCUMENTO QUE ACREDITA IDENTIDAD APODERADO
+export interface CategoriaDocumento {
+  nombre: string;
+  documentos?: string[];
+  subCategorias?: SubCategoria[];
 }
 
-export class Adicionales {
-  intercambio?: Intercambio;
-  discapacidad?: Discapacidad;
-}
-
-export class Intercambio {
-  documento1?: string; // CERTIFICADO DE ESTUDIOS
-  documento2?: string; // BOLETA DE NOTAS
-}
-
-export class Discapacidad {
-  documento1?: string; // CERTIFICADO DE DISCAPACIDAD
+export interface SubCategoria {
+  nombre: string;
+  documentos?: string[];
 }

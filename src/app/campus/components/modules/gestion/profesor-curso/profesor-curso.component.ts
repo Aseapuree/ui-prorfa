@@ -158,7 +158,7 @@ export class ProfesorCursoComponent implements OnInit {
     },
   ];
 
-  
+
 
   // Configuración de acciones para la tabla
   tableActions: ActionConfig[] = [
@@ -250,7 +250,7 @@ export class ProfesorCursoComponent implements OnInit {
 
   const date = new Date(dateStr);
   const [year, month, day] = dateStr.split('-').map(Number);
-  
+
   // Validar formato y rango
   const isValid =
     !isNaN(date.getTime()) &&

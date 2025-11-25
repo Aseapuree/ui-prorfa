@@ -3,7 +3,7 @@ import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, ViewChildr
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { EntidadService } from '../../services/entidad.service';
-import { Entidad, DatosNGS, DocumentoEntidad, Nivel, Grado, SeccionVacantes } from '../../interfaces/DTOEntidad';
+import { Entidad, DatosNGS, DocumentoEntidad, Nivel, Grado, SeccionVacantes, CategoriaDocumento, SubCategoria } from '../../interfaces/DTOEntidad';
 import { HttpClientModule } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
@@ -43,22 +43,20 @@ export class EntidadComponent implements OnInit {
   archivoLogoSeleccionado: File | null = null;
   @ViewChild('logoInput') inputLogo?: ElementRef<HTMLInputElement>;
   @ViewChildren('carouselViewport') carouselViewports!: QueryList<ElementRef>;
-  carouselPositions: number[] = []; // Posición actual de cada carrusel por nivel
-  visibleCards: number[] = []; // Número de tarjetas visibles por nivel
-  cardWidth = 150 + 16; // Ancho de la tarjeta (150px) + gap (1rem = 16px)
-  keysNecesarios: string[] = ['documento1', 'documento2'];
-  keysAdicionales: string[] = ['intercambio', 'discapacidad'];
-  keysDocumentosAdicionalesMap: { [key: string]: string[] } = {
-    'intercambio': ['documento1', 'documento2'],
-    'discapacidad': ['documento1']
-  };
+  carouselPositions: number[] = [];
+  visibleCards: number[] = [];
+  cardWidth = 150 + 16;
+  keysNecesarios: string[] = [];
+  keysAdicionales: string[] = [];
+  keysDocumentosAdicionalesMap: { [key: string]: string[] } = {};
   positionNecesarios: number = 0;
   positionAdicionales: number = 0;
-  itemHeight = 100; // Altura aproximada de cada item
+  itemHeight = 100;
   @ViewChild('necesariosViewport') necesariosViewport?: ElementRef;
   @ViewChild('necesariosContent') necesariosContent?: ElementRef;
   @ViewChild('adicionalesViewport') adicionalesViewport?: ElementRef;
   @ViewChild('adicionalesContent') adicionalesContent?: ElementRef;
+  @ViewChildren('categoriaContainer') categoriaContainers!: QueryList<ElementRef>;
 
   constructor(
     private entidadService: EntidadService,
@@ -85,7 +83,6 @@ export class EntidadComponent implements OnInit {
   }
 
   private updateDarkMode(): void {
-    // Agregar o quitar clase 'dark'
     if (this.isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -112,7 +109,7 @@ export class EntidadComponent implements OnInit {
     if (this.entidad?.datosngs?.niveles) {
       this.carouselPositions = new Array(this.entidad.datosngs.niveles.length).fill(0);
       this.visibleCards = new Array(this.entidad.datosngs.niveles.length).fill(0);
-      this.cdRef.detectChanges(); // Asegura que la UI se actualice
+      this.cdRef.detectChanges();
       this.updateVisibleCards();
     } else {
       this.carouselPositions = [];
@@ -120,7 +117,7 @@ export class EntidadComponent implements OnInit {
     }
   }
 
-  // Obtiene la transformación translateX para el carrusel
+  // Obtiene la transformación para el carrusel
   getTranslateX(nivelIndex: number): number {
     return -this.carouselPositions[nivelIndex] * this.cardWidth;
   }
@@ -178,7 +175,7 @@ export class EntidadComponent implements OnInit {
     this.entidadService.obtenerEntidadPorUsuario(id).pipe(
       finalize(() => {
         this.cargando = false;
-        this.inicializarCarruseles(); // Inicializa los carruseles después de cargar datos
+        this.inicializarCarruseles();
         this.cdRef.detectChanges();
       })
     ).subscribe({
@@ -207,12 +204,6 @@ export class EntidadComponent implements OnInit {
     if (this.entidad) {
       this.crearFormularioDeEntidad(this.entidad);
     }
-    this.keysNecesarios = ['documento1', 'documento2'];
-    this.keysAdicionales = ['intercambio', 'discapacidad'];
-    this.keysDocumentosAdicionalesMap = {
-      'intercambio': ['documento1', 'documento2'],
-      'discapacidad': ['documento1']
-    };
     this.carouselPositions = new Array(this.carouselPositions.length).fill(0);
     this.cdRef.detectChanges();
     this.updateVisibleCards();
@@ -225,7 +216,7 @@ export class EntidadComponent implements OnInit {
     return;
   }
 
-  // Verificar que entidad no sea null y que tenga identidad
+  // Verificar que entidad no sea null
   if (!this.entidad || !this.entidad.identidad) {
     this.notificationService.showNotification('Error: No se puede identificar la entidad a actualizar.', 'error');
     return;
@@ -234,13 +225,14 @@ export class EntidadComponent implements OnInit {
   this.guardando = true;
   this.mensajeSpinner = 'Guardando cambios...';
 
-  // Primero subir el logo si es necesario
   this.subirLogoSiEsNecesario()
     .then(() => {
-      // Después de subir el logo (si era necesario), continuar con el guardado normal
-      const cambios = this.obtenerValoresModificados(this.formularioEntidad);
+      let cambios = this.obtenerValoresModificados(this.formularioEntidad);
 
-      // Asegurarse de que siempre se incluya la identidad
+      if (cambios.documentos) {
+        cambios.documentos = this.transformarDocumentosToNewFormat(cambios.documentos);
+      }
+
       if (!cambios.identidad && this.entidad?.identidad) {
         cambios.identidad = this.entidad.identidad;
       }
@@ -261,7 +253,6 @@ export class EntidadComponent implements OnInit {
         });
       }
 
-      // Usamos una variable local con aserción de tipo para evitar el error de TypeScript
       const entidadId: string = this.entidad!.identidad!;
 
       this.entidadService.editarEntidad(entidadId, cambios).pipe(
@@ -288,6 +279,50 @@ export class EntidadComponent implements OnInit {
     });
 }
 
+  private transformarDocumentosToNewFormat(oldDoc: any): DocumentoEntidad {
+    const categorias: CategoriaDocumento[] = [];
+
+    // Necesarios
+    const nec = oldDoc.necesarios;
+    const nombreNec = nec.nombre ? nec.nombre.trim() : '';
+    const docsNec = Object.entries(nec).filter(([k, v]: [string, any]) => k !== 'nombre' && v && v.trim() !== '').map(([, v]) => v) as string[];
+    if (docsNec.length > 0 && nombreNec !== '') {
+      categorias.push({
+        nombre: nombreNec,
+        documentos: docsNec,
+        subCategorias: []
+      });
+    }
+
+    // Adicionales
+    const add = oldDoc.adicionales;
+    const nombreAdd = add.nombre ? add.nombre.trim() : '';
+    const subCats: SubCategoria[] = [];
+    Object.keys(add).forEach((key: string) => {
+      if (key !== 'nombre') {
+        const sub = add[key];
+        const nombreSub = sub.nombre ? sub.nombre.trim() : '';
+        const docsSub = Object.entries(sub).filter(([k, v]: [string, any]) => k !== 'nombre' && v && v.trim() !== '').map(([, v]) => v) as string[];
+        if (docsSub.length > 0 && nombreSub !== '') {
+          subCats.push({
+            nombre: nombreSub,
+            documentos: docsSub
+          });
+        }
+      }
+    });
+
+    if (subCats.length > 0 && nombreAdd !== '') {
+      categorias.push({
+        nombre: nombreAdd,
+        documentos: [],
+        subCategorias: subCats
+      });
+    }
+
+    return { categorias };
+  }
+
   private esValidoModificado(control: AbstractControl): boolean {
     if (control instanceof FormGroup) {
       return Object.keys(control.controls).every(key => {
@@ -313,7 +348,6 @@ export class EntidadComponent implements OnInit {
       const child = control.get(key)!;
       if (child.dirty) {
         if (child instanceof FormGroup) {
-          // Enviar el objeto completo si algún campo del formulario anidado está modificado
           cambios[key] = child.value;
         } else if (child instanceof FormArray) {
           cambios[key] = child.value;
@@ -361,27 +395,52 @@ export class EntidadComponent implements OnInit {
   }
 
   crearFormGroupDocumentos(documentos?: DocumentoEntidad): FormGroup {
-    const necesariosGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
-    this.keysNecesarios.forEach(key => {
-      necesariosGroup.addControl(key, this.fb.control(((documentos?.necesarios as any)?.[key] ?? '').toUpperCase(), Validators.required));
-    });
+  const necesariosGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
+  const adicionalesGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
 
-    const adicionalesGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({});
-    this.keysAdicionales.forEach(catKey => {
+  if (documentos?.categorias) {
+    // Buscar categoría "Necesarios"
+    const catNecesarios = documentos.categorias.find(c => c.nombre.toLowerCase() === 'necesarios');
+    necesariosGroup.addControl('nombre', this.fb.control(catNecesarios ? catNecesarios.nombre.toUpperCase() : '', Validators.required));
+    const docsNecesarios = catNecesarios?.documentos || [];
+    docsNecesarios.forEach((doc, i) => {
+      const key = `documento${i + 1}`;
+      necesariosGroup.addControl(key, this.fb.control(doc.toUpperCase(), Validators.required));
+    });
+    this.keysNecesarios = docsNecesarios.map((_, i) => `documento${i + 1}`);
+
+    // Buscar categoría "Adicionales"
+    const catAdicionales = documentos.categorias.find(c => c.nombre.toLowerCase() === 'adicionales');
+    adicionalesGroup.addControl('nombre', this.fb.control(catAdicionales ? catAdicionales.nombre.toUpperCase() : '', Validators.required));
+    const subCats = catAdicionales?.subCategorias || [];
+    subCats.forEach((sub, i) => {
+      const catKey = sub.nombre.toLowerCase();
       const catGroup = this.fb.group<{ [key: string]: AbstractControl<any, any> }>({
-        nombre: this.fb.control(((documentos?.adicionales as any)?.[catKey]?.nombre ?? catKey.charAt(0).toUpperCase() + catKey.slice(1)).toUpperCase())
+        nombre: this.fb.control(sub.nombre.toUpperCase(), Validators.required)
       });
-      this.keysDocumentosAdicionalesMap[catKey].forEach(docKey => {
-        catGroup.addControl(docKey, this.fb.control(((documentos?.adicionales as any)?.[catKey]?.[docKey] ?? '').toUpperCase()));
-      });
+      if (sub.documentos && sub.documentos.length > 0) {
+        sub.documentos.forEach((doc, j) => {
+          const docKey = `documento${j + 1}`;
+          catGroup.addControl(docKey, this.fb.control(doc.toUpperCase()));
+        });
+        this.keysDocumentosAdicionalesMap[catKey] = sub.documentos.map((_, j) => `documento${j + 1}`);
+      }
       adicionalesGroup.addControl(catKey, catGroup);
     });
-
-    return this.fb.group({
-      necesarios: necesariosGroup,
-      adicionales: adicionalesGroup
-    });
+    this.keysAdicionales = subCats.map(s => s.nombre.toLowerCase());
+  } else {
+    necesariosGroup.addControl('nombre', this.fb.control('', Validators.required));
+    adicionalesGroup.addControl('nombre', this.fb.control('', Validators.required));
+    this.keysNecesarios = [];
+    this.keysAdicionales = [];
+    this.keysDocumentosAdicionalesMap = {};
   }
+
+  return this.fb.group({
+    necesarios: necesariosGroup,
+    adicionales: adicionalesGroup
+  });
+}
 
   keysDocumentosAdicionales(catKey: string): string[] {
     return this.keysDocumentosAdicionalesMap[catKey] || [];
@@ -392,17 +451,40 @@ export class EntidadComponent implements OnInit {
     const newKey = `documento${this.keysNecesarios.length + 1}`;
     necesarios.addControl(newKey, this.fb.control('', Validators.required));
     this.keysNecesarios.push(newKey);
+    necesarios.markAsDirty();
     this.cdRef.detectChanges();
-    this.positionNecesarios = 0;
+    const newIndex = this.keysNecesarios.length - 1;
+    const newElement = this.necesariosContent?.nativeElement.children[newIndex] as HTMLElement;
+    if (newElement) {
+      const elementTop = newElement.offsetTop;
+      const viewportHeight = this.necesariosViewport?.nativeElement.clientHeight || 0;
+      const elementHeight = newElement.offsetHeight;
+      if (elementTop + elementHeight > this.positionNecesarios + viewportHeight) {
+        this.positionNecesarios = elementTop + elementHeight - viewportHeight;
+      }
+      this.positionNecesarios = Math.max(0, Math.min(this.positionNecesarios, this.getMaxScrollNecesarios()));
+      this.cdRef.detectChanges();
+    }
   }
 
   eliminarDocumentoNecesario(i: number): void {
     const necesarios = this.formularioEntidad.get('documentos.necesarios') as FormGroup;
     const key = this.keysNecesarios[i];
+    const necElement = this.necesariosContent?.nativeElement.children[i] as HTMLElement;
+    let deletedTop = 0;
+    let deletedHeight = this.itemHeight;
+    if (necElement) {
+      deletedTop = necElement.offsetTop;
+      deletedHeight = necElement.offsetHeight;
+    }
     necesarios.removeControl(key);
     this.keysNecesarios.splice(i, 1);
+    necesarios.markAsDirty();
     this.cdRef.detectChanges();
-    this.positionNecesarios = Math.min(this.positionNecesarios, this.getMaxScrollNecesarios());
+    if (deletedTop + deletedHeight <= this.positionNecesarios) {
+      this.positionNecesarios -= deletedHeight;
+    }
+    this.positionNecesarios = Math.max(0, Math.min(this.positionNecesarios, this.getMaxScrollNecesarios()));
   }
 
   agregarCategoriaAdicional(): void {
@@ -415,18 +497,39 @@ export class EntidadComponent implements OnInit {
     adicionales.addControl(newKey, newGroup);
     this.keysAdicionales.push(newKey);
     this.keysDocumentosAdicionalesMap[newKey] = ['documento1'];
+    adicionales.markAsDirty();
     this.cdRef.detectChanges();
-    this.positionAdicionales = 0;
+    const newIndex = this.keysAdicionales.length - 1;
+    const newElement = this.categoriaContainers.toArray()[newIndex].nativeElement;
+    const elementTop = newElement.offsetTop;
+    const viewportHeight = this.adicionalesViewport?.nativeElement.clientHeight || 0;
+    const elementHeight = newElement.offsetHeight;
+    if (elementTop + elementHeight > this.positionAdicionales + viewportHeight) {
+      this.positionAdicionales = elementTop + elementHeight - viewportHeight;
+    }
+    this.positionAdicionales = Math.max(0, Math.min(this.positionAdicionales, this.getMaxScrollAdicionales()));
+    this.cdRef.detectChanges();
   }
 
   eliminarCategoriaAdicional(catIndex: number): void {
     const adicionales = this.formularioEntidad.get('documentos.adicionales') as FormGroup;
     const key = this.keysAdicionales[catIndex];
+    const catElement = this.adicionalesContent?.nativeElement.children[catIndex] as HTMLElement;
+    let deletedTop = 0;
+    let deletedHeight = this.itemHeight;
+    if (catElement) {
+      deletedTop = catElement.offsetTop;
+      deletedHeight = catElement.offsetHeight;
+    }
     adicionales.removeControl(key);
     this.keysAdicionales.splice(catIndex, 1);
     delete this.keysDocumentosAdicionalesMap[key];
+    adicionales.markAsDirty();
     this.cdRef.detectChanges();
-    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
+    if (deletedTop + deletedHeight <= this.positionAdicionales) {
+      this.positionAdicionales -= deletedHeight;
+    }
+    this.positionAdicionales = Math.max(0, Math.min(this.positionAdicionales, this.getMaxScrollAdicionales()));
   }
 
   agregarDocumentoAdicional(catKey: string): void {
@@ -434,17 +537,53 @@ export class EntidadComponent implements OnInit {
     const newKey = `documento${this.keysDocumentosAdicionalesMap[catKey].length + 1}`;
     categoria.addControl(newKey, this.fb.control(''));
     this.keysDocumentosAdicionalesMap[catKey].push(newKey);
+    categoria.markAsDirty();
     this.cdRef.detectChanges();
-    this.positionAdicionales = 0;
+    const catIndex = this.keysAdicionales.indexOf(catKey);
+    if (catIndex > -1) {
+      const catElement = this.categoriaContainers.toArray()[catIndex].nativeElement;
+      const docElements = catElement.querySelectorAll('.seccion-container');
+      const newDocElement = docElements[docElements.length - 1] as HTMLElement;
+      if (newDocElement) {
+        const docTop = newDocElement.offsetTop;
+        const catTop = catElement.offsetTop;
+        const absoluteDocTop = catTop + docTop;
+        const docHeight = newDocElement.offsetHeight;
+        const viewportHeight = this.adicionalesViewport?.nativeElement.clientHeight || 0;
+        if (absoluteDocTop + docHeight > this.positionAdicionales + viewportHeight) {
+          this.positionAdicionales = absoluteDocTop + docHeight - viewportHeight;
+        }
+        this.positionAdicionales = Math.max(0, Math.min(this.positionAdicionales, this.getMaxScrollAdicionales()));
+        this.cdRef.detectChanges();
+      }
+    }
   }
 
   eliminarDocumentoAdicional(catKey: string, docIndex: number): void {
     const categoria = this.formularioEntidad.get('documentos.adicionales.' + catKey) as FormGroup;
     const docKey = this.keysDocumentosAdicionalesMap[catKey][docIndex];
+    const catIndex = this.keysAdicionales.indexOf(catKey);
+    let deletedTop = 0;
+    let deletedHeight = this.itemHeight;
+    if (catIndex !== -1 && this.adicionalesContent) {
+      const catElement = this.adicionalesContent.nativeElement.children[catIndex] as HTMLElement;
+      if (catElement) {
+        const docElements = catElement.querySelectorAll('.seccion-container');
+        const docElement = docElements[docIndex] as HTMLElement;
+        if (docElement) {
+          deletedTop = catElement.offsetTop + docElement.offsetTop;
+          deletedHeight = docElement.offsetHeight;
+        }
+      }
+    }
     categoria.removeControl(docKey);
     this.keysDocumentosAdicionalesMap[catKey].splice(docIndex, 1);
+    categoria.markAsDirty();
     this.cdRef.detectChanges();
-    this.positionAdicionales = Math.min(this.positionAdicionales, this.getMaxScrollAdicionales());
+    if (deletedTop + deletedHeight <= this.positionAdicionales) {
+      this.positionAdicionales -= deletedHeight;
+    }
+    this.positionAdicionales = Math.max(0, Math.min(this.positionAdicionales, this.getMaxScrollAdicionales()));
   }
 
   crearFormGroupDatosNgs(datos?: DatosNGS): FormGroup {
@@ -545,7 +684,7 @@ export class EntidadComponent implements OnInit {
     });
     this.niveles().push(nuevoNivel);
     this.niveles().markAsDirty();
-    this.carouselPositions.push(0); // Añade posición inicial para el nuevo nivel
+    this.carouselPositions.push(0);
     this.visibleCards.push(0);
     this.cdRef.detectChanges();
     this.updateVisibleCards();
@@ -573,7 +712,7 @@ export class EntidadComponent implements OnInit {
   eliminarNivel(nivelIndex: number): void {
     this.niveles().removeAt(nivelIndex);
     this.niveles().markAsDirty();
-    this.carouselPositions.splice(nivelIndex, 1); // Actualiza las posiciones del carrusel
+    this.carouselPositions.splice(nivelIndex, 1);
     this.visibleCards.splice(nivelIndex, 1);
     this.cdRef.detectChanges();
     this.updateVisibleCards();
@@ -582,7 +721,6 @@ export class EntidadComponent implements OnInit {
   eliminarGrado(nivelIndex: number, gradoIndex: number): void {
     this.grados(nivelIndex).removeAt(gradoIndex);
     this.grados(nivelIndex).markAsDirty();
-    // Reinicia la posición del carrusel si es necesario
     if (this.carouselPositions[nivelIndex] > 0) {
       const numGrados = this.grados(nivelIndex).length;
       const visible = this.visibleCards[nivelIndex] || (this.editando ? 6 : 3);
@@ -709,7 +847,6 @@ export class EntidadComponent implements OnInit {
   private subirLogoSiEsNecesario(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (this.archivoLogoSeleccionado && this.entidad?.identidad) {
-      // Usamos una variable local con aserción de tipo para evitar el error de TypeScript
       const entidadId: string = this.entidad!.identidad!;
 
       this.entidadService.subirLogo(entidadId, this.archivoLogoSeleccionado)

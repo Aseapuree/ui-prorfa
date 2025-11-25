@@ -16,16 +16,13 @@ export class EntidadService {
 
   private handleError(error: HttpErrorResponse) {
     if (error.error instanceof ErrorEvent) {
-      console.error('Ocurrió un error:', error.error.message);
+      console.error('Error del cliente:', error.error.message);
     } else {
-      console.error(
-        `Backend returned code ${error.status}, ` +
-        `body was: ${JSON.stringify(error.error)}`);
+      console.error('Error del servidor:', error.status, error.message);
     }
     return throwError(() => new Error('Ocurrió un error inesperado; por favor, inténtelo de nuevo más tarde.'));
   }
 
-  // Nuevo servicio para obtener datos de la entidad por el ID del usuario
   obtenerEntidadPorUsuario(id: string): Observable<Entidad> {
   return this.http.get<DTOResponse<Entidad>>(`${this.urlBase}/usuario/${id}`, { withCredentials: true })
     .pipe(
@@ -33,7 +30,6 @@ export class EntidadService {
         if (response && response.data) {
           return response.data;
         } else {
-          console.error('Estructura de respuesta inesperada para obtenerEntidadPorUsuario', response);
           throw new Error('No se pudieron recuperar los datos de la entidad para el usuario');
         }
       }),
@@ -48,7 +44,6 @@ export class EntidadService {
           if (response && response.data && response.data.content) {
             return response.data.content as Entidad[];
           } else {
-            console.error('Estructura de respuesta inesperada para obtenerEntidadList', response);
             return [];
           }
         }),
@@ -63,7 +58,6 @@ export class EntidadService {
            if (response && response.data) {
             return response.data as Entidad;
           } else {
-            console.error('Estructura de respuesta inesperada para obtenerEntidad', response);
             throw new Error('No se pudieron recuperar los datos de la entidad');
           }
         }),
@@ -78,7 +72,6 @@ export class EntidadService {
            if (response && response.data) {
             return response.data;
           } else {
-            console.error('Estructura de respuesta inesperada para agregarEntidad', response);
             throw new Error('No se pudo agregar la entidad');
           }
         }),
@@ -93,7 +86,6 @@ export class EntidadService {
            if (response && response.data) {
             return response.data;
           } else {
-            console.error('Estructura de respuesta inesperada para editarEntidad', response);
             throw new Error('No se pudo editar la entidad');
           }
         }),
@@ -119,7 +111,6 @@ export class EntidadService {
         if (response && response.data) {
           return response.data;
         } else {
-          console.error('Estructura de respuesta inesperada para subirLogo', response);
           throw new Error('No se pudo subir el logo');
         }
       }),

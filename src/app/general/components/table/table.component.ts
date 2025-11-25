@@ -11,7 +11,8 @@ export interface ColumnConfig {
   maxWidth: number;
   sortable?: boolean;
   type?: 'text' | 'date';
-  transform?: (value: any) => string; // Nueva propiedad para transformar el valor
+  transform?: (value: any) => string;
+  preview?: boolean; // Nueva propiedad: true para activar truncado + icono de vista en hover
 }
 
 export interface ActionConfig {
@@ -38,6 +39,18 @@ export class TableComponent {
   @Input() sortBy: string = '';
   @Input() sortDir: string = 'asc';
   @Output() sortChange = new EventEmitter<{ sortBy: string, sortDir: string }>();
+  @Output() previewClick = new EventEmitter<{ item: any; field: string }>();
+
+  onPreviewClick(item: any, field: string): void {
+    this.previewClick.emit({ item, field });
+  }
+
+  truncateText(value: any): string {
+    if (typeof value === 'string' && value.length > 50) {
+      return value.substring(0, 50) + '...';
+    }
+    return value || '';
+  }
 
   // Código existente
   showCompetenciasModal(item: any): void {
