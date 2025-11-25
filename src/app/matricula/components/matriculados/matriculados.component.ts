@@ -62,6 +62,9 @@ export class MatriculadosComponent implements OnInit {
   columns: ColumnConfig[] = [];
   actions: ActionConfig[] = [];
 
+  page: number = 1;
+  itemsPerPage: number = 5;
+  totalElements: number = 0;
   totalPages: number = 1;
 
   currentDate: string;
@@ -169,7 +172,17 @@ export class MatriculadosComponent implements OnInit {
     this.cargarDatosEntidadParaFiltros();
     this.onSearch();
   }
+//****************************************** */
+onItemsPerPageChange(newSize: number): void {
+  // Forzamos que el cambio ocurra en el próximo ciclo de detección
+  setTimeout(() => {
+    this.itemsPerPage = newSize;
+    this.page = 1;
+    this.onSearch();
+  });
+}
 
+//****************************************** */
   cargarDatosEntidadParaFiltros(): void {
     const idUsuario = localStorage.getItem('IDUSER');
     if (idUsuario) {
@@ -337,61 +350,67 @@ export class MatriculadosComponent implements OnInit {
 
 
   // BÚSQUEDA CON BACKEND
-  onSearch(sortEvent?: { sortBy: string, sortDir: string }): void {
-
-    if (sortEvent) {
-      this.currentSortField = sortEvent.sortBy;
-      this.currentSortDirection = sortEvent.sortDir as 'asc' | 'desc';
-    }
-
-    this.loading = true;
-    this.spinnerMessage = 'Buscando matrículas...';
-
-    const filters: any = {
-      codigomatricula: this.filters.codigomatricula || undefined,
-      codigopago: this.filters.codigopago || undefined,
-      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
-      grado: this.filters.grado || undefined,
-      seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
-      fechaInicio: this.filters.fechaInicio || undefined,
-      fechaFin: this.filters.fechaFin || undefined,
-    };
-
-    this.matriculaService.obtenerMatriculas(filters)
-      .pipe(
-        switchMap((matriculas: Matricula[]) => {
-          this.totalPages = this.matriculaService.totalPages || 1;
-
-          if (!matriculas || matriculas.length === 0) {
-            this.notificationService.showNotification('No se encontraron matrículas.', 'info');
-            return of([]);
-          }
-
-          const observables = matriculas.map(m => this.enriquecerMatricula(m));
-          return forkJoin(observables);
-        })
-      )
-      .subscribe({
-        next: (data) => {
-          this.matriculados = data;
-
-          if (this.currentSortField && this.currentSortDirection) {
-            this.ordenarLocalmente();
-          }
-
-          this.loading = false;
-          const mensaje = data.length === 0
-            ? 'No se encontraron matrículas con los filtros aplicados.'
-            : 'Matrículas cargadas exitosamente.';
-          this.notificationService.showNotification(mensaje, data.length === 0 ? 'info' : 'success');
-        },
-        error: (err) => {
-          this.loading = false;
-          this.notificationService.showNotification('Error al cargar matrículas: ' + err.message, 'error');
-        }
-      });
+  onSearch(sortEvent?: { sortBy: string, sortDir: string }, newPage?: number): void {
+  if (newPage && newPage >= 1 && newPage <= this.totalPages) {
+    this.page = newPage;
   }
 
+  if (sortEvent) {
+    this.currentSortField = sortEvent.sortBy;
+    this.currentSortDirection = sortEvent.sortDir as 'asc' | 'desc';
+  }
+
+  this.loading = true;
+  this.spinnerMessage = 'Buscando matrículas...';
+
+  const filters: any = {
+    codigomatricula: this.filters.codigomatricula || undefined,
+    codigopago: this.filters.codigopago || undefined,
+    nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+    grado: this.filters.grado || undefined,
+    seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
+    fechaInicio: this.filters.fechaInicio || undefined,
+    fechaFin: this.filters.fechaFin || undefined,
+  };
+
+  this.matriculaService.obtenerMatriculas(filters, this.page - 1, this.itemsPerPage)
+    .pipe(
+      switchMap((matriculas: Matricula[]) => {
+        this.totalElements = this.matriculaService.totalElements;
+        this.totalPages = this.matriculaService.totalPages || 1;
+
+        if (!matriculas || matriculas.length === 0) {
+          this.notificationService.showNotification('No se encontraron matrículas.', 'info');
+          return of([]);
+        }
+
+        const observables = matriculas.map(m => this.enriquecerMatricula(m));
+        return forkJoin(observables);
+      })
+    )
+    .subscribe({
+      next: (data) => {
+        this.matriculados = data;
+
+        if (this.currentSortField && this.currentSortDirection) {
+          this.ordenarLocalmente();
+        }
+
+        this.loading = false;
+        const mensaje = data.length === 0
+          ? 'No se encontraron matrículas con los filtros aplicados.'
+          : `Mostrando ${data.length} de ${this.totalElements} matrículas.`;
+        this.notificationService.showNotification(mensaje, data.length === 0 ? 'info' : 'success');
+      },
+      error: (err) => {
+        this.loading = false;
+        this.matriculados = [];
+        this.totalElements = 0;
+        this.totalPages = 1;
+        this.notificationService.showNotification('Error al cargar matrículas: ' + err.message, 'error');
+      }
+    });
+}
 
     private enriquecerMatricula(matricula: Matricula): Observable<MatriculadoDisplay> {
     const apoderado$ = matricula.idapoderado
@@ -448,9 +467,10 @@ export class MatriculadosComponent implements OnInit {
   }
 
     onPageChange(newPage: number): void {
-    if (newPage < 1 || newPage > this.totalPages || newPage) return;
-    this.onSearch();
-  }
+  if (newPage >= 1 && newPage <= this.totalPages && newPage !== this.page) {
+    this.page = newPage;
+    this.onSearch(undefined, newPage);
+  }}
 
   continueMatricula(matricula: MatriculadoDisplay): void {
     const estadoActual = matricula.estadoMatricula?.trim().toUpperCase();
