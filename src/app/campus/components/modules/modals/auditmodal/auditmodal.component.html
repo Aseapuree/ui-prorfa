@@ -1,0 +1,66 @@
+<div
+  class="fixed inset-0 flex items-center justify-center z-50 bg-black/50"
+  (click)="onClose()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-labelledby]="titleId"
+>
+  <div
+    class="bg-white dark:bg-gray-900 rounded-lg p-6 w-full mx-4 max-h-[80vh] overflow-y-auto relative shadow-xl {{ modalSizeClass }} {{ customClass }}"
+    [class.max-w-lg]="maxWidth === 'lg'"
+    [class.max-w-md]="maxWidth === 'md'"
+    [class.max-w-sm]="maxWidth === 'sm'"
+    [class.max-w-xl]="maxWidth === 'xl'"
+    [class.max-w-2xl]="maxWidth === '2xl'"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h3
+        class="text-lg font-medium leading-6 text-gray-800 dark:text-white"
+        [id]="titleId"
+      >
+        {{ title }}
+      </h3>
+    </div>
+
+    <!-- Contenido dinámico -->
+    <div class="mt-2 mb-6">
+      <ng-content></ng-content>
+      
+      <div *ngIf="data !== undefined && data !== null">
+        <pre
+          *ngIf="contentType === 'json'"
+          class="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded overflow-x-auto font-mono"
+        >
+          {{ data | json }}
+        </pre>
+        <p
+          *ngIf="contentType === 'text'"
+          class="text-sm text-gray-700 dark:text-gray-300 break-all"
+        >
+          {{ data }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2">
+      <button
+        *ngFor="let button of buttons"
+        (click)="button.action()"
+        [ngClass]="button.styleClass || 'px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors'"
+        [disabled]="button.disabled"
+      >
+        {{ button.label }}
+      </button>
+      <button
+        *ngIf="showCloseButton && !buttons.length"
+        (click)="onClose()"
+        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

@@ -57,20 +57,21 @@ export class CampusGradosComponent implements OnInit {
         console.log('Cursos obtenidos:', rawCursos);
 
         this.profesorcursos = rawCursos.map((item: any) => ({
-          idProfesorCurso: item.idProfesorCurso || '',
-          usuario: item.usuario || {},
-          curso: {
-            idCurso: item.curso?.idCurso || '',
-            nombre: item.curso?.nombre || 'Curso sin nombre',
-            abreviatura: item.curso?.abreviatura || '',
-          },
-          grado: item.grado || '',
-          seccion: item.seccion || 'Sin sección',
-          nivel: item.nivel || this.nivel,
-          fechaAsignacion: item.fechaAsignacion
-            ? new Date(item.fechaAsignacion)
-            : undefined,
-        }));
+  idProfesorCurso: item.idProfesorCurso || '',
+  usuario: item.usuario || {},
+  curso: {
+    idCurso: item.curso?.idCurso || '',
+    nombre: item.curso?.nombre || 'Curso sin nombre',
+    abreviatura: item.curso?.abreviatura || '',
+    competencias: []  // AÑADIR SIEMPRE
+  },
+  grado: item.grado || '',
+  seccion: item.seccion || 'Sin sección',
+  nivel: item.nivel || this.nivel,
+  fechaAsignacion: item.fechaAsignacion
+    ? new Date(item.fechaAsignacion)
+    : undefined,
+}));
 
         console.log('Cursos mapeados:', this.profesorcursos);
 

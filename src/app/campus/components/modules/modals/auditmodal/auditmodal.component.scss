@@ -1,0 +1,26 @@
+// Estilos específicos para el modal
+pre {
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+}
+
+// Sombra elevada para que el modal destaque
+.modal-content {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+// Transiciones suaves
+:host {
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

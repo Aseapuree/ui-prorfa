@@ -11,7 +11,11 @@ import {
   faSearch,
   faPrint,
   faEye,
-  faFileExcel
+  faFileExcel,
+  faPlusCircle,
+  faExclamationTriangle,
+  faCheckCircle,
+  faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import { faUser, faNewspaper, faStickyNote } from '@fortawesome/free-regular-svg-icons'
 
@@ -44,4 +48,8 @@ export const fontAwesomeIcons: IconDefinition[] = [
     faPrint, // Añadir icono de impresión
     faEye,
     faFileExcel, // Añadir icono de archivo Excel
+    faPlusCircle, // Añadir icono de círculo con más
+    faExclamationTriangle, // Añadir icono de advertencia
+    faCheckCircle, // Añadir icono de círculo con check
+    faXmark // Añadir icono de equis
 ];

@@ -60,10 +60,10 @@ export class AuditService {
     );
 }
 
-  obtenerListaAuditorias(page: number, size: number, sortBy: string, sortDir: string): Observable<{ content: AuditProrfa[], totalElements: number }> {
+  obtenerListaAuditorias(page: number, size: number): Observable<{ content: AuditProrfa[], totalElements: number }> {
     return this.clienteHttp
       .get<DTOResponse<{ content: AuditProrfa[], totalElements: number }>>(
-        `${this.urlBase}/listar?page=${page - 1}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`,
+        `${this.urlBase}/listar?page=${page - 1}&size=${size}`,
         { withCredentials: true }
       )
       .pipe(
@@ -84,23 +84,19 @@ export class AuditService {
   rolName?: string,
   ipAddress?: string,
   bandeja?: string,
-  userAgent?: string,
   fechaInicio?: string,
   fechaFin?: string,
   fechaTipo?: string,
   userId?: string
-}, page: number, size: number, sortBy: string, sortDir: string): Observable<{ content: AuditProrfa[], totalElements: number }> {
+}, page: number, size: number): Observable<{ content: AuditProrfa[], totalElements: number }> {
   let params = new HttpParams();
   params = params.set('page', (page - 1).toString());
   params = params.set('size', size.toString());
-  params = params.set('sortBy', sortBy);
-  params = params.set('sortDir', sortDir);
   if (filters.palabraClave) params = params.set('palabraClave', filters.palabraClave);
   if (filters.userName) params = params.set('userName', filters.userName);
   if (filters.rolName) params = params.set('rolName', filters.rolName);
   if (filters.ipAddress) params = params.set('ipAddress', filters.ipAddress);
   if (filters.bandeja) params = params.set('bandeja', filters.bandeja);
-  if (filters.userAgent) params = params.set('userAgent', filters.userAgent);
   if (filters.fechaInicio) params = params.set('fechaInicio', filters.fechaInicio);
   if (filters.fechaFin) params = params.set('fechaFin', filters.fechaFin);
   if (filters.fechaTipo) params = params.set('fechaTipo', filters.fechaTipo);

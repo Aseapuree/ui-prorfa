@@ -1,0 +1,115 @@
+<form #form="ngForm" (ngSubmit)="submitForm()" class="space-y-6">
+  <!-- Profesor -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Profesor <span class="text-red-500">*</span>
+    </label>
+    <select
+      [(ngModel)]="asignacion.usuario"
+      name="usuario"
+      required
+      [disabled]="isReadOnly"
+      [compareWith]="compareUsuario"
+      class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    >
+      <option [ngValue]="null">Seleccionar profesor</option>
+      <option *ngFor="let u of usuarios" [ngValue]="u">
+        {{ u.nombre }} {{ u.apellidopaterno }} {{ u.apellidomaterno }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Curso -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Curso <span class="text-red-500">*</span>
+    </label>
+    <select
+      [(ngModel)]="asignacion.curso"
+      name="curso"
+      required
+      [disabled]="isReadOnly"
+      [compareWith]="compareCurso"
+      class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    >
+      <option [ngValue]="null">Seleccionar curso</option>
+      <option *ngFor="let c of cursos" [ngValue]="c">
+        {{ c.nombre }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Nivel -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Nivel <span class="text-red-500">*</span>
+    </label>
+    <select
+      [(ngModel)]="asignacion.nivel"
+      name="nivel"
+      required
+      [disabled]="isReadOnly"
+      (change)="onNivelChange()"
+      class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    >
+      <option value="">Seleccionar nivel</option>
+      <option *ngFor="let n of niveles" [value]="n">{{ n }}</option>
+    </select>
+  </div>
+
+  <!-- Grado -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Grado <span class="text-red-500">*</span>
+    </label>
+    <select
+      [(ngModel)]="asignacion.grado"
+      name="grado"
+      required
+      [disabled]="isReadOnly || !asignacion.nivel"
+      (change)="onGradoChange()"
+      class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    >
+      <option value="">Seleccionar grado</option>
+      <option *ngFor="let g of grados" [value]="g">{{ g }}</option>
+    </select>
+  </div>
+
+  <!-- Sección -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Sección <span class="text-red-500">*</span>
+    </label>
+    <select
+      [(ngModel)]="asignacion.seccion"
+      name="seccion"
+      required
+      [disabled]="isReadOnly || !asignacion.grado"
+      class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    >
+      <option value="">Seleccionar sección</option>
+      <option *ngFor="let s of secciones" [value]="s.nombre">
+        {{ s.nombre }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Botones -->
+  <div class="flex justify-end gap-3 mt-6">
+    <button
+      type="button"
+      (click)="cancel.emit()"
+      class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      (click)="submitForm()"
+      [disabled]="isReadOnly"
+      class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+    >
+      {{ asignacion.idProfesorCurso ? "Actualizar" : "Guardar" }}
+    </button>
+  </div>
+</form>

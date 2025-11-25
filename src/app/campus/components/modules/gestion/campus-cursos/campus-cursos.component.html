@@ -1,10 +1,15 @@
 <section class="container px-4 mx-auto">
   <!-- Spinner de carga -->
-  <app-general-loading-spinner [visible]="isLoading" [message]="'Cargando cursos...'"></app-general-loading-spinner>
+  <app-general-loading-spinner
+    [visible]="isLoading"
+    [message]="'Cargando cursos...'"
+  ></app-general-loading-spinner>
   <div class="mt-6 md:flex md:items-center md:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Cursos</h2>
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">
+          Cursos
+        </h2>
         <span
           class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400"
         >
@@ -48,54 +53,75 @@
     </div>
   </div>
 
-  <!-- Selector de cantidad de datos por página -->
-  <div class="mt-4 flex items-center">
-    <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">
-      Mostrar:
-    </label>
-    <select
-      id="itemsPerPage"
-      [(ngModel)]="itemsPerPage"
-      (ngModelChange)="onItemsPerPageChange($event)"
-      class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
-    >
-      <option *ngFor="let option of pageSizeOptions" [value]="option">
-        {{ option }}
-      </option>
-    </select>
-    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">registros por página</span>
-  </div>
-
   <!-- Tabla Reutilizable y Mensaje Condicional -->
   <div class="mt-6">
     <app-table
-      *ngIf="cursos.length > 0 || isLoading"
-      [data]="cursos"
-      [columns]="tableColumns"
-      [sortBy]="sortBy"
-      [sortDir]="sortDir"
-      [enableActions]="true"
-      [actions]="tableActions"
-      (sortChange)="onSortChange($event)"
-      (competenciasClick)="openCompetenciasModal($event)"
-    ></app-table>
+  *ngIf="cursos.length > 0 || isLoading"
+  [data]="cursos"
+  [columns]="tableColumns"
+  [totalItems]="totalCursos"
+  [sortBy]="sortBy"
+  [sortDir]="sortDir"
+  [enableActions]="true"
+  [actions]="tableActions"
+  (itemsPerPageChange)="onItemsPerPageChange($event)"
+  (sortChange)="onSortChange($event)"
+  (previewClick)="onPreviewClick($event)"
+></app-table>
 
     <!-- Mensaje cuando no hay resultados -->
     <div
       *ngIf="cursos.length === 0 && !isLoading"
       class="text-center py-6 text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
     >
-      <fa-icon [icon]="['fas', 'info-circle']" class="text-gray-400 text-xl mr-2"></fa-icon>
+      <fa-icon
+        [icon]="['fas', 'info-circle']"
+        class="text-gray-400 text-xl mr-2"
+      ></fa-icon>
       No se encontraron cursos con el criterio de búsqueda.
     </div>
   </div>
 
   <!-- Paginación -->
   <app-pagination
-  [page]="page"
-  [totalPages]="totalPages"
-  (pageChange)="onPageChange($event)"
-></app-pagination>
+    [page]="page"
+    [totalPages]="totalPages"
+    (pageChange)="onPageChange($event)"
+  ></app-pagination>
+
+  <!-- Modal reutilizable para mostrar competencias -->
+  <!-- MODAL GENERAL -->
+  <app-auditmodal
+    *ngIf="modal.open"
+    [title]="modal.title"
+    [modalSizeClass]="modal.size || 'max-w-lg'"
+    [buttons]="modal.buttons"
+    (close)="closeModal()"
+  >
+    <!-- Formulario -->
+    <app-curso-form
+      *ngIf="modal.type === 'form'"
+      [curso]="modal.data!"
+      [isReadOnly]="modal.isReadOnly"
+      (submit)="onFormSubmit($event)"
+      (cancel)="closeModal()"
+    ></app-curso-form>
+
+    <!-- Confirmación -->
+    <app-confirm-delete
+      *ngIf="modal.type === 'confirm'"
+      (confirm)="onConfirmDelete()"
+      (cancel)="closeModal()"
+    ></app-confirm-delete>
+
+    <!-- Vista previa -->
+    <app-preview-content
+      *ngIf="modal.type === 'preview'"
+      [data]="modal.data"
+      (close)="closeModal()"
+    ></app-preview-content>
+  </app-auditmodal>
+
   <!-- Componente de notificaciones -->
   <app-notification></app-notification>
 </section>

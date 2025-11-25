@@ -1,0 +1,26 @@
+<div class="text-center py-6">
+  <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+    <fa-icon [icon]="['fas', 'exclamation-triangle']" class="h-6 w-6 text-red-600"></fa-icon>
+  </div>
+  <h3 class="mt-6 text-lg font-semibold text-gray-900 dark:text-white">
+    ¿Eliminar curso permanentemente?
+  </h3>
+  <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 max-w-xs mx-auto">
+    Esta acción no se puede deshacer. El curso será eliminado para siempre.
+  </p>
+
+  <div class="mt-8 flex justify-center gap-4">
+    <button
+      (click)="cancel.emit()"
+      class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+    >
+      Cancelar
+    </button>
+    <button
+      (click)="confirm.emit()"
+      class="px-6 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition shadow-md"
+    >
+      Sí, eliminar
+    </button>
+  </div>
+</div>
