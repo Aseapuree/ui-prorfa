@@ -7,23 +7,6 @@ import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NotificationComponent } from "../../../campus/components/shared/notificaciones/notification.component";
 
-import {
-  faArrowLeft,
-  faCalendarAlt,
-  faCheckCircle,
-  faCircleInfo,
-  faDownload,
-  faFilePdf,
-  faGraduationCap,
-  faHashtag,
-  faIdCard,
-  faLink,
-  faMoneyBillWave,
-  faReceipt,
-  faSpinner,
-  faTimesCircle,
-  faTriangleExclamation
-} from '@fortawesome/free-solid-svg-icons';
 
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 
@@ -63,22 +46,6 @@ export class ComprobanteComponent implements OnInit {
   private createdPdfUrls: string[] = [];
   nivel: string | null = null;
 
-
-  faFilePdf = faFilePdf;
-  faCheckCircle = faCheckCircle;
-  faTimesCircle = faTimesCircle;
-  faMoneyBillWave = faMoneyBillWave;
-  faGraduationCap = faGraduationCap;
-  faIdCard = faIdCard;
-  faLink = faLink;
-  faReceipt = faReceipt;
-  faCircleInfo = faCircleInfo;
-  faTriangleExclamation = faTriangleExclamation;
-  faCalendarAlt = faCalendarAlt;
-  faSpinner = faSpinner;
-  faDownload = faDownload;
-  faArrowLeft = faArrowLeft;
-  faHashtag = faHashtag;
 
   private readonly TIPO_COMPROBANTE_MATRICULA_UUID = 'df61cd5c-5609-45d7-a2ad-1d285cabc958';
   private readonly TIPO_COMPROBANTE_PAGO_UUID = 'b5dc4013-5d65-4969-8342-906ae82ee70c';

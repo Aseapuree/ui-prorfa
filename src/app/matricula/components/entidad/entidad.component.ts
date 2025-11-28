@@ -10,6 +10,7 @@ import { GeneralLoadingSpinnerComponent } from '../../../general/components/spin
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { NotificationService } from '../../../campus/components/shared/notificaciones/notification.service';
 import { NotificationComponent } from '../../../campus/components/shared/notificaciones/notification.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-entidad',
@@ -21,7 +22,8 @@ import { NotificationComponent } from '../../../campus/components/shared/notific
     ReactiveFormsModule,
     FormsModule,
     NotificationComponent,
-    TooltipComponent
+    TooltipComponent,
+    FontAwesomeModule
   ],
   templateUrl: './entidad.component.html',
   styleUrls: ['./entidad.component.scss']

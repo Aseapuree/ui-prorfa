@@ -1,6 +1,6 @@
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { 
-  faBook, faHeadset, faSignOutAlt, faStar, faRocket, 
+import {
+  faBook, faHeadset, faSignOutAlt, faStar, faRocket,
   faArrowLeft, faPencil, faTrash, faPlus, faMagnifyingGlass, faUserCircle, faSchool, faWrench, faHome,
   faUsers, // Agrega faUsers aquí
   faArrowRight,
@@ -15,7 +15,40 @@ import {
   faPlusCircle,
   faExclamationTriangle,
   faCheckCircle,
-  faXmark
+  faXmark,
+  faDollarSign,
+  faFileAlt,
+  faCalendarAlt,
+  faCircleInfo,
+  faDownload,
+  faFilePdf,
+  faGraduationCap,
+  faHashtag,
+  faIdCard,
+  faLink,
+  faMoneyBillWave,
+  faReceipt,
+  faSpinner,
+  faTimesCircle,
+  faChevronLeft,
+  faChevronRight,
+  faChevronUp,
+  faChevronDown,
+  faUpload,
+  faImage,
+  faCheck,
+  faSave,
+  faUserEdit,
+  faChalkboardTeacher,
+  faClipboardList,
+  faEnvelope,
+  faPhone,
+  faMapMarkerAlt,
+  faSignature,
+  faIdCardAlt,
+  faBuilding,
+  faPencilAlt,
+  faTrashAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { faUser, faNewspaper, faStickyNote } from '@fortawesome/free-regular-svg-icons'
 
@@ -51,5 +84,38 @@ export const fontAwesomeIcons: IconDefinition[] = [
     faPlusCircle, // Añadir icono de círculo con más
     faExclamationTriangle, // Añadir icono de advertencia
     faCheckCircle, // Añadir icono de círculo con check
-    faXmark // Añadir icono de equis
+    faXmark, // Añadir icono de equis
+    faDollarSign, // Comprobante de pago
+    faFileAlt,  // Comprobante de matrícula
+    faCalendarAlt,  // Fecha del comprobante
+    faCircleInfo,   // Información
+    faDownload,  // Descargar PDF
+    faFilePdf, // Icono del archivo PDF
+    faGraduationCap, // Matrícula
+    faHashtag,   // Código
+    faIdCard, // DNI
+    faLink, // Enlace o referencia
+    faMoneyBillWave, // Pago
+    faReceipt, // Comprobante genérico
+    faSpinner,  // Loading al generar PDF
+    faTimesCircle,  // Error
+    faSave,  // Guardar cambios
+    faChevronLeft, // Carrusel ←
+    faChevronRight,// Carrusel →
+    faChevronUp,  // Scroll ↑
+    faChevronDown,  // Scroll ↓
+    faUpload,   // Subir logo
+    faImage,  // Vista previa logo
+    faCheck,  // Confirmación
+    faUserEdit,
+    faChalkboardTeacher,
+    faClipboardList,
+    faEnvelope,
+    faPhone,
+    faMapMarkerAlt,
+    faSignature,
+    faIdCardAlt,
+    faBuilding,
+    faPencilAlt,
+    faTrashAlt
 ];

@@ -15,19 +15,19 @@
       <div class="form-group">
         <label>RUC del Colegio</label>
         <div class="input-with-icon">
-          <i class="fas fa-id-card input-icon"></i>
+          <fa-icon [icon]="['fas', 'id-card']" class="input-icon"></fa-icon>
           <input type="text" [value]="entidad.rucColegio" disabled>
         </div>
       </div>
       <div class="form-group">
         <label>Razón Social</label>
         <div class="input-with-icon">
-          <i class="fas fa-signature input-icon"></i>
+          <fa-icon [icon]="['fas', 'signature']" class="input-icon"></fa-icon>
           <input type="text" [value]="entidad.razonSocial" disabled>
         </div>
       </div>
       <div class="info-section">
-        <h3><i class="fas fa-file-alt"></i> Documentos Requeridos</h3>
+        <h3><fa-icon [icon]="['fas', 'file-alt']"></fa-icon> Documentos Requeridos</h3>
         <div class="info-group" *ngFor="let categoria of entidad.documentos?.categorias">
           <h4>{{ categoria.nombre }}</h4>
           <ul class="info-list" *ngIf="(categoria.documentos?.length || 0) > 0">
@@ -51,32 +51,32 @@
       <div class="form-group">
         <label>Dirección</label>
         <div class="input-with-icon">
-          <i class="fas fa-map-marker-alt input-icon"></i>
+          <fa-icon [icon]="['fas', 'map-marker-alt']" class="input-icon"></fa-icon>
           <input type="text" [value]="entidad.direccionColegio" disabled>
         </div>
       </div>
       <div class="form-group">
         <label>Teléfono</label>
         <div class="input-with-icon">
-          <i class="fas fa-phone input-icon"></i>
+          <fa-icon [icon]="['fas', 'phone']" class="input-icon"></fa-icon>
           <input type="tel" [value]="entidad.telefonoColegio" disabled>
         </div>
       </div>
       <div class="form-group">
         <label>Correo Electrónico</label>
         <div class="input-with-icon">
-          <i class="fas fa-envelope input-icon"></i>
+          <fa-icon [icon]="['fas', 'envelope']" class="input-icon"></fa-icon>
           <input type="email" [value]="entidad.correoColegio" disabled>
         </div>
       </div>
       <div class="info-section">
-        <h3><i class="fas fa-clipboard-list"></i> Datos Niveles</h3>
+        <h3><fa-icon [icon]="['fas', 'clipboard-list']"></fa-icon> Datos Niveles</h3>
         <div class="grade-grid-wrapper">
           <ng-container *ngFor="let nivel of entidad.datosngs?.niveles; let nivelIndex = index">
             <h4 class="level-name"><b>{{ nivel.nombre }}</b></h4>
             <div class="grade-carousel-container-normal">
               <button type="button" *ngIf="mostrarFlechaIzquierda(nivelIndex)" class="carousel-arrow left-arrow" (click)="moverIzquierda(nivelIndex)">
-                <i class="fas fa-chevron-left"></i>
+                <fa-icon [icon]="['fas', 'chevron-left']"></fa-icon>
               </button>
               <div class="carousel-viewport" #carouselViewport>
                 <div class="grade-carousel" [ngStyle]="{'transform': 'translateX(' + getTranslateX(nivelIndex) + 'px)'}">
@@ -84,7 +84,7 @@
                     <div class="grade-header">
                       <h5>Grado: {{ grado.nombre }}°</h5>
                       <app-tooltip [tooltipText]="'Editar'">
-                        <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(nivelIndex, gradoIndex)"><i class="fas fa-pencil-alt"></i></button>
+                        <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(nivelIndex, gradoIndex)"><fa-icon [icon]="['fas', 'pencil-alt']"></fa-icon></button>
                       </app-tooltip>
                     </div>
                     <div>Secciones:</div>
@@ -97,7 +97,7 @@
                 </div>
               </div>
               <button type="button" *ngIf="mostrarFlechaDerecha(nivelIndex)" class="carousel-arrow right-arrow" (click)="moverDerecha(nivelIndex)">
-                <i class="fas fa-chevron-right"></i>
+                <fa-icon [icon]="['fas', 'chevron-right']"></fa-icon>
               </button>
             </div>
           </ng-container>
@@ -203,12 +203,12 @@
           <div class="dynamic-section-header">
             <h5>Necesarios</h5>
             <app-tooltip [tooltipText]="'Agregar'">
-              <button type="button" (click)="agregarDocumentoNecesario()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+              <button type="button" (click)="agregarDocumentoNecesario()" class="btn-add-small"><fa-icon [icon]="['fas', 'plus']"></fa-icon></button>
             </app-tooltip>
           </div>
           <div class="carousel-vertical-container">
             <button type="button" *ngIf="mostrarFlechaArribaNecesarios()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaNecesarios()">
-              <i class="fas fa-chevron-up"></i>
+              <fa-icon [icon]="['fas', 'chevron-up']"></fa-icon>
             </button>
             <div class="carousel-viewport-vertical" #necesariosViewport>
               <div class="carousel-vertical" #necesariosContent [ngStyle]="{'transform': 'translateY(' + getTranslateYNecesarios() + 'px)'}">
@@ -222,14 +222,14 @@
                       </div>
                     </div>
                     <app-tooltip [tooltipText]="'Eliminar'">
-                      <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                      <button type="button" (click)="eliminarDocumentoNecesario(i)" class="btn-remove"><fa-icon [icon]="['fas', 'trash-alt']"></fa-icon></button>
                     </app-tooltip>
                   </div>
                 </ng-container>
               </div>
             </div>
             <button type="button" *ngIf="mostrarFlechaAbajoNecesarios()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoNecesarios()">
-              <i class="fas fa-chevron-down"></i>
+              <fa-icon [icon]="['fas', 'chevron-down']"></fa-icon>
             </button>
           </div>
         </div>
@@ -237,12 +237,12 @@
           <div class="dynamic-section-header">
             <h5>Adicionales</h5>
             <app-tooltip [tooltipText]="'Agregar Categoría'">
-              <button type="button" (click)="agregarCategoriaAdicional()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+              <button type="button" (click)="agregarCategoriaAdicional()" class="btn-add-small"><fa-icon [icon]="['fas', 'plus']"></fa-icon></button>
             </app-tooltip>
           </div>
           <div class="carousel-vertical-container">
             <button type="button" *ngIf="mostrarFlechaArribaAdicionales()" class="carousel-arrow-vertical top-arrow" (click)="moverArribaAdicionales()">
-              <i class="fas fa-chevron-up"></i>
+              <fa-icon [icon]="['fas', 'chevron-up']"></fa-icon>
             </button>
             <div class="carousel-viewport-vertical" #adicionalesViewport>
               <div class="carousel-vertical" #adicionalesContent [ngStyle]="{'transform': 'translateY(' + getTranslateYAdicionales() + 'px)'}">
@@ -256,10 +256,10 @@
                         </div>
                       </h6>
                       <app-tooltip [tooltipText]="'Agregar Documento'">
-                        <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><i class="fas fa-plus"></i></button>
+                        <button type="button" (click)="agregarDocumentoAdicional(catKey)" class="btn-add-small"><fa-icon [icon]="['fas', 'plus']"></fa-icon></button>
                       </app-tooltip>
                       <app-tooltip [tooltipText]="'Eliminar Categoría'">
-                        <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                        <button type="button" (click)="eliminarCategoriaAdicional(catIndex)" class="btn-remove"><fa-icon [icon]="['fas', 'trash-alt']"></fa-icon></button>
                       </app-tooltip>
                     </div>
                     <ng-container *ngFor="let docKey of keysDocumentosAdicionales(catKey); let docIndex = index">
@@ -269,7 +269,7 @@
                           <input type="text" [formControlName]="docKey" class="form-control ellipsis-input" (input)="convertirAMayusculas($event, 'documentos.adicionales.' + catKey + '.' + docKey)">
                         </div>
                         <app-tooltip [tooltipText]="'Eliminar'">
-                          <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                          <button type="button" (click)="eliminarDocumentoAdicional(catKey, docIndex)" class="btn-remove"><fa-icon [icon]="['fas', 'trash-alt']"></fa-icon></button>
                         </app-tooltip>
                       </div>
                     </ng-container>
@@ -278,7 +278,7 @@
               </div>
             </div>
             <button type="button" *ngIf="mostrarFlechaAbajoAdicionales()" class="carousel-arrow-vertical bottom-arrow" (click)="moverAbajoAdicionales()">
-              <i class="fas fa-chevron-down"></i>
+              <fa-icon [icon]="['fas', 'chevron-down']"></fa-icon>
             </button>
           </div>
         </div>
@@ -291,9 +291,9 @@
     <div formGroupName="datosngs">
       <div class="info-section">
         <div class="dynamic-section-header">
-          <h3><i class="fas fa-clipboard-list"></i> Datos Niveles</h3>
+          <h3><fa-icon [icon]="['fas', 'clipboard-list']"></fa-icon> Datos Niveles</h3>
           <app-tooltip [tooltipText]="'Agregar'">
-            <button type="button" (click)="agregarNivel()" class="btn-add-small"><i class="fas fa-plus"></i></button>
+            <button type="button" (click)="agregarNivel()" class="btn-add-small"><fa-icon [icon]="['fas', 'plus']"></fa-icon></button>
           </app-tooltip>
         </div>
         <div *ngIf="niveles().invalid && niveles().touched && niveles().errors?.['minlength']" class="error-message">
@@ -306,10 +306,10 @@
                 <b><input type="text" formControlName="nombre" class="level-input"></b>
               </h4>
               <app-tooltip [tooltipText]="'Eliminar'">
-                <button type="button" (click)="eliminarNivel(i)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                <button type="button" (click)="eliminarNivel(i)" class="btn-remove"><fa-icon [icon]="['fas', 'trash-alt']"></fa-icon></button>
               </app-tooltip>
               <app-tooltip [tooltipText]="'Agregar'">
-                <button type="button" (click)="agregarGrado(i)" class="btn-add-small"><i class="fas fa-plus"></i></button>
+                <button type="button" (click)="agregarGrado(i)" class="btn-add-small"><fa-icon [icon]="['fas', 'plus']"></fa-icon></button>
               </app-tooltip>
             </div>
             <div *ngIf="niveles().at(i).get('nombre')?.invalid && niveles().at(i).get('nombre')?.touched" class="error-message">
@@ -321,7 +321,7 @@
             </div>
             <div class="grade-carousel-container-edit" formArrayName="grados">
               <button type="button" *ngIf="mostrarFlechaIzquierda(i)" class="carousel-arrow left-arrow" (click)="moverIzquierda(i)">
-                <i class="fas fa-chevron-left"></i>
+                <fa-icon [icon]="['fas', 'chevron-left']"></fa-icon>
               </button>
               <div class="carousel-viewport" #carouselViewport>
                 <div class="grade-carousel" [ngStyle]="{'transform': 'translateX(' + getTranslateX(i) + 'px)'}">
@@ -330,10 +330,10 @@
                       <div class="grade-header">
                         <h5>Grado: <input type="text" formControlName="nombre" class="grade-input"></h5>
                         <app-tooltip [tooltipText]="'Editar'">
-                          <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(i, j)"><i class="fas fa-pencil-alt"></i></button>
+                          <button type="button" class="btn-edit-grade" (click)="abrirModalSecciones(i, j)"><fa-icon [icon]="['fas', 'pencil-alt']"></fa-icon></button>
                         </app-tooltip>
                         <app-tooltip [tooltipText]="'Eliminar'">
-                          <button type="button" (click)="eliminarGrado(i, j)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+                          <button type="button" (click)="eliminarGrado(i, j)" class="btn-remove"><fa-icon [icon]="['fas', 'trash-alt']"></fa-icon></button>
                         </app-tooltip>
                       </div>
                       <div *ngIf="grados(i).at(j).get('nombre')?.invalid && grados(i).at(j).get('nombre')?.touched" class="error-message">
@@ -351,7 +351,7 @@
                 </div>
               </div>
               <button type="button" *ngIf="mostrarFlechaDerecha(i)" class="carousel-arrow right-arrow" (click)="moverDerecha(i)">
-                <i class="fas fa-chevron-right"></i>
+                <fa-icon [icon]="['fas', 'chevron-right']"></fa-icon>
               </button>
             </div>
           </ng-container>
@@ -370,12 +370,12 @@
 <!-- Modal de Edición de Secciones -->
 <div class="edit-modal-overlay" *ngIf="mostrarModalSecciones">
   <div class="edit-modal-container">
-    <button type="button" class="close-button" (click)="cerrarModalSecciones()"><i class="fas fa-times"></i></button>
+    <button type="button" class="close-button" (click)="cerrarModalSecciones()"><fa-icon [icon]="['fas', 'times']"></fa-icon></button>
     <form [formGroup]="formularioSecciones" novalidate>
       <div class="edit-modal-header">
         <h2 class="edit-modal-title">GRADO: {{ nombreGradoSeleccionado }}°</h2>
         <app-tooltip [tooltipText]="'Agregar'">
-          <button type="button" (click)="agregarSeccion()" class="btn-add-small btn-add-spaced"><i class="fas fa-plus"></i></button>
+          <button type="button" (click)="agregarSeccion()" class="btn-add-small btn-add-spaced"><fa-icon [icon]="['fas', 'plus']"></fa-icon></button>
         </app-tooltip>
       </div>
       <div formArrayName="secciones">
@@ -397,7 +397,7 @@
             </div>
           </div>
           <app-tooltip [tooltipText]="'Eliminar'">
-            <button type="button" (click)="eliminarSeccion(k)" class="btn-remove"><i class="fas fa-trash-alt"></i></button>
+            <button type="button" (click)="eliminarSeccion(k)" class="btn-remove"><fa-icon [icon]="['fas', 'trash-alt']"></fa-icon></button>
           </app-tooltip>
         </div>
       </div>

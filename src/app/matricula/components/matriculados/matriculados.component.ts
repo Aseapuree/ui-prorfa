@@ -6,8 +6,7 @@ import { CommonModule } from '@angular/common';
 import { TableComponent, ColumnConfig, ActionConfig } from './../../../general/components/table/table.component';
 import { MatriculaService } from './../../services/matricula.service';
 import { Matricula } from './../../interfaces/DTOMatricula';
-import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle, faSearch, faBroom, faFileExcel } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { GeneralLoadingSpinnerComponent } from './../../../general/components/spinner/spinner.component';
 import { Alumno } from './../../interfaces/DTOAlumno';
 import { ComprobanteService } from './../../services/comprobante.service';
@@ -109,14 +108,9 @@ export class MatriculadosComponent implements OnInit {
     private comprobanteService: ComprobanteService,
     private apoderadoService: ApoderadoService,
     private alumnoService: AlumnoService,
-    private library: FaIconLibrary,
     private notificationService: NotificationService,
     private entidadService: EntidadService
   ) {
-    this.library.addIcons(
-        faArrowRight, faDollarSign, faFileAlt, faExclamationTriangle,
-        faSearch, faBroom, faFileExcel
-    );
     const today = new Date();
     const offset = today.getTimezoneOffset();
     const todayLocal = new Date(today.getTime() - (offset * 60 * 1000));
