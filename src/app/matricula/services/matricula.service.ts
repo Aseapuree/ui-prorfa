@@ -7,7 +7,7 @@ import { Matricula } from '../interfaces/DTOMatricula';
   providedIn: 'root'
 })
 export class MatriculaService {
-  private urlBase = "http://localhost:8080/v1/matriculas";
+  private urlBase = "/api/v1/matriculas";
 
   constructor(private http: HttpClient) { }
 
@@ -94,7 +94,7 @@ export class MatriculaService {
         if (error.status === 0) {
             errorMessage = 'Error de conexión con el backend. Asegúrate de que el servidor esté corriendo y accesible.';
             if (error.error && (error.error as any).message && (error.error as any).message.includes('ECONNREFUSED')) {
-                 errorMessage = 'Error de conexión: El backend rechazo la conexión. Verifica que esté corriendo en http://localhost:8080.';
+                 errorMessage = 'Error de conexión: El backend rechazo la conexión. Verifica que esté corriendo en /api.';
             }
         } else {
             if (error.error instanceof Blob) {

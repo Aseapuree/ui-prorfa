@@ -193,7 +193,7 @@ export class MenuComponent implements OnInit, OnChanges {
       this.perfilUrl = null;
       return;
     }
-    const apiUrl = `http://localhost:8080/api/perfil/imagen/${fileId}`;
+    const apiUrl = `/api/api/perfil/imagen/${fileId}`;
     this.http.get(apiUrl, { responseType: 'blob', withCredentials: true }).subscribe(blob => {
       const imageUrl = URL.createObjectURL(blob);
       this.perfilUrl = imageUrl;

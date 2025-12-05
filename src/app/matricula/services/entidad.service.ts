@@ -10,7 +10,7 @@ import { DTOResponse } from '../../general/Interface/DTOResponse';
 })
 export class EntidadService {
 
-  private urlBase = "http://localhost:8080/v1/entidades";
+  private urlBase = "/api/v1/entidades";
 
   constructor(private http: HttpClient) { }
 

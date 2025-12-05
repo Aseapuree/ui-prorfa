@@ -8,7 +8,7 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 })
 export class ApoderadoService {
 
-  private urlBase = "http://localhost:8080/v1/apoderados";
+  private urlBase = "/api/v1/apoderados";
 
   constructor(private http: HttpClient) { }
 

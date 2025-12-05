@@ -10,7 +10,7 @@ import saveAs from 'file-saver';
 })
 export class ProfesorCursoService {
 
-  private urlBase = "http://localhost:8080/v1/profesor-curso";
+  private urlBase = "/api/v1/profesor-curso";
 
   constructor(private clienteHttp: HttpClient) { }
 

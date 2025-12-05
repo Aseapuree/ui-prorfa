@@ -53,8 +53,8 @@ interface DTOCursoNotas {
   providedIn: 'root'
 })
 export class NotasService {
-  private urlBase = "http://localhost:8080/v1/notas";
-  private alumnoUrlBase = "http://localhost:8080/v1/alumnos";
+  private urlBase = "/api/v1/notas";
+  private alumnoUrlBase = "/api/v1/alumnos";
 
   constructor(private clienteHttp: HttpClient) { }
 

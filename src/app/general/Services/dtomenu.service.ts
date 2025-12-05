@@ -8,7 +8,7 @@ import { DTOResponse } from '../Interface/DTOResponse';
   providedIn: 'root'
 })
 export class DTOmenuService {
-  private url = 'http://localhost:8080/v1/menu/ver?id=';
+  private url = '/api/v1/menu/ver?id=';
 
   constructor(private http: HttpClient) { }
 
