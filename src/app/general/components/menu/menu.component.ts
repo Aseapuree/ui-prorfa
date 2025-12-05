@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef, Input, Inject, PLATFORM_ID, OnCha
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router, NavigationEnd, RouterEvent } from '@angular/router';
 import { DTOmenuService } from '../../Services/dtomenu.service';
-import { DTOMenu } from '../../Interface/DTOMenu';
+import { DTOMenu } from '../../Interface/DTOMenu'; 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { fontAwesomeIcons } from '../../../campus/components/shared/font-awesome-icons'; // Asegúrate que la ruta sea correcta
