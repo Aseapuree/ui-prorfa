@@ -9,6 +9,8 @@ import saveAs from 'file-saver';
 })
 export class MatriculaService {
   private urlBase = "/api/v1/matriculas";
+totalPages: number = 0;
+totalElements: number = 0;
 
   constructor(private http: HttpClient) { }
 

@@ -376,8 +376,8 @@ onItemsPerPageChange(newSize: number): void {
   this.matriculaService.obtenerMatriculas(filters, this.page - 1, this.itemsPerPage)
     .pipe(
       switchMap((matriculas: Matricula[]) => {
-        this.totalElements = this.matriculaService.totalElements;
-        this.totalPages = this.matriculaService.totalPages || 1;
+        this.totalElements = this.matriculaService?.totalElements;
+        this.totalPages = this.matriculaService?.totalPages || 1;
 
         if (!matriculas || matriculas.length === 0) {
           this.notificationService.showNotification('No se encontraron matrículas.', 'info');
