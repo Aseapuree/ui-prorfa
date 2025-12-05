@@ -1,4 +1,4 @@
-export class DTORoles {
+export interface DTORoles {
     idRol?: string;
     nombreRol?: string;
     descripcion?: string;
