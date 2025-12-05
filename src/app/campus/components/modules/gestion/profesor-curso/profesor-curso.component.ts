@@ -10,7 +10,6 @@ import { NotificationComponent } from '../../../shared/notificaciones/notificati
 import { ProfesorCurso } from '../../../../interface/ProfesorCurso';
 import { NotificationService } from '../../../shared/notificaciones/notification.service';
 import { DialogoConfirmacionComponent } from '../../modals/dialogo-confirmacion/dialogo-confirmacion.component';
-import { ModalProfesorCursoComponent } from '../../modals/modal-profesor-curso/modal-profesor-curso.component';
 import { PaginationComponent } from '../../../../../general/components/pagination/pagination.component';
 import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 import { TooltipComponent } from '../../../../../general/components/tooltip/tooltip.component';
@@ -69,8 +68,7 @@ import { MatError } from "@angular/material/form-field";
 })
 export class ProfesorCursoComponent implements OnInit {
   public page: number = 1;
-  public itemsPerPage: number = 6;
-  public pageSizeOptions: number[] = [];
+  public itemsPerPage: number = 5;
   totalPages: number = 1;
   asignaciones: any[] = [];
   keyword: string = '';
@@ -84,6 +82,10 @@ export class ProfesorCursoComponent implements OnInit {
   isValidFechaFin: boolean = true;
   currentYear: number = new Date().getFullYear();
   selectedAsignacion: any = null;
+  datosNGS: DatosNGS | null = null;
+nivelesParaFiltro: string[] = [];
+gradosParaFiltro: string[] = [];
+seccionesParaFiltro: SeccionVacantes[] = [];
 
   modal: {
     open: boolean;
@@ -119,7 +121,6 @@ export class ProfesorCursoComponent implements OnInit {
   niveles: string[] = [];
   grados: string[] = [];
   secciones: SeccionVacantes[] = [];
-  datosNGS: DatosNGS | null = null;
   fechaTipos = [
     { value: 'asignacion', label: 'Fecha Asignación' },
     { value: 'actualizacion', label: 'Fecha Actualización' },
@@ -206,16 +207,15 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const savedItemsPerPage = localStorage.getItem('itemsPerPage');
-    if (savedItemsPerPage) {
-      this.itemsPerPage = parseInt(savedItemsPerPage, 10);
-    }
+    const savedItemsPerPage =
+      localStorage.getItem('itemsPerPageProfesorCurso') || '10';
+    this.itemsPerPage = parseInt(savedItemsPerPage, 10);
     this.cargarConteoAsignaciones();
     this.cargarAsignaciones();
     this.cargarProfesores();
     this.cargarCursos();
-    this.cargarEntidadData();
     this.updateMaxDate();
+    this.cargarDatosEntidadParaFiltros();
   }
 
   // === MODALES ===
@@ -376,100 +376,135 @@ export class ProfesorCursoComponent implements OnInit {
   // === FILTROS Y BÚSQUEDA ===
 
   buscarAsignaciones(): void {
-    console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
+  console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
 
-    // Validar filtros de profesorId y cursoId
-    if (
-      this.filters.profesorId &&
-      !this.isKeywordValid(this.filters.profesorId)
-    ) {
-      this.notificationService.showNotification(
-        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      console.log('Nombre de profesor inválido');
-      return;
-    }
+  // Validar filtros de profesorId y cursoId
+  if (this.filters.profesorId && !this.isKeywordValid(this.filters.profesorId)) {
+    this.notificationService.showNotification(
+      SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+      'error'
+    );
+    console.log('Nombre de profesor inválido');
+    return;
+  }
 
-    if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
-      this.notificationService.showNotification(
-        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'error'
-      );
-      console.log('Nombre de curso inválido');
-      return;
-    }
+  if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
+    this.notificationService.showNotification(
+      SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+      'error'
+    );
+    console.log('Nombre de curso inválido');
+    return;
+  }
 
-    // Confiar en los estados de validación de fechas
-    if (!this.isValidFechaInicio || !this.isValidFechaFin) {
-      this.notificationService.showNotification(
-        'Por favor, corrige las fechas inválidas antes de buscar.',
-        'error'
-      );
-      console.log('Fechas inválidas, deteniendo búsqueda');
-      return;
-    }
+  // Validar fechas
+  if (!this.isValidFechaInicio || !this.isValidFechaFin) {
+    this.notificationService.showNotification(
+      'Por favor, corrige las fechas inválidas antes de buscar.',
+      'error'
+    );
+    console.log('Fechas inválidas, deteniendo búsqueda');
+    return;
+  }
 
-    // Activar el spinner
-    this.isLoading = true;
+  // Activar el spinner
+  this.isLoading = true;
 
-    // Preparar los filtros para enviar al backend
-    const filters: {
-      profesorId?: string;
-      cursoId?: string;
-      grado?: string;
-      seccion?: string;
-      nivel?: string;
-      fechaInicio?: string;
-      fechaFin?: string;
-      fechaTipo?: string;
-    } = {
-      profesorId: this.filters.profesorId
-        ? this.filters.profesorId.trim()
-        : undefined,
-      cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
-      grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
-      seccion: this.filters.seccion
-        ? this.filters.seccion.toLowerCase()
-        : undefined,
-      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
-      fechaInicio: this.filters.fechaInicio || undefined,
-      fechaFin: this.filters.fechaFin || undefined,
-      fechaTipo: this.filters.fechaTipo || undefined,
-    };
+  // Preparar los filtros para enviar al backend
+  const filters: {
+    profesorId?: string;
+    cursoId?: string;
+    grado?: string;
+    seccion?: string;
+    nivel?: string;
+    fechaInicio?: string;
+    fechaFin?: string;
+    fechaTipo?: string;
+  } = {
+    profesorId: this.filters.profesorId ? this.filters.profesorId.trim() : undefined,
+    cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
+    grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
+    seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
+    nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+    fechaInicio: this.filters.fechaInicio || undefined,
+    fechaFin: this.filters.fechaFin || undefined,
+    fechaTipo: this.filters.fechaTipo || undefined,
+  };
 
-    console.log('Filtros aplicados:', filters);
-    this.appliedFilters = filters;
+  console.log('Filtros aplicados:', filters);
+  this.appliedFilters = filters;
 
-    // Realizar la solicitud al backend
-    this.profesorCursoService
-      .buscarAsignaciones(
-        filters,
-        this.page,
-        this.itemsPerPage,
-        this.sortBy,
-        this.sortDir
-      )
-      .subscribe({
-        next: (resultado) => {
-          console.log('Resultados recibidos:', resultado);
-          this.asignaciones = this.transformarDatos(resultado.content || []);
-          this.totalAsignaciones = resultado.totalElements;
-          this.totalPages = Math.ceil(
-            this.totalAsignaciones / this.itemsPerPage
+  // Realizar la solicitud al backend
+  this.profesorCursoService
+    .buscarAsignaciones(filters, this.page, this.itemsPerPage)
+    .subscribe({
+      next: (resultado) => {
+        console.log('Resultados recibidos:', resultado);
+        this.asignaciones = this.transformarDatos(resultado.content || []);
+        this.totalAsignaciones = resultado.totalElements;
+        this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+
+        if (this.totalAsignaciones === 0) {
+          this.notificationService.showNotification(
+            'No se encontraron asignaciones con los filtros aplicados.',
+            'info'
           );
+        }
 
-          if (this.totalAsignaciones === 0) {
-            this.notificationService.showNotification(
-              'No se encontraron asignaciones con los filtros aplicados.',
-              'info'
-            );
-          }
+        // Si la página actual excede el total de páginas, volver a la 1
+        if (this.page > this.totalPages && this.totalPages > 0) {
+          this.page = 1;
+          this.buscarAsignaciones();
+          return;
+        }
 
-          this.updatePageSizeOptions();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda:', err);
+        this.notificationService.showNotification(
+          'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
+          'error'
+        );
+        this.asignaciones = [];
+        this.totalAsignaciones = 0;
+        this.totalPages = 1;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      complete: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+}
+  // === CARGA DE DATOS ===
+  cargarAsignaciones(): void {
+  this.isLoading = true;
+  console.log('Cargando asignaciones con:', {
+    page: this.page,
+    itemsPerPage: this.itemsPerPage,
+    sortBy: this.sortBy,
+    sortDir: this.sortDir,
+    filters: this.appliedFilters,
+  });
+
+  if (this.appliedFilters) {
+    // Hay filtros activos → usar búsqueda con filtros
+    this.profesorCursoService
+      .buscarAsignaciones(this.appliedFilters, this.page, this.itemsPerPage)
+      .subscribe({
+        next: (response) => {
+          console.log('Respuesta de buscarAsignaciones:', response);
+          this.asignaciones = this.transformarDatos(response.content || []);
+          this.totalAsignaciones = response.totalElements;
+          this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+
+          // Si la página actual es mayor que el total de páginas, volver a la 1
           if (this.page > this.totalPages && this.totalPages > 0) {
             this.page = 1;
-            this.buscarAsignaciones();
+            this.cargarAsignaciones();
             return;
           }
 
@@ -477,112 +512,54 @@ export class ProfesorCursoComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (err) => {
-          console.error('Error en la búsqueda:', err);
-          this.notificationService.showNotification(
-            'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
-            'error'
-          );
+          console.error('Error en buscarAsignaciones:', err);
           this.asignaciones = [];
           this.totalAsignaciones = 0;
           this.totalPages = 1;
-          this.updatePageSizeOptions();
+          this.notificationService.showNotification(
+            'Error al cargar asignaciones: ' + err.message,
+            'error'
+          );
           this.isLoading = false;
           this.cdr.detectChanges();
         },
-        complete: () => {
+      });
+  } else {
+    // Sin filtros → cargar lista completa paginada
+    this.profesorCursoService
+      .obtenerCourseList(this.page, this.itemsPerPage)
+      .subscribe({
+        next: (response) => {
+          console.log('Respuesta de obtenerCourseList:', response);
+          this.asignaciones = this.transformarDatos(response.content || []);
+          this.totalAsignaciones = response.totalElements;
+          this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+
+          // Ajustar página si es necesario
+          if (this.page > this.totalPages && this.totalPages > 0) {
+            this.page = 1;
+            this.cargarAsignaciones();
+            return;
+          }
+
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error en obtenerCourseList:', err);
+          this.asignaciones = [];
+          this.totalAsignaciones = 0;
+          this.totalPages = 1;
+          this.notificationService.showNotification(
+            'Error al cargar asignaciones: ' + err.message,
+            'error'
+          );
           this.isLoading = false;
           this.cdr.detectChanges();
         },
       });
   }
-  // === CARGA DE DATOS ===
-  cargarAsignaciones(): void {
-    this.isLoading = true;
-    console.log('Cargando asignaciones con:', {
-      page: this.page,
-      itemsPerPage: this.itemsPerPage,
-      sortBy: this.sortBy,
-      sortDir: this.sortDir,
-      filters: this.appliedFilters,
-    });
-
-    if (this.appliedFilters) {
-      this.profesorCursoService
-        .buscarAsignaciones(
-          this.appliedFilters,
-          this.page,
-          this.itemsPerPage,
-          this.sortBy,
-          this.sortDir
-        )
-        .subscribe({
-          next: (response) => {
-            console.log('Respuesta de buscarAsignaciones:', response);
-            this.asignaciones = this.transformarDatos(response.content || []);
-            this.totalAsignaciones = response.totalElements;
-            this.totalPages = Math.ceil(
-              this.totalAsignaciones / this.itemsPerPage
-            );
-            this.updatePageSizeOptions();
-            if (this.page > this.totalPages) {
-              this.page = 1;
-              this.cargarAsignaciones();
-              return;
-            }
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            console.error('Error en buscarAsignaciones:', err);
-            this.asignaciones = [];
-            this.totalPages = 1;
-            this.notificationService.showNotification(
-              'Error al cargar asignaciones: ' + err.message,
-              'error'
-            );
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-        });
-    } else {
-      this.profesorCursoService
-        .obtenerCourseList(
-          this.page,
-          this.itemsPerPage,
-          this.sortBy,
-          this.sortDir
-        )
-        .subscribe({
-          next: (response) => {
-            console.log('Respuesta de obtenerCourseList:', response);
-            this.asignaciones = this.transformarDatos(response.content || []);
-            this.totalAsignaciones = response.totalElements;
-            this.totalPages = Math.ceil(
-              this.totalAsignaciones / this.itemsPerPage
-            );
-            this.updatePageSizeOptions();
-            if (this.page > this.totalPages) {
-              this.page = 1;
-              this.cargarAsignaciones();
-              return;
-            }
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            console.error('Error en obtenerCourseList:', err);
-            this.asignaciones = [];
-            this.totalPages = 1;
-            this.notificationService.showNotification(
-              'Error al cargar asignaciones: ' + err.message,
-              'error'
-            );
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-        });
-    }
-  }
+}
 
   private transformarDatos(asignaciones: ProfesorCurso[]): any[] {
     return asignaciones.map((a) => ({
@@ -752,99 +729,69 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   isFormValid(): boolean {
-  // Verificar si algún filtro está aplicado
-  const isAnyFilterApplied =
-    !!this.filters.profesorId.trim() ||
-    !!this.filters.cursoId.trim() ||
-    !!this.filters.nivel ||
-    !!this.filters.grado ||
-    !!this.filters.seccion ||
-    !!this.filters.fechaInicio ||
-    !!this.filters.fechaFin ||
-    this.filters.fechaTipo !== 'asignacion';
+    // Verificar si algún filtro está aplicado
+    const isAnyFilterApplied =
+      !!this.filters.profesorId.trim() ||
+      !!this.filters.cursoId.trim() ||
+      !!this.filters.nivel ||
+      !!this.filters.grado ||
+      !!this.filters.seccion ||
+      !!this.filters.fechaInicio ||
+      !!this.filters.fechaFin ||
+      this.filters.fechaTipo !== 'asignacion';
 
-  // Validar los campos
-  const isValidInputs =
-    this.isValidFechaInicio &&
-    this.isValidFechaFin &&
-    (!this.filters.profesorId || this.isKeywordValid(this.filters.profesorId)) &&
-    (!this.filters.cursoId || this.isKeywordValid(this.filters.cursoId));
+    // Validar los campos
+    const isValidInputs =
+      this.isValidFechaInicio &&
+      this.isValidFechaFin &&
+      (!this.filters.profesorId ||
+        this.isKeywordValid(this.filters.profesorId)) &&
+      (!this.filters.cursoId || this.isKeywordValid(this.filters.cursoId));
 
-  return isAnyFilterApplied && isValidInputs;
-}
+    return isAnyFilterApplied && isValidInputs;
+  }
 
-  private cargarEntidadData(): void {
-    this.entidadService.obtenerEntidadList().subscribe({
-      next: (entidades) => {
-        if (entidades.length > 0) {
-          const entidad = entidades[0];
-          if (entidad.datosngs) {
-            this.datosNGS = entidad.datosngs;
-            this.niveles =
-              this.datosNGS.niveles?.map((nivel) => nivel.nombre) || [];
-            this.onNivelChange();
-          } else {
-            this.notificationService.showNotification(
-              'No se encontraron datos de niveles, grados y secciones',
-              'info'
-            );
-          }
+  cargarDatosEntidadParaFiltros(): void {
+  const idUsuario = localStorage.getItem('IDUSER');
+  if (idUsuario) {
+    this.entidadService.obtenerEntidadPorUsuario(idUsuario).subscribe({
+      next: (entidad) => {
+        if (entidad && entidad.datosngs && entidad.datosngs.niveles) {
+          this.datosNGS = entidad.datosngs;
+
+          // Niveles
+          this.niveles = this.datosNGS.niveles!
+            .map(n => n.nombre)
+            .filter((nombre): nombre is string => !!nombre)
+            .sort();
+
+          this.notificationService.showNotification('Niveles cargados para los filtros.', 'success');
         } else {
-          this.notificationService.showNotification(
-            'No se encontraron entidades',
-            'info'
-          );
+          this.notificationService.showNotification('No se encontraron niveles en la entidad del usuario.', 'error');
+          this.niveles = [];
         }
-        this.cdr.detectChanges();
+        // Limpiar grados y secciones al cargar
+        this.gradosParaFiltro = [];
+        this.seccionesParaFiltro = [];
       },
       error: (err) => {
-        this.notificationService.showNotification(
-          'Error al cargar datos de entidad',
-          'error'
-        );
-        console.error('Error al cargar entidad:', err);
-      },
-    });
-  }
-
-  private updatePageSizeOptions(): void {
-    const previousItemsPerPage = this.itemsPerPage;
-    this.pageSizeOptions = [];
-    const increment = 5;
-    for (let i = increment; i <= this.totalAsignaciones; i += increment) {
-      this.pageSizeOptions.push(i);
-    }
-
-    if (this.pageSizeOptions.length > 0) {
-      if (!this.pageSizeOptions.includes(this.itemsPerPage)) {
-        const validOption = this.pageSizeOptions
-          .filter((option) => option <= this.totalAsignaciones)
-          .reduce(
-            (prev, curr) =>
-              Math.abs(curr - this.itemsPerPage) <
-              Math.abs(prev - this.itemsPerPage)
-                ? curr
-                : prev,
-            this.pageSizeOptions[0]
-          );
-        this.itemsPerPage = validOption;
-        localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-        console.log(
-          `itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage}`
-        );
+        this.notificationService.showNotification('Error al cargar datos de entidad: ' + err.message, 'error');
+        this.niveles = [];
+        this.gradosParaFiltro = [];
+        this.seccionesParaFiltro = [];
       }
-    } else {
-      this.pageSizeOptions = [5];
-      this.itemsPerPage = 5;
-      localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
-      console.log(`itemsPerPage establecido a 5 porque no hay asignaciones`);
-    }
+    });
+  } else {
+    this.notificationService.showNotification('No se encontró el ID del usuario en localStorage.', 'error');
+    this.niveles = [];
+    this.gradosParaFiltro = [];
+    this.seccionesParaFiltro = [];
   }
+}
 
   onItemsPerPageChange(newSize: number): void {
-    console.log(`onItemsPerPageChange: Cambiando itemsPerPage a ${newSize}`);
     this.itemsPerPage = newSize;
-    localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
+    localStorage.setItem('itemsPerPageProfesorCurso', newSize.toString()); // opcional: clave distinta
     this.page = 1;
     this.cargarAsignaciones();
   }
@@ -883,37 +830,40 @@ export class ProfesorCursoComponent implements OnInit {
   }
 
   onNivelChange(): void {
-    this.grados = [];
-    this.secciones = [];
-    this.filters.grado = '';
-    this.filters.seccion = '';
+  this.filters.grado = '';
+  this.filters.seccion = '';
+  this.gradosParaFiltro = [];
+  this.seccionesParaFiltro = [];
 
-    if (this.filters.nivel && this.datosNGS) {
-      const selectedNivel = this.datosNGS.niveles?.find(
-        (n) => n.nombre === this.filters.nivel
-      );
-      this.grados = selectedNivel?.grados?.map((grado) => grado.nombre) || [];
+  if (this.filters.nivel && this.datosNGS?.niveles) {
+    const nivelSel = this.datosNGS.niveles.find(n => n.nombre === this.filters.nivel);
+    if (nivelSel?.grados) {
+      this.gradosParaFiltro = nivelSel.grados
+        .map(g => g.nombre)
+        .filter((nombre): nombre is string => !!nombre)
+        .sort((a, b) => {
+          const numA = parseInt(a, 10);
+          const numB = parseInt(b, 10);
+          return (isNaN(numA) || isNaN(numB)) ? a.localeCompare(b) : numA - numB;
+        });
     }
-    this.cdr.detectChanges();
   }
+}
 
   onGradoChange(): void {
-    this.secciones = [];
-    this.filters.seccion = '';
+  this.filters.seccion = '';
+  this.seccionesParaFiltro = [];
 
-    if (this.filters.nivel && this.filters.grado && this.datosNGS) {
-      const selectedNivel = this.datosNGS.niveles?.find(
-        (n) => n.nombre === this.filters.nivel
+  if (this.filters.nivel && this.filters.grado && this.datosNGS?.niveles) {
+    const nivelSel = this.datosNGS.niveles.find(n => n.nombre === this.filters.nivel);
+    const gradoSel = nivelSel?.grados?.find(g => g.nombre === this.filters.grado);
+    if (gradoSel?.secciones) {
+      this.seccionesParaFiltro = [...gradoSel.secciones].sort((a, b) => 
+        a.nombre.localeCompare(b.nombre)
       );
-      if (selectedNivel) {
-        const selectedGrado = selectedNivel.grados?.find(
-          (g) => g.nombre === this.filters.grado
-        );
-        this.secciones = selectedGrado?.secciones || [];
-      }
     }
-    this.cdr.detectChanges();
   }
+}
 
   resetFilter(filter: string): void {
     if (filter === 'all') {
@@ -1006,21 +956,72 @@ export class ProfesorCursoComponent implements OnInit {
   onSortChange(event: { sortBy: string; sortDir: string }): void {
     this.sortBy = event.sortBy;
     this.sortDir = event.sortDir;
-    this.page = 1;
-    this.cargarAsignaciones();
+
+    this.sortAsignacionesLocalmente();
+
+    this.cdr.detectChanges();
+  }
+
+  private sortAsignacionesLocalmente(): void {
+    if (!this.asignaciones || this.asignaciones.length === 0) return;
+
+    const dir = this.sortDir === 'asc' ? 1 : -1;
+
+    this.asignaciones.sort((a: any, b: any) => {
+      let valA: any;
+      let valB: any;
+
+      switch (this.sortBy) {
+        case 'profesor':
+          valA = `${a.usuario?.nombre || ''} ${
+            a.usuario?.apellidopaterno || ''
+          }`.toLowerCase();
+          valB = `${b.usuario?.nombre || ''} ${
+            b.usuario?.apellidopaterno || ''
+          }`.toLowerCase();
+          break;
+        case 'curso':
+          valA = (a.cursoObj?.nombre || '').toLowerCase();
+          valB = (b.cursoObj?.nombre || '').toLowerCase();
+          break;
+        case 'grado':
+          valA = (a.grado || '').toLowerCase();
+          valB = (b.grado || '').toLowerCase();
+          break;
+        case 'seccion':
+          valA = (a.seccion || '').toLowerCase();
+          valB = (b.seccion || '').toLowerCase();
+          break;
+        case 'nivel':
+          valA = (a.nivel || '').toLowerCase();
+          valB = (b.nivel || '').toLowerCase();
+          break;
+        case 'fechaAsignacion':
+          valA = new Date(a.fechaAsignacion || 0);
+          valB = new Date(b.fechaAsignacion || 0);
+          break;
+        case 'fechaActualizacion':
+          valA = new Date(a.fechaActualizacion || 0);
+          valB = new Date(b.fechaActualizacion || 0);
+          break;
+        default:
+          return 0;
+      }
+
+      if (valA === valB) return 0;
+      return (valA > valB ? 1 : -1) * dir;
+    });
   }
 
   cargarConteoAsignaciones(): void {
     this.profesorCursoService.obtenerConteoAsignaciones().subscribe({
       next: (count) => {
         this.totalAsignaciones = count;
-        this.updatePageSizeOptions();
         this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.totalAsignaciones = 0;
-        this.pageSizeOptions = [5];
         this.itemsPerPage = 5;
         localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
         this.notificationService.showNotification(

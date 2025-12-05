@@ -2,10 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatriculaService } from './../../services/matricula.service';
+import { EntidadService } from '../../services/entidad.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faGraduationCap, faChair, faSortNumericDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { GeneralLoadingSpinnerComponent } from '../../../general/components/spinner/spinner.component';
 import { NotificationComponent } from "../../../campus/components/shared/notificaciones/notification.component";
+import { NotificationService } from '../../../campus/components/shared/notificaciones/notification.service';
+import { of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { Entidad, DatosNGS, Nivel, Grado, SeccionVacantes } from '../../interfaces/DTOEntidad';
 
 interface NivelVacantes {
   nombre: string;
@@ -22,7 +27,7 @@ interface NivelVacantes {
     FontAwesomeModule,
     GeneralLoadingSpinnerComponent,
     NotificationComponent
-],
+  ],
   templateUrl: './matriculas.component.html',
   styleUrls: ['./matriculas.component.scss']
 })
@@ -38,7 +43,9 @@ export class MatriculasComponent implements OnInit {
   loadingMessage: string = 'Cargando vacantes...';
   constructor(
     private matriculaService: MatriculaService,
-    private router: Router
+    private entidadService: EntidadService,
+    private router: Router,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -47,27 +54,62 @@ export class MatriculasComponent implements OnInit {
     if (level) {
       this.selectedNivel = level.toLowerCase();
     }
-    this.cargarVacantes();
+    const idUsuario = localStorage.getItem('IDUSER');
+    if (idUsuario) {
+      this.cargarVacantes();
+    } else {
+      this.notificationService.showNotification('Error: No se pudo identificar al usuario.', 'error');
+    }
   }
 
   cargarVacantes(): void {
     this.cargando = true;
     this.loadingMessage = 'Cargando vacantes...';
-    this.matriculaService.vacantesPorNivel(this.selectedNivel).subscribe({
-      next: (vacantes) => {
-        let grados: number[] = [];
-        if (this.selectedNivel === 'primaria') {
-          grados = [1, 2, 3, 4, 5, 6];
-        } else if (this.selectedNivel === 'secundaria') {
-          grados = [1, 2, 3, 4, 5];
+    this.entidadService.obtenerEntidadPorUsuario(localStorage.getItem('IDUSER') ?? '').pipe(
+      map((entidad: Entidad) => {
+        const datosngs = entidad.datosngs;
+        if (!datosngs || !datosngs.niveles) {
+          throw new Error('No se encontró la Entidad.');
         }
-        this.niveles = [
-          {
-            nombre: this.selectedNivel.charAt(0).toUpperCase() + this.selectedNivel.slice(1),
-            grados,
-            vacantes: vacantes ? { ...vacantes } : {}
-          }
-        ];
+
+        const nivelSeleccionado = datosngs.niveles.find(n => n.nombre.toLowerCase() === this.selectedNivel);
+        if (!nivelSeleccionado) {
+          throw new Error(`Nivel "${this.selectedNivel}" no encontrado.`);
+        }
+
+        let grados: number[] = [];
+        const vacantesPorGrado: { [grado: number]: { [seccion: string]: number } } = {};
+        if (nivelSeleccionado.grados) {
+          nivelSeleccionado.grados.forEach((grado: Grado) => {
+            const gradoNum = parseInt(grado.nombre, 10);
+            grados.push(gradoNum);
+            vacantesPorGrado[gradoNum] = {};
+            if (grado.secciones) {
+              grado.secciones.forEach((seccion: SeccionVacantes) => {
+                vacantesPorGrado[gradoNum][seccion.nombre] = seccion.vacantes || 0;
+              });
+            }
+          });
+        }
+
+        return {
+          nombre: nivelSeleccionado.nombre,
+          grados,
+          vacantes: vacantesPorGrado
+        };
+      }),
+      catchError(error => {
+        console.error('Error al cargar vacantes:', error);
+        return of(null);
+      })
+    ).subscribe({
+      next: (nivelData) => {
+        if (nivelData) {
+          this.niveles = [nivelData];
+        } else {
+          this.niveles = [];
+          this.loadingMessage = 'Error al cargar datos.';
+        }
         this.cargando = false;
       },
       error: (error) => {

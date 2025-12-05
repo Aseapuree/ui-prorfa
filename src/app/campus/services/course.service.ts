@@ -94,4 +94,18 @@ export class CourseService {
         })
       );
   }
+
+  obtenerListaCursosSinOrden(page: number, size: number): Observable<{ content: Curso[], totalElements: number }> {
+  return this.clienteHttp
+    .get<{ data: { content: Curso[], totalElements: number } }>(
+      `${this.urlBase}/listar?page=${page - 1}&size=${size}`,
+      { withCredentials: true }
+    )
+    .pipe(
+      map(response => ({
+        content: response.data.content,
+        totalElements: response.data.totalElements
+      }))
+    );
+}
 }

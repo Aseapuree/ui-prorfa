@@ -32,6 +32,7 @@ import { NotificationComponent } from '../../shared/notificaciones/notification.
 import { RolesService } from '../../../services/roles.service';
 import { Role } from '../../../interface/role';
 import { AuditmodalComponent } from '../modals/auditmodal/auditmodal.component';
+import { PreviewContentComponent } from '../modals/preview-content/preview-content.component';
 
 interface AuditFilters {
   userName: string;
@@ -56,12 +57,12 @@ interface AuditFilters {
     NotificationComponent,
     PaginationComponent,
     GeneralLoadingSpinnerComponent,
-    TooltipComponent,
     TableComponent,
     MatDatepickerModule,
     MatInputModule,
     MatNativeDateModule,
     AuditmodalComponent,
+    PreviewContentComponent,
   ],
   providers: [AuditService, UsuarioService, RolesService],
   templateUrl: './audit.component.html',
@@ -70,15 +71,24 @@ interface AuditFilters {
 export class AuditComponent implements OnInit {
   public page: number = 1;
   public itemsPerPage: number = 5;
-  public pageSizeOptions: number[] = [];
   totalPages: number = 1;
-  auditorias: any[] = [];
+
+  // Datos originales desde el backend
+  auditorias: AuditProrfa[] = [];
+
+  // Datos ya ordenados
+  auditoriasOrdenadas: AuditProrfa[] = [];
+
   totalAuditorias: number = 0;
+
+  // Estado del ordenamiento actual
   sortBy: string = 'fechaCreacion';
-  sortDir: string = 'asc';
+  sortDir: string = 'desc';
+
   isLoading: boolean = false;
   loadingMessage: string = 'Cargando...';
   appliedFilters: any = null;
+
   isValidFechaInicio: boolean = true;
   isValidFechaFin: boolean = true;
   currentYear: number = new Date().getFullYear();
@@ -100,9 +110,58 @@ export class AuditComponent implements OnInit {
   userSearchResults: Usuario[] = [];
   selectedUserId: string | null = null;
   private isSearchingUser: boolean = false;
-  showModal: boolean = false;
-  selectedItem: AuditProrfa | null = null;
-  selectedField: string = '';
+
+  modal = {
+  open: false,
+  type: 'preview' as 'preview',
+  title: '',
+  data: null as any,
+  size: 'max-w-2xl',
+};
+
+onPreviewClick(event: { item: AuditProrfa; field: string }): void {
+  const item = event.item;
+  const field = event.field;
+
+  let title = '';
+  let data: any = null;
+  let size = 'max-w-2xl';
+
+  if (field === 'userAgent') {
+    title = 'User Agent completo';
+    data = {
+      field: 'text',
+      content: item.userAgent || 'No disponible',
+    };
+  }
+
+  if (field === 'payload') {
+    title = 'Payload completo (JSON)';
+    data = {
+      field: 'json',
+      content: item.payload ? JSON.stringify(item.payload, null, 2) : 'Sin datos',
+    };
+    size = 'max-w-4xl';
+  }
+
+  this.modal = {
+    open: true,
+    type: 'preview',
+    title,
+    data,
+    size,
+  };
+}
+
+closeModal() {
+  this.modal = {
+    open: false,
+    type: 'preview',
+    title: '',
+    data: null,
+    size: 'max-w-2xl',
+  };
+}
 
   // Roles cargados (sin autocomplete)
   roles: Role[] = [];
@@ -191,17 +250,11 @@ export class AuditComponent implements OnInit {
     if (savedItemsPerPage) {
       this.itemsPerPage = parseInt(savedItemsPerPage, 10);
     }
+
     this.cargarConteoAuditorias();
     this.cargarAuditorias();
     this.loadRoles();
     this.updateMaxDate();
-  }
-
-  onPreviewClick(event: { item: AuditProrfa; field: string }): void {
-    this.selectedItem = event.item;
-    this.selectedField = event.field;
-    this.showModal = true;
-    this.cdr.detectChanges();
   }
 
   private updateMaxDate(): void {
@@ -477,66 +530,31 @@ export class AuditComponent implements OnInit {
     });
   }
 
-  private updatePageSizeOptions(): void {
-    const previousItemsPerPage = this.itemsPerPage;
-    this.pageSizeOptions = [];
-    const increment = 5;
-    for (let i = increment; i <= this.totalAuditorias; i += increment) {
-      this.pageSizeOptions.push(i);
-    }
-
-    if (this.pageSizeOptions.length > 0) {
-      if (!this.pageSizeOptions.includes(this.itemsPerPage)) {
-        const validOption = this.pageSizeOptions
-          .filter((option) => option <= this.totalAuditorias)
-          .reduce(
-            (prev, curr) =>
-              Math.abs(curr - this.itemsPerPage) <
-              Math.abs(prev - this.itemsPerPage)
-                ? curr
-                : prev,
-            this.pageSizeOptions[0]
-          );
-        this.itemsPerPage = validOption;
-        localStorage.setItem('itemsPerPageAudit', this.itemsPerPage.toString());
-        console.log(
-          `itemsPerPage cambiado de ${previousItemsPerPage} a ${this.itemsPerPage}`
-        );
-      }
-    } else {
-      this.pageSizeOptions = [5];
-      this.itemsPerPage = 5;
-      localStorage.setItem('itemsPerPageAudit', this.itemsPerPage.toString());
-      console.log(`itemsPerPage establecido a 5 porque no hay auditorías`);
-    }
-  }
+  
 
   onItemsPerPageChange(newSize: number): void {
-    console.log(`onItemsPerPageChange: Cambiando itemsPerPage a ${newSize}`);
-    this.itemsPerPage = newSize;
-    localStorage.setItem('itemsPerPageAudit', this.itemsPerPage.toString());
-    this.page = 1;
-    this.cargarAuditorias();
-  }
+  const validatedSize = Math.min(newSize, 30);
+  this.itemsPerPage = newSize;
+  localStorage.setItem('itemsPerPageAudit', newSize.toString());
+  this.page = 1;
+  this.cargarAuditorias();
+}
 
   onSortChange(event: { sortBy: string; sortDir: string }): void {
     this.sortBy = event.sortBy;
     this.sortDir = event.sortDir;
-    this.page = 1;
-    this.cargarAuditorias();
+    this.actualizarOrdenamientoLocal(); // Solo ordena localmente
   }
 
   cargarConteoAuditorias(): void {
     this.auditService.obtenerConteoAuditorias().subscribe({
       next: (count) => {
         this.totalAuditorias = count;
-        this.updatePageSizeOptions();
         this.totalPages = Math.ceil(this.totalAuditorias / this.itemsPerPage);
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.totalAuditorias = 0;
-        this.pageSizeOptions = [5];
         this.itemsPerPage = 5;
         localStorage.setItem('itemsPerPageAudit', this.itemsPerPage.toString());
         this.notificationService.showNotification(
@@ -548,89 +566,74 @@ export class AuditComponent implements OnInit {
     });
   }
 
-  cargarAuditorias(): void {
-    this.loadingMessage = 'Cargando auditorías...';
-    this.isLoading = true;
-    console.log('Cargando auditorías con:', {
-      page: this.page,
-      itemsPerPage: this.itemsPerPage,
-      sortBy: this.sortBy,
-      sortDir: this.sortDir,
-      filters: this.appliedFilters,
+  private actualizarOrdenamientoLocal(): void {
+    if (!this.auditorias || this.auditorias.length === 0) {
+      this.auditoriasOrdenadas = [];
+      return;
+    }
+
+    const sorted = [...this.auditorias].sort((a, b) => {
+      let valA = this.getNestedValue(a, this.sortBy);
+      let valB = this.getNestedValue(b, this.sortBy);
+
+      if (valA == null) valA = '';
+      if (valB == null) valB = '';
+
+      if (this.sortBy === 'fechaCreacion') {
+        valA = new Date(valA as string).getTime();
+        valB = new Date(valB as string).getTime();
+      } else if (typeof valA === 'string' && typeof valB === 'string') {
+        valA = valA.toLowerCase();
+        valB = valB.toLowerCase();
+      }
+
+      if (valA < valB) return this.sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return this.sortDir === 'asc' ? 1 : -1;
+      return 0;
     });
 
-    if (this.appliedFilters) {
-      this.auditService
-        .buscarAuditorias(
-          this.appliedFilters,
-          this.page,
-          this.itemsPerPage
-        )
-        .subscribe({
-          next: (response) => {
-            console.log('Respuesta de buscarAuditorias:', response);
-            this.auditorias = this.transformarDatos(response.content || []);
-            this.totalAuditorias = response.totalElements;
-            this.totalPages = Math.ceil(
-              this.totalAuditorias / this.itemsPerPage
-            );
-            this.updatePageSizeOptions();
-            if (this.page > this.totalPages) {
-              this.page = 1;
-              this.cargarAuditorias();
-              return;
-            }
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            console.error('Error en buscarAuditorias:', err);
-            this.auditorias = [];
-            this.totalPages = 1;
-            this.notificationService.showNotification(
-              'Error al cargar auditorías: ' + err.message,
-              'error'
-            );
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-        });
-    } else {
-      this.auditService
-        .obtenerListaAuditorias(
-          this.page,
-          this.itemsPerPage
-        )
-        .subscribe({
-          next: (response) => {
-            console.log('Respuesta de obtenerListaAuditorias:', response);
-            this.auditorias = this.transformarDatos(response.content || []);
-            this.totalAuditorias = response.totalElements;
-            this.totalPages = Math.ceil(
-              this.totalAuditorias / this.itemsPerPage
-            );
-            this.updatePageSizeOptions();
-            if (this.page > this.totalPages) {
-              this.page = 1;
-              this.cargarAuditorias();
-              return;
-            }
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            console.error('Error en obtenerListaAuditorias:', err);
-            this.auditorias = [];
-            this.totalPages = 1;
-            this.notificationService.showNotification(
-              'Error al cargar auditorías: ' + err.message,
-              'error'
-            );
-            this.cdr.detectChanges();
-            this.isLoading = false;
-          },
-        });
-    }
+    this.auditoriasOrdenadas = sorted;
+    this.cdr.detectChanges();
+  }
+
+  
+
+  private getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((o, p) => (o ? o[p] : null), obj);
+  }
+
+  cargarAuditorias(): void {
+    this.isLoading = true;
+    this.loadingMessage = 'Cargando auditorías...';
+
+    const request = this.appliedFilters
+      ? this.auditService.buscarAuditorias(this.appliedFilters, this.page, this.itemsPerPage)
+      : this.auditService.obtenerListaAuditorias(this.page, this.itemsPerPage);
+
+    request.subscribe({
+      next: (response: any) => {
+        this.auditorias = this.transformarDatos(response.content || []);
+        this.actualizarOrdenamientoLocal(); // Aplica el orden actual
+        this.totalAuditorias = response.totalElements;
+        this.totalPages = Math.ceil(this.totalAuditorias / this.itemsPerPage);
+
+        if (this.page > this.totalPages && this.totalPages > 0) {
+          this.page = 1;
+          this.cargarAuditorias();
+        }
+
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.auditorias = [];
+        this.auditoriasOrdenadas = [];
+        this.totalAuditorias = 0;
+        this.isLoading = false;
+        this.notificationService.showNotification('Error al cargar auditorías', 'error');
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   private transformarDatos(auditorias: AuditProrfa[]): any[] {
@@ -735,7 +738,7 @@ export class AuditComponent implements OnInit {
             );
           }
 
-          this.updatePageSizeOptions();
+          
           if (this.page > this.totalPages && this.totalPages > 0) {
             this.page = 1;
             this.buscarAuditorias();
@@ -754,7 +757,6 @@ export class AuditComponent implements OnInit {
           this.auditorias = [];
           this.totalAuditorias = 0;
           this.totalPages = 1;
-          this.updatePageSizeOptions();
           this.isLoading = false;
           this.cdr.detectChanges();
         },

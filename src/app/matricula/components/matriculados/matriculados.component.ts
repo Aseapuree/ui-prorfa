@@ -3,7 +3,7 @@ import { NotificationService } from './../../../campus/components/shared/notific
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { TableComponent, ColumnConfig } from './../../../general/components/table/table.component';
+import { TableComponent, ColumnConfig, ActionConfig } from './../../../general/components/table/table.component';
 import { MatriculaService } from './../../services/matricula.service';
 import { Matricula } from './../../interfaces/DTOMatricula';
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
@@ -13,27 +13,15 @@ import { Alumno } from './../../interfaces/DTOAlumno';
 import { ComprobanteService } from './../../services/comprobante.service';
 import { ApoderadoService } from './../../services/apoderado.service';
 import { AlumnoService } from './../../services/alumno.service';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, of, Observable } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { Comprobante } from '../../interfaces/DTOComprobante';
 import { Apoderado } from '../../interfaces/DTOApoderado';
 import { PaginationComponent } from './../../../general/components/pagination/pagination.component';
 import { FormsModule } from '@angular/forms';
 import { TooltipComponent } from './../../../general/components/tooltip/tooltip.component';
-
-import * as XLSX from 'xlsx';
-
 import { EntidadService } from './../../services/entidad.service';
-import { DatosNGS, Nivel as EntidadNivel, Grado as EntidadGrado, SeccionVacantes } from './../../interfaces/DTOEntidad';
-
-export interface ActionConfig {
-  name: string;
-  icon: any;
-  tooltip: string;
-  action: (item: MatriculadoDisplay) => void;
-  hoverColor?: string;
-  visible?: (item: MatriculadoDisplay) => boolean;
-}
+import { DatosNGS, SeccionVacantes } from './../../interfaces/DTOEntidad';
 
 export interface MatriculadoDisplay extends Matricula {
   nombre?: string | null;
@@ -70,15 +58,14 @@ export class MatriculadosComponent implements OnInit {
   spinnerMessage: string = 'Cargando matrículas...';
 
   matriculados: MatriculadoDisplay[] = [];
-  allMatriculados: MatriculadoDisplay[] = [];
 
   columns: ColumnConfig[] = [];
   actions: ActionConfig[] = [];
 
-  currentPage: number = 1;
+  page: number = 1;
+  itemsPerPage: number = 5;
+  totalElements: number = 0;
   totalPages: number = 1;
-  pageSize: number = 5;
-  maxPaginationSize: number = 7;
 
   currentDate: string;
 
@@ -100,6 +87,22 @@ export class MatriculadosComponent implements OnInit {
     fechaFin: '' as string
   };
 
+  isValidFechaInicio: boolean = true;
+  isValidFechaFin: boolean = true;
+  currentYear: number = new Date().getFullYear();
+
+  // REGEX
+  //private readonly CODIGO_MATRICULA_REGEX = /^MTRC-\d{4}-\d{5}$/i;
+  //private readonly CODIGO_PAGO_REGEX = /^PAGO-\d{4}-\d{5}$/i;
+
+  private readonly REGEX_INTERMEDIO = /^[MPTRCAGO0-9-]*$/i;
+  //private readonly REGEX_BUSQUEDA_PARCIAL = /^(MTRC|PAGO)(-\d{0,4})?(-\d{0,5})?$/i;
+
+  private lastValidValues: { [key: string]: string } = {
+    codigomatricula: '',
+    codigopago: ''
+  };
+
   constructor(
     private router: Router,
     private matriculaService: MatriculaService,
@@ -116,26 +119,21 @@ export class MatriculadosComponent implements OnInit {
     );
     const today = new Date();
     const offset = today.getTimezoneOffset();
-    const todayLocal = new Date(today.getTime() - (offset*60*1000));
+    const todayLocal = new Date(today.getTime() - (offset * 60 * 1000));
     this.currentDate = todayLocal.toISOString().split('T')[0];
   }
 
   ngOnInit() {
     this.columns = [
-      { field: 'codigomatricula', header: 'CODIGO MATRICULA', maxWidth: 150, sortable: true },
-      { field: 'codigopago', header: 'CODIGO PAGO', maxWidth: 150, sortable: true },
+      { field: 'codigomatricula', header: 'CÓDIGO MATRÍCULA', maxWidth: 170, sortable: true },
+      { field: 'codigopago', header: 'CÓDIGO PAGO', maxWidth: 170, sortable: true },
       { field: 'grado', header: 'GRADO', maxWidth: 100, sortable: true },
-      {
-        field: 'seccion',
-        header: 'SECCION',
-        maxWidth: 100,
-        sortable: true,
-      },
+      { field: 'seccion', header: 'SECCIÓN', maxWidth: 100, sortable: true },
       { field: 'nivel', header: 'NIVEL', maxWidth: 100, sortable: true },
-      { field: 'numeroDocumentoApoderado', header: 'DOCUMENTO APODERADO', maxWidth: 110, sortable: true },
-      { field: 'numeroDocumentoAlumno', header: 'DOCUMENTO ALUMNO', maxWidth: 110, sortable: true },
+      { field: 'numeroDocumentoApoderado', header: 'DOC. APODERADO', maxWidth: 130, sortable: true },
+      { field: 'numeroDocumentoAlumno', header: 'DOC. ALUMNO', maxWidth: 130, sortable: true },
       { field: 'estadoMatricula', header: 'ESTADO', maxWidth: 150, sortable: true },
-      { field: 'fechaCreacionMatricula', header: 'FECHA CREACION', maxWidth: 150, sortable: true, type: 'date' },
+      { field: 'fechaCreacionMatricula', header: 'FECHA CREACIÓN', maxWidth: 150, sortable: true, type: 'date' },
     ];
 
     this.actions = [
@@ -145,10 +143,7 @@ export class MatriculadosComponent implements OnInit {
         tooltip: 'CONTINUAR',
         action: (item: MatriculadoDisplay) => this.continueMatricula(item),
         hoverColor: 'green',
-        visible: (item: MatriculadoDisplay) => {
-           const estado = item.estadoMatricula?.trim().toUpperCase();
-           return estado === 'EN PROCESO';
-        }
+        visible: (item: MatriculadoDisplay) => item.estadoMatricula?.trim().toUpperCase() === 'EN PROCESO'
       },
       {
         name: 'print-payment',
@@ -159,54 +154,67 @@ export class MatriculadosComponent implements OnInit {
           this.viewComprobante(item, 'pago');
         },
         hoverColor: 'blue',
-        visible: (item: MatriculadoDisplay) => {
-           const estado = item.estadoMatricula?.trim().toUpperCase();
-           return estado === 'COMPLETADO';
-        }
+        visible: (item: MatriculadoDisplay) => item.estadoMatricula?.trim().toUpperCase() === 'COMPLETADO'
       },
       {
         name: 'print-enrollment',
         icon: ['fas', 'file-alt'],
-        tooltip: 'COMPROBANTE MATRICULA',
+        tooltip: 'COMPROBANTE MATRÍCULA',
         action: (item: MatriculadoDisplay) => {
           this.spinnerMessage = 'Generando comprobante de matrícula...';
           this.viewComprobante(item, 'matricula');
         },
         hoverColor: 'purple',
-        visible: (item: MatriculadoDisplay) => {
-           const estado = item.estadoMatricula?.trim().toUpperCase();
-           return estado === 'COMPLETADO';
-        }
+        visible: (item: MatriculadoDisplay) => item.estadoMatricula?.trim().toUpperCase() === 'COMPLETADO'
       }
     ];
-    this.cargarDatosEntidadParaFiltros();
-    this.loadMatriculas();
-  }
 
+    this.cargarDatosEntidadParaFiltros();
+    this.onSearch();
+  }
+//****************************************** */
+onItemsPerPageChange(newSize: number): void {
+  // Forzamos que el cambio ocurra en el próximo ciclo de detección
+  setTimeout(() => {
+    this.itemsPerPage = newSize;
+    this.page = 1;
+    this.onSearch();
+  });
+}
+
+//****************************************** */
   cargarDatosEntidadParaFiltros(): void {
-    this.entidadService.obtenerEntidadList().subscribe({
-      next: (entidades) => {
-        if (entidades && entidades.length > 0 && entidades[0].datosngs && entidades[0].datosngs.niveles) {
-          this.datosNGS = entidades[0].datosngs;
-          this.nivelesParaFiltro = this.datosNGS.niveles!
-            .map(n => n.nombre)
-            .filter((nombre): nombre is string => !!nombre)
-            .sort();
-          this.notificationService.showNotification('Niveles cargados exitosamente para los filtros.', 'success');
-        } else {
-          this.notificationService.showNotification('No se pudieron cargar los niveles para los filtros desde la entidad.', 'error');
+    const idUsuario = localStorage.getItem('IDUSER');
+    if (idUsuario) {
+      this.entidadService.obtenerEntidadPorUsuario(idUsuario).subscribe({
+        next: (entidad) => {
+          if (entidad && entidad.datosngs && entidad.datosngs.niveles) {
+            this.datosNGS = entidad.datosngs;
+            this.nivelesParaFiltro = this.datosNGS.niveles!
+              .map(n => n.nombre)
+              .filter((nombre): nombre is string => !!nombre)
+              .sort();
+            this.notificationService.showNotification('Niveles cargados exitosamente para los filtros.', 'success');
+          } else {
+            this.notificationService.showNotification('No se pudieron cargar los niveles para los filtros desde la entidad.', 'error');
+            this.nivelesParaFiltro = [];
+          }
+          this.gradosParaFiltro = [];
+          this.seccionesParaFiltro = [];
+        },
+        error: (err) => {
+          this.notificationService.showNotification('Error al cargar datos de entidad para filtros: ' + err.message, 'error');
           this.nivelesParaFiltro = [];
+          this.gradosParaFiltro = [];
+          this.seccionesParaFiltro = [];
         }
-        this.gradosParaFiltro = [];
-        this.seccionesParaFiltro = [];
-      },
-      error: (err) => {
-        this.notificationService.showNotification('Error al cargar datos de entidad para filtros: ' + err.message, 'error');
-        this.nivelesParaFiltro = [];
-        this.gradosParaFiltro = [];
-        this.seccionesParaFiltro = [];
-      }
-    });
+      });
+    } else {
+      this.notificationService.showNotification('Error: No se pudo identificar al usuario.', 'error');
+      this.nivelesParaFiltro = [];
+      this.gradosParaFiltro = [];
+      this.seccionesParaFiltro = [];
+    }
   }
 
   onNivelChange(): void {
@@ -232,11 +240,7 @@ export class MatriculadosComponent implements OnInit {
             return a.localeCompare(b);
           });
         this.notificationService.showNotification(`Grados cargados para el nivel: ${this.filters.nivel}`, 'info');
-      } else {
-        this.notificationService.showNotification('No se encontraron grados para el nivel seleccionado.', 'info');
       }
-    } else {
-      this.notificationService.showNotification('Nivel no seleccionado o datos de entidad no disponibles.', 'error');
     }
   }
 
@@ -255,330 +259,256 @@ export class MatriculadosComponent implements OnInit {
         if (gradoSeleccionado && gradoSeleccionado.secciones) {
           this.seccionesParaFiltro = [...gradoSeleccionado.secciones].sort((a, b) => a.nombre.localeCompare(b.nombre));
           this.notificationService.showNotification(`Secciones cargadas para el grado: ${this.filters.grado}`, 'info');
-        } else {
-          this.notificationService.showNotification('No se encontraron secciones para el grado seleccionado.', 'info');
         }
       }
-    } else {
-      this.notificationService.showNotification('Nivel o grado no seleccionado, o datos de entidad no disponibles.', 'error');
-    }
-  }
-
-  loadMatriculas(): void {
-     this.loading = true;
-     this.spinnerMessage = 'Cargando matrículas...';
-     this.matriculaService.obtenerMatriculas()
-       .pipe(
-         switchMap(matriculas => {
-           if (!matriculas || matriculas.length === 0) {
-             this.notificationService.showNotification('No se encontraron matrículas.', 'info');
-             return of([]);
-           }
-           const observables = matriculas.map(matricula => {
-             const apoderado$ = matricula.idapoderado ? this.apoderadoService.obtenerApoderado(matricula.idapoderado).pipe(catchError(() => of(null))) : of(null);
-             const alumno$ = matricula.idalumno ? this.alumnoService.obtenerAlumno(matricula.idalumno).pipe(catchError(() => of(null))) : of(null);
-             const comprobante$ = matricula.idmatricula ? this.comprobanteService.obtenerComprobantePorIdMatricula(matricula.idmatricula).pipe(catchError(() => of(null))) : of(null);
-             return forkJoin([of(matricula), apoderado$, alumno$, comprobante$]);
-           });
-           return forkJoin(observables);
-         }),
-         map(results => {
-           return results.map(([matricula, apoderado, alumno, comprobante]) => {
-             const mappedSeccion = (matricula.seccion && typeof matricula.seccion === 'object' && 'nombre' in matricula.seccion)
-                        ? (matricula.seccion as SeccionVacantes).nombre
-                        : (matricula.seccion || null);
-
-             return {
-               ...matricula,
-               nombre: alumno?.nombre || null,
-               apellidoPaterno: alumno?.apellidoPaterno || null,
-               apellidoMaterno: alumno?.apellidoMaterno || null,
-               estadoMatricula: matricula.estadoMatricula || null,
-               codigomatricula: comprobante?.codigomatricula || null,
-               codigopago: comprobante?.codigopago || null,
-               fechaCreacionMatricula: matricula?.fechaCreacion || null,
-               numeroDocumentoApoderado: apoderado?.numeroDocumento || null,
-               numeroDocumentoAlumno: alumno?.numeroDocumento || null,
-               nivel: matricula.nivel,
-               grado: matricula.grado,
-               seccion: mappedSeccion,
-               montoTotalComprobante: comprobante?.montototal ? parseFloat(comprobante.montototal) : undefined,
-             } as MatriculadoDisplay;
-           });
-         })
-       )
-       .subscribe({
-         next: data => {
-           this.allMatriculados = data;
-           this.applyFiltersAndPagination(this.filters.fechaInicio || undefined, this.filters.fechaFin || undefined);
-           this.loading = false;
-           if (this.allMatriculados.length === 0) {
-             this.notificationService.showNotification('No hay matrículas registradas para mostrar.', 'info');
-           } else {
-             this.notificationService.showNotification('Matrículas cargadas exitosamente.', 'success');
-           }
-         },
-         error: err => {
-           this.notificationService.showNotification('Error al cargar matrículas: ' + err.message, 'error');
-           this.loading = false;
-         }
-       });
-   }
-
-  applyFiltersAndPagination(fechaInicioBusqueda?: string, fechaFinBusqueda?: string): void {
-    let filteredMatriculados = this.allMatriculados.filter(matricula => {
-      let isMatch = true;
-
-      if (this.filters.codigomatricula && !matricula.codigomatricula?.toLowerCase().includes(this.filters.codigomatricula.toLowerCase())) isMatch = false;
-      if (this.filters.codigopago && !matricula.codigopago?.toLowerCase().includes(this.filters.codigopago.toLowerCase())) isMatch = false;
-
-      if (this.filters.nivel && matricula.nivel?.toLowerCase() !== this.filters.nivel.toLowerCase()) isMatch = false;
-      if (this.filters.grado && matricula.grado?.toString().toLowerCase() !== this.filters.grado.toLowerCase()) isMatch = false;
-      if (this.filters.seccion && matricula.seccion?.toLowerCase() !== this.filters.seccion.toLowerCase()) isMatch = false;
-
-      const fechaInicioValida = fechaInicioBusqueda && this.isValidDateFormat(fechaInicioBusqueda);
-      const fechaFinValida = fechaFinBusqueda && this.isValidDateFormat(fechaFinBusqueda);
-
-      if (fechaInicioValida && fechaFinValida) {
-        const fechaCreacionStr = matricula.fechaCreacionMatricula?.split('T')[0];
-        const fechaCreacion = fechaCreacionStr ? new Date(fechaCreacionStr + "T00:00:00Z") : null;
-        const fechaInicioFilter = new Date(fechaInicioBusqueda + "T00:00:00Z");
-        const fechaFinFilter = new Date(fechaFinBusqueda + "T00:00:00Z");
-
-        if (fechaCreacion) {
-            if (fechaCreacion.getTime() < fechaInicioFilter.getTime() || fechaCreacion.getTime() > fechaFinFilter.getTime()) {
-                 isMatch = false;
-            }
-        } else {
-          isMatch = false;
-        }
-      }
-
-      return isMatch;
-    });
-
-    if (this.currentSortField && this.currentSortDirection) {
-        filteredMatriculados.sort((a, b) => {
-            const fieldA = (a as any)[this.currentSortField!];
-            const fieldB = (b as any)[this.currentSortField!];
-
-            let comparison = 0;
-
-            if (fieldA == null && fieldB == null) {
-                comparison = 0;
-            } else if (fieldA == null) {
-                comparison = this.currentSortDirection === 'asc' ? -1 : 1;
-            } else if (fieldB == null) {
-                comparison = this.currentSortDirection === 'asc' ? 1 : -1;
-            } else {
-                if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-                     comparison = fieldA.toLowerCase().localeCompare(fieldB.toLowerCase());
-                } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
-                     comparison = fieldA - fieldB;
-                } else if (typeof fieldA === 'string' && typeof fieldB === 'string' && this.currentSortField === 'fechaCreacionMatricula') {
-                    const dateA = new Date(fieldA);
-                    const dateB = new Date(fieldB);
-                    comparison = dateA.getTime() - dateB.getTime();
-                }
-                 else {
-                    if (fieldA < fieldB) comparison = -1;
-                    else if (fieldA > fieldB) comparison = 1;
-                    else comparison = 0;
-                }
-            }
-
-            return this.currentSortDirection === 'asc' ? comparison : -comparison;
-        });
-    }
-
-    this.totalPages = Math.ceil(filteredMatriculados.length / this.pageSize);
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-        this.currentPage = 1;
-    } else if (this.totalPages === 0) {
-        this.currentPage = 1;
-    }
-
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    this.matriculados = filteredMatriculados.slice(startIndex, endIndex);
-    if (this.matriculados.length === 0 && this.allMatriculados.length > 0) {
-      this.notificationService.showNotification('No se encontraron matrículas con los filtros aplicados.', 'info');
     }
   }
 
   isValidDateFormat(dateString: string | null): boolean {
-      if (!dateString) return false;
-      const regex = /^\d{4}-\d{2}-\d{2}$/;
-      if(!regex.test(dateString)) return false;
-      const [year, month, day] = dateString.split('-').map(Number);
-      const date = new Date(Date.UTC(year, month - 1, day));
-      return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+    if (!dateString) return false;
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(dateString)) return false;
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
   }
 
   validateDateIsNotFuture(dateString: string | null): boolean {
-      if (!dateString || !this.isValidDateFormat(dateString)) return true;
-      const [year, month, day] = dateString.split('-').map(Number);
-      const inputDateUTC = Date.UTC(year, month - 1, day);
-
-      const today = new Date();
-      const todayUTC = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-
-      return inputDateUTC <= todayUTC;
+    if (!dateString || !this.isValidDateFormat(dateString)) return true;
+    const [year, month, day] = dateString.split('-').map(Number);
+    const inputDateUTC = Date.UTC(year, month - 1, day);
+    const today = new Date();
+    const todayUTC = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    return inputDateUTC <= todayUTC;
   }
 
   onDateChange(field: 'fechaInicio' | 'fechaFin'): void {
-      const dateValue = this.filters[field];
-      if (dateValue && !this.isValidDateFormat(dateValue)) {
-          this.notificationService.showNotification(`Formato de ${field === 'fechaInicio' ? 'Fecha Inicio' : 'Fecha Fin'} inválido. UseYYYY-MM-dd.`, 'error');
-          this.filters[field] = '';
-          return;
-      }
-      if (dateValue && !this.validateDateIsNotFuture(dateValue)) {
-          this.notificationService.showNotification(`La ${field === 'fechaInicio' ? 'Fecha Inicio' : 'Fecha Fin'} no puede ser mayor a la fecha actual.`, 'error');
-          this.filters[field] = '';
-      }
-  }
-
-  onSearch(sortEvent?: { sortBy: string, sortDir: string }): void {
-    this.loading = true;
-    this.spinnerMessage = 'Buscando matrículas...';
-    this.notificationService.showNotification('Aplicando filtros y buscando matrículas...', 'info');
-
-    if (sortEvent) {
-        this.currentSortField = sortEvent.sortBy;
-        this.currentSortDirection = (sortEvent.sortDir === 'asc' || sortEvent.sortDir === 'desc') ? (sortEvent.sortDir as 'asc' | 'desc') : null;
+    const dateValue = this.filters[field];
+    if (dateValue && !this.isValidDateFormat(dateValue)) {
+      this.notificationService.showNotification(`Formato de ${field === 'fechaInicio' ? 'Fecha Inicio' : 'Fecha Fin'} inválido. Use YYYY-MM-DD.`, 'error');
+      this.filters[field] = '';
+      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
+      return;
+    }
+    if (dateValue && !this.validateDateIsNotFuture(dateValue)) {
+      this.notificationService.showNotification(`La ${field === 'fechaInicio' ? 'Fecha Inicio' : 'Fecha Fin'} no puede ser mayor a la fecha actual.`, 'error');
+      this.filters[field] = '';
+      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = false;
     } else {
-        this.currentPage = 1;
+      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = true;
     }
 
-    let fechaInicioBusqueda = this.filters.fechaInicio;
-    let fechaFinBusqueda = this.filters.fechaFin;
+    if (field === 'fechaFin' && this.filters.fechaInicio && dateValue) {
+      const startDate = new Date(this.filters.fechaInicio);
+      const endDate = new Date(dateValue);
+      if (endDate < startDate) {
+        this.notificationService.showNotification('La Fecha Fin no puede ser menor que la Fecha Inicio.', 'error');
+        this.filters.fechaFin = '';
+        this.isValidFechaFin = false;
+      }
+    }
+    if (field === 'fechaInicio' && this.filters.fechaFin) {
+      const startDate = new Date(dateValue);
+      const endDate = new Date(this.filters.fechaFin);
+      if (endDate < startDate) {
+        this.notificationService.showNotification('La Fecha Fin no puede ser menor que la Fecha Inicio.', 'error');
+        this.filters.fechaFin = '';
+        this.isValidFechaFin = false;
+      }
+    }
+  }
 
-    if (fechaInicioBusqueda && !this.isValidDateFormat(fechaInicioBusqueda)) {
-        this.notificationService.showNotification('Formato de Fecha Inicio inválido. UseYYYY-MM-dd.', 'error');
-        this.loading = false;
-        return;
-    }
-    if (fechaFinBusqueda && !this.isValidDateFormat(fechaFinBusqueda)) {
-        this.notificationService.showNotification('Formato de Fecha Fin inválido. UseYYYY-MM-dd.', 'error');
-        this.loading = false;
-        return;
+  // VALIDACIÓN EN TIEMPO REAL PARA CÓDIGOS MTRC y PAGO
+  onInputChange(event: Event, field: 'codigomatricula' | 'codigopago'): void {
+    const input = event.target as HTMLInputElement;
+    let valor = input.value.toUpperCase().trimStart();
+
+    // Bloquea espacios al inicio
+    if (valor.startsWith(' ')) {
+      input.value = this.lastValidValues[field];
+      this.filters[field] = this.lastValidValues[field];
+      return;
     }
 
-    if (fechaInicioBusqueda && !this.validateDateIsNotFuture(fechaInicioBusqueda)) {
-        this.notificationService.showNotification('La Fecha Inicio no puede ser futura.', 'error');
-        this.loading = false;
-        return;
-    }
-    if (fechaFinBusqueda && !this.validateDateIsNotFuture(fechaFinBusqueda)) {
-        this.notificationService.showNotification('La Fecha Fin no puede ser futura.', 'error');
-        this.loading = false;
-        return;
+    // Permitir solo caracteres válidos mientras escribe
+    if (valor && !this.REGEX_INTERMEDIO.test(valor)) {
+      input.value = this.lastValidValues[field];
+      this.filters[field] = this.lastValidValues[field];
+      this.notificationService.showNotification('Solo letras MTRC/PAGO, números y guiones', 'info');
+      return;
     }
 
-    if (fechaInicioBusqueda && !fechaFinBusqueda) {
-        fechaFinBusqueda = this.currentDate;
-    } else if (!fechaInicioBusqueda && fechaFinBusqueda) {
-        this.notificationService.showNotification('Por favor, ingrese también la Fecha Inicio para filtrar por rango.', 'error');
-        this.loading = false;
-        return;
-    }
+    this.filters[field] = valor;
+    this.lastValidValues[field] = valor;
+  }
 
-    if (fechaInicioBusqueda && fechaFinBusqueda) {
-        const inicio = new Date(fechaInicioBusqueda + "T00:00:00Z");
-        const fin = new Date(fechaFinBusqueda + "T00:00:00Z");
-        if (fin.getTime() < inicio.getTime()) {
-            this.notificationService.showNotification('La Fecha Fin no puede ser menor que la Fecha Inicio.', 'error');
-            this.loading = false;
-            return;
+    onEnterKey(event: any): void {
+    if (event.key === 'Enter') {
+      this.onSearch();
+    }
+  }
+
+
+  // BÚSQUEDA CON BACKEND
+  onSearch(sortEvent?: { sortBy: string, sortDir: string }, newPage?: number): void {
+  if (newPage && newPage >= 1 && newPage <= this.totalPages) {
+    this.page = newPage;
+  }
+
+  if (sortEvent) {
+    this.currentSortField = sortEvent.sortBy;
+    this.currentSortDirection = sortEvent.sortDir as 'asc' | 'desc';
+  }
+
+  this.loading = true;
+  this.spinnerMessage = 'Buscando matrículas...';
+
+  const filters: any = {
+    codigomatricula: this.filters.codigomatricula || undefined,
+    codigopago: this.filters.codigopago || undefined,
+    nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+    grado: this.filters.grado || undefined,
+    seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
+    fechaInicio: this.filters.fechaInicio || undefined,
+    fechaFin: this.filters.fechaFin || undefined,
+  };
+
+  this.matriculaService.obtenerMatriculas(filters, this.page - 1, this.itemsPerPage)
+    .pipe(
+      switchMap((matriculas: Matricula[]) => {
+        this.totalElements = this.matriculaService.totalElements;
+        this.totalPages = this.matriculaService.totalPages || 1;
+
+        if (!matriculas || matriculas.length === 0) {
+          this.notificationService.showNotification('No se encontraron matrículas.', 'info');
+          return of([]);
         }
-    }
 
-    setTimeout(() => {
-      this.applyFiltersAndPagination(fechaInicioBusqueda || undefined, fechaFinBusqueda || undefined);
-      this.loading = false;
-      this.notificationService.showNotification('Filtros aplicados y búsqueda completada.', 'success');
-    }, 300);
+        const observables = matriculas.map(m => this.enriquecerMatricula(m));
+        return forkJoin(observables);
+      })
+    )
+    .subscribe({
+      next: (data) => {
+        this.matriculados = data;
+
+        if (this.currentSortField && this.currentSortDirection) {
+          this.ordenarLocalmente();
+        }
+
+        this.loading = false;
+        const mensaje = data.length === 0
+          ? 'No se encontraron matrículas con los filtros aplicados.'
+          : `Mostrando ${data.length} de ${this.totalElements} matrículas.`;
+        this.notificationService.showNotification(mensaje, data.length === 0 ? 'info' : 'success');
+      },
+      error: (err) => {
+        this.loading = false;
+        this.matriculados = [];
+        this.totalElements = 0;
+        this.totalPages = 1;
+        this.notificationService.showNotification('Error al cargar matrículas: ' + err.message, 'error');
+      }
+    });
+}
+
+    private enriquecerMatricula(matricula: Matricula): Observable<MatriculadoDisplay> {
+    const apoderado$ = matricula.idapoderado
+      ? this.apoderadoService.obtenerApoderado(matricula.idapoderado).pipe(catchError(() => of(null)))
+      : of(null);
+
+    const alumno$ = matricula.idalumno
+      ? this.alumnoService.obtenerAlumno(matricula.idalumno).pipe(catchError(() => of(null)))
+      : of(null);
+
+    const comprobante$ = (matricula.estadoMatricula?.trim().toUpperCase() === 'COMPLETADO' && matricula.idmatricula)
+      ? this.comprobanteService.obtenerComprobantePorIdMatricula(matricula.idmatricula).pipe(catchError(() => of(null)))
+      : of(null);
+
+    return forkJoin([of(matricula), apoderado$, alumno$, comprobante$]).pipe(
+      map(([m, apoderado, alumno, comprobante]) => {
+        const seccionNombre = (typeof m.seccion === 'object' && m.seccion && 'nombre' in m.seccion)
+          ? (m.seccion as any).nombre
+          : (m.seccion || null);
+
+        return {
+          ...m,
+          codigomatricula: comprobante?.codigomatricula || null,
+          codigopago: comprobante?.codigopago || null,
+          numeroDocumentoApoderado: apoderado?.numeroDocumento || null,
+          numeroDocumentoAlumno: alumno?.numeroDocumento || null,
+          montoTotalComprobante: comprobante?.montototal ? parseFloat(comprobante.montototal) : undefined,
+          seccion: seccionNombre,
+          fechaCreacionMatricula: m.fechaCreacion || null
+        } as MatriculadoDisplay;
+      })
+    );
   }
 
-  onPageChange(newPage: number): void {
-    this.currentPage = newPage;
-    let fechaInicioActiva = this.filters.fechaInicio;
-    let fechaFinActiva = this.filters.fechaFin;
 
-    if (this.filters.fechaInicio && this.isValidDateFormat(this.filters.fechaInicio) &&
-        (!this.filters.fechaFin || !this.isValidDateFormat(this.filters.fechaFin))) {
-        fechaFinActiva = this.currentDate;
-    }
-    this.applyFiltersAndPagination(fechaInicioActiva || undefined, fechaFinActiva || undefined);
-    this.notificationService.showNotification(`Cambiando a la página ${newPage}.`, 'info');
+  private ordenarLocalmente(): void {
+    this.matriculados.sort((a: any, b: any) => {
+      const fieldA = a[this.currentSortField!];
+      const fieldB = b[this.currentSortField!];
+      let comparison = 0;
+      if (fieldA == null) comparison = -1;
+      else if (fieldB == null) comparison = 1;
+      else if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+        comparison = fieldA.toLowerCase().localeCompare(fieldB.toLowerCase());
+      } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
+        comparison = fieldA - fieldB;
+      } else if (this.currentSortField === 'fechaCreacionMatricula') {
+        comparison = new Date(fieldA || '').getTime() - new Date(fieldB || '').getTime();
+      } else {
+        comparison = fieldA < fieldB ? -1 : (fieldA > fieldB ? 1 : 0);
+      }
+      return this.currentSortDirection === 'asc' ? comparison : -comparison;
+    });
   }
+
+    onPageChange(newPage: number): void {
+  if (newPage >= 1 && newPage <= this.totalPages && newPage !== this.page) {
+    this.page = newPage;
+    this.onSearch(undefined, newPage);
+  }}
 
   continueMatricula(matricula: MatriculadoDisplay): void {
     const estadoActual = matricula.estadoMatricula?.trim().toUpperCase();
     if (estadoActual === 'EN PROCESO' && matricula.idmatricula) {
-      this.notificationService.showNotification(`Continuando trámite para matrícula ID: ${matricula.idmatricula}`, 'info');
       this.router.navigate(['/registrarmatricula'], {
         queryParams: {
-            idMatricula: matricula.idmatricula,
-            nivel: matricula.nivel,
-            grado: matricula.grado,
+          idMatricula: matricula.idmatricula,
+          nivel: matricula.nivel,
+          grado: matricula.grado,
         }
       });
-    } else if (!matricula.idmatricula) {
-       this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para continuar.', 'error');
     } else {
-      this.notificationService.showNotification(`Solo se puede continuar matrículas en estado 'En Proceso'. Estado actual: ${matricula.estadoMatricula}`, 'error');
+      this.notificationService.showNotification('Solo se puede continuar matrículas en estado "En Proceso".', 'error');
     }
   }
 
   viewComprobante(matricula: MatriculadoDisplay, tipoComprobante: string): void {
-    const estadoActual = matricula.estadoMatricula?.trim().toUpperCase();
-    if (estadoActual !== 'COMPLETADO') {
-      this.notificationService.showNotification(`El comprobante de ${tipoComprobante} solo está disponible para matrículas en estado 'Completado'. Estado actual: ${matricula.estadoMatricula}`, 'error');
+    if (matricula.estadoMatricula?.trim().toUpperCase() !== 'COMPLETADO') {
+      this.notificationService.showNotification(`El comprobante solo está disponible para matrículas completadas.`, 'error');
       return;
     }
-
-    if (!matricula.idmatricula) {
-      this.notificationService.showNotification('No se pudo obtener el ID de la matrícula para generar el comprobante.', 'error');
-      return;
-    }
+    if (!matricula.idmatricula) return;
 
     this.loading = true;
-    this.notificationService.showNotification(`Generando comprobante de ${tipoComprobante}...`, 'info');
-
-    const monto = matricula.montoTotalComprobante;
-
-    this.comprobanteService.generarPdfDirecto(matricula.idmatricula, tipoComprobante, monto)
+    this.comprobanteService.generarPdfDirecto(matricula.idmatricula, tipoComprobante, matricula.montoTotalComprobante)
       .subscribe({
         next: (blob) => {
           this.loading = false;
           if (blob.size === 0) {
-            this.notificationService.showNotification(`No se pudo generar el comprobante de ${tipoComprobante}. El archivo está vacío.`, 'error');
+            this.notificationService.showNotification('El archivo PDF está vacío.', 'error');
             return;
           }
-          const fileURL = URL.createObjectURL(blob);
-          window.open(fileURL, '_blank');
-          this.notificationService.showNotification(`Comprobante de ${tipoComprobante} generado exitosamente.`, 'success');
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
         },
-        error: (err) => {
+        error: () => {
           this.loading = false;
-          let displayMessage = `Error al generar el comprobante de ${tipoComprobante}.`;
-
-          if (err && err.message) {
-            displayMessage = err.message;
-            if (err.message.includes('(500)')) {
-                displayMessage += " Por favor, revise los logs del servidor o contacte al administrador.";
-            }
-            if (err.message.includes('(400)')) {
-                 displayMessage += " Verifique los datos asociados a la matrícula.";
-            }
-
-          } else {
-            displayMessage = `Ocurrió un error inesperado al generar el comprobante de ${tipoComprobante}. Intente nuevamente.`;
-          }
-
-          this.notificationService.showNotification(displayMessage, 'error');
+          this.notificationService.showNotification('Error al generar el comprobante.', 'error');
         }
       });
   }
@@ -595,136 +525,35 @@ export class MatriculadosComponent implements OnInit {
     };
     this.gradosParaFiltro = [];
     this.seccionesParaFiltro = [];
-    this.currentPage = 1;
     this.currentSortField = null;
     this.currentSortDirection = null;
-
-    this.applyFiltersAndPagination();
-    this.notificationService.showNotification('Filtros y ordenación limpiados.', 'info');
+    this.onSearch();
+    this.notificationService.showNotification('Filtros limpiados.', 'info');
   }
 
   exportToExcel(): void {
     this.loading = true;
-    this.notificationService.showNotification('Preparando datos para exportar a Excel...', 'info');
+    this.notificationService.showNotification('Generando archivo Excel...', 'info');
 
-    let fechaInicioBusqueda = this.filters.fechaInicio;
-    let fechaFinBusqueda = this.filters.fechaFin;
-    if (fechaInicioBusqueda && this.isValidDateFormat(fechaInicioBusqueda) && (!fechaFinBusqueda || !this.isValidDateFormat(fechaFinBusqueda))) {
-        fechaFinBusqueda = this.currentDate;
-    }
+    const filters: any = {
+      codigomatricula: this.filters.codigomatricula || undefined,
+      codigopago: this.filters.codigopago || undefined,
+      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+      grado: this.filters.grado || undefined,
+      seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
+      fechaInicio: this.filters.fechaInicio || undefined,
+      fechaFin: this.filters.fechaFin || undefined,
+    };
 
-    let datosFiltradosCompletos = this.allMatriculados.filter(matricula => {
-      let isMatch = true;
-
-      if (this.filters.codigomatricula && !matricula.codigomatricula?.toLowerCase().includes(this.filters.codigomatricula.toLowerCase())) isMatch = false;
-      if (this.filters.codigopago && !matricula.codigopago?.toLowerCase().includes(this.filters.codigopago.toLowerCase())) isMatch = false;
-      if (this.filters.nivel && matricula.nivel?.toLowerCase() !== this.filters.nivel.toLowerCase()) isMatch = false;
-      if (this.filters.grado && matricula.grado?.toString().toLowerCase() !== this.filters.grado.toLowerCase()) isMatch = false;
-      if (this.filters.seccion && matricula.seccion?.toLowerCase() !== this.filters.seccion.toLowerCase()) isMatch = false;
-
-      const fechaInicioValida = fechaInicioBusqueda && this.isValidDateFormat(fechaInicioBusqueda);
-      const fechaFinValida = fechaFinBusqueda && this.isValidDateFormat(fechaFinBusqueda);
-
-      if (fechaInicioValida && fechaFinValida) {
-        const fechaCreacionStr = matricula.fechaCreacionMatricula?.split('T')[0];
-        const fechaCreacion = fechaCreacionStr ? new Date(fechaCreacionStr + "T00:00:00Z") : null;
-        const fechaInicioFilter = new Date(fechaInicioBusqueda + "T00:00:00Z");
-        const fechaFinFilter = new Date(fechaFinBusqueda + "T00:00:00Z");
-
-        if (fechaCreacion) {
-            if (fechaCreacion.getTime() < fechaInicioFilter.getTime() || fechaCreacion.getTime() > fechaFinFilter.getTime()) {
-                 isMatch = false;
-            }
-        } else {
-          isMatch = false;
-        }
-      }
-      return isMatch;
-    });
-
-    if (this.currentSortField && this.currentSortDirection) {
-        datosFiltradosCompletos.sort((a, b) => {
-            const fieldA = (a as any)[this.currentSortField!];
-            const fieldB = (b as any)[this.currentSortField!];
-
-            let comparison = 0;
-
-            if (fieldA == null && fieldB == null) {
-                comparison = 0;
-            } else if (fieldA == null) {
-                comparison = this.currentSortDirection === 'asc' ? -1 : 1;
-            } else if (fieldB == null) {
-                comparison = this.currentSortDirection === 'asc' ? 1 : -1;
-            } else {
-                if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-                     comparison = fieldA.toLowerCase().localeCompare(fieldB.toLowerCase());
-                } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
-                     comparison = fieldA - fieldB;
-                } else if (typeof fieldA === 'string' && typeof fieldB === 'string' && this.currentSortField === 'fechaCreacionMatricula') {
-                    const dateA = new Date(fieldA);
-                    const dateB = new Date(fieldB);
-                    comparison = dateA.getTime() - dateB.getTime();
-                }
-                 else {
-                    if (fieldA < fieldB) comparison = -1;
-                    else if (fieldA > fieldB) comparison = 1;
-                    else comparison = 0;
-                }
-            }
-
-            return this.currentSortDirection === 'asc' ? comparison : -comparison;
-        });
-    }
-
-    if (datosFiltradosCompletos.length === 0) {
-        this.notificationService.showNotification('No hay datos para exportar según los filtros actuales.', 'info');
+    this.matriculaService.descargarExcel(filters).subscribe({
+      next: () => {
         this.loading = false;
-        return;
-    }
-
-    const dataToExport = datosFiltradosCompletos.map(m => {
-        let fechaFormateada = '-';
-        if (m.fechaCreacionMatricula) {
-            const dateParts = m.fechaCreacionMatricula.split('T')[0].split('-');
-            if (dateParts.length === 3) {
-                fechaFormateada = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-            }
-        }
-        return {
-          'Código Matrícula': m.codigomatricula || '-',
-          'Código Pago': m.codigopago || '-',
-          'Grado': m.grado || '-',
-          'Sección': m.seccion || '-',
-          'Nivel': m.nivel || '-',
-          'Documento Apoderado': m.numeroDocumentoApoderado || '-',
-          'Documento Alumno': m.numeroDocumentoAlumno || '-',
-          'Estado de Matrícula': m.estadoMatricula || '-',
-          'Fecha de Creación': fechaFormateada
-        };
+        this.notificationService.showNotification('Excel descargado correctamente', 'success');
+      },
+      error: (err) => {
+        this.loading = false;
+        this.notificationService.showNotification('Error al generar el Excel: ' + err.message, 'error');
+      }
     });
-
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataToExport);
-
-    const columnWidths = [
-      { wch: 18 },
-      { wch: 15 },
-      { wch: 10 },
-      { wch: 10 },
-      { wch: 10 },
-      { wch: 22 },
-      { wch: 22 },
-      { wch: 20 },
-      { wch: 18 }
-    ];
-    ws['!cols'] = columnWidths;
-
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Matriculados');
-
-
-    XLSX.writeFile(wb, 'matriculados_export_' + new Date().toISOString().split('T')[0] + '.xlsx');
-
-    this.loading = false;
-    this.notificationService.showNotification('Datos exportados a Excel exitosamente.', 'success');
   }
 }
