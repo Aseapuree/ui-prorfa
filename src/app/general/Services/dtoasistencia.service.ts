@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOAsistencia, AsistenciaResponse } from '../Interface/DTOAsistencia';
-import { DTOResponse } from '../Interface/DTOResponse';
+import { DTOAsistencia, AsistenciaResponse } from '../interfaces/DTOAsistencia';
+import { DTOResponse } from '../interfaces/DTOResponse';
 
 @Injectable({
   providedIn: 'root'

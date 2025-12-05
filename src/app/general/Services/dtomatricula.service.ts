@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOResponse } from '../Interface/DTOResponse';
+import { DTOResponse } from '../interfaces/DTOResponse';
 
 interface Alumno {
   idalumno: string;

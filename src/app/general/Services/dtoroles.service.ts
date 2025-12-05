@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTORoles } from '../Interface/DTORoles'; 
-import { DTOResponse } from '../Interface/DTOResponse';
+import { DTORoles } from '../interfaces/DTORoles'; 
+import { DTOResponse } from '../interfaces/DTOResponse';
 @Injectable({
     providedIn: 'root'
   })

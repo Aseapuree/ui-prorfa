@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Entidad } from '../interfaces/DTOEntidad';
-import { DTOResponse } from '../../general/Interface/DTOResponse';
+import { DTOResponse } from '../../general/interfaces/DTOResponse';
 
 @Injectable({
   providedIn: 'root'

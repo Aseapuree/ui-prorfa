@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOUsuario } from '../Interface/DTOUsuario';
+import { DTOUsuario } from '../interfaces/DTOUsuario';
 
 @Injectable({
   providedIn: 'root'
