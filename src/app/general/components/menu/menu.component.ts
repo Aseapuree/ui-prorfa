@@ -292,6 +292,6 @@ export class MenuComponent implements OnInit, OnChanges {
   logout() {
     this.activeTooltipId = null;
     if (isPlatformBrowser(this.platformId)) localStorage.clear();
-    window.location.href = 'http://localhost:4203';
+    window.location.href = 'http://34.231.204.50/oauth';
   }
 }
