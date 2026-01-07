@@ -71,21 +71,39 @@ function documentRegexValidator(): ValidatorFn {
 function minAgeValidator(minAge: number): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!control.value) return null;
-    try {
-      const birthDate = new Date(control.value);
-      if (isNaN(birthDate.getTime()) || birthDate > new Date()) {
-          return { invalidDate: true };
-      }
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age < minAge ? { minAge: { requiredAge: minAge, actualAge: age } } : null;
-    } catch (e) {
+
+    const inputDate = control.value;
+    if (typeof inputDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(inputDate)) {
       return { invalidDate: true };
     }
+
+    const birthDate = new Date(inputDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 1. Validar que no sea fecha futura
+    if (birthDate > today) {
+      return { futureDate: { value: inputDate } };
+    }
+
+    // 2. Validar que no sea fecha inválida
+    if (isNaN(birthDate.getTime())) {
+      return { invalidDate: true };
+    }
+
+    // 3. Calcular edad
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    // 4. Validar edad mínima
+    if (age < minAge) {
+      return { minAge: { requiredAge: minAge, actualAge: age } };
+    }
+
+    return null;
   };
 }
 function soloLetrasValidator(): ValidatorFn {
