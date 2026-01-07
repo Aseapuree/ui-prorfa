@@ -3,14 +3,14 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ProfesorCurso } from '../interface/ProfesorCurso'; 
 import { DTOResponse } from '../interface/DTOResponse';
-import saveAs from 'file-saver';
+import  saveAs  from 'file-saver';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfesorCursoService {
 
-  private urlBase = "http://localhost:8080/v1/profesor-curso";
+  private urlBase = "/api/v1/profesor-curso";
 
   constructor(private clienteHttp: HttpClient) { }
 

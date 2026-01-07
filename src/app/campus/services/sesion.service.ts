@@ -10,7 +10,7 @@ import { DTOResponse } from '../interface/DTOResponse';
 })
 export class SesionService {
 
-  private urlBase = "http://localhost:8080/v1/sesiones";
+  private urlBase = "/api/v1/sesiones";
 
 
   constructor(private clienteHttp: HttpClient) { }

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOResponse } from '../Interface/DTOResponse';
+import { DTOResponse } from '../interfaces/DTOResponse';
 
 interface Alumno {
   idalumno: string;
@@ -20,7 +20,7 @@ interface Alumno {
   providedIn: 'root'
 })
 export class MatriculaService { // Renombramos a MatriculaService
-  private readonly url = 'http://localhost:8080/v1/matriculas/alumnos';
+  private readonly url = '/api/v1/matriculas/alumnos';
 
   constructor(private http: HttpClient) {}
 

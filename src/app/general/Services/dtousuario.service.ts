@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOUsuario } from '../Interface/DTOUsuario';
+import { DTOUsuario } from '../interfaces/DTOUsuario';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DTOUsuarioService {
-  private url = 'http://localhost:8080/v1/usuario/verporid?id=';
+  private url = '/api/v1/usuario/verporid?id=';
 
   constructor(private http: HttpClient) {}
 

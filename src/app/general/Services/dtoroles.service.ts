@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTORoles } from '../Interface/DTORoles'; 
-import { DTOResponse } from '../Interface/DTOResponse';
+import { DTORoles } from '../interfaces/DTORoles'; 
+import { DTOResponse } from '../interfaces/DTOResponse';
 @Injectable({
     providedIn: 'root'
   })
   export class DTOrolesService {
-    private url = 'http://localhost:8080/v1/';
+    private url = '/api/v1/';
   
     constructor(private http: HttpClient) { }
   

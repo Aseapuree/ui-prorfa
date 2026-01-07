@@ -163,15 +163,21 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
         if (navigation?.extras.state) {
           this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
           this.idCurso = navigation.extras.state['idCurso'] || null;
+          // FIX: Recupera fechaAsignada del state (viene de Sesiones)
+          this.fechaAsignada = navigation.extras.state['fechaAsignada'] || null;
+          console.log('CampusActividades - fechaAsignada from state:', this.fechaAsignada);
         } else {
           this.idProfesorCurso = localStorage.getItem('idProfesorCurso') || null;
           this.idCurso = localStorage.getItem('idCurso') || null;
+          // Fallback: Si no hay state, intenta de localStorage o null
+          this.fechaAsignada = localStorage.getItem('fechaSesion') || null;  // Opcional: guarda en LS si necesitas persistencia
         }
         console.log('Datos de navegación:', {
           idSesion: this.idSesion,
           idProfesorCurso: this.idProfesorCurso,
           idCurso: this.idCurso,
-          rolUsuario: this.rolUsuario
+          rolUsuario: this.rolUsuario,
+          fechaAsignada: this.fechaAsignada  // FIX: Log para debug
         });
 
         if (this.idSesion) {

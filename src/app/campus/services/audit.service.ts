@@ -10,7 +10,7 @@ import saveAs from 'file-saver';
 })
 export class AuditService {
 
-  private urlBase = "http://localhost:8080/v1/audit";
+  private urlBase = "/api/v1/audit";
 
   constructor(private clienteHttp: HttpClient) { }
 

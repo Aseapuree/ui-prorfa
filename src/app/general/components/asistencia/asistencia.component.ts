@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { MatriculaService } from '../../Services/dtomatricula.service';
 import { DTOAsistenciaService } from '../../Services/dtoasistencia.service';
 import { AlertComponent } from '../../../campus/components/shared/alert/alert.component';
-import { DTOAsistencia, AlumnoAsistencia, AsistenciaResponse } from '../../Interface/DTOAsistencia';
+import { DTOAsistencia, AlumnoAsistencia, AsistenciaResponse } from '../../../general/interfaces/DTOAsistencia';
+import { Router } from '@angular/router';  // FIX: Import para recuperar state
 
 interface Alumno {
   idalumno: string;
@@ -40,7 +41,8 @@ export class AsistenciaComponent implements OnInit {
 
   constructor(
     private matriculaService: MatriculaService,
-    private asistenciaService: DTOAsistenciaService
+    private asistenciaService: DTOAsistenciaService,
+    private router: Router  // FIX: Inyectar para recuperar state
   ) {}
 
   ngOnInit(): void {
@@ -51,9 +53,23 @@ export class AsistenciaComponent implements OnInit {
     console.log('Asistencia - rolUsuario:', this.rolUsuario);
     console.log('Asistencia - fechaAsignada:', this.fechaAsignada);
 
-    // Parsear la fecha de la sesión
-    if (this.fechaAsignada) {
-      this.fechaSesion = new Date(this.fechaAsignada);
+    // FIX: Recuperar fecha del router state (prioridad alta) o Input
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras.state as any;
+    let fechaFromState = state?.fechaAsignada || this.fechaAsignada;  // State > Input
+
+    // FIX: Fallback a localStorage si aún null (key por idSesion)
+    if (!fechaFromState && this.idSesion) {
+      fechaFromState = localStorage.getItem(`fechaSesion_${this.idSesion}`) || null;
+      console.log('Asistencia - fechaAsignada from LS fallback:', fechaFromState);
+    }
+
+    console.log('Asistencia - fechaAsignada final (state/Input/LS):', fechaFromState);
+
+    // FIX: Usar fechaFromState en el if (reemplaza this.fechaAsignada)
+    if (fechaFromState) {
+      this.fechaAsignada = fechaFromState;  // Actualiza para consistencia
+      this.fechaSesion = new Date(fechaFromState);
     } else {
       console.warn('No se proporcionó fechaAsignada, usando fecha actual como fallback');
       this.fechaSesion = new Date();
@@ -67,38 +83,57 @@ export class AsistenciaComponent implements OnInit {
   }
 
   async cargarAlumnos(): Promise<void> {
-    try {
-      const grado = localStorage.getItem('grado');
-      const seccion = localStorage.getItem('seccion');
-      const nivel = localStorage.getItem('nivel');
+  try {
+    let grado = localStorage.getItem('grado');
+    let seccion = localStorage.getItem('seccion');
+    let nivel = localStorage.getItem('nivel');
 
-      console.log('Valores desde localStorage:', { grado, seccion, nivel });
+    console.log('Valores raw desde localStorage:', { grado, seccion, nivel });
 
-      if (grado && seccion && nivel) {
-        const response = await this.matriculaService.getAlumnosPorGradoSeccionYNivel(grado, seccion, nivel).toPromise();
-        console.log('Respuesta de la API (alumnos):', response);
+    // FIX: Limpia 'grado' removiendo "°" o "mo" para enviar solo número (ej., "5°" → "5")
+    if (grado) {
+      let cleanGrado = grado.replace(/[°mo]/g, '').trim();  // Remueve símbolos, deja solo dígitos
+      if (cleanGrado === '') {
+        throw new Error('Grado inválido en localStorage: ' + grado);
+      }
+      grado = cleanGrado;  // Ahora 'grado' es "5" (string, pero backend lo convierte a int)
+    }
 
-        if (response && response.code === 200 && response.data) {
-          this.alumnos = response.data.map((alumno: Alumno) => ({
-            ...alumno,
-            asistencia: false,
-            idAsistencia: undefined
-          }));
-          console.log('Alumnos cargados:', this.alumnos);
-          await this.cargarAsistenciasPrevias();
-        } else {
-          console.error('No se encontraron alumnos:', response);
-          this.alumnos = [];
-        }
+    // Encoding para otros params (seccion/nivel, si tienen chars especiales)
+    if (seccion) seccion = encodeURIComponent(seccion);
+    if (nivel) nivel = encodeURIComponent(nivel);
+
+    console.log('Valores limpios/encoded para API:', { grado, seccion, nivel });
+
+    if (grado && seccion && nivel) {
+      const response = await this.matriculaService.getAlumnosPorGradoSeccionYNivel(grado, seccion, nivel).toPromise();
+      console.log('Respuesta de la API (alumnos):', response);
+
+      if (response && response.code === 200 && response.data) {
+        this.alumnos = response.data.map((alumno: Alumno) => ({
+          ...alumno,
+          asistencia: false,
+          idAsistencia: undefined
+        }));
+        console.log('Alumnos cargados:', this.alumnos);
+        await this.cargarAsistenciasPrevias();
       } else {
-        console.error('Faltan datos en localStorage:', { grado, seccion, nivel });
+        console.error('No se encontraron alumnos:', response);
         this.alumnos = [];
       }
-    } catch (error) {
-      console.error('Error al cargar los alumnos:', error);
+    } else {
+      console.error('Faltan datos en localStorage:', { grado, seccion, nivel });
       this.alumnos = [];
     }
+  } catch (error: unknown) {
+    // Type guard para narrowing
+    if (error && typeof error === 'object' && 'status' in error && (error as any).status === 500) {
+      console.error('Posible issue de encoding en backend. Verifica logs de Spring Boot.');
+    }
+    console.error('Error al cargar los alumnos:', error);
+    this.alumnos = [];
   }
+}
 
   async cargarAsistenciasPrevias(): Promise<void> {
     if (!this.idSesion) {
@@ -151,7 +186,7 @@ export class AsistenciaComponent implements OnInit {
               console.log(`Comparando fecha de asistencia ${fechaAsistenciaStr} con fecha de sesión ${fechaSesionStr}`);
               return fechaAsistenciaStr === fechaSesionStr;
             })
-          : this.asistenciasPrevias;
+          : this.asistenciasPrevias;  
   
         console.log('Asistencias filtradas por fecha:', asistenciasFiltradas);
   
@@ -199,113 +234,122 @@ export class AsistenciaComponent implements OnInit {
   }
 
   async guardarAsistencia(): Promise<void> {
-    if (!this.idSesion) {
-      this.alertMessage = 'No se proporcionó el ID de la sesión';
-      this.alertType = 'error';
-      setTimeout(() => (this.alertMessage = null), 3000);
-      return;
-    }
-  
-    try {
-      const grado = localStorage.getItem('grado');
-      const seccion = localStorage.getItem('seccion');
-      const nivel = localStorage.getItem('nivel');
-      let idCurso = this.idCurso || localStorage.getItem('idCurso');
-  
-      console.log('Valores para asistencia:', { idSesion: this.idSesion, grado, seccion, nivel, idCurso });
-  
-      if (!grado || !seccion || !nivel) {
-        throw new Error('Faltan datos de grado, sección o nivel en localStorage');
-      }
-      if (!idCurso) {
-        throw new Error('No se encontró idCurso en los inputs ni en localStorage. Por favor, verifica la configuración del curso.');
-      }
-  
-      // Log del estado de los alumnos antes de mapear
-      console.log('Estado de los alumnos antes de enviar:', this.alumnos);
-  
-      const listaAlumnos: AlumnoAsistencia[] = this.alumnos
-        .filter(alumno => alumno.asistencia !== undefined)
-        .map(alumno => ({
-          alumnoId: alumno.idalumno,
-          asistio: alumno.asistencia ? true : false,
-          idAsistencia: alumno.idAsistencia
-        }));
-  
-      // Log detallado de listaAlumnos
-      console.log('Lista de alumnos a enviar:', listaAlumnos);
-  
-      // Usar la fecha de la sesión (fechaAsignada), con fallback a la fecha actual
-      let fechaFormatted: string;
-      if (!this.fechaAsignada) {
-        console.warn('fechaAsignada no está disponible, usando la fecha actual como fallback');
-        const fechaActual = new Date();
-        fechaFormatted = `${fechaActual.getFullYear()}-${(fechaActual.getMonth() + 1).toString().padStart(2, '0')}-${fechaActual.getDate().toString().padStart(2, '0')} ${fechaActual.getHours().toString().padStart(2, '0')}:${fechaActual.getMinutes().toString().padStart(2, '0')}:${fechaActual.getSeconds().toString().padStart(2, '0')}.000`;
-        this.alertMessage = 'Advertencia: No se proporcionó la fecha de la sesión. Se usará la fecha actual.';
-        this.alertType = 'error'; // Cambiado a 'error' para mayor visibilidad
-        setTimeout(() => (this.alertMessage = null), 5000);
-      } else {
-        const fecha = new Date(this.fechaAsignada);
-        fechaFormatted = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}-${fecha.getDate().toString().padStart(2, '0')} ${fecha.getHours().toString().padStart(2, '0')}:${fecha.getMinutes().toString().padStart(2, '0')}:${fecha.getSeconds().toString().padStart(2, '0')}.000`;
-      }
-  
-      const asistencia: DTOAsistencia = {
-        idSesion: this.idSesion,
-        grado,
-        seccion,
-        nivel,
-        idCurso,
-        fechaAsistencia: fechaFormatted,
-        listaAlumnos
-      };
-  
-      console.log('Asistencia a enviar:', asistencia);
-      console.log('fechaAsistencia enviada:', asistencia.fechaAsistencia);
-  
-      let response;
-      if (this.asistenciasPrevias.length > 0) {
-        console.log('Editando asistencia existente...');
-        response = await this.asistenciaService.editarAsistencia(asistencia).toPromise();
-        console.log('Respuesta de edición:', response);
-      } else {
-        console.log('Registrando nueva asistencia...');
-        response = await this.asistenciaService.registrarAsistencia(asistencia).toPromise();
-        console.log('Respuesta de registro:', response);
-      }
-  
-      if (response && response.code !== 200) {
-        throw new Error(`Error al ${this.asistenciasPrevias.length > 0 ? 'editar' : 'registrar'} asistencia: ${response.message}`);
-      }
-  
-      // Mostrar un mensaje más detallado si hay problemas en la respuesta
-      if (response && response.data && Array.isArray(response.data) && response.data.length > 0 && response.data[0].includes('No se encontró asistencia')) {
-        this.alertMessage = 'No se encontraron asistencias para editar en esta fecha. Intentando registrar como nuevas...';
-        setTimeout(() => (this.alertMessage = null), 5000);
-  
-        // Forzar registro como nuevas asistencias
-        response = await this.asistenciaService.registrarAsistencia(asistencia).toPromise();
-        console.log('Respuesta de registro (forzado):', response);
-  
-        if (response && response.code !== 200) {
-          throw new Error(`Error al registrar asistencia: ${response.message}`);
-        }
-      }
-  
-      this.alertMessage = 'Asistencia guardada con éxito';
-      this.alertType = 'success';
-      setTimeout(() => (this.alertMessage = null), 3000);
-  
-      // Recargar asistencias para reflejar los cambios
-      console.log('Recargando asistencias después de guardar...');
-      await this.cargarAsistenciasPrevias();
-      console.log('Estado de ultimaActualizacion después de recargar:', this.ultimaActualizacion);
-    } catch (error: any) {
-      console.error('Error al guardar asistencias:', error);
-      this.alertMessage = error.message || `Ocurrió un error inesperado: ${error.statusText || 'Unknown Error'}`;
-      this.alertType = 'error';
-      setTimeout(() => (this.alertMessage = null), 3000);
-    }
+  if (!this.idSesion) {
+    this.alertMessage = 'No se proporcionó el ID de la sesión';
+    this.alertType = 'error';
+    setTimeout(() => (this.alertMessage = null), 3000);
+    return;
   }
+
+  try {
+    let grado = localStorage.getItem('grado');
+    const seccion = localStorage.getItem('seccion');
+    const nivel = localStorage.getItem('nivel');
+    let idCurso = this.idCurso || localStorage.getItem('idCurso');
+
+    console.log('Valores para asistencia:', { idSesion: this.idSesion, grado, seccion, nivel, idCurso });
+
+    if (!grado || !seccion || !nivel) {
+      throw new Error('Faltan datos de grado, sección o nivel en localStorage');
+    }
+    if (!idCurso) {
+      throw new Error('No se encontró idCurso en los inputs ni en localStorage. Por favor, verifica la configuración del curso.');
+    }
+
+    // FIX: Limpia 'grado' removiendo "°" o "mo" para enviar solo número (ej., "5°" → "5")
+    let cleanGrado = grado.replace(/[°mo]/g, '').trim();
+    if (cleanGrado === '') {
+      throw new Error('Grado inválido en localStorage: ' + grado);
+    }
+    grado = cleanGrado;  // Ahora 'grado' es "5" (limpio para backend)
+
+    console.log('Grado limpio para backend:', grado);  // Log para debug
+
+    // Log del estado de los alumnos antes de mapear
+    console.log('Estado de los alumnos antes de enviar:', this.alumnos);
+
+    const listaAlumnos: AlumnoAsistencia[] = this.alumnos
+      .filter(alumno => alumno.asistencia !== undefined)
+      .map(alumno => ({
+        alumnoId: alumno.idalumno,
+        asistio: alumno.asistencia ? true : false,
+        idAsistencia: alumno.idAsistencia
+      }));
+
+    // Log detallado de listaAlumnos
+    console.log('Lista de alumnos a enviar:', listaAlumnos);
+
+    // Usar la fecha de la sesión (fechaAsignada), con fallback a la fecha actual
+    let fechaFormatted: string;
+    if (!this.fechaAsignada) {
+      console.warn('fechaAsignada no está disponible, usando la fecha actual como fallback');
+      const fechaActual = new Date();
+      fechaFormatted = `${fechaActual.getFullYear()}-${(fechaActual.getMonth() + 1).toString().padStart(2, '0')}-${fechaActual.getDate().toString().padStart(2, '0')} ${fechaActual.getHours().toString().padStart(2, '0')}:${fechaActual.getMinutes().toString().padStart(2, '0')}:${fechaActual.getSeconds().toString().padStart(2, '0')}.000`;
+      this.alertMessage = 'Advertencia: No se proporcionó la fecha de la sesión. Se usará la fecha actual.';
+      this.alertType = 'error'; // Cambiado a 'error' para mayor visibilidad
+      setTimeout(() => (this.alertMessage = null), 5000);
+    } else {
+      const fecha = new Date(this.fechaAsignada);
+      fechaFormatted = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}-${fecha.getDate().toString().padStart(2, '0')} ${fecha.getHours().toString().padStart(2, '0')}:${fecha.getMinutes().toString().padStart(2, '0')}:${fecha.getSeconds().toString().padStart(2, '0')}.000`;
+    }
+
+    const asistencia: DTOAsistencia = {
+      idSesion: this.idSesion,
+      grado,  // FIX: Usa el grado limpio
+      seccion,
+      nivel,
+      idCurso,
+      fechaAsistencia: fechaFormatted,
+      listaAlumnos
+    };
+
+    console.log('Asistencia a enviar:', asistencia);
+    console.log('fechaAsistencia enviada:', asistencia.fechaAsistencia);
+
+    let response;
+    if (this.asistenciasPrevias.length > 0) {
+      console.log('Editando asistencia existente...');
+      response = await this.asistenciaService.editarAsistencia(asistencia).toPromise();
+      console.log('Respuesta de edición:', response);
+    } else {
+      console.log('Registrando nueva asistencia...');
+      response = await this.asistenciaService.registrarAsistencia(asistencia).toPromise();
+      console.log('Respuesta de registro:', response);
+    }
+
+    if (response && response.code !== 200) {
+      throw new Error(`Error al ${this.asistenciasPrevias.length > 0 ? 'editar' : 'registrar'} asistencia: ${response.message}`);
+    }
+
+    // Mostrar un mensaje más detallado si hay problemas en la respuesta
+    if (response && response.data && Array.isArray(response.data) && response.data.length > 0 && response.data[0].includes('No se encontró asistencia')) {
+      this.alertMessage = 'No se encontraron asistencias para editar en esta fecha. Intentando registrar como nuevas...';
+      setTimeout(() => (this.alertMessage = null), 5000);
+
+      // Forzar registro como nuevas asistencias
+      response = await this.asistenciaService.registrarAsistencia(asistencia).toPromise();
+      console.log('Respuesta de registro (forzado):', response);
+
+      if (response && response.code !== 200) {
+        throw new Error(`Error al registrar asistencia: ${response.message}`);
+      }
+    }
+
+    this.alertMessage = 'Asistencia guardada con éxito';
+    this.alertType = 'success';
+    setTimeout(() => (this.alertMessage = null), 3000);
+
+    // Recargar asistencias para reflejar los cambios
+    console.log('Recargando asistencias después de guardar...');
+    await this.cargarAsistenciasPrevias();
+    console.log('Estado de ultimaActualizacion después de recargar:', this.ultimaActualizacion);
+  } catch (error: any) {
+    console.error('Error al guardar asistencias:', error);
+    this.alertMessage = error.message || `Ocurrió un error inesperado: ${error.statusText || 'Unknown Error'}`;
+    this.alertType = 'error';
+    setTimeout(() => (this.alertMessage = null), 3000);
+  }
+}
 
   toggleBloqueo(): void {
     this.bloqueado = !this.bloqueado;

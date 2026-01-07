@@ -3,14 +3,14 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Entidad } from '../interfaces/DTOEntidad';
-import { DTOResponse } from '../../general/Interface/DTOResponse';
+import { DTOResponse } from '../../general/interfaces/DTOResponse';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EntidadService {
 
-  private urlBase = "http://localhost:8080/v1/entidades";
+  private urlBase = "/api/v1/entidades";
 
   constructor(private http: HttpClient) { }
 
