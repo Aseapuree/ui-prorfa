@@ -40,6 +40,7 @@ import {
 } from '../../modals/auditmodal/auditmodal.component';
 import { ProfesorCursoFormComponent } from '../../modals/profesor-curso-form/profesor-curso-form.component';
 import { ConfirmDeleteComponent } from '../../modals/confirm-delete/confirm-delete.component';
+import { MatError } from "@angular/material/form-field";
 
 @Component({
   selector: 'app-profesor-curso',
@@ -59,7 +60,8 @@ import { ConfirmDeleteComponent } from '../../modals/confirm-delete/confirm-dele
     ProfesorCursoFormComponent,
     ConfirmDeleteComponent,
     AuditmodalComponent,
-  ],
+    MatError
+],
   providers: [ProfesorCursoService, EntidadService],
   templateUrl: './profesor-curso.component.html',
   styleUrl: './profesor-curso.component.scss',
@@ -662,6 +664,7 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       return;
     }
 
+    /*
     if (!this.isValidDateFormat(value)) {
       this.notificationService.showNotification(
         DATE_VALIDATION_MESSAGES.INVALID_FORMAT,
@@ -672,56 +675,56 @@ seccionesParaFiltro: SeccionVacantes[] = [];
         false;
       this.cdr.detectChanges();
       return;
-    }
+    }*/
 
-    const year = parseInt(value.split('-')[0], 10);
-    if (year > this.currentYear) {
-      this.notificationService.showNotification(
-        DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
-        'error'
-      );
-      this.filters[field] = '';
-      this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] =
-        false;
-      this.cdr.detectChanges();
-      return;
-    }
 
-    // Validate fechaFin against fechaInicio
-    if (field === 'fechaFin' && this.filters.fechaInicio && value) {
-      const startDate = new Date(this.filters.fechaInicio);
-      const endDate = new Date(value);
-      if (endDate < startDate) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.END_BEFORE_START,
-          'error'
-        );
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-        this.cdr.detectChanges();
-        return;
-      }
-    }
+    // const year = parseInt(value.split('-')[0], 10);
+    // if (year > this.currentYear) {
+    //   this.notificationService.showNotification(
+    //     DATE_VALIDATION_MESSAGES.INVALID_YEAR(this.currentYear),
+    //     'error'
+    //   );
+    //   this.filters[field] = '';
+    //   this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] =
+    //     false;
+    //   this.cdr.detectChanges();
+    //   return;
+    // }
+
+    // // Validate fechaFin against fechaInicio
+    // if (field === 'fechaFin' && this.filters.fechaInicio && value) {
+    //   const startDate = new Date(this.filters.fechaInicio);
+    //   const endDate = new Date(value);
+    //   if (endDate < startDate) {
+    //     this.notificationService.showNotification(
+    //       DATE_VALIDATION_MESSAGES.END_BEFORE_START,
+    //       'error'
+    //     );
+    //     this.filters.fechaFin = '';
+    //     this.isValidFechaFin = false;
+    //     this.cdr.detectChanges();
+    //     return;
+    //   }
+    // }
 
     // If fechaInicio changes, validate and potentially reset fechaFin
-    if (field === 'fechaInicio' && this.filters.fechaFin) {
-      const startDate = new Date(value);
-      const endDate = new Date(this.filters.fechaFin);
-      if (endDate < startDate) {
-        this.notificationService.showNotification(
-          DATE_VALIDATION_MESSAGES.END_BEFORE_START,
-          'error'
-        );
-        this.filters.fechaFin = '';
-        this.isValidFechaFin = false;
-        this.cdr.detectChanges();
-        return;
-      }
-    }
+    // if (field === 'fechaInicio' && this.filters.fechaFin) {
+    //   const startDate = new Date(value);
+    //   const endDate = new Date(this.filters.fechaFin);
+    //   if (endDate < startDate) {
+    //     this.notificationService.showNotification(
+    //       DATE_VALIDATION_MESSAGES.END_BEFORE_START,
+    //       'error'
+    //     );
+    //     this.filters.fechaFin = '';
+    //     this.isValidFechaFin = false;
+    //     this.cdr.detectChanges();
+    //     return;
+    //   }
+    // }
 
     this.filters[field] = value;
-    this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] =
-      true;
+    this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = true;
     this.cdr.detectChanges();
   }
 

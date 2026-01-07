@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef, Input, Inject, PLATFORM_ID, OnCha
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router, NavigationEnd, RouterEvent } from '@angular/router';
 import { DTOmenuService } from '../../Services/dtomenu.service';
-import { DTOMenu } from '../../Interface/DTOMenu';
+import { DTOMenu } from '../../interfaces/DTOMenu'; 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { fontAwesomeIcons } from '../../../campus/components/shared/font-awesome-icons'; // Asegúrate que la ruta sea correcta
@@ -193,7 +193,7 @@ export class MenuComponent implements OnInit, OnChanges {
       this.perfilUrl = null;
       return;
     }
-    const apiUrl = `http://localhost:8080/api/perfil/imagen/${fileId}`;
+    const apiUrl = `/api/api/perfil/imagen/${fileId}`;
     this.http.get(apiUrl, { responseType: 'blob', withCredentials: true }).subscribe(blob => {
       const imageUrl = URL.createObjectURL(blob);
       this.perfilUrl = imageUrl;
@@ -292,6 +292,6 @@ export class MenuComponent implements OnInit, OnChanges {
   logout() {
     this.activeTooltipId = null;
     if (isPlatformBrowser(this.platformId)) localStorage.clear();
-    window.location.href = 'http://localhost:4203';
+    window.location.href = 'http://34.231.204.50/oauth';
   }
 }

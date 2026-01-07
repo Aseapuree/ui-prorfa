@@ -8,9 +8,9 @@ import saveAs from 'file-saver';
   providedIn: 'root'
 })
 export class MatriculaService {
-  private urlBase = "http://localhost:8080/v1/matriculas";
-  totalPages: number = 0;
-  totalElements: number = 0;
+  private urlBase = "/api/v1/matriculas";
+totalPages: number = 0;
+totalElements: number = 0;
 
   constructor(private http: HttpClient) { }
 
@@ -122,26 +122,30 @@ export class MatriculaService {
     let errorMessage = 'Error desconocido al comunicar con el backend.';
 
     if (error instanceof HttpErrorResponse) {
-      if (error.status === 0) {
-        errorMessage = 'Error de conexión con el backend. Asegúrate de que el servidor esté corriendo y accesible.';
-        if (error.error && (error.error as any).message && (error.error as any).message.includes('ECONNREFUSED')) {
-          errorMessage = 'Error de conexión: El backend rechazó la conexión. Verifica que esté corriendo en http://localhost:8080.';
-        }
-      } else {
-        if (error.error instanceof Blob) {
-          const reader = new FileReader();
-          reader.onload = () => {
-          };
-          reader.readAsText(error.error);
-          errorMessage = `Error del servidor (${error.status}): El servidor devolvió un archivo binario en la respuesta de error.`;
+        console.error(
+            `MatriculaService: Error del lado del servidor: Código ${error.status}, ` +
+            `Body: ${JSON.stringify(error.error)}`);
+
+        if (error.status === 0) {
+            errorMessage = 'Error de conexión con el backend. Asegúrate de que el servidor esté corriendo y accesible.';
+            if (error.error && (error.error as any).message && (error.error as any).message.includes('ECONNREFUSED')) {
+                 errorMessage = 'Error de conexión: El backend rechazo la conexión. Verifica que esté corriendo en /api.';
+            }
         } else {
-          if (error.error && error.error.message) {
-            errorMessage = `Error del servidor (${error.status}): ${error.error.message}`;
-          } else {
-            errorMessage = `Error del servidor (${error.status}): ${error.statusText || 'Mensaje desconocido'}`;
-          }
+            if (error.error instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                };
+                reader.readAsText(error.error);
+                errorMessage = `Error del servidor (${error.status}): El servidor devolvió un archivo binario en la respuesta de error.`;
+            } else {
+                if (error.error && error.error.message) {
+                    errorMessage = `Error del servidor (${error.status}): ${error.error.message}`;
+                } else {
+                    errorMessage = `Error del servidor (${error.status}): ${error.statusText || 'Mensaje desconocido'}`;
+                }
+            }
         }
-      }
     } else if (error instanceof Error) {
       errorMessage = `Error en la aplicación: ${error.message}`;
       if (error.message.includes('ErrorEvent is not defined')) {

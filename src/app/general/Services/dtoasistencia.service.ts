@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOAsistencia, AsistenciaResponse } from '../Interface/DTOAsistencia';
-import { DTOResponse } from '../Interface/DTOResponse';
+import { DTOAsistencia, AsistenciaResponse } from '../interfaces/DTOAsistencia';
+import { DTOResponse } from '../interfaces/DTOResponse';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DTOAsistenciaService {
-  private readonly baseUrl = 'http://localhost:8080/v1/asistencias';
+  private readonly baseUrl = '/api/v1/asistencias';
 
   constructor(private http: HttpClient) {}
 

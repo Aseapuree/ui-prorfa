@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { AdminUserService } from '../../Services/admin-user.service';
 import { DTOrolesService } from '../../Services/dtoroles.service';
 import { lastValueFrom } from 'rxjs';
-import { DTORoles } from '../../Interface/DTORoles';
+import { DTORoles } from '../../interfaces/DTORoles';
 import { MasterService } from '../../Services/master.service';
 
 @Component({

@@ -5,7 +5,7 @@ import { UsuarioService } from '../../../campus/services/usuario.service';
 import { DTOUsuarioService } from '../../Services/dtousuario.service';
 import { lastValueFrom } from 'rxjs';
 import { DTOrolesService } from '../../Services/dtoroles.service';
-import { DTORoles } from '../../Interface/DTORoles';
+import { DTORoles } from '../../interfaces/DTORoles';
 
 @Component({
   selector: 'app-perfil',

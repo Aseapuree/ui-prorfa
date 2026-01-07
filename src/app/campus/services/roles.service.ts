@@ -9,7 +9,7 @@ import { Role } from '../interface/role';  // Ajusta path según estructura
 })
 export class RolesService {
 
-  private urlRoles = "http://localhost:8080/v1/roles";
+  private urlRoles = "/api/v1/roles";
 
   constructor(private http: HttpClient) { }
 

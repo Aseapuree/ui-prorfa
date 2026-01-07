@@ -1,4 +1,4 @@
-export class DTOMatricula {
+export interface DTOMatricula {
     idMatricula?: string;
     idUsuario?: string;
     idApoderado?: string;

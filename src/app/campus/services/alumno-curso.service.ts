@@ -7,7 +7,7 @@ import { AlumnoCurso } from '../interface/AlumnoCurso';
   providedIn: 'root'
 })
 export class AlumnoCursoService {
-    private urlBase = 'http://localhost:8080/v1/alumnos';
+    private urlBase = '/api/v1/alumnos';
 
   constructor(private clienteHttp: HttpClient) {}
 
