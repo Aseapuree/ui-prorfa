@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatriculaService } from '../../Services/dtomatricula.service';
 import { DTOAsistenciaService } from '../../Services/dtoasistencia.service';
 import { AlertComponent } from '../../../campus/components/shared/alert/alert.component';
-import { DTOAsistencia, AlumnoAsistencia, AsistenciaResponse } from '../../Interface/DTOAsistencia';
+import { DTOAsistencia, AlumnoAsistencia, AsistenciaResponse } from '../../../general/interfaces/DTOAsistencia';
 import { Router } from '@angular/router';  // FIX: Import para recuperar state
 
 interface Alumno {
