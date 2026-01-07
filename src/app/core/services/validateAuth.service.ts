@@ -24,7 +24,7 @@ export interface UserData {
 })
 export class ValidateService {
   
-  private API_URL = "http://localhost:8081";
+  private API_URL = "/api-oauth";
 
   constructor(private http: HttpClient) {}
 

@@ -78,9 +78,7 @@
             }"
           >
             <option value="">Seleccionar nivel</option>
-            <option *ngFor="let nivel of niveles" [value]="nivel">
-              {{ nivel }}
-            </option>
+            <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
           </select>
           <div
             class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
@@ -125,9 +123,7 @@
             }"
           >
             <option value="">Seleccionar grado</option>
-            <option *ngFor="let grado of grados" [value]="grado">
-              {{ grado }}
-            </option>
+            <option *ngFor="let grado of gradosParaFiltro" [value]="grado">{{ grado }}</option>
           </select>
           <div
             class="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8"
@@ -171,9 +167,9 @@
             }"
           >
             <option value="">Seleccionar sección</option>
-            <option *ngFor="let seccion of secciones" [value]="seccion.nombre">
-              {{ seccion.nombre }}
-            </option>
+            <option *ngFor="let seccion of seccionesParaFiltro" [value]="seccion.nombre">
+  {{ seccion.nombre }}
+</option>
             <!-- Se agrego .nombre para manejar la nueva estructura de entidad-->
           </select>
           <div
@@ -301,29 +297,6 @@
 
     <!-- Selector de cantidad de datos por página y botones -->
     <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-      <!-- Selector a la izquierda -->
-      <div class="flex items-center">
-        <label
-          for="itemsPerPage"
-          class="text-sm text-gray-500 dark:text-gray-400 mr-2"
-        >
-          Mostrar:
-        </label>
-        <select
-          id="itemsPerPage"
-          [(ngModel)]="itemsPerPage"
-          (ngModelChange)="onItemsPerPageChange($event)"
-          class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
-        >
-          <option *ngFor="let option of pageSizeOptions" [value]="option">
-            {{ option }}
-          </option>
-        </select>
-        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400"
-          >registros por página</span
-        >
-      </div>
-
       <!-- Botones a la derecha -->
       <div class="flex flex-wrap items-center gap-2">
         <!-- Botón Buscar -->
@@ -382,6 +355,9 @@
       [sortBy]="sortBy"
       [sortDir]="sortDir"
       (sortChange)="onSortChange($event)"
+      [totalItems]="totalAsignaciones"
+      [(itemsPerPage)]="itemsPerPage"
+      (itemsPerPageChange)="onItemsPerPageChange($event)"
     ></app-table>
 
     <!-- Mensaje cuando no hay resultados -->

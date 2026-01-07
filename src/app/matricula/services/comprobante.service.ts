@@ -1,6 +1,3 @@
-import { Apoderado } from './../interfaces/DTOApoderado';
-import { Alumno } from './../interfaces/DTOAlumno';
-import { Matricula } from './../interfaces/DTOMatricula';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError, forkJoin, of } from 'rxjs';
@@ -16,7 +13,7 @@ const TIPO_COMPROBANTE_PAGO_UUID = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
 })
 export class ComprobanteService {
 
-  private urlBase = "http://localhost:8080/v1/comprobantes";
+  private urlBase = "/api/v1/comprobantes";
 
   constructor(private http: HttpClient) { }
 
@@ -82,7 +79,6 @@ export class ComprobanteService {
   }
 
   generarCodigoPago(): Observable<string> {
-    console.log(`ComprobanteService: Calling backend endpoint: ${this.urlBase}/generar-codigo-pago`);
     return this.http.get<any>(`${this.urlBase}/generar-codigo-pago`, { withCredentials: true })
       .pipe(map(response => {
         return response.data;
@@ -126,7 +122,6 @@ export class ComprobanteService {
 
 
   obtenerComprobantePorIdMatricula(idMatricula: string): Observable<Comprobante | null> {
-    console.log(`ComprobanteService: Calling backend endpoint: ${this.urlBase}/by-matricula/${idMatricula}`);
     return this.http.get<any>(`${this.urlBase}/by-matricula/${idMatricula}`, { withCredentials: true })
       .pipe(
         retry(3),
@@ -160,14 +155,7 @@ export class ComprobanteService {
       }
   }
 
-  generarPdfDirecto(idMatricula: string, tipoComprobanteString: string, montoTotal?: number): Observable<Blob> {
-      const tipoComprobanteUuid = this.getTipoComprobanteUuid(tipoComprobanteString);
-
-      if (!tipoComprobanteUuid) {
-          return throwError(() => new Error(`Tipo de comprobante desconocido: ${tipoComprobanteString}`));
-      }
-
-      console.log(`ComprobanteService: Calling backend endpoint: ${this.urlBase}/generar-pdf-directo for type ${tipoComprobanteString} with UUID ${tipoComprobanteUuid}`);
+  generarPdfDirecto(idMatricula: string, tipoComprobanteUuid: string, montoTotal?: number): Observable<Blob> {
       let params = new HttpParams()
           .set('idMatricula', idMatricula)
           .set('tipoComprobante', tipoComprobanteUuid);
@@ -204,14 +192,11 @@ export class ComprobanteService {
                             errorMessage = `Error del servidor (${error.status}): El servidor devolvió un archivo binario inesperado en la respuesta de error.`;
                         }
                     } catch (e) {
-                        console.error('ComprobanteService: No se pudo parsear el cuerpo del error como JSON. Contenido:', reader.result);
                         errorMessage = `Error del servidor (${error.status}): ${error.statusText || 'Mensaje desconocido'}. El servidor no devolvió un mensaje de error estándar.`;
                     }
-                    console.error('ComprobanteService: Error completo:', error);
                     observer.error(new Error(errorMessage));
                 };
                 reader.onerror = () => {
-                    console.error('ComprobanteService: Falló la lectura del blob de error.', error);
                     errorMessage = `Error del servidor (${error.status}): Falló la lectura del mensaje de error del backend.`;
                     observer.error(new Error(errorMessage));
                 };
@@ -232,18 +217,15 @@ export class ComprobanteService {
         }
 
     } else if (error instanceof Error) {
-        console.error('ComprobanteService: Error del lado del cliente o de red:', error.message);
         errorMessage = `Error en la aplicación: ${error.message}`;
          if (error.message.includes('ErrorEvent is not defined')) {
              errorMessage = 'Error interno del navegador al procesar la respuesta.';
          }
 
     } else {
-        console.error('ComprobanteService: Otro tipo de error:', error);
         errorMessage = `Ocurrió un error inesperado: ${JSON.stringify(error)}`;
     }
 
-    console.error('ComprobanteService: Error completo:', error);
     return throwError(() => new Error(errorMessage));
   }
 }

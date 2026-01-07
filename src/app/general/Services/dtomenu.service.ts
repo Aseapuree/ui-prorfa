@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOMenu } from '../Interface/DTOMenu'; 
-import { DTOResponse } from '../Interface/DTOResponse';
+import { DTOMenu } from '../interfaces/DTOMenu'; 
+import { DTOResponse } from '../interfaces/DTOResponse';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DTOmenuService {
-  private url = 'http://localhost:8080/v1/menu/ver?id=';
+  private url = '/api/v1/menu/ver?id=';
 
   constructor(private http: HttpClient) { }
 

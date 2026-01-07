@@ -1,0 +1,21 @@
+name: CI UI-PRINCIPAL
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - "**"
+
+permissions:
+  contents: read
+  packages: write
+
+
+jobs:
+  call_orchestrator:
+    uses: Aseapuree/rfa-workflows/.github/workflows/build-angular.yml@master
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GHCR_USER:  ${{ secrets.GHCR_USER }}
+    with:
+      service_name: ui-prorfa

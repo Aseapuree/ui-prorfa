@@ -44,7 +44,6 @@
           <input id="apoderado_numeroDocumento_buscar" formControlName="numeroDocumento" name="numeroDocumento_search" type="text" inputmode="numeric" placeholder="Ingrese número para buscar"
                  title="Solo números" [attr.maxlength]="getNumeroDocumentoMaxLength('apoderado')"
                  (keypress)="onKeyPressOnlyNumbers($event)" (keydown.enter)="onEnterBuscarApoderado($event)"
-                 [disabled]="!formMatricula.get('apoderado.idtipodoc')?.value || isSearching"
                  [attr.aria-describedby]="'numdoc-search-error numdoc-search-reminder'"
                  [class.input-disabled]="!formMatricula.get('apoderado.idtipodoc')?.value || isSearching"
                  (focus)="!formMatricula.get('apoderado.idtipodoc')?.value ? formMatricula.get('apoderado.idtipodoc')?.markAsTouched() : null"/>
@@ -82,7 +81,7 @@
               <label for="apoderado_idtipodoc_confirm">Tipo de Documento</label>
               <div class="input-group relative">
                 <span><fa-icon [icon]="faIdCard"></fa-icon></span>
-                <select id="apoderado_idtipodoc_confirm" formControlName="idtipodoc" [attr.disabled]="apoderadoEncontrado ? true : null" [class.input-disabled]="apoderadoEncontrado">
+                <select id="apoderado_idtipodoc_confirm" formControlName="idtipodoc" [class.input-disabled]="apoderadoEncontrado">
                   <option value="" disabled selected>Selecciona una opción</option>
                   <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre | uppercase }}</option>
                 </select>
@@ -99,7 +98,6 @@
                  <input id="apoderado_numeroDocumento_completo" formControlName="numeroDocumento" type="text" inputmode="numeric" placeholder="Ingrese número de documento"
                        title="Solo números" [attr.maxlength]="getNumeroDocumentoMaxLength('apoderado')"
                        (keypress)="onKeyPressOnlyNumbers($event)" [readonly]="apoderadoEncontrado"
-                       [disabled]="!apoderadoEncontrado && !formMatricula.get('apoderado.idtipodoc')?.value"
                        [class.input-readonly]="apoderadoEncontrado"
                        [class.input-disabled]="!apoderadoEncontrado && !formMatricula.get('apoderado.idtipodoc')?.value"
                        [attr.aria-describedby]="'numdoc-apoderado-confirm-error numdoc-apoderado-confirm-reminder'"
@@ -369,7 +367,6 @@
                  <input id="alumno_numeroDocumento" formControlName="numeroDocumento" type="text" inputmode="numeric" placeholder="Ingrese número de documento"
                        title="Solo números" [attr.maxlength]="getNumeroDocumentoMaxLength('alumno')"
                        (keypress)="onKeyPressOnlyNumbers($event)"
-                       [disabled]="!formMatricula.get('alumno.idtipodoc')?.value"
                        [attr.aria-describedby]="'numdoc-alumno-error numdoc-alumno-reminder'"
                        [class.input-disabled]="!formMatricula.get('alumno.idtipodoc')?.value"
                        (focus)="!formMatricula.get('alumno.idtipodoc')?.value ? formMatricula.get('alumno.idtipodoc')?.markAsTouched() : null"/>

@@ -1,9 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { TooltipComponent } from '../tooltip/tooltip.component';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { SafeHtmlPipe } from '../../../campus/components/modules/gestion/campus-cursos/safe-html.pipe';
+import { FormsModule } from '@angular/forms';
 
 export interface ColumnConfig {
   field: string;
@@ -27,19 +35,72 @@ export interface ActionConfig {
 @Component({
   selector: 'app-table',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, TooltipComponent,SafeHtmlPipe],
+  imports: [
+    CommonModule,
+    FontAwesomeModule,
+    TooltipComponent,
+    SafeHtmlPipe,
+    FormsModule,
+  ],
   templateUrl: './table.component.html',
-  styleUrl: './table.component.scss'
+  styleUrl: './table.component.scss',
 })
-export class TableComponent {
+export class TableComponent implements OnChanges {
   @Input() data: any[] = [];
   @Input() columns: ColumnConfig[] = [];
   @Input() enableActions: boolean = true;
   @Input() actions: ActionConfig[] = [];
   @Input() sortBy: string = '';
   @Input() sortDir: string = 'asc';
-  @Output() sortChange = new EventEmitter<{ sortBy: string, sortDir: string }>();
+  @Input() itemsPerPage: number = 5;
+  @Input() totalItems: number = 0;
+  @Output() sortChange = new EventEmitter<{
+    sortBy: string;
+    sortDir: string;
+  }>();
   @Output() previewClick = new EventEmitter<{ item: any; field: string }>();
+  @Output() itemsPerPageChange = new EventEmitter<number>();
+
+
+  private _currentPage: number = 1;
+  @Input() set currentPage(value: number) {
+    this._currentPage = value || 1;
+  }
+  get currentPage(): number {
+    return this._currentPage;
+  }
+
+  pageSizeOptions: number[] = [];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['totalItems'] || changes['data']) {
+      this.updatePageSizeOptions();
+    }
+  }
+
+  private updatePageSizeOptions(): void {
+  const total = this.totalItems || this.data.length;
+  const fixedOptions = [5, 10, 15, 20, 25, 30];
+
+  // Siempre incluye el 5 aunque haya menos datos
+  this.pageSizeOptions = [5];
+  this.pageSizeOptions.push(...fixedOptions.filter(opt => opt > 5 && opt <= total));
+
+  if (this.pageSizeOptions.length === 1 && total >= 10) {
+    this.pageSizeOptions.push(10);
+  }
+
+  // Si el valor actual es mayor al permitido, lo ajusta al máximo disponible
+  const maxAllowed = Math.max(...this.pageSizeOptions);
+  if (this.itemsPerPage > maxAllowed) {
+    this.itemsPerPage = maxAllowed;
+    this.itemsPerPageChange.emit(this.itemsPerPage);
+  }
+}
+
+  onItemsPerPageChange(newSize: number): void {
+    this.itemsPerPageChange.emit(newSize);
+  }
 
   onPreviewClick(item: any, field: string): void {
     this.previewClick.emit({ item, field });

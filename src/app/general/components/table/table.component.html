@@ -1,3 +1,22 @@
+<div class="mt-4 flex items-center">
+  <label for="itemsPerPage" class="text-sm text-gray-500 dark:text-gray-400 mr-2">
+    Mostrar:
+  </label>
+  <select
+    id="itemsPerPage"
+    [(ngModel)]="itemsPerPage"
+    (ngModelChange)="onItemsPerPageChange($event)"
+    class="py-1.5 px-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:outline-none"
+  >
+    <option *ngFor="let option of pageSizeOptions" [value]="option">
+      {{ option }}
+    </option>
+  </select>
+  <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">
+    registros por página
+  </span>
+</div>
+
 <div class="flex flex-col">
   <div class="table-container overflow-x-auto shadow-sm">
     <div class="inline-block min-w-full py-2 align-middle">

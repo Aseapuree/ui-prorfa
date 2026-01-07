@@ -1,6 +1,6 @@
 import { DTORoles } from "./DTORoles";
 
-export class DTOUsuario {
+export interface DTOUsuario {
     idusuario?: string;
     nombre?: string;
     apellidopaterno?: string;

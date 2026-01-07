@@ -1,4 +1,4 @@
-export class DTOMenu {
+export interface DTOMenu {
     idMenu?: string;
     idmenuparent?: string;
     idmenurol?: string;

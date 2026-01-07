@@ -1,43 +1,43 @@
-<form (ngSubmit)="submit.emit(asignacion)" #form="ngForm" class="space-y-6">
+<form #form="ngForm" (ngSubmit)="submitForm()" class="space-y-6">
   <!-- Profesor -->
-<div>
-  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-    Profesor <span class="text-red-500">*</span>
-  </label>
-  <select
-    [(ngModel)]="asignacion.usuario"
-    name="usuario"
-    required
-    [disabled]="isReadOnly"
-    [compareWith]="compareUsuario"
-    class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-  >
-    <option [ngValue]="null">Seleccionar profesor</option>
-    <option *ngFor="let u of usuarios" [ngValue]="u">
-      {{ u.nombre }} {{ u.apellidopaterno }} {{ u.apellidomaterno }}
-    </option>
-  </select>
-</div>
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Profesor <span class="text-red-500">*</span>
+    </label>
+    <select
+      [(ngModel)]="asignacion.usuario"
+      name="usuario"
+      required
+      [disabled]="isReadOnly"
+      [compareWith]="compareUsuario"
+      class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    >
+      <option [ngValue]="null">Seleccionar profesor</option>
+      <option *ngFor="let u of usuarios" [ngValue]="u">
+        {{ u.nombre }} {{ u.apellidopaterno }} {{ u.apellidomaterno }}
+      </option>
+    </select>
+  </div>
 
-<!-- Curso -->
-<div>
-  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-    Curso <span class="text-red-500">*</span>
-  </label>
-  <select
-    [(ngModel)]="asignacion.curso"
-    name="curso"
-    required
-    [disabled]="isReadOnly"
-    [compareWith]="compareCurso"
-    class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-  >
-    <option [ngValue]="null">Seleccionar curso</option>
-    <option *ngFor="let c of cursos" [ngValue]="c">
-      {{ c.nombre }}
-    </option>
-  </select>
-</div>
+  <!-- Curso -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Curso <span class="text-red-500">*</span>
+    </label>
+    <select
+      [(ngModel)]="asignacion.curso"
+      name="curso"
+      required
+      [disabled]="isReadOnly"
+      [compareWith]="compareCurso"
+      class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    >
+      <option [ngValue]="null">Seleccionar curso</option>
+      <option *ngFor="let c of cursos" [ngValue]="c">
+        {{ c.nombre }}
+      </option>
+    </select>
+  </div>
 
   <!-- Nivel -->
   <div>
@@ -104,8 +104,9 @@
       Cancelar
     </button>
     <button
-      type="submit"
-      [disabled]="form.invalid || isReadOnly"
+      type="button"
+      (click)="submitForm()"
+      [disabled]="isReadOnly"
       class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
     >
       {{ asignacion.idProfesorCurso ? "Actualizar" : "Guardar" }}

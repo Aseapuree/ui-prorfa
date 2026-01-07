@@ -3,14 +3,14 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ProfesorCurso } from '../interface/ProfesorCurso'; 
 import { DTOResponse } from '../interface/DTOResponse';
-import saveAs from 'file-saver';
+import  saveAs  from 'file-saver';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfesorCursoService {
 
-  private urlBase = "http://localhost:8080/v1/profesor-curso";
+  private urlBase = "/api/v1/profesor-curso";
 
   constructor(private clienteHttp: HttpClient) { }
 
@@ -75,23 +75,24 @@ export class ProfesorCursoService {
   }
 
    // Obtener lista de asignaciones con paginación
-   obtenerCourseList(page: number, size: number, sortBy: string, sortDir: string): Observable<{ content: ProfesorCurso[], totalElements: number }> {
-    return this.clienteHttp
-      .get<DTOResponse<{ content: ProfesorCurso[], totalElements: number }>>(
-        `${this.urlBase}/listar?page=${page - 1}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`,
-        { withCredentials: true }
-      )
-      .pipe(
-        map(response => ({
-          content: response.data.content,
-          totalElements: response.data.totalElements
-        })),
-        catchError(error => {
-          console.error('Error al obtener asignaciones:', error);
-          return throwError(() => new Error('Error al cargar las asignaciones'));
-        })
-      );
-  }
+  obtenerCourseList(page: number, size: number): Observable<{ content: ProfesorCurso[]; totalElements: number }> {
+  const params = new HttpParams()
+    .set('page', (page - 1).toString())
+    .set('size', size.toString());
+
+  return this.clienteHttp
+    .get<DTOResponse<any>>(`${this.urlBase}/listar`, { params, withCredentials: true })
+    .pipe(
+      map(response => ({
+        content: response.data?.content || [],
+        totalElements: response.data?.totalElements || 0
+      })),
+      catchError(error => {
+        console.error('Error al obtener lista de asignaciones:', error);
+        return throwError(() => new Error('Error al cargar las asignaciones'));
+      })
+    );
+}
 
  // Agregar una nueva asignación
  agregarCurso(profesorCurso: ProfesorCurso): Observable<ProfesorCurso> {
@@ -131,22 +132,26 @@ eliminarCurso(id: string): Observable<void> {
     );
 }
 
-buscarAsignaciones(filters: {
-  keyword?: string,
-  profesorId?: string,
-  cursoId?: string,
-  grado?: string,
-  seccion?: string,
-  nivel?: string,
-  fechaInicio?: string,
-  fechaFin?: string,
-  fechaTipo?: string
-}, page: number, size: number, sortBy: string, sortDir: string): Observable<{ content: ProfesorCurso[], totalElements: number }> {
-  let params = new HttpParams();
-  params = params.set('page', (page - 1).toString());
-  params = params.set('size', size.toString());
-  params = params.set('sortBy', sortBy);
-  params = params.set('sortDir', sortDir);
+buscarAsignaciones(
+  filters: {
+    keyword?: string;
+    profesorId?: string;
+    cursoId?: string;
+    grado?: string;
+    seccion?: string;
+    nivel?: string;
+    fechaInicio?: string;
+    fechaFin?: string;
+    fechaTipo?: string;
+  },
+  page: number,
+  size: number
+): Observable<{ content: ProfesorCurso[]; totalElements: number }> {
+  let params = new HttpParams()
+    .set('page', (page - 1).toString())
+    .set('size', size.toString());
+
+  // Solo agregamos los filtros reales (sin sortBy/sortDir)
   if (filters.keyword) params = params.set('palabraClave', filters.keyword);
   if (filters.profesorId) params = params.set('profesorId', filters.profesorId);
   if (filters.cursoId) params = params.set('cursoId', filters.cursoId);
@@ -157,22 +162,14 @@ buscarAsignaciones(filters: {
   if (filters.fechaFin) params = params.set('fechaFin', filters.fechaFin);
   if (filters.fechaTipo) params = params.set('fechaTipo', filters.fechaTipo);
 
-  console.log('Parámetros enviados al backend:', params.toString());
+  console.log('Parámetros enviados al backend (sin sort):', params.toString());
 
   return this.clienteHttp
-    .get<any>(`${this.urlBase}/buscar`, { params, withCredentials: true })
+    .get<DTOResponse<any>>(`${this.urlBase}/buscar`, { params, withCredentials: true })
     .pipe(
       map(response => {
-        console.log('Respuesta del backend:', response);
-        let content: ProfesorCurso[] = [];
-        let totalElements: number = 0;
-
-        if (response.data && response.data.content) {
-          content = response.data.content || [];
-          totalElements = response.data.totalElements || 0;
-        } else {
-          console.warn('Estructura de respuesta no reconocida:', response);
-        }
+        const content = response.data?.content || [];
+        const totalElements = response.data?.totalElements || 0;
 
         return { content, totalElements };
       }),

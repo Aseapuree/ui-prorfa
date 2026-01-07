@@ -186,7 +186,7 @@ export class AsistenciaComponent implements OnInit {
               console.log(`Comparando fecha de asistencia ${fechaAsistenciaStr} con fecha de sesión ${fechaSesionStr}`);
               return fechaAsistenciaStr === fechaSesionStr;
             })
-          : this.asistenciasPrevias;
+          : this.asistenciasPrevias;  
   
         console.log('Asistencias filtradas por fecha:', asistenciasFiltradas);
   

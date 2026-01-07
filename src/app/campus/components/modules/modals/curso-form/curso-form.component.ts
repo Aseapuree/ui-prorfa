@@ -3,11 +3,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Curso, Competencia } from '../../../../interface/curso';
+import { TextInputRestrictionDirective } from '../../../shared/text-input-restriction.directive/text-input-restriction.directive.component';
 
 @Component({
   selector: 'app-curso-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, FontAwesomeModule,TextInputRestrictionDirective],
   templateUrl: './curso-form.component.html',
   styleUrl: './curso-form.component.scss',
 })
