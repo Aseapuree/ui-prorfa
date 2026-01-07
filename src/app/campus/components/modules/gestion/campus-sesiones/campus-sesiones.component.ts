@@ -40,6 +40,7 @@ export class CampusSesionesComponent {
   public itemsPerPage: number = 4; // Fixed as per original template
   public totalPages: number = 1; // Initialize totalPages
   sesiones: Sesion[] = [];
+  private sesionesMap: Map<string, Sesion> = new Map(); // FIX: Agregado para quick lookup por idSesion
   idProfesorCurso: string | null = null;
   idCurso: string | null = null;
   rolUsuario: string | null = null;
@@ -224,6 +225,9 @@ export class CampusSesionesComponent {
           'info'
         );
       }
+      // FIX: Poblar map para recuperar sesión por ID
+      this.sesionesMap.clear();
+      this.sesiones.forEach(s => this.sesionesMap.set(s.idSesion!, s));
       this.updateTotalPages(); // Update totalPages after fetching sessions
     } catch (error) {
       console.error('Error al obtener sesiones:', error);
@@ -254,6 +258,9 @@ export class CampusSesionesComponent {
             'info'
           );
         }
+        // FIX: Poblar map para recuperar sesión por ID
+        this.sesionesMap.clear();
+        this.sesiones.forEach(s => this.sesionesMap.set(s.idSesion!, s));
         this.updateTotalPages(); // Update totalPages after fetching sessions
       } else {
         throw new Error('Curso no encontrado');
@@ -329,14 +336,25 @@ export class CampusSesionesComponent {
     });
   }
 
-  irAActividades(idSesion: string): void {
+    irAActividades(idSesion: string): void {
     if (this.rolUsuario === 'Profesor' && this.idProfesorCurso) {
       localStorage.setItem('idProfesorCurso', this.idProfesorCurso);
     }
+    // Recupera sesión del map
+    const sesion = this.sesionesMap.get(idSesion);
+    if (!sesion) {
+      console.error('Sesión no encontrada para id:', idSesion);
+      return;
+    }
+
+    // FIX: Guarda fecha en localStorage con key única por sesión
+    localStorage.setItem(`fechaSesion_${idSesion}`, sesion.fechaAsignada || '');
+
     this.router.navigate(['/card-actividades', idSesion], {
       state: {
         idProfesorCurso: this.idProfesorCurso || null,
         idCurso: this.idCurso || null,
+        fechaAsignada: sesion.fechaAsignada  // State como primary, LS como backup
       },
     });
   }
