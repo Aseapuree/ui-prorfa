@@ -1,7 +1,7 @@
 <app-general-loading-spinner [visible]="isLoading || isGeneratingPdf || isNavigating" [message]="getSpinnerMessage()"></app-general-loading-spinner>
 <div *ngIf="comprobante && !isLoading && !error && !isGeneratingPdf && !isNavigating" class="container mx-auto p-6 bg-white rounded-lg shadow-xl my-8">
   <h2 class="text-2xl font-bold text-gray-800 mb-8 flex items-center justify-center">
-    <fa-icon [icon]="faReceipt" class="mr-3 text-blue-600"></fa-icon>
+    <fa-icon [icon]="['fas', 'receipt']" class="mr-3 text-blue-600"></fa-icon>
     Comprobantes Generados
   </h2>
 
@@ -10,30 +10,30 @@
     <div class="flex flex-col justify-between">
       <div class="info-general">
         <h4>
-          <fa-icon [icon]="faCircleInfo" class="fa-icon"></fa-icon> Información General
+          <fa-icon [icon]="['fas', 'circle-info']" class="fa-icon"></fa-icon> Información General
         </h4>
         <div class="space-y-3 text-sm">
           <div class="data-row">
             <span class="label">
-              <fa-icon [icon]="faHashtag" class="fa-icon"></fa-icon> Código Matrícula:
+              <fa-icon [icon]="['fas', 'hashtag']" class="fa-icon"></fa-icon> Código Matrícula:
             </span>
             <span class="value">{{ comprobante.codigomatricula || 'N/A' }}</span>
           </div>
           <div class="data-row">
             <span class="label">
-              <fa-icon [icon]="faHashtag" class="fa-icon"></fa-icon> Código Alumno:
+              <fa-icon [icon]="['fas', 'hashtag']" class="fa-icon"></fa-icon> Código Alumno:
             </span>
             <span class="value">{{ comprobante.codigoalumno || 'N/A' }}</span>
           </div>
           <div class="data-row">
             <span class="label">
-              <fa-icon [icon]="faHashtag" class="fa-icon"></fa-icon> Código Pago:
+              <fa-icon [icon]="['fas', 'hashtag']" class="fa-icon"></fa-icon> Código Pago:
             </span>
             <span class="value">{{ comprobante.codigopago || 'N/A' }}</span>
           </div>
           <div class="data-row">
             <span class="label">
-              <fa-icon [icon]="faCalendarAlt" class="fa-icon"></fa-icon> Fecha Creación:
+             <fa-icon [icon]="['fas', 'calendar-alt']" class="fa-icon"></fa-icon> Fecha Creación:
             </span>
             <span class="value">{{ comprobante.fechaCreacion ? (comprobante.fechaCreacion | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
           </div>
@@ -51,48 +51,48 @@
     <div class="right-column">
       <div class="comprobante-section matricula-section">
         <h3>
-          <fa-icon [icon]="faGraduationCap" class="fa-icon"></fa-icon> Comprobante Matrícula
+          <fa-icon [icon]="['fas', 'graduation-cap']" class="fa-icon"></fa-icon> Comprobante Matrícula
         </h3>
         <div *ngIf="comprobante.urlMatricula; else noUrlMatricula">
           <button
             [disabled]="isMatriculaLoading || isPagoLoading || isGeneratingPdf || isNavigating" (click)="openPdf('matricula')"
             class="btn-view-pdf matricula" >
             <ng-container *ngIf="!isMatriculaLoading">
-              <fa-icon [icon]="faFilePdf" class="fa-icon"></fa-icon> Ver / Imprimir PDF Matrícula
-              <fa-icon [icon]="faLink" class="fa-icon"></fa-icon>
+              <fa-icon [icon]="['fas', 'file-pdf']" class="fa-icon"></fa-icon> Ver / Imprimir PDF Matrícula
+              <fa-icon [icon]="['fas', 'link']" class="fa-icon ml-2"></fa-icon>
             </ng-container>
             <ng-container *ngIf="isMatriculaLoading">
-              <fa-icon [icon]="faSpinner" [spin]="true" class="fa-icon"></fa-icon> Generando...
+              <fa-icon [icon]="['fas', 'spinner']" [spin]="true" class="fa-icon"></fa-icon> Generando...
             </ng-container>
           </button>
         </div>
         <ng-template #noUrlMatricula>
           <div class="url-link no-url">
-            <fa-icon [icon]="faTimesCircle" class="fa-icon"></fa-icon> No hay PDF de Matrícula disponible.
+            <fa-icon [icon]="['fas', 'times-circle']" class="fa-icon"></fa-icon> No hay PDF de Matrícula disponible.
           </div>
         </ng-template>
       </div>
 
       <div class="comprobante-section pago-section">
         <h3>
-          <fa-icon [icon]="faMoneyBillWave" class="fa-icon"></fa-icon> Comprobante Pago
+          <fa-icon [icon]="['fas', 'money-bill-wave']" class="fa-icon"></fa-icon> Comprobante Pago
         </h3>
         <div *ngIf="comprobante.urlPago; else noUrlPago">
           <button
             [disabled]="isPagoLoading || isMatriculaLoading || isGeneratingPdf || isNavigating" (click)="openPdf('pago')"
             class="btn-view-pdf pago" >
             <ng-container *ngIf="!isPagoLoading">
-              <fa-icon [icon]="faFilePdf" class="fa-icon"></fa-icon> Ver / Imprimir PDF Pago
-              <fa-icon [icon]="faLink" class="fa-icon"></fa-icon>
+              <fa-icon [icon]="['fas', 'file-pdf']" class="fa-icon"></fa-icon> Ver / Imprimir PDF Pago
+              <fa-icon [icon]="['fas', 'link']" class="fa-icon ml-2"></fa-icon>
             </ng-container>
             <ng-container *ngIf="isPagoLoading">
-              <fa-icon [icon]="faSpinner" [spin]="true" class="fa-icon"></fa-icon> Generando...
+              <fa-icon [icon]="['fas', 'spinner']" [spin]="true" class="fa-icon"></fa-icon> Generando...
             </ng-container>
           </button>
         </div>
         <ng-template #noUrlPago>
           <div class="url-link no-url">
-            <fa-icon [icon]="faTimesCircle" class="fa-icon"></fa-icon> No hay PDF de Pago disponible.
+            <fa-icon [icon]="['fas', 'times-circle']" class="fa-icon"></fa-icon> No hay PDF de Pago disponible.
           </div>
         </ng-template>
       </div>

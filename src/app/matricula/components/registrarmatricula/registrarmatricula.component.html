@@ -237,7 +237,7 @@
               <label for="apoderado_direccion">Dirección</label>
               <div class="input-group relative">
                 <span><fa-icon [icon]="faHome"></fa-icon></span>
-                <input id="apoderado_direccion" formControlName="direccion" type="text" placeholder="Ingrese dirección" [attr.pattern]="direccionPattern.source"/>
+                <input id="apoderado_direccion" formControlName="direccion" type="text" placeholder="Ingrese dirección" />
               </div>
               <div class="error">
                  <ng-container *ngIf="formMatricula.get('apoderado.direccion')?.touched">
@@ -443,7 +443,7 @@
               <label for="alumno_direccion">Dirección</label>
               <div class="input-group relative">
                  <span><fa-icon [icon]="faHome"></fa-icon></span>
-                <input id="alumno_direccion" formControlName="direccion" type="text" placeholder="Ingrese dirección" [attr.pattern]="direccionPattern.source"/>
+                <input id="alumno_direccion" formControlName="direccion" type="text" placeholder="Ingrese dirección" />
               </div>
                <div class="error">
                  <ng-container *ngIf="formMatricula.get('alumno.direccion')?.touched">
