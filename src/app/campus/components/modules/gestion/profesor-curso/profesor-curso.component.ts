@@ -60,7 +60,6 @@ import { MatError } from "@angular/material/form-field";
     ProfesorCursoFormComponent,
     ConfirmDeleteComponent,
     AuditmodalComponent,
-    MatError
 ],
   providers: [ProfesorCursoService, EntidadService],
   templateUrl: './profesor-curso.component.html',
@@ -596,7 +595,9 @@ seccionesParaFiltro: SeccionVacantes[] = [];
   maxDate!: string;
 
   descargarExcel(): void {
+    
     this.isLoading = true;
+    console.log("Enviando exactamente esto al backend:", this.appliedFilters);
     console.log('Descargando Excel con filtros:', this.appliedFilters);
 
     this.profesorCursoService.descargarExcel(this.appliedFilters).subscribe({

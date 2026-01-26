@@ -4,13 +4,14 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Entidad } from '../interfaces/DTOEntidad';
 import { DTOResponse } from '../../general/interfaces/DTOResponse';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EntidadService {
 
-  private urlBase = "/api/v1/entidades";
+  private urlBase = `${environment.apiUrl}/api/v1/entidades`;
 
   constructor(private http: HttpClient) { }
 

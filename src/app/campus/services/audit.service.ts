@@ -4,13 +4,14 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { AuditProrfa } from '../interface/audit';
 import { DTOResponse } from '../interface/DTOResponse';
 import saveAs from 'file-saver';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuditService {
 
-  private urlBase = "/api/v1/audit";
+  private urlBase = `${environment.apiUrl}/api/v1/audit`;
 
   constructor(private clienteHttp: HttpClient) { }
 

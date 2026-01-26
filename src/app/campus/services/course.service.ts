@@ -4,13 +4,14 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { Competencia, Curso } from '../interface/curso';
 import { response } from 'express';
 import { DTOResponse } from '../interface/DTOResponse';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CourseService {
 
-  private urlBase = "/api/v1/cursos";
+  private urlBase = `${environment.apiUrl}/api/v1/cursos`;
 
 
   constructor(private clienteHttp: HttpClient) { }

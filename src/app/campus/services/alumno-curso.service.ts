@@ -2,12 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { AlumnoCurso } from '../interface/AlumnoCurso';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AlumnoCursoService {
-    private urlBase = '/api/v1/alumnos';
+
+    private urlBase = `${environment.apiUrl}/api/v1/alumnos`;
 
   constructor(private clienteHttp: HttpClient) {}
 
