@@ -4,13 +4,14 @@ import { Sesion } from '../interface/sesion';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { DTOActividad, DTOActividadesSesion } from '../interface/DTOActividad';
 import { DTOResponse } from '../interface/DTOResponse';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SesionService {
 
-  private urlBase = "/api/v1/sesiones";
+  private urlBase = `${environment.apiUrl}/api/v1/sesiones`;
 
 
   constructor(private clienteHttp: HttpClient) { }
