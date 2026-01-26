@@ -225,6 +225,13 @@ export class MenuComponent implements OnInit, OnChanges {
     return (nombres[0]?.[0] || '?').toUpperCase();
   }
 
+  get nombreCompleto(): string {
+  return [this.nombreUsuario, this.apellidoPaterno, this.apellidoMaterno]
+    .filter(v => v && v !== 'undefined' && v.trim() !== '')
+    .join(' ');
+}
+
+
   getIcon(menu_icono: string): IconDefinition | null {
     const iconoEncontrado = fontAwesomeIcons.find(icon => icon.iconName === menu_icono?.toLowerCase());
     if (!iconoEncontrado && menu_icono) console.warn(`⚠ No se encontró el icono: "${menu_icono}" en fontAwesomeIcons`);

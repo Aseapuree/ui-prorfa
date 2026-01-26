@@ -3,12 +3,13 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DTOAsistencia, AsistenciaResponse } from '../interfaces/DTOAsistencia';
 import { DTOResponse } from '../interfaces/DTOResponse';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DTOAsistenciaService {
-  private readonly baseUrl = '/api/v1/asistencias';
+  private readonly baseUrl = `${environment.apiUrl}/api/v1/asistencias`;
 
   constructor(private http: HttpClient) {}
 

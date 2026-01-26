@@ -9,9 +9,10 @@
       {{ obtenerIniciales() }}
     </div>
     <img *ngIf="imagenValida" [src]="perfilUrl" alt="Foto de perfil" class="w-20 h-20 rounded-full object-cover border-2 border-white profile-image">
-    <p class="text-lg font-bold text-white mt-2 user-name" *ngIf="!menuCerrado">
-      {{ nombreUsuario }} {{ apellidoPaterno }} {{ apellidoMaterno }}
+    <p class="text-lg font-bold text-white mt-2 user-name" *ngIf="!menuCerrado && nombreCompleto">
+     {{ nombreCompleto }}
     </p>
+
     <p class="text-sm text-gray-300 user-role" *ngIf="!menuCerrado">{{ nombreRol || 'Sin Rol' }}</p>
   </div>
 

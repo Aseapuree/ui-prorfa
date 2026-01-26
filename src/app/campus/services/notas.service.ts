@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { DTOResponse } from '../interface/DTOResponse';
 import { DTONota, AlumnoNotas, DTONotaResponse, DTOAlumnoNotas } from '../interface/DTONota';
+import { environment } from '../../../environments/environment';
 
 // Interfaz para la respuesta del endpoint /alumnByNumDoc
 interface DTOAlumno {
@@ -53,8 +54,8 @@ interface DTOCursoNotas {
   providedIn: 'root'
 })
 export class NotasService {
-  private urlBase = "/api/v1/notas";
-  private alumnoUrlBase = "/api/v1/alumnos";
+  private urlBase = `${environment.apiUrl}/api/v1/notas`;
+  private alumnoUrlBase = `${environment.apiUrl}/api/v1/alumnos`;
 
   constructor(private clienteHttp: HttpClient) { }
 
