@@ -10,7 +10,7 @@ import { environment } from '../../../environments/environment';
 })
 export class RolesService {
 
-  private urlRoles = `${environment.apiUrl}/api/v1/roles`;
+  private urlRoles = `${environment.apiUrl}/v1/roles`;
 
   constructor(private http: HttpClient) { }
 

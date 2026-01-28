@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class CourseService {
 
-  private urlBase = `${environment.apiUrl}/api/v1/cursos`;
+  private urlBase = `${environment.apiUrl}/v1/cursos`;
 
 
   constructor(private clienteHttp: HttpClient) { }
@@ -81,7 +81,7 @@ export class CourseService {
     return this.clienteHttp.get<DTOResponse<number>>(`${this.urlBase}/contar`, { withCredentials: true })
       .pipe(map(response => response.data));
   }
-  
+
 
   // Nuevo método para obtener competencias de un curso
   obtenerCompetenciasPorCurso(idCurso: string): Observable<Competencia[]> {

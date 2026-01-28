@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class DTOAsistenciaService {
-  private readonly baseUrl = `${environment.apiUrl}/api/v1/asistencias`;
+  private readonly baseUrl = `${environment.apiUrl}/v1/asistencias`;
 
   constructor(private http: HttpClient) {}
 

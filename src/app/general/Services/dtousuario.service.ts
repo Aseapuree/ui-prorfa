@@ -7,7 +7,7 @@ import { DTOUsuario } from '../interfaces/DTOUsuario';
   providedIn: 'root'
 })
 export class DTOUsuarioService {
-  private url = 'http://localhost:8080/api/v1/usuario/verporid?id=';
+  private url = 'http://localhost:8080/v1/usuario/verporid?id=';
 
   constructor(private http: HttpClient) {}
 

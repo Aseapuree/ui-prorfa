@@ -20,7 +20,7 @@ interface Alumno {
   providedIn: 'root'
 })
 export class MatriculaService { // Renombramos a MatriculaService
-  private readonly url = '/api/v1/matriculas/alumnos';
+  private readonly url = 'v1/matriculas/alumnos';
 
   constructor(private http: HttpClient) {}
 

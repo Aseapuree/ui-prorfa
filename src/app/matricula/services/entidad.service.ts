@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class EntidadService {
 
-  private urlBase = `${environment.apiUrl}/api/v1/entidades`;
+  private urlBase = `${environment.apiUrl}/v1/entidades`;
 
   constructor(private http: HttpClient) { }
 

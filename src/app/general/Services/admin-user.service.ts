@@ -7,8 +7,8 @@ import { Observable } from 'rxjs';
 })
 export class AdminUserService {
   private apiUrl = '/api'; // Replace with actual API URL
-  private emailApiUrl = '/api/email'; // Replace with actual email API URL
-  private imageUploadUrl = '/api/upload'; // Replace with actual image upload URL
+  private emailApiUrl = '/email'; // Replace with actual email API URL
+  private imageUploadUrl = '/upload'; // Replace with actual image upload URL
 
   constructor(private http: HttpClient) {}
 

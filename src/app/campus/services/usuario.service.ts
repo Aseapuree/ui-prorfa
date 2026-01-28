@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Usuario } from '../interface/usuario'; 
+import { Usuario } from '../interface/usuario';
 import { catchError, map, Observable, pipe, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
 })
 export class UsuarioService {
 
-  private urlBase = `${environment.apiUrl}/api/v1/usuario`;
+  private urlBase = `${environment.apiUrl}/v1/usuario`;
 
   constructor(private clienteHttp: HttpClient) { }
 

@@ -8,7 +8,7 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 })
 export class AlumnoService {
 
-  private urlBase = "/api/v1/alumnos";
+  private urlBase = "v1/alumnos";
 
   constructor(private http: HttpClient) { }
 

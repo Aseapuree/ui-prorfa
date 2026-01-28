@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { ProfesorCurso } from '../interface/ProfesorCurso'; 
+import { ProfesorCurso } from '../interface/ProfesorCurso';
 import { DTOResponse } from '../interface/DTOResponse';
 import  saveAs  from 'file-saver';
 import { environment } from '../../../environments/environment';
@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class ProfesorCursoService {
 
-  private urlBase = `${environment.apiUrl}/api/v1/profesor-curso`;
+  private urlBase = `${environment.apiUrl}/v1/profesor-curso`;
 
   constructor(private clienteHttp: HttpClient) { }
 
@@ -193,5 +193,5 @@ obtenerConteoAsignaciones(): Observable<number> {
       })
     );
 }
-  
+
 }

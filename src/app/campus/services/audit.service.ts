@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class AuditService {
 
-  private urlBase = `${environment.apiUrl}/api/v1/audit`;
+  private urlBase = `${environment.apiUrl}/v1/audit`;
 
   constructor(private clienteHttp: HttpClient) { }
 
@@ -36,8 +36,8 @@ export class AuditService {
   let filename = `bandeja_auditoria_${dateStr}.xlsx`;
 
   return this.clienteHttp
-    .post(`${this.urlBase}/exportar-excel`, filters || {}, { 
-      responseType: 'blob', 
+    .post(`${this.urlBase}/exportar-excel`, filters || {}, {
+      responseType: 'blob',
       withCredentials: true,
       observe: 'response'
     })

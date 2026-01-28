@@ -13,7 +13,7 @@ const TIPO_COMPROBANTE_PAGO_UUID = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
 })
 export class ComprobanteService {
 
-  private urlBase = "/api/v1/comprobantes";
+  private urlBase = "v1/comprobantes";
 
   constructor(private http: HttpClient) { }
 
