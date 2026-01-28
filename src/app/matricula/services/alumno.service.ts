@@ -2,13 +2,14 @@ import { Alumno } from '../interfaces/DTOAlumno';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AlumnoService {
 
-  private urlBase = "/api/v1/alumnos";
+  private urlBase = `${environment.apiUrl}/api/v1/alumnos`;
 
   constructor(private http: HttpClient) { }
 
