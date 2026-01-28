@@ -8,7 +8,7 @@ import saveAs from 'file-saver';
   providedIn: 'root'
 })
 export class MatriculaService {
-  private urlBase = "/api/v1/matriculas";
+  private urlBase = "/v1/matriculas";
 totalPages: number = 0;
 totalElements: number = 0;
 

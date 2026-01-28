@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class DTOmenuService {
-  private url = `${environment.apiUrl}/api/v1/menu/ver?id=`;
+  private url = `${environment.apiUrl}/v1/menu/ver?id=`;
 
   constructor(private http: HttpClient) { }
 

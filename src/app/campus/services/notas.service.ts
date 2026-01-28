@@ -54,8 +54,8 @@ interface DTOCursoNotas {
   providedIn: 'root'
 })
 export class NotasService {
-  private urlBase = `${environment.apiUrl}/api/v1/notas`;
-  private alumnoUrlBase = `${environment.apiUrl}/api/v1/alumnos`;
+  private urlBase = `${environment.apiUrl}/v1/notas`;
+  private alumnoUrlBase = `${environment.apiUrl}/v1/alumnos`;
 
   constructor(private clienteHttp: HttpClient) { }
 

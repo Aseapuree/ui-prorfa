@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
 })
 export class AlumnoCursoService {
 
-    private urlBase = `${environment.apiUrl}/api/v1/alumnos`;
+    private urlBase = `${environment.apiUrl}/v1/alumnos`;
 
   constructor(private clienteHttp: HttpClient) {}
 

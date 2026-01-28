@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class AuditService {
 
-  private urlBase = `${environment.apiUrl}/api/v1/audit`;
+  private urlBase = `${environment.apiUrl}/v1/audit`;
 
   constructor(private clienteHttp: HttpClient) { }
 

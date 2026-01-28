@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MasterService {
-  private apiUrl = '/api/v1/maestra'; // Replace with actual API URL
+  private apiUrl = '/v1/maestra'; // Replace with actual API URL
 
   constructor(private http: HttpClient) {}
 

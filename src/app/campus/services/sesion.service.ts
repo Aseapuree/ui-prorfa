@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class SesionService {
 
-  private urlBase = `${environment.apiUrl}/api/v1/sesiones`;
+  private urlBase = `${environment.apiUrl}/v1/sesiones`;
 
 
   constructor(private clienteHttp: HttpClient) { }

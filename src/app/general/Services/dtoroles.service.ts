@@ -7,7 +7,7 @@ import { DTOResponse } from '../interfaces/DTOResponse';
     providedIn: 'root'
   })
   export class DTOrolesService {
-    private url = '/api/v1/';
+    private url = '/v1/';
   
     constructor(private http: HttpClient) { }
   
