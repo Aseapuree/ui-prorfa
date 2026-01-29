@@ -26,39 +26,42 @@
   </div>
 
   <!-- Tarjetas de sesiones -->
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-dark">
-  <div
-    *ngFor="let sesion of sesiones | slice: (page - 1) * itemsPerPage : page * itemsPerPage; let i = index"
-    class="flex flex-col bg-white dark:bg-gray-900 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
-  >
-    <!-- Tarjeta de sesión -->
-    <app-card-week
-      [week]="'Sesión ' + ((page - 1) * itemsPerPage + (i + 1))"
-      [title]="sesion.titulo || 'Nombre de la sesión'"
-      [description]="sesion.descripcion || 'Descripción de la clase'"
-      [route]="'/card-actividades'"
-      [idSesion]="sesion.idSesion"
-      [fechaAsignada]="sesion.fechaAsignada"
-      (click)="irAActividades(sesion.idSesion!)"
-    ></app-card-week>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 px-4 py-6">
 
-    <!-- Botones Editar y Eliminar (visibles solo para Profesor) -->
-    <div class="flex border-t divide-x dark:border-gray-700 dark:divide-gray-700" *ngIf="rolUsuario === 'Profesor'">
-      <button
-        (click)="openEditModal(sesion)"
-        class="flex-1 flex items-center justify-center px-2 py-2 xl:px-4 xl:py-2 text-sm font-medium text-gray-600 transition-colors duration-200 xl:text-base dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 gap-x-2"
-      >
-        <fa-icon [icon]="['fas', 'pencil']" class="w-5 h-5 xl:w-6 xl:h-6"></fa-icon>
-        <span class="hidden xl:inline">Editar</span>
+  <div *ngFor="let sesion of sesiones | slice: (page-1)*itemsPerPage : page*itemsPerPage; let i = index"
+       class="flex flex-col bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 overflow-hidden h-full min-h-[320px]">
+
+    <!-- Área clickable (contenido principal) -->
+    <div class="flex-1 cursor-pointer" (click)="irAActividades(sesion.idSesion!)">
+      <app-card-week
+        [week]="'Sesión ' + ((page-1)*itemsPerPage + i + 1)"
+        [title]="sesion.titulo || 'Nombre de la sesión'"
+        [description]="sesion.descripcion || 'Descripción de la clase'"
+        [route]="'/card-actividades'"
+        [idSesion]="sesion.idSesion"
+        [fechaAsignada]="sesion.fechaAsignada"
+      ></app-card-week>
+    </div>
+
+    <!-- Barra de acciones FIJA en la parte inferior – solo para Profesores -->
+    <div *ngIf="rolUsuario === 'Profesor'"
+         class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/70 flex divide-x divide-gray-200 dark:divide-gray-700 mt-auto">
+      
+      <button 
+        (click)="openEditModal(sesion); $event.stopPropagation()"
+        class="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700/60 transition-colors duration-150">
+        <fa-icon [icon]="['fas', 'pencil-alt']" class="w-4 h-4"></fa-icon>
+        <span class="hidden sm:inline">Editar</span>
       </button>
-      <button
-        (click)="eliminarSesion(sesion.idSesion!)"
-        class="flex-1 flex items-center justify-center px-2 py-2 xl:px-4 xl:py-2 text-sm font-medium text-gray-600 transition-colors duration-200 xl:text-base dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100 gap-x-2"
-      >
-        <fa-icon [icon]="['fas', 'trash']" class="w-5 h-5 xl:w-6 xl:h-6"></fa-icon>
-        <span class="hidden xl:inline">Eliminar</span>
+
+      <button 
+        (click)="eliminarSesion(sesion.idSesion!); $event.stopPropagation()"
+        class="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700/60 transition-colors duration-150">
+        <fa-icon [icon]="['fas', 'trash-alt']" class="w-4 h-4"></fa-icon>
+        <span class="hidden sm:inline">Eliminar</span>
       </button>
     </div>
+
   </div>
 </div>
 
