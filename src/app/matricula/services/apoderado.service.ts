@@ -2,13 +2,14 @@ import { Apoderado } from '../interfaces/DTOApoderado';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApoderadoService {
 
-  private urlBase = "/v1/apoderados";
+  private urlBase = `${environment.apiUrl}/v1/apoderados`;
 
   constructor(private http: HttpClient) { }
 
@@ -29,8 +30,7 @@ export class ApoderadoService {
 
 
   agregarApoderado(apoderado: Apoderado): Observable<Apoderado> {
-    return this.http.post<any>(`${this.urlBase}/agregar`, apoderado, { withCredentials: true })
-      .pipe(map(response => response.data));
+    return this.http.post<any>(`${this.urlBase}/agregar`, apoderado, { withCredentials: true }).pipe(map(response => response.data));
   }
 
   editarApoderado(id: string, apoderado: Apoderado): Observable<Apoderado> {
