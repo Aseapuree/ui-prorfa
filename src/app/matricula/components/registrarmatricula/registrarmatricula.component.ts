@@ -654,7 +654,7 @@ export class RegistrarMatriculaComponent implements OnInit {
         setTimeout(() => this.focusFirstInvalidControl('apoderado'), 50);
       },
       error: (err: HttpErrorResponse) => {
-        if (err.status !== 404) {
+        if (err.status != 404) {
           console.error('Error inesperado al buscar apoderado:', err);
         }
         this.apoderadoEncontrado = null;
@@ -677,9 +677,9 @@ export class RegistrarMatriculaComponent implements OnInit {
         this.mostrarFormularioAlumno = false;
         this.mostrarSeccionDocumentos = false;
         this.currentView = 'apoderado';
-        if (err.status === 404) {
+        if (err.status == 404) {
             this.notificationService.showNotification('Apoderado no registrado | Complete los datos para crearlo.', 'info');
-        } else if (err.status === 409 || (err.error?.message && (err.error.message.toLowerCase().includes('duplicado') || err.error.message.toLowerCase().includes('ya existe')))) {
+        } else if (err.status == 409 || (err.error?.message && (err.error.message.toLowerCase().includes('duplicado') || err.error.message.toLowerCase().includes('ya existe')))) {
             this.notificationService.showNotification('El documento del apoderado ya está registrado en el sistema.', 'error');
         } else {
             this.notificationService.showNotification('Error al buscar apoderado: ' + (err.error?.message || err.message || 'Intente de nuevo. Verifique duplicados en documentos.'), 'error');

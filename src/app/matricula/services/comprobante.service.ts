@@ -18,7 +18,6 @@ export class ComprobanteService {
 
   constructor(private http: HttpClient) { }
 
-
   obtenerComprobantes(): Observable<Comprobante[]> {
     return this.http.get<any>(this.urlBase + "/listar").pipe(
         map(response => response.data.content),

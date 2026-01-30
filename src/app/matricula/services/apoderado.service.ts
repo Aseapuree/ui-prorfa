@@ -30,8 +30,7 @@ export class ApoderadoService {
 
 
   agregarApoderado(apoderado: Apoderado): Observable<Apoderado> {
-    return this.http.post<any>(`${this.urlBase}/agregar`, apoderado, { withCredentials: true })
-      .pipe(map(response => response.data));
+    return this.http.post<any>(`${this.urlBase}/agregar`, apoderado, { withCredentials: true }).pipe(map(response => response.data));
   }
 
   editarApoderado(id: string, apoderado: Apoderado): Observable<Apoderado> {

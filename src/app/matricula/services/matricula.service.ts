@@ -9,7 +9,9 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class MatriculaService {
+
   private urlBase = `${environment.apiUrl}/v1/matriculas`;
+
 totalPages: number = 0;
 totalElements: number = 0;
 
