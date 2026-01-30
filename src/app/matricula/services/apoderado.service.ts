@@ -2,13 +2,14 @@ import { Apoderado } from '../interfaces/DTOApoderado';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApoderadoService {
 
-  private urlBase = "/v1/apoderados";
+  private urlBase = `${environment.apiUrl}/v1/apoderados`;
 
   constructor(private http: HttpClient) { }
 

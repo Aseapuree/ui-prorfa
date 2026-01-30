@@ -3,12 +3,13 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { Matricula } from '../interfaces/DTOMatricula';
 import saveAs from 'file-saver';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MatriculaService {
-  private urlBase = "/v1/matriculas";
+  private urlBase = `${environment.apiUrl}/v1/matriculas`;
 totalPages: number = 0;
 totalElements: number = 0;
 
