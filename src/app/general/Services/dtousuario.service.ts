@@ -7,6 +7,7 @@ import { map, catchError } from 'rxjs/operators';  // ← FIX: Importa operadore
 import { throwError } from 'rxjs';  // ← FIX: Importa throwError
 
 
+// REFACTORIZAR !!!!
 @Injectable({
   providedIn: 'root'
 })

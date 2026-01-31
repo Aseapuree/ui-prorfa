@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment'
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminUserService {
-  private apiUrl = '/api'; // Replace with actual API URL
-  private emailApiUrl = '/api/email'; // Replace with actual email API URL
-  private imageUploadUrl = '/api/upload'; // Replace with actual image upload URL
+  private apiUrl = `${environment.apiUrl}`; // Replace with actual API URL
+  private emailApiUrl = `${environment.apiUrl}/api/email`; // Replace with actual email API URL
+  private imageUploadUrl = `${environment.apiUrl}/api/upload`; // Replace with actual image upload URL
 
   constructor(private http: HttpClient) {}
 

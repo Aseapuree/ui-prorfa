@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError, forkJoin, of } from 'rxjs';
 import { catchError, map, retry, tap, switchMap } from 'rxjs/operators';
 import { Comprobante } from '../interfaces/DTOComprobante';
+import { environment } from '../../../environments/environment'
 
 const TIPO_COMPROBANTE_MATRICULA_UUID = 'df61cd5c-5609-45d7-a2ad-1d285cabc958';
 const TIPO_COMPROBANTE_PAGO_UUID = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
@@ -13,10 +14,9 @@ const TIPO_COMPROBANTE_PAGO_UUID = 'b5dc4013-5d65-4969-8342-906ae82ee70c';
 })
 export class ComprobanteService {
 
-  private urlBase = "/v1/comprobantes";
+  private urlBase = `${environment.apiUrl}/api/v1/comprobantes`;
 
   constructor(private http: HttpClient) { }
-
 
   obtenerComprobantes(): Observable<Comprobante[]> {
     return this.http.get<any>(this.urlBase + "/listar").pipe(

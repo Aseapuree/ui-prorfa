@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
-
+import { environment } from '../../../environments/environment'
 // Interfaz para los datos del usuario (nivel interno)
 export interface UserInfo {
   id: string;
@@ -24,7 +24,7 @@ export interface UserData {
 })
 export class ValidateService {
   
-  private API_URL = "http://localhost:8081";
+  private API_URL = `${environment.apiOauth}`;
 
   constructor(private http: HttpClient) {}
 

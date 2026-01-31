@@ -36,6 +36,14 @@ yarn-error.log
 /libpeerconnection.log
 testem.log
 /typings
+Dockerfile.dev
+*.package-lock.json
+# Vim
+*~ 
+*.swp
+*.swo
+*.swm
+*.un~
 
 # System files
 .DS_Store
