@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CardComponent } from '../../shared/card/card.component';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfesorCurso } from '../../../interface/ProfesorCurso';
 import { lastValueFrom } from 'rxjs';
 import { ProfesorCursoService } from '../../../services/profesor-curso.service';
+import { DTOUsuarioService } from '../../../../general/Services/dtousuario.service';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { CommonModule, SlicePipe } from '@angular/common';
 
@@ -37,10 +38,18 @@ export class CampusGradosComponent implements OnInit {
   profesorNombre: string = 'Profesor';
   isLoading: boolean = false;
 
+  puedeVerNotasBimestrales: boolean = false;
+  usuarioPerfil: any = null;
+
+  // Nueva propiedad: IDs de los cursos donde ES TUTOR
+  gruposTutoradosIds: string[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private profesorCursoService: ProfesorCursoService,
-    private router: Router
+    private router: Router,
+    private usuarioService: DTOUsuarioService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -49,6 +58,45 @@ export class CampusGradosComponent implements OnInit {
     const usuarioId = localStorage.getItem('usuarioId');
     const storedGrado = localStorage.getItem('grado');
 
+    // Cargar perfil (para tutorprimaria/secundaria)
+    let tutorPrimaria = '';
+    let tutorSecundaria = '';
+
+    if (usuarioId) {
+      try {
+        console.log('Cargando perfil para usuarioId:', usuarioId);
+        const response = await lastValueFrom(this.usuarioService.getUsuario(usuarioId));
+        console.log('Respuesta completa del perfil:', response);
+
+        if (response && response.code === 200 && response.data) {
+          this.usuarioPerfil = response.data;
+
+          tutorPrimaria = typeof this.usuarioPerfil?.tutorprimaria === 'string' 
+            ? this.usuarioPerfil.tutorprimaria.trim() 
+            : '';
+          tutorSecundaria = typeof this.usuarioPerfil?.tutorsecundaria === 'string' 
+            ? this.usuarioPerfil.tutorsecundaria.trim() 
+            : '';
+
+          this.puedeVerNotasBimestrales = Boolean(tutorPrimaria || tutorSecundaria);
+
+          console.log('Tutor Primaria:', tutorPrimaria);
+          console.log('Tutor Secundaria:', tutorSecundaria);
+          console.log('Puede ver Notas Bimestrales (temporal):', this.puedeVerNotasBimestrales);
+        } else {
+          console.warn('Respuesta inválida o sin data:', response);
+          this.puedeVerNotasBimestrales = false;
+        }
+      } catch (error) {
+        console.error('Error al cargar perfil usuario:', error);
+        this.puedeVerNotasBimestrales = false;
+      }
+    } else {
+      console.warn('No se encontró usuarioId en localStorage');
+      this.puedeVerNotasBimestrales = false;
+    }
+
+    // Cargar cursos y calcular grupos tutorados
     if (usuarioId) {
       try {
         const rawCursos = await lastValueFrom(
@@ -57,23 +105,44 @@ export class CampusGradosComponent implements OnInit {
         console.log('Cursos obtenidos:', rawCursos);
 
         this.profesorcursos = rawCursos.map((item: any) => ({
-  idProfesorCurso: item.idProfesorCurso || '',
-  usuario: item.usuario || {},
-  curso: {
-    idCurso: item.curso?.idCurso || '',
-    nombre: item.curso?.nombre || 'Curso sin nombre',
-    abreviatura: item.curso?.abreviatura || '',
-    competencias: []  // AÑADIR SIEMPRE
-  },
-  grado: item.grado || '',
-  seccion: item.seccion || 'Sin sección',
-  nivel: item.nivel || this.nivel,
-  fechaAsignacion: item.fechaAsignacion
-    ? new Date(item.fechaAsignacion)
-    : undefined,
-}));
+          idProfesorCurso: item.idProfesorCurso || '',
+          usuario: item.usuario || {},
+          curso: {
+            idCurso: item.curso?.idCurso || '',
+            nombre: item.curso?.nombre || 'Curso sin nombre',
+            abreviatura: item.curso?.abreviatura || '',
+            competencias: []  // AÑADIR SIEMPRE
+          },
+          grado: item.grado || '',
+          seccion: item.seccion || 'Sin sección',
+          nivel: item.nivel || this.nivel,
+          fechaAsignacion: item.fechaAsignacion
+            ? new Date(item.fechaAsignacion)
+            : undefined,
+        }));
 
         console.log('Cursos mapeados:', this.profesorcursos);
+
+        // FIX: Calcular grupos tutorados AQUÍ (después de tener profesorcursos)
+        if (tutorPrimaria || tutorSecundaria) {
+          this.gruposTutoradosIds = this.profesorcursos
+            .filter(curso => {
+              const grupoKey = `${curso.grado}${curso.seccion}`.toLowerCase(); // ej. "5b"
+              const nivelCurso = curso.nivel?.toLowerCase();
+
+              if (nivelCurso === 'primaria' && tutorPrimaria && grupoKey === tutorPrimaria.toLowerCase()) {
+                return true;
+              }
+              if (nivelCurso === 'secundaria' && tutorSecundaria && grupoKey === tutorSecundaria.toLowerCase()) {
+                return true;
+              }
+              return false;
+            })
+            .map(curso => curso.idProfesorCurso!)
+            .filter(id => !!id);  // Eliminar null/undefined
+
+          console.log('IDs de grupos tutorados:', this.gruposTutoradosIds);
+        }
 
         if (this.profesorcursos.length > 0 && this.profesorcursos[0].usuario) {
           const usuario = this.profesorcursos[0].usuario;
@@ -121,6 +190,7 @@ export class CampusGradosComponent implements OnInit {
       } finally {
         this.isLoading = false;
         this.isDataLoaded = true;
+        this.cdr.detectChanges();
       }
     } else {
       console.error('No se encontró usuarioId en localStorage');
@@ -199,7 +269,6 @@ export class CampusGradosComponent implements OnInit {
     }
   }
 
-  // Calculate total pages based on filteredCursos and itemsPerPage
   updateTotalPages(): void {
     this.totalPages = Math.ceil(this.filteredCursos.length / this.itemsPerPage);
     if (this.page > this.totalPages && this.totalPages > 0) {
@@ -210,7 +279,6 @@ export class CampusGradosComponent implements OnInit {
     );
   }
 
-  // Handle page change events from app-pagination
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       console.log(`Cambiando a página: ${page}`);
@@ -218,16 +286,26 @@ export class CampusGradosComponent implements OnInit {
     }
   }
 
-  // Nuevo método para navegar a Notas Bimestrales
-navigateToNotasBimestrales(): void {
-  const usuarioId = localStorage.getItem('usuarioId');
-  const nivel = this.nivel; // Usar el nivel actual (e.g., "Primaria")
-  if (usuarioId && nivel) {
-    // Solo navega a la ruta sin queryParams
-    this.router.navigate(['/app-lista-alumnos']);
-  } else {
-    console.error('No se encontró usuarioId o nivel en el contexto.');
-  }
-}
+  navigateToNotasBimestrales(): void {
+    if (!this.puedeVerNotasBimestrales) {
+      console.warn('Usuario no es tutor – Acceso denegado');
+      return;
+    }
 
+    if (this.gruposTutoradosIds.length === 0) {
+      console.warn('No se encontraron grupos tutorados válidos – Verifica que el grado/sección coincida exactamente');
+      console.log('Tutor Primaria en DB:', this.usuarioPerfil?.tutorprimaria);
+      console.log('Cursos disponibles:', this.profesorcursos.map(c => `${c.grado}${c.seccion} (${c.nivel})`));
+      return;
+    }
+
+    const tutorIds = this.gruposTutoradosIds.join(',');
+    console.log('Navegando a notas bimestrales con tutorIds:', tutorIds);
+
+    this.router.navigate(['/app-lista-alumnos'], {
+      queryParams: {
+        tutorIds: tutorIds
+      }
+    });
+  }
 }

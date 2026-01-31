@@ -7,5 +7,7 @@ export interface DTOUsuario {
     apellidomaterno?: string;
     perfilurl?: string;
     rol?: DTORoles;//DTORoles ya contiene las misma propiedades que estaban anteriormente
+    tutor_primaria?: string;
+    tutor_secundaria?: string;
     relacionentidad?: string;
   }
