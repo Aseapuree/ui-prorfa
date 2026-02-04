@@ -36,8 +36,8 @@ export class AuditService {
   let filename = `bandeja_auditoria_${dateStr}.xlsx`;
 
   return this.clienteHttp
-    .post(`${this.urlBase}/exportar-excel`, filters || {}, { 
-      responseType: 'blob', 
+    .post(`${this.urlBase}/exportar-excel`, filters || {}, {
+      responseType: 'blob',
       withCredentials: true,
       observe: 'response'
     })
@@ -50,7 +50,6 @@ export class AuditService {
             filename = filenameMatch[1].replace(/['"]/g, '');
           }
         }
-        // Si el parsing del header falla, usa el fallback con fecha
         saveAs(response.body, filename);
         return undefined;
       }),

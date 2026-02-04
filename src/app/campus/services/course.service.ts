@@ -81,7 +81,7 @@ export class CourseService {
     return this.clienteHttp.get<DTOResponse<number>>(`${this.urlBase}/contar`, { withCredentials: true })
       .pipe(map(response => response.data));
   }
-  
+
 
   // Nuevo método para obtener competencias de un curso
   obtenerCompetenciasPorCurso(idCurso: string): Observable<Competencia[]> {

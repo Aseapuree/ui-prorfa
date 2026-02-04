@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DTOMenu } from '../interfaces/DTOMenu'; 
+import { DTOMenu } from '../interfaces/DTOMenu';
 import { DTOResponse } from '../interfaces/DTOResponse';
 import { environment } from '../../../environments/environment';
 

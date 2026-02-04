@@ -13,7 +13,7 @@ export class CardComponent {
   @Input() image: string = 'assets/default-image.jpg';
   @Input() session: string = 'Nombre de la sesión';
   @Input() title: string = 'Título de la clase';
-  @Input() abreviatura: string = ''; // Nueva propiedad para la abreviatura
+  @Input() abreviatura: string = '';
   @Input() teacher: string = 'Nombre del profesor';
   @Input() grado: string = '';
   @Output() cardClicked = new EventEmitter<void>();
@@ -29,12 +29,10 @@ export class CardComponent {
 
   private checkResponsive() {
     this.isResponsive = window.innerWidth <= 940;
-    console.log('isResponsive:', this.isResponsive, 'window.innerWidth:', window.innerWidth);
   }
 
 
   get displayTitle(): string {
-    console.log('displayTitle - isResponsive:', this.isResponsive, 'abreviatura:', this.abreviatura, 'title:', this.title);
     return this.isResponsive && this.abreviatura ? this.abreviatura : this.title;
   }
 

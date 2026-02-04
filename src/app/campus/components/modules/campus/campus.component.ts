@@ -27,8 +27,8 @@ import { PaginationComponent } from '../../../../general/components/pagination/p
 })
 export class CampusComponent implements OnInit {
   public page: number = 1;
-  public itemsPerPage: number = 4; // Fixed as per original template
-  public totalPages: number = 1; // Initialize totalPages
+  public itemsPerPage: number = 4;
+  public totalPages: number = 1; 
   profesorcursos: ProfesorCurso[] = [];
   alumnocursos: AlumnoCurso[] = [];
   idAuth: string | null = null;
@@ -113,11 +113,11 @@ export class CampusComponent implements OnInit {
         this.alumnoCursoService.obtenerCursosPorAlumno(this.idAuth!)
       );
       console.log('Cursos del alumno:', this.alumnocursos);
-      this.updateTotalPages(); // Update totalPages after fetching courses
+      this.updateTotalPages();
     } catch (error) {
       console.error('Error al obtener los cursos del alumno:', error);
       this.alumnocursos = [];
-      this.updateTotalPages(); // Ensure totalPages is updated even on error
+      this.updateTotalPages();
     } finally {
       this.isLoading = false;
     }
@@ -236,7 +236,6 @@ export class CampusComponent implements OnInit {
     this.router.navigate(['/campus/grados', nivel]);
   }
 
-  // Calculate total pages based on alumnocursos and itemsPerPage
   updateTotalPages(): void {
     this.totalPages = Math.ceil(this.alumnocursos.length / this.itemsPerPage);
     if (this.page > this.totalPages && this.totalPages > 0) {
@@ -247,7 +246,6 @@ export class CampusComponent implements OnInit {
     );
   }
 
-  // Handle page change events from app-pagination
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       console.log(`Cambiando a página: ${page}`);

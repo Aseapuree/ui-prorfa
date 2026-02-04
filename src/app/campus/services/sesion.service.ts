@@ -48,7 +48,7 @@ obtenerSesionesPorCursoId(idCurso: string): Observable<Sesion[]> {
 
   obtenerSesionesPorCurso(idProfesorCurso: string): Observable<any[]> {
     console.log(`Obteniendo sesiones de ${idProfesorCurso}`);
-    
+
     return this.clienteHttp.get<{ status: number, message: string, data: any[] }>(
       `${this.urlBase}/profesor-curso/${idProfesorCurso}` , {withCredentials:true}
     ).pipe(
@@ -85,12 +85,12 @@ editarSesion(sesion: Sesion): Observable<Sesion> {
 eliminarSesion(id: string): Observable<void> {
   return this.clienteHttp.delete<void>(`${this.urlBase}/eliminar/${id}`,{withCredentials:true});
 }
-  
+
 obtenerActividadesPorSesion(idSesion: string): Observable<DTOActividadesSesion> {
   return this.clienteHttp.get<DTOActividadesSesion>(
     `${this.urlBase}/actividades/${idSesion}`, { withCredentials: true }
   ).pipe(
-    map(response => response) 
+    map(response => response)
   );
 }
 
