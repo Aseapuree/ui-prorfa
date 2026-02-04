@@ -23,6 +23,8 @@ import { FormsModule } from '@angular/forms';
 import { GeneralLoadingSpinnerComponent } from '../../../../../general/components/spinner/spinner.component';
 import { faExternalLinkAlt, faCheckCircle, faDownload, faPlus, faPencil, faStickyNote, faTrash, faBook } from '@fortawesome/free-solid-svg-icons';
 import { faStickyNote as farStickyNote } from '@fortawesome/free-regular-svg-icons';
+import { DTOUsuarioService } from '../../../../../general/Services/dtousuario.service';  // ← Ajusta esta ruta si es diferente
+import { DTOUsuario } from '../../../../../general/interfaces/DTOUsuario';  // ← Ajusta la ruta a tu interface DTOUsuario
 
 type TipoActividad = 'introducciones' | 'materiales' | 'actividades' | 'asistencias';
 
@@ -122,7 +124,8 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
     private validateService: ValidateService,
     private notasService: NotasService,
     private cdr: ChangeDetectorRef,
-    private library: FaIconLibrary
+    private library: FaIconLibrary,
+    private usuarioService: DTOUsuarioService,
   ) {
     this.library.addIcons(faExternalLinkAlt, faCheckCircle, faDownload, faPlus, faPencil, faStickyNote, farStickyNote, faTrash, faBook);
   }
@@ -133,73 +136,104 @@ export class CampusActividadesComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.isLoading = true;
-    try {
-      this.usuarioId = localStorage.getItem('IDUSER');
-      if (!this.usuarioId) {
-        throw new Error('No se encontró el ID del usuario autenticado en localStorage (IDUSER)');
-      }
-      console.log('ID del usuario autenticado (IDUSER):', this.usuarioId);
-
-      const userData: UserData = await lastValueFrom(this.validateService.getUserData());
-      this.rolUsuario = userData?.data?.rol || null;
-      console.log('Datos completos del usuario (userData):', userData);
-
-      if (userData?.data?.nombre && userData?.data?.apellidoPaterno && userData?.data?.apellidoMaterno) {
-        this.nombreCompletoUsuario = `${userData.data.nombre} ${userData.data.apellidoPaterno} ${userData.data.apellidoMaterno}`;
-      } else {
-        this.nombreCompletoUsuario = 'Joiser Monsalve Salazar';
-      }
-      console.log('Nombre completo del usuario:', this.nombreCompletoUsuario);
-
-      if (this.nombreCompletoUsuario && this.rolUsuario === 'Alumno') {
-        this.idAlumno = await lastValueFrom(this.notasService.obtenerIdAlumnoPorNombre(this.nombreCompletoUsuario));
-        console.log('idAlumno del usuario autenticado:', this.idAlumno);
-      }
-
-      this.route.paramMap.subscribe(async params => {
-        this.idSesion = params.get('idSesion') || '';
-        const navigation = this.router.getCurrentNavigation();
-        if (navigation?.extras.state) {
-          this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
-          this.idCurso = navigation.extras.state['idCurso'] || null;
-          // FIX: Recupera fechaAsignada del state (viene de Sesiones)
-          this.fechaAsignada = navigation.extras.state['fechaAsignada'] || null;
-          console.log('CampusActividades - fechaAsignada from state:', this.fechaAsignada);
-        } else {
-          this.idProfesorCurso = localStorage.getItem('idProfesorCurso') || null;
-          this.idCurso = localStorage.getItem('idCurso') || null;
-          // Fallback: Si no hay state, intenta de localStorage o null
-          this.fechaAsignada = localStorage.getItem('fechaSesion') || null;  // Opcional: guarda en LS si necesitas persistencia
-        }
-        console.log('Datos de navegación:', {
-          idSesion: this.idSesion,
-          idProfesorCurso: this.idProfesorCurso,
-          idCurso: this.idCurso,
-          rolUsuario: this.rolUsuario,
-          fechaAsignada: this.fechaAsignada  // FIX: Log para debug
-        });
-
-        if (this.idSesion) {
-          await this.obtenerActividades();
-          if (this.rolUsuario === 'Alumno') {
-            await this.validarNotas();
-          }
-          await this.obtenerDatosSesion();
-        } else {
-          console.error('No se proporcionó idSesion');
-          this.notificationService.showNotification('Error: No se proporcionó ID de sesión', 'error');
-          this.router.navigate(['campus']);
-        }
-      });
-    } catch (error) {
-      console.error('Error al obtener el rol del usuario:', error);
-      this.notificationService.showNotification('Error al cargar los datos', 'error');
-      this.router.navigate(['campus']);
-    } finally {
-      this.isLoading = false;
+  this.isLoading = true;
+  try {
+    this.usuarioId = localStorage.getItem('IDUSER');
+    if (!this.usuarioId) {
+      throw new Error('No se encontró el ID del usuario autenticado en localStorage (IDUSER)');
     }
+    console.log('ID del usuario autenticado (IDUSER):', this.usuarioId);
+
+    // FIX: Llamamos al servicio correcto y tipamos la respuesta
+    const usuarioResponse = await lastValueFrom(
+      this.usuarioService.getUsuario(this.usuarioId)
+    ) as { code: number; message: string; data: DTOUsuario };
+
+    console.log('Respuesta completa del perfil (verporid):', JSON.stringify(usuarioResponse, null, 2));
+
+    if (usuarioResponse && usuarioResponse.code === 200 && usuarioResponse.data) {
+      const data = usuarioResponse.data;
+
+      this.rolUsuario = data.rol?.nombreRol || null;  // Ajustado a tu DTO
+
+          // Construir nombre completo con los campos reales
+      if (data.nombre && data.apellidopaterno && data.apellidomaterno) {
+        this.nombreCompletoUsuario = `${data.nombre} ${data.apellidopaterno} ${data.apellidomaterno}`.trim();
+        console.log('Nombre completo obtenido del backend:', this.nombreCompletoUsuario);
+      } else if (data.nombre) {
+        this.nombreCompletoUsuario = data.nombre.trim();
+        console.warn('Nombre parcial (solo nombre):', this.nombreCompletoUsuario);
+      } else {
+        this.nombreCompletoUsuario = 'Alumno Autenticado';
+        console.warn('No hay nombre/apellidos en la respuesta. Usando fallback genérico.');
+      }
+
+      console.log('Nombre completo final usado:', this.nombreCompletoUsuario);
+
+          /// Intentar obtener idAlumno
+      if (this.rolUsuario === 'Alumno' && this.nombreCompletoUsuario && this.nombreCompletoUsuario !== 'Alumno Autenticado') {
+        try {
+          this.idAlumno = await lastValueFrom(
+            this.notasService.obtenerIdAlumnoPorNombre(this.nombreCompletoUsuario)
+          );
+          console.log('idAlumno del usuario autenticado:', this.idAlumno);
+        } catch (err) {
+          console.error('Error al obtener idAlumno por nombre:', err);
+          this.idAlumno = null;
+          this.notificationService.showNotification(
+            'No se pudo cargar tu ID de alumno. Algunas funciones pueden estar limitadas.',
+            'info'  // o 'error'
+          );
+        }
+      }
+    } else {
+      console.warn('Respuesta inválida o sin data del perfil:', usuarioResponse);
+      this.nombreCompletoUsuario = 'Usuario Autenticado';
+      this.rolUsuario = null;
+    }
+
+    // Resto del código (route.paramMap.subscribe, etc.) queda igual
+    this.route.paramMap.subscribe(async params => {
+      this.idSesion = params.get('idSesion') || '';
+      const navigation = this.router.getCurrentNavigation();
+      if (navigation?.extras.state) {
+        this.idProfesorCurso = navigation.extras.state['idProfesorCurso'] || null;
+        this.idCurso = navigation.extras.state['idCurso'] || null;
+        this.fechaAsignada = navigation.extras.state['fechaAsignada'] || null;
+        console.log('CampusActividades - fechaAsignada from state:', this.fechaAsignada);
+      } else {
+        this.idProfesorCurso = localStorage.getItem('idProfesorCurso') || null;
+        this.idCurso = localStorage.getItem('idCurso') || null;
+        this.fechaAsignada = localStorage.getItem('fechaSesion') || null;
+      }
+      console.log('Datos de navegación:', {
+        idSesion: this.idSesion,
+        idProfesorCurso: this.idProfesorCurso,
+        idCurso: this.idCurso,
+        rolUsuario: this.rolUsuario,
+        fechaAsignada: this.fechaAsignada
+      });
+
+      if (this.idSesion) {
+        await this.obtenerActividades();
+        if (this.rolUsuario === 'Alumno') {
+          await this.validarNotas();
+        }
+        await this.obtenerDatosSesion();
+      } else {
+        console.error('No se proporcionó idSesion');
+        this.notificationService.showNotification('Error: No se proporcionó ID de sesión', 'error');
+        this.router.navigate(['campus']);
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener el rol/nombre del usuario:', error);
+    this.notificationService.showNotification('Error al cargar los datos del usuario', 'error');
+    this.router.navigate(['campus']);
+  } finally {
+    this.isLoading = false;
   }
+}
 
   async obtenerDatosSesion(): Promise<void> {
     try {
