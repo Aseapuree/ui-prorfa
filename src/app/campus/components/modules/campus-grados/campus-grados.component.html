@@ -38,12 +38,13 @@
     </button>
     <!-- Botón Notas Bimestrales (dinámico) -->
     <button
+      *ngIf="puedeVerNotasBimestrales"  
       class="flex items-center gap-2 px-4 py-2 text-white"
-      (click)="navigateToNotasBimestrales()"
+     (click)="navigateToNotasBimestrales()"
     >
-      <i class="fas fa-pencil"></i>
-      <span class="text-sm font-normal">Notas Bimestrales</span>
-    </button>
+   <i class="fas fa-pencil"></i>
+   <span class="text-sm font-normal">Notas Bimestrales</span>
+</button>
   </nav>
 
   <!-- Contenido Principal -->

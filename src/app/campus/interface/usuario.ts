@@ -12,4 +12,6 @@ export interface Usuario {
   apellidomaterno?: string;
   idtipodoc?: string;
   perfilurl?: string;
+  tutorprimaria?: string;
+  tutorsecundaria?: string;
 }

@@ -50,7 +50,6 @@ export class AuditService {
             filename = filenameMatch[1].replace(/['"]/g, '');
           }
         }
-        // Si el parsing del header falla, usa el fallback con fecha
         saveAs(response.body, filename);
         return undefined;
       }),

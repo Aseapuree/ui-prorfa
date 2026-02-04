@@ -97,26 +97,25 @@ export class ProfesorCursoService {
 
  // Agregar una nueva asignación
  agregarCurso(profesorCurso: ProfesorCurso): Observable<ProfesorCurso> {
-  return this.clienteHttp
-    .post<{ data: ProfesorCurso }>(`${this.urlBase}/agregar`, profesorCurso, { withCredentials: true })
-    .pipe(
-      map(response => response.data),
-      catchError(error => {
-        console.error('Error al agregar asignación:', error);
-        return throwError(() => new Error('Error al agregar la asignación'));
-      })
-    );
-}
+    return this.clienteHttp
+      .post<DTOResponse<ProfesorCurso>>(`${this.urlBase}/agregar`, profesorCurso, { withCredentials: true })
+      .pipe(
+        map(response => response.data),
+        catchError(error => {
+          console.error('Error al agregar asignación:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
 // Editar una asignación existente
 editarCurso(profesorCurso: ProfesorCurso): Observable<ProfesorCurso> {
   return this.clienteHttp
-    .put<{ data: ProfesorCurso }>(`${this.urlBase}/editar`, profesorCurso, { withCredentials: true })
+    .put(`${this.urlBase}/editar`, profesorCurso, { withCredentials: true })
     .pipe(
-      map(response => response.data),
+      map((response: any) => response.data),
       catchError(error => {
-        console.error('Error al editar asignación:', error);
-        return throwError(() => new Error('Error al editar la asignación'));
+        return throwError(() => error);
       })
     );
 }

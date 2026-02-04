@@ -21,7 +21,7 @@ export class ListaAlumnosComponent implements OnInit {
   isLoading: boolean = false;
   isDataLoaded: boolean = false;
   loadingMessage: string = 'Cargando lista de alumnos...';
-  grado: string = ''; // Agregadas para que el template no falle
+  grado: string = '';
   seccion: string = '';
   nivel: string = '';
 
@@ -38,9 +38,8 @@ export class ListaAlumnosComponent implements OnInit {
 
   loadAlumnos(): void {
     this.isLoading = true;
-    this.alumnos = []; // Limpiar la lista anterior
+    this.alumnos = []; // Limpiar lista
 
-    // Obtener el ID del profesor logueado desde localStorage o sistema de autenticación
     const usuarioId = localStorage.getItem('usuarioId');
     if (!usuarioId) {
       console.error('No se encontró el ID del profesor logueado.');
@@ -49,7 +48,17 @@ export class ListaAlumnosComponent implements OnInit {
       return;
     }
 
-    // Paso 1: Obtener todos los cursos asignados al profesor
+    // Leer tutorIds desde queryParams
+    const tutorIdsStr = this.route.snapshot.queryParams['tutorIds'];
+    let tutorIds: string[] = [];
+    if (tutorIdsStr) {
+      tutorIds = tutorIdsStr.split(',');
+      console.log('Filtrando solo alumnos de grupos tutorados:', tutorIds);
+    } else {
+      console.warn('No se recibieron IDs tutorados – mostrando todos los cursos');
+    }
+
+    // Paso 1: Obtener todos los cursos del profesor
     this.profesorCursoService.obtenerCursosPorProfesor(usuarioId).subscribe({
       next: (cursos: ProfesorCurso[]) => {
         if (!cursos || cursos.length === 0) {
@@ -59,19 +68,24 @@ export class ListaAlumnosComponent implements OnInit {
           return;
         }
 
-        // Obtener todos los idProfesorCurso de los cursos asignados, filtrando undefined
-        const idProfesorCursos = cursos
+        // Filtrar solo los cursos que están en tutorIds (si hay tutorIds)
+        let idProfesorCursos = cursos
           .map(c => c.idProfesorCurso)
           .filter((id): id is string => id !== undefined && id !== null);
 
+        if (tutorIds.length > 0) {
+          idProfesorCursos = idProfesorCursos.filter(id => tutorIds.includes(id));
+          console.log('Cursos filtrados por tutoría:', idProfesorCursos);
+        }
+
         if (idProfesorCursos.length === 0) {
-          console.warn('No se encontraron idProfesorCurso válidos.');
+          console.warn('No se encontraron cursos tutorados válidos.');
           this.isLoading = false;
           this.isDataLoaded = true;
           return;
         }
 
-        // Paso 2: Iterar sobre cada idProfesorCurso para obtener las notas y extraer alumnos
+        // Paso 2: Cargar alumnos solo de esos cursos
         this.fetchAllAlumnos(idProfesorCursos);
       },
       error: (error) => {
@@ -83,18 +97,19 @@ export class ListaAlumnosComponent implements OnInit {
   }
 
   fetchAllAlumnos(idProfesorCursos: string[]): void {
-    const alumnosMap = new Map<string, LocalAlumno>(); // Mapa para evitar duplicados por idAlumno
+    const alumnosMap = new Map<string, LocalAlumno>();
 
-    // Función recursiva para procesar todos los idProfesorCursos
     const processNext = (index: number) => {
       if (index >= idProfesorCursos.length) {
         this.alumnos = Array.from(alumnosMap.values());
         this.isDataLoaded = true;
         this.isLoading = false;
+        console.log('Alumnos finales cargados:', this.alumnos.length);
         return;
       }
 
       const idProfesorCurso = idProfesorCursos[index];
+
       this.notasService.listarNotasPorProfesorCurso(idProfesorCurso).subscribe({
         next: (response) => {
           if (response.code === 200 && response.data) {
@@ -112,16 +127,16 @@ export class ListaAlumnosComponent implements OnInit {
               });
             });
           }
-          processNext(index + 1); // Procesar el siguiente idProfesorCurso
+          processNext(index + 1);
         },
         error: (error) => {
-          console.error(`Error al cargar notas para idProfesorCurso ${idProfesorCurso}:`, error);
-          processNext(index + 1); // Continuar incluso si hay error
+          console.error(`Error al cargar notas para ${idProfesorCurso}:`, error);
+          processNext(index + 1);
         }
       });
     };
 
-    processNext(0); // Iniciar el procesamiento
+    processNext(0);
   }
 
   verBoleta(idAlumno: string, nombreAlumno: string): void {
@@ -130,21 +145,17 @@ export class ListaAlumnosComponent implements OnInit {
   const seccion = alumno?.seccion || 'No especificado';
   const nivel = this.nivel || 'Secundaria';
 
-  // Guardar los datos en localStorage
   localStorage.setItem('idAlumno', idAlumno);
   localStorage.setItem('nombreAlumno', nombreAlumno);
   localStorage.setItem('grado', grado);
   localStorage.setItem('seccion', seccion);
   localStorage.setItem('nivel', nivel);
 
-  // Navegar sin queryParams
   this.router.navigate(['/app-boleta-notas']);
 }
 
-
-
   regresar(): void {
-    this.router.navigate(['/app-campus-grados']);
+    this.router.navigate(['/campus']);
   }
 }
 

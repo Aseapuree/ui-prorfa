@@ -30,6 +30,7 @@
       required
       [disabled]="isReadOnly"
       [compareWith]="compareCurso"
+      (change)="onCursoChange()"
       class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
     >
       <option [ngValue]="null">Seleccionar curso</option>
@@ -37,6 +38,10 @@
         {{ c.nombre }}
       </option>
     </select>
+
+    <p *ngIf="cursoEsTutoria" class="text-sm text-amber-600 mt-1">
+      → Se asignará como **tutor** del grado y sección seleccionados
+    </p>
   </div>
 
   <!-- Nivel -->
@@ -104,8 +109,7 @@
       Cancelar
     </button>
     <button
-      type="button"
-      (click)="submitForm()"
+      type="submit"
       [disabled]="isReadOnly"
       class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
     >
