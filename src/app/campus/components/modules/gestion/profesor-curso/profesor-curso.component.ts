@@ -40,7 +40,7 @@ import {
 } from '../../modals/auditmodal/auditmodal.component';
 import { ProfesorCursoFormComponent } from '../../modals/profesor-curso-form/profesor-curso-form.component';
 import { ConfirmDeleteComponent } from '../../modals/confirm-delete/confirm-delete.component';
-import { MatError } from "@angular/material/form-field";
+import { MatError } from '@angular/material/form-field';
 
 @Component({
   selector: 'app-profesor-curso',
@@ -60,7 +60,7 @@ import { MatError } from "@angular/material/form-field";
     ProfesorCursoFormComponent,
     ConfirmDeleteComponent,
     AuditmodalComponent,
-],
+  ],
   providers: [ProfesorCursoService, EntidadService],
   templateUrl: './profesor-curso.component.html',
   styleUrl: './profesor-curso.component.scss',
@@ -82,9 +82,9 @@ export class ProfesorCursoComponent implements OnInit {
   currentYear: number = new Date().getFullYear();
   selectedAsignacion: any = null;
   datosNGS: DatosNGS | null = null;
-nivelesParaFiltro: string[] = [];
-gradosParaFiltro: string[] = [];
-seccionesParaFiltro: SeccionVacantes[] = [];
+  nivelesParaFiltro: string[] = [];
+  gradosParaFiltro: string[] = [];
+  seccionesParaFiltro: SeccionVacantes[] = [];
 
   modal: {
     open: boolean;
@@ -200,7 +200,7 @@ seccionesParaFiltro: SeccionVacantes[] = [];
     private notificationService: NotificationService,
     private courseService: CourseService,
     private usuarioService: UsuarioService,
-    private entidadService: EntidadService
+    private entidadService: EntidadService,
   ) {
     this.updateMaxDate();
   }
@@ -222,7 +222,7 @@ seccionesParaFiltro: SeccionVacantes[] = [];
     if (this.profesores.length === 0 || this.cursos.length === 0) {
       this.notificationService.showNotification(
         'Cargando datos, por favor espera...',
-        'info'
+        'info',
       );
       return;
     }
@@ -246,13 +246,13 @@ seccionesParaFiltro: SeccionVacantes[] = [];
   }
 
   openEditModal(asignacion: any) {
-    // ← AQUÍ ESTÁ EL PROBLEMA Y LA SOLUCIÓN
+    
     const profesorEncontrado = this.profesores.find(
-      (p) => p.idusuario === asignacion.usuario.idusuario
+      (p) => p.idusuario === asignacion.usuario.idusuario,
     );
 
     const cursoEncontrado = this.cursos.find(
-      (c) => c.idCurso === asignacion.cursoObj.idCurso // o asignacion.curso?.idCurso
+      (c) => c.idCurso === asignacion.cursoObj.idCurso, 
     );
 
     this.modal = {
@@ -261,8 +261,8 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       title: 'Editar Asignación',
       data: {
         idProfesorCurso: asignacion.idProfesorCurso,
-        usuario: profesorEncontrado || asignacion.usuario, // ← referencia exacta
-        curso: cursoEncontrado || asignacion.cursoObj, // ← referencia exacta
+        usuario: profesorEncontrado || asignacion.usuario,
+        curso: cursoEncontrado || asignacion.cursoObj, 
         nivel: asignacion.nivel,
         grado: asignacion.grado,
         seccion: asignacion.seccion,
@@ -301,7 +301,10 @@ seccionesParaFiltro: SeccionVacantes[] = [];
 
   // === ACCIONES CRUD ===
   onFormSubmit(asignacion: any) {
-    // ENVIAR OBJETOS COMPLETOS, NO SOLO IDs
+    if (!asignacion.usuario?.idusuario) {
+      return;
+    }
+
     const payload: ProfesorCurso = {
       idProfesorCurso: asignacion.idProfesorCurso,
       usuario: asignacion.usuario,
@@ -311,43 +314,53 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       seccion: asignacion.seccion,
     };
 
-    if (asignacion.idProfesorCurso) {
-      this.profesorCursoService.editarCurso(payload).subscribe({
-        next: () => {
-          this.closeModal();
-          this.cargarAsignaciones();
-          this.notificationService.showNotification(
-            'Asignación actualizada',
-            'success'
-          );
-        },
-        error: (err) => {
-          console.error('Error al actualizar:', err);
-          this.notificationService.showNotification(
-            'Error al actualizar: ' + (err.error?.message || err.message),
-            'error'
-          );
-        },
-      });
-    } else {
-      this.profesorCursoService.agregarCurso(payload).subscribe({
-        next: () => {
-          this.closeModal();
-          this.cargarAsignaciones();
-          this.notificationService.showNotification(
-            'Asignación agregada',
-            'success'
-          );
-        },
-        error: (err) => {
-          console.error('Error al agregar:', err);
-          this.notificationService.showNotification(
-            'Error al agregar: ' + (err.error?.message || err.message),
-            'error'
-          );
-        },
-      });
-    }
+    const esEdicion = !!asignacion.idProfesorCurso;
+    const obs = esEdicion
+      ? this.profesorCursoService.editarCurso(payload)
+      : this.profesorCursoService.agregarCurso(payload);
+
+    obs.subscribe({
+      next: () => {
+
+        this.closeModal();
+        this.cargarAsignaciones();
+        this.notificationService.showNotification(
+          esEdicion
+            ? 'Asignación actualizada correctamente'
+            : 'Asignación agregada correctamente',
+          'success',
+        );
+      },
+      error: (err: any) => {
+        console.error('[onFormSubmit] Error completo recibido:', err);
+
+        let mensaje = 'Ocurrió un error inesperado';
+
+        if (err.error?.message) {
+          mensaje = err.error.message;
+        }
+
+        else if (err.error?.error) {
+          mensaje = err.error.error;
+        } else if (err.error?.text) {
+          mensaje = err.error.text;
+        }
+
+        else if (err.status === 409) {
+          mensaje =
+            'Ya existe un tutor asignado para ese nivel, grado y sección';
+        } else if (err.status === 400) {
+          mensaje = err.error?.message || 'Datos inválidos o incompletos';
+        } else if (err.status >= 500) {
+          mensaje = 'Error interno del servidor. Contacte al administrador.';
+        }
+
+        const tipo =
+          err.status === 409 || err.status === 400 ? 'error' : 'error';
+
+        this.notificationService.showNotification(mensaje, tipo);
+      },
+    });
   }
 
   onConfirmDelete() {
@@ -360,13 +373,13 @@ seccionesParaFiltro: SeccionVacantes[] = [];
             this.cargarAsignaciones();
             this.notificationService.showNotification(
               'Asignación eliminada',
-              'success'
+              'success',
             );
           },
           error: (err) => {
             this.notificationService.showNotification(
               'Error al eliminar: ' + err.message,
-              'error'
+              'error',
             );
           },
         });
@@ -375,190 +388,203 @@ seccionesParaFiltro: SeccionVacantes[] = [];
   // === FILTROS Y BÚSQUEDA ===
 
   buscarAsignaciones(): void {
-  console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
+    console.log('Iniciando buscarAsignaciones con filtros:', this.filters);
 
-  // Validar filtros de profesorId y cursoId
-  if (this.filters.profesorId && !this.isKeywordValid(this.filters.profesorId)) {
-    this.notificationService.showNotification(
-      SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-      'error'
-    );
-    console.log('Nombre de profesor inválido');
-    return;
-  }
+    // Validar filtros de profesorId y cursoId
+    if (
+      this.filters.profesorId &&
+      !this.isKeywordValid(this.filters.profesorId)
+    ) {
+      this.notificationService.showNotification(
+        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+        'error',
+      );
+      console.log('Nombre de profesor inválido');
+      return;
+    }
 
-  if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
-    this.notificationService.showNotification(
-      SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-      'error'
-    );
-    console.log('Nombre de curso inválido');
-    return;
-  }
+    if (this.filters.cursoId && !this.isKeywordValid(this.filters.cursoId)) {
+      this.notificationService.showNotification(
+        SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
+        'error',
+      );
+      console.log('Nombre de curso inválido');
+      return;
+    }
 
-  // Validar fechas
-  if (!this.isValidFechaInicio || !this.isValidFechaFin) {
-    this.notificationService.showNotification(
-      'Por favor, corrige las fechas inválidas antes de buscar.',
-      'error'
-    );
-    console.log('Fechas inválidas, deteniendo búsqueda');
-    return;
-  }
+    // Validar fechas
+    if (!this.isValidFechaInicio || !this.isValidFechaFin) {
+      this.notificationService.showNotification(
+        'Por favor, corrige las fechas inválidas antes de buscar.',
+        'error',
+      );
+      console.log('Fechas inválidas, deteniendo búsqueda');
+      return;
+    }
 
-  // Activar el spinner
-  this.isLoading = true;
+    // Activar el spinner
+    this.isLoading = true;
 
-  // Preparar los filtros para enviar al backend
-  const filters: {
-    profesorId?: string;
-    cursoId?: string;
-    grado?: string;
-    seccion?: string;
-    nivel?: string;
-    fechaInicio?: string;
-    fechaFin?: string;
-    fechaTipo?: string;
-  } = {
-    profesorId: this.filters.profesorId ? this.filters.profesorId.trim() : undefined,
-    cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
-    grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
-    seccion: this.filters.seccion ? this.filters.seccion.toLowerCase() : undefined,
-    nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
-    fechaInicio: this.filters.fechaInicio || undefined,
-    fechaFin: this.filters.fechaFin || undefined,
-    fechaTipo: this.filters.fechaTipo || undefined,
-  };
+    // Preparar los filtros para enviar al backend
+    const filters: {
+      profesorId?: string;
+      cursoId?: string;
+      grado?: string;
+      seccion?: string;
+      nivel?: string;
+      fechaInicio?: string;
+      fechaFin?: string;
+      fechaTipo?: string;
+    } = {
+      profesorId: this.filters.profesorId
+        ? this.filters.profesorId.trim()
+        : undefined,
+      cursoId: this.filters.cursoId ? this.filters.cursoId.trim() : undefined,
+      grado: this.filters.grado ? this.filters.grado.toLowerCase() : undefined,
+      seccion: this.filters.seccion
+        ? this.filters.seccion.toLowerCase()
+        : undefined,
+      nivel: this.filters.nivel ? this.filters.nivel.toLowerCase() : undefined,
+      fechaInicio: this.filters.fechaInicio || undefined,
+      fechaFin: this.filters.fechaFin || undefined,
+      fechaTipo: this.filters.fechaTipo || undefined,
+    };
 
-  console.log('Filtros aplicados:', filters);
-  this.appliedFilters = filters;
+    console.log('Filtros aplicados:', filters);
+    this.appliedFilters = filters;
 
-  // Realizar la solicitud al backend
-  this.profesorCursoService
-    .buscarAsignaciones(filters, this.page, this.itemsPerPage)
-    .subscribe({
-      next: (resultado) => {
-        console.log('Resultados recibidos:', resultado);
-        this.asignaciones = this.transformarDatos(resultado.content || []);
-        this.totalAsignaciones = resultado.totalElements;
-        this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
-
-        if (this.totalAsignaciones === 0) {
-          this.notificationService.showNotification(
-            'No se encontraron asignaciones con los filtros aplicados.',
-            'info'
+    // Realizar la solicitud al backend
+    this.profesorCursoService
+      .buscarAsignaciones(filters, this.page, this.itemsPerPage)
+      .subscribe({
+        next: (resultado) => {
+          console.log('Resultados recibidos:', resultado);
+          this.asignaciones = this.transformarDatos(resultado.content || []);
+          this.totalAsignaciones = resultado.totalElements;
+          this.totalPages = Math.ceil(
+            this.totalAsignaciones / this.itemsPerPage,
           );
-        }
 
-        // Si la página actual excede el total de páginas, volver a la 1
-        if (this.page > this.totalPages && this.totalPages > 0) {
-          this.page = 1;
-          this.buscarAsignaciones();
-          return;
-        }
+          if (this.totalAsignaciones === 0) {
+            this.notificationService.showNotification(
+              'No se encontraron asignaciones con los filtros aplicados.',
+              'info',
+            );
+          }
 
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error en la búsqueda:', err);
-        this.notificationService.showNotification(
-          'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
-          'error'
-        );
-        this.asignaciones = [];
-        this.totalAsignaciones = 0;
-        this.totalPages = 1;
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      complete: () => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
-}
+          // Si la página actual excede el total de páginas, volver a la 1
+          if (this.page > this.totalPages && this.totalPages > 0) {
+            this.page = 1;
+            this.buscarAsignaciones();
+            return;
+          }
+
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda:', err);
+          this.notificationService.showNotification(
+            'Error al buscar asignaciones. Verifique los filtros o contacte al administrador.',
+            'error',
+          );
+          this.asignaciones = [];
+          this.totalAsignaciones = 0;
+          this.totalPages = 1;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        complete: () => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
   // === CARGA DE DATOS ===
   cargarAsignaciones(): void {
-  this.isLoading = true;
-  console.log('Cargando asignaciones con:', {
-    page: this.page,
-    itemsPerPage: this.itemsPerPage,
-    sortBy: this.sortBy,
-    sortDir: this.sortDir,
-    filters: this.appliedFilters,
-  });
+    this.isLoading = true;
+    console.log('Cargando asignaciones con:', {
+      page: this.page,
+      itemsPerPage: this.itemsPerPage,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir,
+      filters: this.appliedFilters,
+    });
 
-  if (this.appliedFilters) {
-    // Hay filtros activos → usar búsqueda con filtros
-    this.profesorCursoService
-      .buscarAsignaciones(this.appliedFilters, this.page, this.itemsPerPage)
-      .subscribe({
-        next: (response) => {
-          console.log('Respuesta de buscarAsignaciones:', response);
-          this.asignaciones = this.transformarDatos(response.content || []);
-          this.totalAsignaciones = response.totalElements;
-          this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+    if (this.appliedFilters) {
+      // Hay filtros activos → usar búsqueda con filtros
+      this.profesorCursoService
+        .buscarAsignaciones(this.appliedFilters, this.page, this.itemsPerPage)
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de buscarAsignaciones:', response);
+            this.asignaciones = this.transformarDatos(response.content || []);
+            this.totalAsignaciones = response.totalElements;
+            this.totalPages = Math.ceil(
+              this.totalAsignaciones / this.itemsPerPage,
+            );
 
-          // Si la página actual es mayor que el total de páginas, volver a la 1
-          if (this.page > this.totalPages && this.totalPages > 0) {
-            this.page = 1;
-            this.cargarAsignaciones();
-            return;
-          }
+            // Si la página actual es mayor que el total de páginas, volver a la 1
+            if (this.page > this.totalPages && this.totalPages > 0) {
+              this.page = 1;
+              this.cargarAsignaciones();
+              return;
+            }
 
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error en buscarAsignaciones:', err);
-          this.asignaciones = [];
-          this.totalAsignaciones = 0;
-          this.totalPages = 1;
-          this.notificationService.showNotification(
-            'Error al cargar asignaciones: ' + err.message,
-            'error'
-          );
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-      });
-  } else {
-    // Sin filtros → cargar lista completa paginada
-    this.profesorCursoService
-      .obtenerCourseList(this.page, this.itemsPerPage)
-      .subscribe({
-        next: (response) => {
-          console.log('Respuesta de obtenerCourseList:', response);
-          this.asignaciones = this.transformarDatos(response.content || []);
-          this.totalAsignaciones = response.totalElements;
-          this.totalPages = Math.ceil(this.totalAsignaciones / this.itemsPerPage);
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error('Error en buscarAsignaciones:', err);
+            this.asignaciones = [];
+            this.totalAsignaciones = 0;
+            this.totalPages = 1;
+            this.notificationService.showNotification(
+              'Error al cargar asignaciones: ' + err.message,
+              'error',
+            );
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          },
+        });
+    } else {
+      // Sin filtros → cargar lista completa paginada
+      this.profesorCursoService
+        .obtenerCourseList(this.page, this.itemsPerPage)
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de obtenerCourseList:', response);
+            this.asignaciones = this.transformarDatos(response.content || []);
+            this.totalAsignaciones = response.totalElements;
+            this.totalPages = Math.ceil(
+              this.totalAsignaciones / this.itemsPerPage,
+            );
 
-          // Ajustar página si es necesario
-          if (this.page > this.totalPages && this.totalPages > 0) {
-            this.page = 1;
-            this.cargarAsignaciones();
-            return;
-          }
+            // Ajustar página si es necesario
+            if (this.page > this.totalPages && this.totalPages > 0) {
+              this.page = 1;
+              this.cargarAsignaciones();
+              return;
+            }
 
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error en obtenerCourseList:', err);
-          this.asignaciones = [];
-          this.totalAsignaciones = 0;
-          this.totalPages = 1;
-          this.notificationService.showNotification(
-            'Error al cargar asignaciones: ' + err.message,
-            'error'
-          );
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-      });
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error('Error en obtenerCourseList:', err);
+            this.asignaciones = [];
+            this.totalAsignaciones = 0;
+            this.totalPages = 1;
+            this.notificationService.showNotification(
+              'Error al cargar asignaciones: ' + err.message,
+              'error',
+            );
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          },
+        });
+    }
   }
-}
 
   private transformarDatos(asignaciones: ProfesorCurso[]): any[] {
     return asignaciones.map((a) => ({
@@ -595,16 +621,15 @@ seccionesParaFiltro: SeccionVacantes[] = [];
   maxDate!: string;
 
   descargarExcel(): void {
-    
     this.isLoading = true;
-    console.log("Enviando exactamente esto al backend:", this.appliedFilters);
+    console.log('Enviando exactamente esto al backend:', this.appliedFilters);
     console.log('Descargando Excel con filtros:', this.appliedFilters);
 
     this.profesorCursoService.descargarExcel(this.appliedFilters).subscribe({
       next: () => {
         this.notificationService.showNotification(
           'Archivo Excel descargado con éxito',
-          'success'
+          'success',
         );
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -612,7 +637,7 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       error: (err) => {
         this.notificationService.showNotification(
           'Error al descargar el archivo Excel: ' + err.message,
-          'error'
+          'error',
         );
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -655,7 +680,6 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       this.filters[field] = '';
       if (field === 'fechaInicio') {
         this.isValidFechaInicio = true;
-        // Reset fechaFin if fechaInicio is cleared
         this.filters.fechaFin = '';
         this.isValidFechaFin = true;
       } else {
@@ -677,7 +701,6 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       this.cdr.detectChanges();
       return;
     }*/
-
 
     // const year = parseInt(value.split('-')[0], 10);
     // if (year > this.currentYear) {
@@ -725,7 +748,8 @@ seccionesParaFiltro: SeccionVacantes[] = [];
     // }
 
     this.filters[field] = value;
-    this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] = true;
+    this[field === 'fechaInicio' ? 'isValidFechaInicio' : 'isValidFechaFin'] =
+      true;
     this.cdr.detectChanges();
   }
 
@@ -753,42 +777,54 @@ seccionesParaFiltro: SeccionVacantes[] = [];
   }
 
   cargarDatosEntidadParaFiltros(): void {
-  const idUsuario = localStorage.getItem('IDUSER');
-  if (idUsuario) {
-    this.entidadService.obtenerEntidadPorUsuario(idUsuario).subscribe({
-      next: (entidad) => {
-        if (entidad && entidad.datosngs && entidad.datosngs.niveles) {
-          this.datosNGS = entidad.datosngs;
+    const idUsuario = localStorage.getItem('IDUSER');
+    if (idUsuario) {
+      this.entidadService.obtenerEntidadPorUsuario(idUsuario).subscribe({
+        next: (entidad) => {
+          if (entidad && entidad.datosngs && entidad.datosngs.niveles) {
+            this.datosNGS = entidad.datosngs;
 
-          // Niveles
-          this.niveles = this.datosNGS.niveles!
-            .map(n => n.nombre)
-            .filter((nombre): nombre is string => !!nombre)
-            .sort();
+            // Niveles
+            this.niveles = this.datosNGS
+              .niveles!.map((n) => n.nombre)
+              .filter((nombre): nombre is string => !!nombre)
+              .sort();
 
-          this.notificationService.showNotification('Niveles cargados para los filtros.', 'success');
-        } else {
-          this.notificationService.showNotification('No se encontraron niveles en la entidad del usuario.', 'error');
+            this.notificationService.showNotification(
+              'Niveles cargados para los filtros.',
+              'success',
+            );
+          } else {
+            this.notificationService.showNotification(
+              'No se encontraron niveles en la entidad del usuario.',
+              'error',
+            );
+            this.niveles = [];
+          }
+          // Limpiar grados y secciones al cargar
+          this.gradosParaFiltro = [];
+          this.seccionesParaFiltro = [];
+        },
+        error: (err) => {
+          this.notificationService.showNotification(
+            'Error al cargar datos de entidad: ' + err.message,
+            'error',
+          );
           this.niveles = [];
-        }
-        // Limpiar grados y secciones al cargar
-        this.gradosParaFiltro = [];
-        this.seccionesParaFiltro = [];
-      },
-      error: (err) => {
-        this.notificationService.showNotification('Error al cargar datos de entidad: ' + err.message, 'error');
-        this.niveles = [];
-        this.gradosParaFiltro = [];
-        this.seccionesParaFiltro = [];
-      }
-    });
-  } else {
-    this.notificationService.showNotification('No se encontró el ID del usuario en localStorage.', 'error');
-    this.niveles = [];
-    this.gradosParaFiltro = [];
-    this.seccionesParaFiltro = [];
+          this.gradosParaFiltro = [];
+          this.seccionesParaFiltro = [];
+        },
+      });
+    } else {
+      this.notificationService.showNotification(
+        'No se encontró el ID del usuario en localStorage.',
+        'error',
+      );
+      this.niveles = [];
+      this.gradosParaFiltro = [];
+      this.seccionesParaFiltro = [];
+    }
   }
-}
 
   onItemsPerPageChange(newSize: number): void {
     this.itemsPerPage = newSize;
@@ -802,14 +838,14 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       next: (usuarios) => {
         // FILTRAR SOLO USUARIOS CON ROL "profesor"
         this.profesores = usuarios.filter(
-          (u) => u.rol?.nombreRol?.toLowerCase() === 'profesor'
+          (u) => u.rol?.nombreRol?.toLowerCase() === 'profesor',
         );
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.notificationService.showNotification(
           'Error al cargar profesores',
-          'error'
+          'error',
         );
       },
     });
@@ -824,47 +860,55 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       error: (err) => {
         this.notificationService.showNotification(
           'Error al cargar cursos',
-          'error'
+          'error',
         );
       },
     });
   }
 
   onNivelChange(): void {
-  this.filters.grado = '';
-  this.filters.seccion = '';
-  this.gradosParaFiltro = [];
-  this.seccionesParaFiltro = [];
+    this.filters.grado = '';
+    this.filters.seccion = '';
+    this.gradosParaFiltro = [];
+    this.seccionesParaFiltro = [];
 
-  if (this.filters.nivel && this.datosNGS?.niveles) {
-    const nivelSel = this.datosNGS.niveles.find(n => n.nombre === this.filters.nivel);
-    if (nivelSel?.grados) {
-      this.gradosParaFiltro = nivelSel.grados
-        .map(g => g.nombre)
-        .filter((nombre): nombre is string => !!nombre)
-        .sort((a, b) => {
-          const numA = parseInt(a, 10);
-          const numB = parseInt(b, 10);
-          return (isNaN(numA) || isNaN(numB)) ? a.localeCompare(b) : numA - numB;
-        });
+    if (this.filters.nivel && this.datosNGS?.niveles) {
+      const nivelSel = this.datosNGS.niveles.find(
+        (n) => n.nombre === this.filters.nivel,
+      );
+      if (nivelSel?.grados) {
+        this.gradosParaFiltro = nivelSel.grados
+          .map((g) => g.nombre)
+          .filter((nombre): nombre is string => !!nombre)
+          .sort((a, b) => {
+            const numA = parseInt(a, 10);
+            const numB = parseInt(b, 10);
+            return isNaN(numA) || isNaN(numB)
+              ? a.localeCompare(b)
+              : numA - numB;
+          });
+      }
     }
   }
-}
 
   onGradoChange(): void {
-  this.filters.seccion = '';
-  this.seccionesParaFiltro = [];
+    this.filters.seccion = '';
+    this.seccionesParaFiltro = [];
 
-  if (this.filters.nivel && this.filters.grado && this.datosNGS?.niveles) {
-    const nivelSel = this.datosNGS.niveles.find(n => n.nombre === this.filters.nivel);
-    const gradoSel = nivelSel?.grados?.find(g => g.nombre === this.filters.grado);
-    if (gradoSel?.secciones) {
-      this.seccionesParaFiltro = [...gradoSel.secciones].sort((a, b) => 
-        a.nombre.localeCompare(b.nombre)
+    if (this.filters.nivel && this.filters.grado && this.datosNGS?.niveles) {
+      const nivelSel = this.datosNGS.niveles.find(
+        (n) => n.nombre === this.filters.nivel,
       );
+      const gradoSel = nivelSel?.grados?.find(
+        (g) => g.nombre === this.filters.grado,
+      );
+      if (gradoSel?.secciones) {
+        this.seccionesParaFiltro = [...gradoSel.secciones].sort((a, b) =>
+          a.nombre.localeCompare(b.nombre),
+        );
+      }
     }
   }
-}
 
   resetFilter(filter: string): void {
     if (filter === 'all') {
@@ -921,7 +965,7 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       this.filters[field] = this.lastValidValues[field];
       this.notificationService.showNotification(
         SEARCH_VALIDATION_MESSAGES.NO_LEADING_SPACE,
-        'info'
+        'info',
       );
       this.cdr.detectChanges();
       return;
@@ -942,7 +986,7 @@ seccionesParaFiltro: SeccionVacantes[] = [];
       this.filters[field] = this.lastValidValues[field];
       this.notificationService.showNotification(
         SEARCH_VALIDATION_MESSAGES.INVALID_FORMAT,
-        'info'
+        'info',
       );
       this.cdr.detectChanges();
       return;
@@ -1027,7 +1071,7 @@ seccionesParaFiltro: SeccionVacantes[] = [];
         localStorage.setItem('itemsPerPage', this.itemsPerPage.toString());
         this.notificationService.showNotification(
           'Error al cargar el conteo de asignaciones: ' + err.message,
-          'error'
+          'error',
         );
         console.error('Error al cargar conteo:', err);
       },
@@ -1043,7 +1087,6 @@ seccionesParaFiltro: SeccionVacantes[] = [];
   }
 
   onFechaTipoChange(): void {
-    // Limpiar fechas al cambiar el tipo para evitar inconsistencias
     this.filters.fechaInicio = '';
     this.filters.fechaFin = '';
     this.isValidFechaInicio = true;
