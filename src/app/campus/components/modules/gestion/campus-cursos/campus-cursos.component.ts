@@ -116,7 +116,7 @@ export class CampusCursosComponent {
       },
       isReadOnly: false,
       size: 'max-w-xl',
-      buttons: [], // ← Deja vacío, el formulario maneja los botones
+      buttons: [],
     };
   }
 
@@ -553,9 +553,9 @@ onItemsPerPageChange(newSize: number): void {
       type: 'form',
       title: 'Detalle del Curso',
       data: { ...curso, competencias: curso.competencias || [] },
-      isReadOnly: true, // ← MODO SOLO LECTURA
+      isReadOnly: true, 
       size: 'max-w-2xl',
-      buttons: [], // El formulario pone "Cancelar" solo
+      buttons: [],
     };
   }
 }
